@@ -4,12 +4,17 @@
 \name{neonPlants-package}
 \alias{neonPlants}
 \alias{neonPlants-package}
-\title{neonPlants: What the Package Does (One Line, Title Case)}
+\title{neonPlants: Tools to access and work with NEON plant data}
 \description{
-What the package does (one paragraph).
+Library of R functions to work with NEON plant data.
 }
 \author{
-\strong{Maintainer}: First Last \email{first.last@example.com} (\href{https://orcid.org/YOUR-ORCID-ID}{ORCID})
+\strong{Maintainer}: Eric Sokol \email{esokol@battelleecology.org} (\href{https://orcid.org/0000-0001-5923-0917}{ORCID}) [copyright holder]
+
+Authors:
+\itemize{
+  \item Dave Barnett
+}
 
 }
 \keyword{internal}
