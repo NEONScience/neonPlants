@@ -29,3 +29,6 @@ Imports:
     rlang,
     stringr,
     withr
+Depends: 
+    R (>= 2.10)
+LazyData: true
