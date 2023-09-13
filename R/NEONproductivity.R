@@ -60,7 +60,7 @@
 #################################################################################  
 ######    CALCULATE PLOT AND SITE-LEVEL NET PRIMARY PRODUCTIVITY (NPP)     ###### 
 
-NEON.productivity = function(
+NEONproductivity = function(
                          input = "NEONbiomassOutputs.rds",
                          plotType = "tower",
                          plotPriority = 5,

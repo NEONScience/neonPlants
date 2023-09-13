@@ -60,7 +60,7 @@
 
 ##############################################################################################
 
-NEON.biomass = function(site = "all",
+NEONbiomass = function(site = "all",
                         start = "2018", 
                         end = as.character(as.integer(format(Sys.Date(), "%Y"))-1),
                         inputVst = NA,
