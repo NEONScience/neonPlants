@@ -79,32 +79,27 @@ divStack <- function(
   ###limit 1m2 data to plant species records
   data_1m2 <- dplyr::filter(data_1m2, divDataType == "plantSpecies")
 
+  # columns to keep
+  cols2keep <- c("namedLocation", "domainID",	"siteID",
+                 "decimalLatitude",	"decimalLongitude",	"geodeticDatum",
+                 "coordinateUncertainty",	"elevation",
+                 "elevationUncertainty", "nlcdClass", "eventID",
+                 "plotType", "plotID",	"subplotID",	"boutNumber",
+                 "targetTaxaPresent",	"taxonID",	"scientificName",
+                 "taxonRank",	"family",	"nativeStatusCode",
+                 "identificationQualifier",	"morphospeciesID",
+                 "samplingImpractical", "samplingImpracticalRemarks",
+                 "biophysicalCriteria", "publicationDate", "release")
 
   ###get rid of extra fields that could be hard for generating unique records
   #data_1m2
-  data_1m2 <- dplyr::select(data_1m2, namedLocation, domainID,	siteID,
-                            decimalLatitude,	decimalLongitude,	geodeticDatum,
-                            coordinateUncertainty,	elevation,
-                            elevationUncertainty, nlcdClass, eventID,
-                            plotType, plotID,	subplotID,	boutNumber,
-                            targetTaxaPresent,	taxonID,	scientificName,
-                            taxonRank,	family,	nativeStatusCode,
-                            identificationQualifier,	morphospeciesID,
-                            samplingImpractical, samplingImpracticalRemarks,
-                            biophysicalCriteria, publicationDate, release)
+  data_1m2 <- data_1m2 %>% dplyr::select(
+    tidyr::any_of(c("data_1m2",cols2keep)))
 
   #data 10_100
-  data_10_100m2 <- dplyr::select(data_10_100m2, namedLocation, domainID,
-                                 siteID,	decimalLatitude,	decimalLongitude,
-                                 geodeticDatum,	coordinateUncertainty,
-                                 elevation,	elevationUncertainty, nlcdClass,
-                                 eventID, plotType, plotID,	subplotID,
-                                 boutNumber,	targetTaxaPresent,	taxonID,
-                                 scientificName,	taxonRank,	family,
-                                 nativeStatusCode, identificationQualifier,
-                                 morphospeciesID,	samplingImpractical,
-                                 samplingImpracticalRemarks, biophysicalCriteria,
-                                 publicationDate, release)
+  data_10_100m2 <- data_10_100m2 %>% dplyr::select(
+    tidyr::any_of(c("data_10_100m2",cols2keep)))
+
 
   ##############identify those years where sample 1m2 subplots only and those
   # years where sample both (alternating years)##############
@@ -208,10 +203,8 @@ divStack <- function(
     dplyr::group_by(eventID, plotID, subplotID) %>%
     dplyr::mutate(tot = n()) %>%
     dplyr::filter(
-      if(tot > 1){
-        targetTaxaPresent != "N"
-      }else{
-        targetTaxaPresent == targetTaxaPresent}) %>%
+      (tot > 1 & targetTaxaPresent != "N") |
+        (tot <= 1 & targetTaxaPresent == targetTaxaPresent)) %>%
     dplyr::select(-tot) %>%
     dplyr::ungroup()
 
