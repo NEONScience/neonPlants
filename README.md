@@ -5,6 +5,8 @@ neonPlants
 
 Library of R functions to work with NEON plant data
 
+To install the package:
+`remotes::install_github("NEONScience/neonPlants")`
 
 <!-- ****** Requests ****** -->
 Requests
