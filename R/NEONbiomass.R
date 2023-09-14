@@ -12,14 +12,13 @@
 #' Samuel M Simkin (2021-03-30)  original creation
 #' Samuel M Simkin (2022-07-12)  revised
 #' Samuel M Simkin (2023-08-04)  revised
+#' Samuel M Simkin (2023-09-14)  revised
 
-#' @param site Either the string 'all', meaning all available sites, or a character vector of 4-letter NEON site codes, e.g. c('ONAQ','RMNP'). Defaults to all. [list]
-#' @param start Either NA, meaning all available years starting with 2018, or a character vector specifying start year in the form YYYY, e.g. 2019. The default and earliest allowable option is 2018. [character]
-#' @param end Either NA, meaning all available years after the start year, or a character vector specifying start year in the form YYYY, e.g. 2021. Data from the current calendar year are excluded since they would be incomplete. [character]
-#' @param inputVst Optionally, to save script run time, specify a local file in .rds format (e.g. vstDat.rds) that contains NEON portal VST data. If this argument is specified then the site, start, and end parameters are ignored. [character]
-#' @param inputHbp Optionally, to save script run time, specify a local file in .rds format (e.g. vstHbp.rds) that contains NEON portal VST data. If this argument is specified then the site, start, and end parameters are ignored. [character]
-#' @param saveRawData Optionally include raw NEON portal VST data (named vstData.rds) in function output.
-#' @param dataProducts Select whether to analyse only woody biomass "Vst" or woody plus herbaceous "VstHbp" [character]
+#' @param inputVst Specify a local file in .rds format (e.g. VstDat.rds) that contains NEON portal VST data. [character]
+#' @param inputHbp Optionally, specify a local file in .rds format (e.g. vstHbp.rds) that contains NEON portal HBP data. [character]
+#' @param site Either NA, meaning all available sites from inputVst and inputHBP data, or a character vector of 4-letter NEON site codes, e.g. c('ONAQ','RMNP'). Defaults to all. [list]
+#' @param start Either NA, meaning all available years from inputVst and inputHBP data, or a character vector specifying start year in the form YYYY, e.g. 2019. The default and earliest allowable option is 2018. [character]
+#' @param end Either NA, meaning all available years from inputVst and inputHBP data after the start year, or a character vector specifying start year in the form YYYY, e.g. 2021. Data from the current calendar year are excluded since they would be incomplete. [character]
 #' @param growthForm Select which growth forms to analyse [character]
 #' @param plotType Optional filter based on NEON plot type. Defaults to "tower" plots, which are sampled annually. Otherwise "distributed" plots are examined also. [character]
 #' @param plotPriority NEON plots have a priority number in the event that not all plots are able to be sampled. The lower the number the higher the priority. The default is 5. [numeric]
@@ -44,50 +43,40 @@
 #' @examples
 #' \dontrun{
 #' # example with arguments at default values
-#' biomassFunctionOutputs <- NEON.biomass(growthForm = "single and multi-bole trees") 
-#' 
-#' # example specifying many non-default arguments
-#' biomassFunctionOutputs <- NEON.biomass(siteID = c("HARV","JERC"), start = "2019", end = "2022", saveRawData = "Y", dataProducts = "Vst", growthForm = "all trees", plotType = "all", plotPriority = 10)
-#'  
-#' example reading in locally saved portal data to avoid waiting for portal data to download
-#' biomassFunctionOutputs <- NEON.biomass(inputVst = "vstDat.rds, inputHbp = "HbpDat.rds, dataProducts = "VstHbp", growthForm = "single and multi-bole trees")
+#' biomassFunctionOutputs <- NEONbiomass(inputVst = "VstDat.rds, inputHbp = "HbpDat.rds, 
+#'         growthForm = "single and multi-bole trees", plotType = "tower", plotPriority = 5)
 #' 
 #' list2env(NEONbiomassOutputs ,.GlobalEnv) # unlist all data frames for easier viewing or additional analysis
-#' saveRDS(NEONbiomassOutputs, 'NEONbiomassOutputs.rds') # save all outputs locally for further examination and if desired use in the follow-up productivity function.
-#' saveRDS(NEONbiomassOutputs$vstDat, 'vstDat.rds') # save vst portal data locally if you want to reference it in inputVst argument in future re-run of function
-#' saveRDS(NEONbiomassOutputs$HbpDat, 'HbpDat.rds') # save hbp portal data locally if you want to reference it in inputHbp argument in future re-run of function
+#' saveRDS(NEONbiomassOutputs, 'NEONbiomassOutputs.rds') # save all outputs locally for further examination and 
+#'        if desired use in the follow-up productivity function.
 #' }
 
 ##############################################################################################
 
-NEONbiomass = function(site = "all",
-                        start = "2018", 
-                        end = as.character(as.integer(format(Sys.Date(), "%Y"))-1),
-                        inputVst = NA,
-                        inputHbp = NA,
-                        saveRawData = "N",
-                        dataProducts = "VstHbp",
-                        growthForm = "single and multi-bole trees",
-                        plotType = "tower",
-                        plotPriority = 5
+NEONbiomass = function(inputVst = "VstDat.rds",
+                       inputHbp = "HbpDat.rds",
+                       site = NA,
+                       start = NA, 
+                       end = NA,
+                       growthForm = "single and multi-bole trees",
+                       plotType = "tower",
+                       plotPriority = 5
                          ) {
 
-library(neonUtilities)
 library(tidyverse)
+  
+# Error if no input VST data
+  if(is.na(inputVst) ){
+    stop("The biomass function requires input NEON vegetation structure (VST) data, specified in the inputVst argument.")
+  }  
+  
+# Warning if no input HBP data
+  if(is.na(inputHbp) ){
+    print("NEON Herbaceous biomass (HBP) data will not be aggregated since the inputHbp argument is NA.")
+  } 
 
 # growthForm "single shrub", "small shrub", and "" from vst_apparentIndividual will not be summarized until application of rigorous allometric equations
 # all "non-woody" growthform values from vst_non-woody table will likewise not be summarized until application of rigorous allometric equations
-  
-
-# Error if invalid saveRawData option selected
-  if(saveRawData!= "Y" & saveRawData != "N"){
-    stop("The only valid saveRawData options are 'Y' or 'N'.")
-  }  
-  
-# Error if invalid dataProducts option selected
-  if(dataProducts != "VstHbp" & dataProducts != "Vst"){
-    stop("Currently the only valid dataProducts options are 'VstHbp' or 'Vst'.")
-  }
 
 # Error if invalid growthForm option selected
   if(growthForm != "single and multi-bole trees" & growthForm != "all trees"){
@@ -103,33 +92,49 @@ library(tidyverse)
   if(plotPriority < 1){
     stop("The minimum plotPriority value is 1, and 5 or greater is the recommended default.")
   }  
+
   
-if(!is.na(inputVst)) { vstDat <- readRDS(inputVst) } else {
+VstDat <- readRDS(inputVst)
   
+perplot <- VstDat$vst_perplotperyear ## read in plot sample area for each growthForm by eventID combo from vst_perplotperyear table
+perplot$year <- as.numeric(substr(perplot$eventID,10,13) )
+start_from_input <- as.character(min(as.numeric(substr(perplot$date, 1,4))))
+end_from_input <- as.character(max(as.numeric(substr(perplot$date, 1,4))))
+site_from_input <- unique(perplot$siteID)
+
+
+# Warning if start date filter is before input data
+  if (!is.na(start)) {if(as.numeric(start) < as.numeric(start_from_input)){  start = as.numeric(start_from_input)
+    perplot <- perplot %>% filter(year >= as.numeric(start) ) 
+    print("The start year is earlier than the input data (re-pull data as early as 2018 from the portal using separate function). The start year in current run of function has automatically been changed to:")
+    print(start_from_input)
+  }} else {start = as.numeric(start_from_input)}
+
 # Warning if start date is too early
-  if(as.numeric(start) < 2018){  start = "2018"
+   if (!is.na(start)) {if(as.numeric(start) < 2018){  start = "2018"
     print("The earliest year that can be used for this function is 2018. The start year has automatically been changed to 2018.")
-  }
+  }} else {start = as.numeric(start_from_input)}
+
+# Warning if end date filter is after input data
+   if (!is.na(end)) {if(as.numeric(end) > as.numeric(end_from_input)){  end = as.numeric(end_from_input)
+    print("The end year is later than the input data (re-pull data as late as the preceding calendar year from the portal using separate function). The end year in current run of function has automatically been changed to:")
+    print(end_from_input)
+  }} else {end = as.numeric(end_from_input)}
 
 # Warning if end date is too late
-  if(as.numeric(end) > as.integer(format(Sys.Date(), "%Y"))-1){  end = as.character(as.integer(format(Sys.Date(), "%Y"))-1)
+   if (!is.na(end)) {if(as.numeric(end) > as.integer(format(Sys.Date(), "%Y"))-1){  end = as.character(as.integer(format(Sys.Date(), "%Y"))-1)
     print("The end year can not be the current calendar year or a future year. The end year has automatically been changed to the year prior to the current calendar year.")
-  }
-  
-print("Downloading NEON 'Vegetation structure' data (dpID DP1.10098.001)  ..... ")
-#### ingest tree, sapling, shrub, and liana data (plus non-herbaceous perennial other data) from portal   
+  }} else {end = as.numeric(end_from_input)}
 
-vstDat <- loadByProduct(dpID="DP1.10098.001", 
-                             site = site,
-                             startdate = paste0(start,"-01"),
-                             enddate = paste0(end, "-12"),
-                             package = "basic", check.size = FALSE, token = Sys.getenv('NEON_TOKEN')) # pulled from portal with loadByProduct on 2023 Jul 11
-}
+# Warning if site is not in input data
+   if (!is.na(site)) {
+     sites_not_in_input <- setdiff(site, site_from_input)
+     if(length(sites_not_in_input) >= 1){ 
+    stop(paste0("One or more sites are not in the input data (re-pull data for desired sites from the portal using separate function). The following site(s) are not in the input data: ", sites_not_in_input) ) 
+  }} else {site = site_from_input}
 
-perplot <- vstDat$vst_perplotperyear ## read in plot sample area for each growthForm by eventID combo from vst_perplotperyear table
-perplot$year <- as.numeric(substr(perplot$eventID,10,13) )
-start <- as.character(min(as.numeric(substr(perplot$date, 1,4))))
-end <- as.character(max(as.numeric(substr(perplot$date, 1,4))))
+perplot <- perplot %>% filter(year >= as.numeric(start) & year <= as.numeric(end) & siteID %in% site)
+
 
 # obtained "UniquePlotIDsSamplingModulesPriorityLists" from GitHub NEON-OS_spatial_data repo and then filtered and selected to relevant records and columns: 
 #                   dplyr::filter(str_detect(specificModule, "vst"))  %>% dplyr::select(c(plotID,specificModuleSamplingPriority, plotType) ) 
@@ -152,15 +157,20 @@ perplot_not_SI <- perplot %>% dplyr::filter(samplingImpractical == "OK" | sampli
  plot_eventID_list <- unique(perplot_not_SI$plot_eventID) # list of all unique combos of plotID and eventID where full sampling should have taken place
 perplot <- perplot %>% dplyr::select(plot_eventID, plotID, eventID, year, nlcdClass, plotType, eventType, dataCollected, targetTaxaPresent, totalSampledAreaTrees, totalSampledAreaShrubSapling, totalSampledAreaLiana, totalSampledAreaOther)
 
-plotType_df <- vstDat$vst_perplotperyear 
+plotType_df <- VstDat$vst_perplotperyear 
+
   plotType_df <- plotType_df %>% dplyr::select(plotID,plotType)
   plotType_df <- plotType_df[!duplicated(plotType_df$plotID),]
 
 if(grepl("non-woody", growthForm) )    {
-vst_agb_other <- vstDat$'vst_non-woody'
+vst_agb_other <- VstDat$'vst_non-woody'
+#vst_agb_other <- vst_agb_other %>% filter(as.numeric(substr(date,1,4)) >= as.numeric(start) & as.numeric(substr(date,1,4)) <= as.numeric(end) & siteID %in% site)
+
+
 print("Calculating biomass from vst_non-woody table ..... ")
 
 vst_agb_other <- merge(vst_agb_other, perplot, by=c("plotID", "eventID"), all.x=TRUE) # add total sampled areas
+vst_agb_other$agb_source <- "no source"
 
 vst_agb_other$agb_yucca <- ifelse(vst_agb_other$growthForm == "yucca", round(((0.0022*vst_agb_other$height) + (0.00096*(vst_agb_other$height^2)) + 0.04)/1000, digits=6), NA) 
 # White, J.D., K.J. Gutzwiller, W.C. Barrow, L.J. Randall, and P. Swint. 2008. Modeling mechanisms of vegetation change due to fire in a semi-arid ecosystem. Ecological Modelling 214:181-200.
@@ -223,14 +233,16 @@ vst_agb_per_ha_other <- vst_agb_final_other %>% dplyr::group_by(plot_eventID, ev
 }
   
 ## read in taxonID from vst_mappingandtagging table 
-map <- vstDat$vst_mappingandtagging 
+map <- VstDat$vst_mappingandtagging 
 map <- map[order(map$date),]
 map <- map[!duplicated(map$individualID, fromLast=TRUE), ] # keep the most recent record which should have a more specific or considered taxonID; in QA older dupes are periodically deleted
     taxonID_df <- unique(subset(map, select = c(taxonID)) )
     vst_taxonIDs <- taxonID_df$taxonID
  map <- map %>% dplyr::select(individualID, taxonID)
 
-appInd <- vstDat$vst_apparentindividual
+appInd <- VstDat$vst_apparentindividual
+appInd <- appInd %>% filter(as.numeric(substr(date,1,4)) >= as.numeric(start) & as.numeric(substr(date,1,4)) <= as.numeric(end) & siteID %in% site)
+
 
 print("Assembling allometric equation parameters ..... ")
 
@@ -602,16 +614,11 @@ vst_site <- vst_plot_w_0s %>% dplyr::group_by(siteID, year) %>% dplyr::summarise
 # } 
 
 ##### If option to include herbaceous data was selected then download and aggregate the herbaceous data #############################
-if(grepl("Hbp", dataProducts) )    {
 # Original hbp scripts by Eric Sokol (esokol@battelleecology) in May 2020. Merged and modified by Sam Simkin (ssimkin@battelleecology.org) in Jul 2023
   
-if(!is.na(inputHbp)) { HbpDat <- readRDS(inputHbp) } else {
+if(!is.na(inputHbp)) { 
+HbpDat <- readRDS(inputHbp)
 
-print("Downloading NEON 'Herbaceous clip harvest' data (dpID DP1.10023.00)  ..... ")
-  
-HbpDat <- neonUtilities::loadByProduct(dpID = "DP1.10023.001", site = site, startdate = paste0(start,"-01"), enddate = paste0(as.character(as.integer(format(Sys.Date(), "%Y"))-1), "-12"), 
-                                           package = "basic", check.size = FALSE, token = Sys.getenv('NEON_TOKEN'))
-}
   hbp_perbout <- HbpDat$hbp_perbout
   hbp_massdata <- HbpDat$hbp_massdata
 
@@ -672,33 +679,8 @@ vst_plot_w_0s$plotType <- NULL #  plotType field only partially populated so rem
 
 print("Returning biomass output data frames as a list object  ..... ")
 
-if(saveRawData == "Y")    {
-if(grepl("Hbp", dataProducts) )    {
-output.list <- list(
-   vstDat = vstDat,
-   HbpDat = HbpDat,
-   vst_agb_per_ha = vst_agb_per_ha,
-   vst_plot_w_0s = vst_plot_w_0s,
-   vst_agb_zeros = vst_agb_zeros,
-   vst_site = vst_site,
-   hbp_agb_per_ha = hbp_agb_per_ha,
-   hbp_plot = hbp_plot,
-   VstHbp_site = VstHbp_site
-   )
- return(output.list)
-  } else {
-  output.list <- list(
-   vstDat = vstDat,
-   vst_agb_per_ha = vst_agb_per_ha,
-   vst_plot_w_0s = vst_plot_w_0s,
-   vst_agb_zeros = vst_agb_zeros,
-   vst_site = vst_site
-)
-  }
-}
 
-else {
-if(grepl("Hbp", dataProducts) )    {
+if(!is.na(inputHbp))    {
 output.list <- list(
    vst_agb_per_ha = vst_agb_per_ha,
    vst_plot_w_0s = vst_plot_w_0s,
@@ -717,11 +699,10 @@ output.list <- list(
    vst_site = vst_site
 )
   }
-}
 
 }
 
-#NEONbiomassOutputs <- NEON.biomass(growthForm = "single and multi-bole trees")
+#NEONbiomassOutputs <- NEONbiomass(growthForm = "single and multi-bole trees")
 
 #list2env(NEONbiomassOutputs ,.GlobalEnv) # unlist all data frames for easier viewing or additional analysis
 #saveRDS(NEONbiomassOutputs, 'NEONbiomassOutputs.rds') # save all outputs locally for further examination and if desired use in follow-up productivity function.

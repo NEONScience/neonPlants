@@ -9,7 +9,12 @@ Authors@R:
              comment = c(ORCID = "0000-0001-5923-0917")),
       person(given = "Dave",
              family = "Barnett", 
-             role = c("aut"))
+             role = c("aut")),
+      person(given = "Sam",
+             family = "Simkin", 
+             role = c("aut"),
+             email = "ssimkin@battelleecology.org", 
+             comment = c(ORCID = "0000-0003-2418-4265"))
              )
 Description: Library of R functions to work with NEON plant data.
 License: GPL (>= 3)

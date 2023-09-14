@@ -46,10 +46,13 @@
 #' @examples
 #' \dontrun{
 #' # example with arguments at default values
-#' NEONproductivityOutputs <- NEON.productivity(input = "NEONbiomassOutputs.rds")
+#' NEONproductivityOutputs <- NEONproductivity(input = "NEONbiomassOutputs.rds")
 #'                       
 #' # example specifying many non-default arguments
-#' NEONproductivityOutputs <- NEON.productivity(input = "NEONbiomassOutputs.rds", plotType = "all", plotPriority = 50, calcMethod = "approach_2", outlier = 2, outlier_type = "SD", dataProducts = "Vst")
+#' NEONproductivityOutputs <- NEONproductivity(input = "NEONbiomassOutputs.rds", 
+#'                plotType = "all", plotPriority = 50, 
+#'                calcMethod = "approach_2", outlier = 2, outlier_type = "SD", 
+#'                dataProducts = "Vst")
 #' 
 #' list2env(NEONbiomassOutputs ,.GlobalEnv) # unlist all data frames for easier viewing or additional analysis
 #' saveRDS(NEONproductivityOutputs, 'NEONproductivityOutputs.rds') # save all outputs locally for further examination
@@ -553,8 +556,8 @@ output.list <- list(
 
 }
 
-#NEONproductivityOutputs <- NEON.productivity(input = "NEONbiomassOutputs.rds", calcMethod = "approach_1", outlier = 1.5, outlier_type = "IQR")
-#NEONproductivityOutputs <- NEON.productivity(input = "NEONbiomassOutputs.rds", calcMethod = "approach_1", outlier = 2, outlier_type = "SD")
+#NEONproductivityOutputs <- NEONproductivity(input = "NEONbiomassOutputs.rds", calcMethod = "approach_1", outlier = 1.5, outlier_type = "IQR")
+#NEONproductivityOutputs <- NEONproductivity(input = "NEONbiomassOutputs.rds", calcMethod = "approach_1", outlier = 2, outlier_type = "SD")
 
 #list2env(NEONproductivityOutputs ,.GlobalEnv) # unlist all data frames for easier viewing or additional analysis
 #saveRDS(NEONproductivityOutputs, 'NEONproductivityOutputs.rds') # save all outputs locally for further examination
