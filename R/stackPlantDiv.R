@@ -7,8 +7,8 @@
 #'
 #' @import httr XML dplyr
 #'
-#' @param data_1m2 div_1m2Data table in NEON data produdct (Plant presence and percent cover, DP1.10058.001)
-#' @param data_10_100m2 div_10m2Data100m2Data table in NEON data produdct (Plant presence and percent cover, DP1.10058.001)
+#' @param div_1m2Data div_1m2Data table in NEON data produdct (Plant presence and percent cover, DP1.10058.001)
+#' @param div_10m2Data100m2Data div_10m2Data100m2Data table in NEON data produdct (Plant presence and percent cover, DP1.10058.001)
 #'
 #' @return This function returns a data frame
 #'
@@ -36,9 +36,9 @@
 #' ###get 10_100
 #' data_10_100m2 <- allDiv[["div_10m2Data100m2Data"]]
 #'
-#' data_stacked <- divStack(
-#'   data_1m2 = data_1m2,
-#'   data_10_100m2 = data_10_100m2)
+#' data_stacked <- stackPlantDiv(
+#'   div_1m2Data = data_1m2,
+#'   div_10m2Data100m2Data = data_10_100m2)
 #' }
 
 
@@ -49,35 +49,35 @@
 #     add to neonPlants package
 ##############################################################################################
 
-divStack <- function(
-    data_1m2 = NA,
-    data_10_100m2 = NA){
+stackPlantDiv <- function(
+    div_1m2Data = NA,
+    div_10m2Data100m2Data = NA){
 
   # library(dplyr)
   # library(stringr)
 
   ###deal with eventID and year - 1m2 data
   #create year column
-  data_1m2$year <- substr(data_1m2$endDate, start = 1, stop = 4)
-  data_1m2$eventID <- ifelse(
-    is.na(data_1m2$eventID) | stringr::str_length(data_1m2$eventID) > 11,
-    paste(data_1m2$siteID, data_1m2$boutNumber, data_1m2$year, sep="."),
-    data_1m2$eventID)
-  data_1m2 <- data_1m2 %>% dplyr::select(-year)
+  div_1m2Data$year <- substr(div_1m2Data$endDate, start = 1, stop = 4)
+  div_1m2Data$eventID <- ifelse(
+    is.na(div_1m2Data$eventID) | stringr::str_length(div_1m2Data$eventID) > 11,
+    paste(div_1m2Data$siteID, div_1m2Data$boutNumber, div_1m2Data$year, sep="."),
+    div_1m2Data$eventID)
+  div_1m2Data <- div_1m2Data %>% dplyr::select(-year)
 
   ###deal with eventID and year - larger subplot data table
   #create year column
-  data_10_100m2$year <- substr(data_10_100m2$endDate, start = 1, stop = 4)
-  data_10_100m2$eventID <- ifelse(
-    is.na(data_10_100m2$eventID) | stringr::str_length(data_10_100m2$eventID) > 11,
-    paste(data_10_100m2$siteID,
-          data_10_100m2$boutNumber,
-          data_10_100m2$year, sep="."),
-    data_10_100m2$eventID)
-  data_10_100m2 <- data_10_100m2 %>% dplyr::select(-year)
+  div_10m2Data100m2Data$year <- substr(div_10m2Data100m2Data$endDate, start = 1, stop = 4)
+  div_10m2Data100m2Data$eventID <- ifelse(
+    is.na(div_10m2Data100m2Data$eventID) | stringr::str_length(div_10m2Data100m2Data$eventID) > 11,
+    paste(div_10m2Data100m2Data$siteID,
+          div_10m2Data100m2Data$boutNumber,
+          div_10m2Data100m2Data$year, sep="."),
+    div_10m2Data100m2Data$eventID)
+  div_10m2Data100m2Data <- div_10m2Data100m2Data %>% dplyr::select(-year)
 
   ###limit 1m2 data to plant species records
-  data_1m2 <- dplyr::filter(data_1m2, divDataType == "plantSpecies")
+  div_1m2Data <- dplyr::filter(div_1m2Data, divDataType == "plantSpecies")
 
   # columns to keep
   cols2keep <- c("namedLocation", "domainID",	"siteID",
@@ -92,13 +92,13 @@ divStack <- function(
                  "biophysicalCriteria", "publicationDate", "release")
 
   ###get rid of extra fields that could be hard for generating unique records
-  #data_1m2
-  data_1m2 <- data_1m2 %>% dplyr::select(
-    tidyr::any_of(c("data_1m2",cols2keep)))
+  #div_1m2Data
+  div_1m2Data <- div_1m2Data %>% dplyr::select(
+    tidyr::any_of(c("div_1m2Data",cols2keep)))
 
   #data 10_100
-  data_10_100m2 <- data_10_100m2 %>% dplyr::select(
-    tidyr::any_of(c("data_10_100m2",cols2keep)))
+  div_10m2Data100m2Data <- div_10m2Data100m2Data %>% dplyr::select(
+    tidyr::any_of(c("div_10m2Data100m2Data",cols2keep)))
 
 
   ##############identify those years where sample 1m2 subplots only and those
@@ -106,17 +106,17 @@ divStack <- function(
   # don't want to process 1m2 only year with larger subplot data that don't exist
 
   # 1m2 data data frame of eventIDs
-  smallEventID <- dplyr::select(data_1m2, eventID) %>% unique()
+  smallEventID <- dplyr::select(div_1m2Data, eventID) %>% unique()
 
   # 10_100m2 data data frame of eventIDs
-  bigEventID <- dplyr::select(data_10_100m2, eventID) %>% unique()
+  bigEventID <- dplyr::select(div_10m2Data100m2Data, eventID) %>% unique()
 
   # make df of those eventIDs sampled the 1m2 and not the larger subplots
   smallOut <- dplyr::anti_join(smallEventID, bigEventID)
 
   # pull out the corresponding data into unique data frame that will not be
   # incorporated in the larger scale data
-  data_1m2Out <- data_1m2 %>%
+  div_1m2DataOut <- div_1m2Data %>%
     dplyr::filter(eventID %in% smallOut$eventID)
 
   #make df of eventID common to both
@@ -124,7 +124,7 @@ divStack <- function(
   smallMergeEventID <- smallMerge$eventID
 
   #subset to data that corresponds to evenID in both the small and large data
-  data_1m2 <- data_1m2 %>%
+  div_1m2Data <- div_1m2Data %>%
     dplyr::filter(eventID %in% smallMergeEventID)
 
   ###############set up data aggregation across scales, will need to update
@@ -133,16 +133,16 @@ divStack <- function(
   ###preparation
 
   #make sure subplotID is character (seems like it comes down that way now)
-  data_10_100m2$subplotID <- as.character(data_10_100m2$subplotID)
+  div_10m2Data100m2Data$subplotID <- as.character(div_10m2Data100m2Data$subplotID)
 
   #separate the 10m2 data from the 100m2 data:
-  data_100m2 = data_10_100m2[which(nchar(data_10_100m2$subplotID)<3), ]
-  data_10m2 = data_10_100m2[which(nchar(data_10_100m2$subplotID)>2), ]
+  data_100m2 = div_10m2Data100m2Data[which(nchar(div_10m2Data100m2Data$subplotID)<3), ]
+  data_10m2 = div_10m2Data100m2Data[which(nchar(div_10m2Data100m2Data$subplotID)>2), ]
 
   ###build 10m2 data by aggregating observations from 1m2
   # (years sampled both 1 and 10_100) and 10m2
   #rename 1m2 to combine with 10
-  data_10m2Build <- data_1m2
+  data_10m2Build <- div_1m2Data
 
   #rename 1m2 subplots so associated observations will combine with 10m2 observations
   data_10m2Build$subplotID[data_10m2Build$subplotID == "31.1.1"] <- "31.1.10"
@@ -177,11 +177,11 @@ divStack <- function(
   data_100m2 <- rbind(data_100m2, data_100m2Build)
 
   #################recombine the 1m2 data#####################
-  data_1m2 <- rbind(data_1m2, data_1m2Out)
+  div_1m2Data <- rbind(div_1m2Data, div_1m2DataOut)
 
   #################remove duplicates and combine to one data frame#####################
   ###make sure unique at each scale after combinations Need to figure out how to do unique on specific columns or get rid Different people might have measured the 1 and 10m subplots which could result in otherwise duplicate entries, for example. Maybe have to get rid of the stuff like date above?
-  data_1m2 <- unique(data_1m2)
+  div_1m2Data <- unique(div_1m2Data)
   data_10m2 <- unique(data_10m2)
   data_100m2 <- unique(data_100m2)
 
@@ -193,7 +193,7 @@ divStack <- function(
   ###this chunk combines the data from all scales of measurement into one table
 
   #data10_100_400 <- rbind(data_10m2, data_100m2)
-  data <- rbind(data_1m2, data_10m2, data_100m2, data_400m2)
+  data <- rbind(div_1m2Data, data_10m2, data_100m2, data_400m2)
 
   #remove duplicates
   divPlantPresenceData <- unique(data)

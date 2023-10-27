@@ -14,6 +14,6 @@ data_1m2 <- allDiv[["div_1m2Data"]]
 ###get 10_100
 data_10_100m2 <- allDiv[["div_10m2Data100m2Data"]]
 
-data_stacked <- divStack(
-  data_1m2 = data_1m2,
-  data_10_100m2 = data_10_100m2)
+data_stacked <- stackPlantDiv(
+  div_1m2Data = data_1m2,
+  div_10m2Data100m2Data = data_10_100m2)
