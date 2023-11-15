@@ -4,12 +4,18 @@
 \alias{stackPlantDiv}
 \title{Stack NEON plant diversity data}
 \usage{
-stackPlantDiv(div_1m2Data = NA, div_10m2Data100m2Data = NA)
+stackPlantDiv(
+  div_1m2Data = NA,
+  div_10m2Data100m2Data = NA,
+  totalSampledAreaFilter = NA
+)
 }
 \arguments{
 \item{div_1m2Data}{div_1m2Data table in NEON data produdct (Plant presence and percent cover, DP1.10058.001)}
 
 \item{div_10m2Data100m2Data}{div_10m2Data100m2Data table in NEON data produdct (Plant presence and percent cover, DP1.10058.001)}
+
+\item{totalSampledAreaFilter}{(integer, options are NA, 1, 10, 100, 400) The plot size for which data are returned. Default (NA) will return data for all plot sizes in the dataset. If you select a plot size, the function will filter the data returned to the desired plot size.}
 }
 \value{
 This function returns a data frame
@@ -31,14 +37,9 @@ allDiv <- loadByProduct(
   package = "basic",
   check.size = FALSE)
 
-##extract 1m2 data from list of lists and some processing
-data_1m2 <- allDiv[["div_1m2Data"]]
-###get 10_100
-data_10_100m2 <- allDiv[["div_10m2Data100m2Data"]]
-
 data_stacked <- stackPlantDiv(
-  div_1m2Data = data_1m2,
-  div_10m2Data100m2Data = data_10_100m2)
+  div_1m2Data = allDiv$div_1m2Data,
+  div_10m2Data100m2Data = allDiv$div_10m2Data100m2Data)
 }
 }
 \references{

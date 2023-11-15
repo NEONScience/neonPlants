@@ -28,10 +28,8 @@ RoxygenNote: 7.2.3
 Imports: 
     dplyr,
     glue,
-    httr,
     lifecycle,
     magrittr,
     rlang,
     stringr,
-    tidyr,
-    XML
+    tidyr

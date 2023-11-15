@@ -2,9 +2,6 @@
 
 export("%>%")
 export(stackPlantDiv)
-import(XML)
-import(dplyr)
-import(httr)
 import(rlang)
 importFrom(glue,glue)
 importFrom(lifecycle,deprecated)
