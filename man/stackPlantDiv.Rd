@@ -37,9 +37,17 @@ allDiv <- loadByProduct(
   package = "basic",
   check.size = FALSE)
 
+# stack all the div data
 data_stacked <- stackPlantDiv(
   div_1m2Data = allDiv$div_1m2Data,
   div_10m2Data100m2Data = allDiv$div_10m2Data100m2Data)
+
+# stack the data and filter to 10m plot
+data_stacked_10m <- stackPlantDiv(
+  div_1m2Data = allDiv$div_1m2Data,
+  div_10m2Data100m2Data = allDiv$div_10m2Data100m2Data,
+  totalSampledAreaFilter = 10)
+
 }
 }
 \references{
