@@ -27,13 +27,13 @@ reformatSubplotID <- function(x){
 #' @description Use this function to aggregate data from the NEON Plant presence and percent cover (DP1.10058.001) data product to reflect plant species present at each plot scale.
 #'
 #'
-#' @param divDataList A list of data.frames from the NEON Plant presence and percent cover (DP1.10058.001) data product as returned from neonUtilities::loadByProduct(). This list must include data.frames with the names 'div_10m2Data100m2Data' and 'div_10m2Data100m2Data'.
+#' @param divDataList A list of data.frames from the NEON Plant presence and percent cover (DP1.10058.001) data product as returned from neonUtilities::loadByProduct(). This list must include data.frames with the names 'div_1m2Data' and 'div_10m2Data100m2Data'.
 #' @param div_1m2Data (data.frame) div_1m2Data table from the NEON Plant presence and percent cover (DP1.10058.001) data product
 #' @param div_10m2Data100m2Data (data.frame) div_10m2Data100m2Data table from the NEON Plant presence and percent cover (DP1.10058.001) data product
 #' @param totalSampledAreaFilter (integer, options are NA, 1, 10, 100, 400) The plot size for which data are returned. Default (NA) will return data for all plot sizes in the dataset. If you select a plot size, the function will filter the data returned to the desired plot size.
 #'
 #' @details
-#' This function properly stacks occurrence records from the NEON Plant presence and percent cover, (DP1.10058.001) data product. Either (1) provide a list that includes data.frames named 'div_10m2Data100m2Data' and 'div_10m2Data100m2Data' or (2) pass the tables along to the function as separate data.frames.
+#' This function properly stacks occurrence records from the NEON Plant presence and percent cover, (DP1.10058.001) data product. Either (1) provide a list that includes data.frames named 'div_1m2Data' and 'div_10m2Data100m2Data' or (2) pass the tables along to the function as separate data.frames.
 #'
 #' @return This function returns a data frame
 #'
@@ -98,15 +98,15 @@ stackPlantPresence <- function(
 
   # error handling
   # check if divDataList is a list
-  if(class(divDataList) == "list"){
+  if(is(divDataList,"list")){
     if(length(
       dplyr::setdiff(
         c("div_1m2Data","div_10m2Data100m2Data"),
         names(divDataList))) == 0){
 
       # if data.frames also provided, return a warning
-      if("data.frame" %in% c(
-        class(div_1m2Data), class(div_10m2Data100m2Data))){
+      if(is(div_1m2Data, "data.frame") |
+         is(div_10m2Data100m2Data, "data.frame")){
         message("Warning: only 'divDataList' will be evaluated")
       }
 
@@ -117,11 +117,13 @@ stackPlantPresence <- function(
     }else{
       stop("please provide a list containing data.frames named 'div_1m2Data' and 'div_10m2Data100m2Data'")
     }
-  }else if(class(divDataList) == "logical"){
-    if(!(class(div_1m2Data) == "data.frame" &
-         class(div_10m2Data100m2Data) == "data.frame")){
+  }else if(is(divDataList,"logical")){
+    if(!(is(div_1m2Data,"data.frame") &
+         is(div_10m2Data100m2Data,"data.frame"))){
       stop("Please provide either a properly formatted list or properly formatted data.frames for this function to stack")
     }
+  }else if(is(divDataList,"data.frame")){
+    stop("Please provide either a properly formatted list or properly formatted data.frames for this function to stack")
   }
 
 

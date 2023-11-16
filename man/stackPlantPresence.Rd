@@ -12,7 +12,7 @@ stackPlantPresence(
 )
 }
 \arguments{
-\item{divDataList}{A list of data.frames from the NEON Plant presence and percent cover (DP1.10058.001) data product as returned from neonUtilities::loadByProduct(). This list must include data.frames with the names 'div_10m2Data100m2Data' and 'div_10m2Data100m2Data'.}
+\item{divDataList}{A list of data.frames from the NEON Plant presence and percent cover (DP1.10058.001) data product as returned from neonUtilities::loadByProduct(). This list must include data.frames with the names 'div_1m2Data' and 'div_10m2Data100m2Data'.}
 
 \item{div_1m2Data}{(data.frame) div_1m2Data table from the NEON Plant presence and percent cover (DP1.10058.001) data product}
 
@@ -27,7 +27,7 @@ This function returns a data frame
 Use this function to aggregate data from the NEON Plant presence and percent cover (DP1.10058.001) data product to reflect plant species present at each plot scale.
 }
 \details{
-This function properly stacks occurrence records from the NEON Plant presence and percent cover, (DP1.10058.001) data product. Either (1) provide a list that includes data.frames named 'div_10m2Data100m2Data' and 'div_10m2Data100m2Data' or (2) pass the tables along to the function as separate data.frames.
+This function properly stacks occurrence records from the NEON Plant presence and percent cover, (DP1.10058.001) data product. Either (1) provide a list that includes data.frames named 'div_1m2Data' and 'div_10m2Data100m2Data' or (2) pass the tables along to the function as separate data.frames.
 }
 \examples{
 \dontrun{
