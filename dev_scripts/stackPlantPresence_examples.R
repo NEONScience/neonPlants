@@ -19,21 +19,21 @@ library(neonPlants)
 allDiv <- readRDS("dev_scripts/allDiv.RDS")
 
 # stack the data
-data_stacked <- stackPlantDiv(
-  div_dataset = allDiv)
+data_stacked <- stackPlantPresence(
+  divDataList = allDiv)
 
 # send list of data using pipe
 data_stacked <- allDiv |>
-  stackPlantDiv()
+  stackPlantPresence()
 
 # filter to 10m plots
 data_stacked_10 <- allDiv |>
-  stackPlantDiv(totalSampledAreaFilter = 10)
+  stackPlantPresence(totalSampledAreaFilter = 10)
 
 
 
 # stack the data
-data_stacked <- stackPlantDiv(
+data_stacked <- stackPlantPresence(
   div_1m2Data = allDiv$div_1m2Data,
   div_10m2Data100m2Data = allDiv$div_10m2Data100m2Data)
 
@@ -42,7 +42,7 @@ data_stacked %>% names()
 data_stacked$subplotID %>% unique()
 
 # stack the data and filter to 10m plot
-data_stacked_10m <- stackPlantDiv(
+data_stacked_10m <- stackPlantPresence(
   div_1m2Data = allDiv$div_1m2Data,
   div_10m2Data100m2Data = allDiv$div_10m2Data100m2Data,
   totalSampledAreaFilter = 10)
@@ -51,7 +51,7 @@ data_stacked_10m %>% names()
 data_stacked_10m$subplotID %>% unique()
 
 # stack the data and filter to 10m plot
-data_stacked_10m <- stackPlantDiv(
+data_stacked_10m <- stackPlantPresence(
   div_1m2Data = allDiv$div_1m2Data,
   div_10m2Data100m2Data = allDiv$div_10m2Data100m2Data,
   totalSampledAreaFilter = 34)
