@@ -1,5 +1,6 @@
 # load neonUtilities
 library (neonUtilities)
+library(dplyr)
 
 # install dev version
 devtools::install_github("NEONScience/neonPlants@dev")
@@ -22,6 +23,22 @@ allDiv <- readRDS("dev_scripts/allDiv.RDS")
 data_stacked <- stackPlantPresence(
   divDataList = allDiv)
 
+# make your own list and stack the data
+my_1m_data <- allDiv$div_1m2Data
+my_10_100m_data <- allDiv$div_10m2Data100m2Data
+
+data_stacked <- stackPlantPresence(
+  divDataList = list(
+    div_1m2Data = my_1m_data,
+    div_10m2Data100m2Data = my_10_100m_data))
+
+# list with pipe
+data_stacked <- list(div_1m2Data = allDiv$div_1m2Data,
+                     div_10m2Data100m2Data = allDiv$div_10m2Data100m2Data) %>%
+  stackPlantPresence()
+
+
+
 # send list of data using pipe
 data_stacked <- allDiv |>
   stackPlantPresence()
@@ -30,10 +47,20 @@ data_stacked <- allDiv |>
 data_stacked_10 <- allDiv |>
   stackPlantPresence(totalSampledAreaFilter = 10)
 
+# filter to 10m plots
+data_stacked_10 <- allDiv %>%
+  stackPlantPresence() %>%
+  filter(totalSampledArea == 10)
 
 
 # stack the data
 data_stacked <- stackPlantPresence(
+  div_1m2Data = allDiv$div_1m2Data,
+  div_10m2Data100m2Data = allDiv$div_10m2Data100m2Data)
+
+# warning when sending a list and dataframes
+data_stacked <- stackPlantPresence(
+  divDataList = allDiv,
   div_1m2Data = allDiv$div_1m2Data,
   div_10m2Data100m2Data = allDiv$div_10m2Data100m2Data)
 

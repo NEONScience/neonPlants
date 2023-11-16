@@ -30,3 +30,10 @@ data_stacked$scientificName %>% unique()
 
 data_no_sci_name <- data_stacked %>%
   filter(is.na(scientificName))
+
+data_no_taxonID <- data_stacked %>%
+  filter(is.na(taxonID))
+# data_no_sci_name_old <- data_no_sci_name_old
+
+# old data_stacked record count = 87428
+# with dedpub by primary key count = 87256

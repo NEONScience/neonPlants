@@ -308,8 +308,16 @@ stackPlantPresence <- function(
   data_400m2$totalSampledArea <- 400
   data <- dplyr::bind_rows(div_1m2Data, data_10m2, data_100m2, data_400m2)
 
-  #remove duplicates
-  divPlantPresenceData <- data %>% dplyr::distinct()
+  #remove duplicates by primary key fields (in variables table)
+  divPlantPresenceData <- data %>%
+    dplyr::distinct(plotID,
+                    subplotID,
+                    boutNumber,
+                    eventID,
+                    taxonID,
+                    identificationQualifier,
+                    morphospeciesID,
+                    .keep_all = TRUE)
 
   #don't pass target taxa present to larger-scale subplots if not true
   divPlantPresenceData <- divPlantPresenceData %>%
@@ -319,7 +327,8 @@ stackPlantPresence <- function(
       (tot > 1 & targetTaxaPresent != "N") |
         (tot <= 1 & targetTaxaPresent == targetTaxaPresent)) %>%
     dplyr::select(-tot) %>%
-    dplyr::ungroup()
+    dplyr::ungroup() %>%
+    dplyr::filter(!is.na(scientificName)|!is.na(taxonID))
 
   # filter to totalSampledAreaFilter if necessary
   if(!is.na(totalSampledAreaFilter)){
