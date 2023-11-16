@@ -24,7 +24,7 @@ stackPlantDiv(
 This function returns a data frame
 }
 \description{
-Use this function to aggregate data from the NEON Plant presence and percent cover, (DP1.10058.001) data product to reflect plant species present at each plot scale.
+Use this function to aggregate data from the NEON Plant presence and percent cover (DP1.10058.001) data product to reflect plant species present at each plot scale.
 }
 \details{
 This function properly stacks occurrence records from the NEON Plant presence and percent cover, (DP1.10058.001) data product. Either (1) provide a list that includes data.frames named 'div_10m2Data100m2Data' and 'div_10m2Data100m2Data' or (2) pass the tables along to the function as separate data.frames.
@@ -74,4 +74,5 @@ License: GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007
 }
 \author{
 Dave T Barnett \email{dbarnettl@battelleecology.org} \cr
+Eric Sokol \email{esokol@battelleecology.org} \cr
 }

@@ -22,8 +22,9 @@ reformatSubplotID <- function(x){
 #'
 #' @author
 #' Dave T Barnett \email{dbarnettl@battelleecology.org} \cr
-#'
-#' @description Use this function to aggregate data from the NEON Plant presence and percent cover, (DP1.10058.001) data product to reflect plant species present at each plot scale.
+#' Eric Sokol \email{esokol@battelleecology.org} \cr
+
+#' @description Use this function to aggregate data from the NEON Plant presence and percent cover (DP1.10058.001) data product to reflect plant species present at each plot scale.
 #'
 #'
 #' @param div_dataset A list of data.frames from the NEON Plant presence and percent cover (DP1.10058.001) data product as returned from neonUtilities::loadByProduct(). This list must include data.frames with the names 'div_10m2Data100m2Data' and 'div_10m2Data100m2Data'.
