@@ -23,12 +23,16 @@ reformatSubplotID <- function(x){
 #' @author
 #' Dave T Barnett \email{dbarnettl@battelleecology.org} \cr
 #'
-#' @description Use this function to aggregate NEON plant presence data to reflect plant species present at each plot scale.
+#' @description Use this function to aggregate data from the NEON Plant presence and percent cover, (DP1.10058.001) data product to reflect plant species present at each plot scale.
 #'
 #'
-#' @param div_1m2Data div_1m2Data table in NEON data produdct (Plant presence and percent cover, DP1.10058.001)
-#' @param div_10m2Data100m2Data div_10m2Data100m2Data table in NEON data produdct (Plant presence and percent cover, DP1.10058.001)
+#' @param div_dataset A list of data.frames from the NEON Plant presence and percent cover (DP1.10058.001) data product as returned from neonUtilities::loadByProduct(). This list must include data.frames with the names 'div_10m2Data100m2Data' and 'div_10m2Data100m2Data'.
+#' @param div_1m2Data (data.frame) div_1m2Data table from the NEON Plant presence and percent cover (DP1.10058.001) data product
+#' @param div_10m2Data100m2Data (data.frame) div_10m2Data100m2Data table from the NEON Plant presence and percent cover (DP1.10058.001) data product
 #' @param totalSampledAreaFilter (integer, options are NA, 1, 10, 100, 400) The plot size for which data are returned. Default (NA) will return data for all plot sizes in the dataset. If you select a plot size, the function will filter the data returned to the desired plot size.
+#'
+#' @details
+#' This function properly stacks occurrence records from the NEON Plant presence and percent cover, (DP1.10058.001) data product. Either (1) provide a list that includes data.frames named 'div_10m2Data100m2Data' and 'div_10m2Data100m2Data' or (2) pass the tables along to the function as separate data.frames.
 #'
 #' @return This function returns a data frame
 #'
@@ -51,7 +55,20 @@ reformatSubplotID <- function(x){
 #'   package = "basic",
 #'   check.size = FALSE)
 #'
-#' # stack all the div data
+#' # stack the data by sending the list returned by neonUtilities::loadByProduct
+#' data_stacked <- stackPlantDiv(
+#'   div_dataset = allDiv)
+#'
+#' # send list of data using pipe
+#' data_stacked <- allDiv |>
+#'   stackPlantDiv()
+#'
+#' # filter to 10m plots
+#' data_stacked_10 <- allDiv |>
+#'   stackPlantDiv(totalSampledAreaFilter = 10)
+#'
+#'
+#' # stack all the div data by sending the tables as separate data.frames
 #' data_stacked <- stackPlantDiv(
 #'   div_1m2Data = allDiv$div_1m2Data,
 #'   div_10m2Data100m2Data = allDiv$div_10m2Data100m2Data)
@@ -73,9 +90,38 @@ reformatSubplotID <- function(x){
 ##############################################################################################
 
 stackPlantDiv <- function(
+    div_dataset = NA,
     div_1m2Data = NA,
     div_10m2Data100m2Data = NA,
     totalSampledAreaFilter = NA){
+
+  # error handling
+  # check if div_dataset is a list
+  if(class(div_dataset) == "list"){
+    if(length(
+      dplyr::setdiff(
+        c("div_1m2Data","div_10m2Data100m2Data"),
+        names(div_dataset))) == 0){
+
+      # if data.frames also provided, return a warning
+      if("data.frame" %in% c(
+        class(div_1m2Data), class(div_10m2Data100m2Data))){
+        message("Warning: only 'div_dataset' will be evaluated")
+      }
+
+      # extract data.frames from div_dataset list
+      div_1m2Data <- div_dataset$div_1m2Data
+      div_10m2Data100m2Data <- div_dataset$div_10m2Data100m2Data
+
+    }else{
+      stop("please provide a list containing data.frames named 'div_1m2Data' and 'div_10m2Data100m2Data'")
+    }
+  }else if(class(div_dataset) == "logical"){
+    if(!(class(div_1m2Data) == "data.frame" &
+         class(div_10m2Data100m2Data) == "data.frame")){
+      stop("Please provide either a properly formatted list or properly formatted data.frames for this function to stack")
+    }
+  }
 
 
   # reformat subplotID

@@ -5,15 +5,18 @@
 \title{Stack NEON plant diversity data}
 \usage{
 stackPlantDiv(
+  div_dataset = NA,
   div_1m2Data = NA,
   div_10m2Data100m2Data = NA,
   totalSampledAreaFilter = NA
 )
 }
 \arguments{
-\item{div_1m2Data}{div_1m2Data table in NEON data produdct (Plant presence and percent cover, DP1.10058.001)}
+\item{div_dataset}{A list of data.frames from the NEON Plant presence and percent cover (DP1.10058.001) data product as returned from neonUtilities::loadByProduct(). This list must include data.frames with the names 'div_10m2Data100m2Data' and 'div_10m2Data100m2Data'.}
 
-\item{div_10m2Data100m2Data}{div_10m2Data100m2Data table in NEON data produdct (Plant presence and percent cover, DP1.10058.001)}
+\item{div_1m2Data}{(data.frame) div_1m2Data table from the NEON Plant presence and percent cover (DP1.10058.001) data product}
+
+\item{div_10m2Data100m2Data}{(data.frame) div_10m2Data100m2Data table from the NEON Plant presence and percent cover (DP1.10058.001) data product}
 
 \item{totalSampledAreaFilter}{(integer, options are NA, 1, 10, 100, 400) The plot size for which data are returned. Default (NA) will return data for all plot sizes in the dataset. If you select a plot size, the function will filter the data returned to the desired plot size.}
 }
@@ -21,7 +24,10 @@ stackPlantDiv(
 This function returns a data frame
 }
 \description{
-Use this function to aggregate NEON plant presence data to reflect plant species present at each plot scale.
+Use this function to aggregate data from the NEON Plant presence and percent cover, (DP1.10058.001) data product to reflect plant species present at each plot scale.
+}
+\details{
+This function properly stacks occurrence records from the NEON Plant presence and percent cover, (DP1.10058.001) data product. Either (1) provide a list that includes data.frames named 'div_10m2Data100m2Data' and 'div_10m2Data100m2Data' or (2) pass the tables along to the function as separate data.frames.
 }
 \examples{
 \dontrun{
@@ -37,7 +43,20 @@ allDiv <- loadByProduct(
   package = "basic",
   check.size = FALSE)
 
-# stack all the div data
+# stack the data by sending the list returned by neonUtilities::loadByProduct
+data_stacked <- stackPlantDiv(
+  div_dataset = allDiv)
+
+# send list of data using pipe
+data_stacked <- allDiv |>
+  stackPlantDiv()
+
+# filter to 10m plots
+data_stacked_10 <- allDiv |>
+  stackPlantDiv(totalSampledAreaFilter = 10)
+
+
+# stack all the div data by sending the tables as separate data.frames
 data_stacked <- stackPlantDiv(
   div_1m2Data = allDiv$div_1m2Data,
   div_10m2Data100m2Data = allDiv$div_10m2Data100m2Data)

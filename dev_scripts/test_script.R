@@ -18,6 +18,19 @@ library(neonPlants)
 
 allDiv <- readRDS("dev_scripts/allDiv.RDS")
 
+# stack the data
+data_stacked <- stackPlantDiv(
+  div_dataset = allDiv)
+
+# send list of data using pipe
+data_stacked <- allDiv |>
+  stackPlantDiv()
+
+# filter to 10m plots
+data_stacked_10 <- allDiv |>
+  stackPlantDiv(totalSampledAreaFilter = 10)
+
+
 
 # stack the data
 data_stacked <- stackPlantDiv(
