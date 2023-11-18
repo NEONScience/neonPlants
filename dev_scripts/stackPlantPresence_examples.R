@@ -2,7 +2,8 @@
 library (neonUtilities)
 library(dplyr)
 
-# install dev version
+# install latest dev version
+detach(package:neonPlants)
 devtools::install_github("NEONScience/neonPlants@dev")
 library(neonPlants)
 

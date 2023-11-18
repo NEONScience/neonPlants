@@ -2,21 +2,12 @@
 % Please edit documentation in R/stackPlantPresence.R
 \name{stackPlantPresence}
 \alias{stackPlantPresence}
-\title{Stack NEON plant diversity data}
+\title{Stack NEON plant occurrence data}
 \usage{
-stackPlantPresence(
-  divDataList = NA,
-  div_1m2Data = NA,
-  div_10m2Data100m2Data = NA,
-  totalSampledAreaFilter = NA
-)
+stackPlantPresence(divDataList = NA, totalSampledAreaFilter = NA_integer_)
 }
 \arguments{
 \item{divDataList}{A list of data.frames from the NEON Plant presence and percent cover (DP1.10058.001) data product as returned from neonUtilities::loadByProduct(). This list must include data.frames with the names 'div_1m2Data' and 'div_10m2Data100m2Data'.}
-
-\item{div_1m2Data}{(data.frame) div_1m2Data table from the NEON Plant presence and percent cover (DP1.10058.001) data product}
-
-\item{div_10m2Data100m2Data}{(data.frame) div_10m2Data100m2Data table from the NEON Plant presence and percent cover (DP1.10058.001) data product}
 
 \item{totalSampledAreaFilter}{(integer, options are NA, 1, 10, 100, 400) The plot size for which data are returned. Default (NA) will return data for all plot sizes in the dataset. If you select a plot size, the function will filter the data returned to the desired plot size.}
 }
@@ -24,16 +15,17 @@ stackPlantPresence(
 This function returns a data frame
 }
 \description{
-Use this function to aggregate data from the NEON Plant presence and percent cover (DP1.10058.001) data product to reflect plant species present at each plot scale.
+Use this function to aggregate the occurrence data from the NEON Plant presence and percent cover (DP1.10058.001) data product to list the plant species present at each plot scale.
 }
 \details{
-This function properly stacks occurrence records from the NEON Plant presence and percent cover, (DP1.10058.001) data product. Either (1) provide a list that includes data.frames named 'div_1m2Data' and 'div_10m2Data100m2Data' or (2) pass the tables along to the function as separate data.frames.
+This function properly stacks occurrence records from the NEON Plant presence and percent cover, (DP1.10058.001) data product. Provide a list that includes data.frames named 'div_1m2Data' and 'div_10m2Data100m2Data' and this function will properly stack the occurrence data for each plot scale. If you only want to return a species list for one plot scale, use the totalSampledAreaFilter parameter to select the scale (1, 10, 100, or 400m). If totalSampledAreaFilter is NA (default), then the function will return a data.frame with the occurrence records for all plot scales, and you will need to filter the output to get species lists for each plot scale.
 }
 \examples{
 \dontrun{
 
-# load neonUtilities
-library (neonUtilities)
+# load additional packages for these examples
+library(neonUtilities)
+library(dplyr)
 
 # get data
 allDiv <- loadByProduct(
@@ -43,30 +35,49 @@ allDiv <- loadByProduct(
   package = "basic",
   check.size = FALSE)
 
+
 # stack the data by sending the list returned by neonUtilities::loadByProduct
 data_stacked <- stackPlantPresence(
   divDataList = allDiv)
 
+
 # send list of data using pipe
-data_stacked <- allDiv |>
+data_stacked <- allDiv \%>\%
   stackPlantPresence()
 
+
 # filter to 10m plots
-data_stacked_10 <- allDiv |>
+data_stacked_10 <- allDiv \%>\%
   stackPlantPresence(totalSampledAreaFilter = 10)
 
 
-# stack all the div data by sending the tables as separate data.frames
+# filter to 10m plots outside of the stackPlantPresence function
+data_stacked_10 <- allDiv \%>\%
+  stackPlantPresence() \%>\%
+  filter(totalSampledArea == 10)
+
+
+# make your own list and stack the data
+my_1m_data <- allDiv$div_1m2Data
+my_10_100m_data <- allDiv$div_10m2Data100m2Data
+
 data_stacked <- stackPlantPresence(
-  div_1m2Data = allDiv$div_1m2Data,
-  div_10m2Data100m2Data = allDiv$div_10m2Data100m2Data)
+  divDataList = list(
+    div_1m2Data = my_1m_data,
+    div_10m2Data100m2Data = my_10_100m_data))
 
-# stack the data and filter to 10m plot
-data_stacked_10m <- stackPlantPresence(
-  div_1m2Data = allDiv$div_1m2Data,
-  div_10m2Data100m2Data = allDiv$div_10m2Data100m2Data,
-  totalSampledAreaFilter = 10)
 
+# filter tables to a single plot, then stack the data
+my_1m_data_SRER_43 <- my_1m_data \%>\%
+  filter(namedLocation == "SRER_043.basePlot.div")
+
+my_10_100m_data_SRER_43 <- my_10_100m_data \%>\%
+  filter(namedLocation == "SRER_043.basePlot.div")
+
+data_stacked_SRER_43 <- stackPlantPresence(
+  divDataList = list(
+    div_1m2Data = my_1m_data_SRER_43,
+    div_10m2Data100m2Data = my_10_100m_data_SRER_43))
 }
 }
 \references{

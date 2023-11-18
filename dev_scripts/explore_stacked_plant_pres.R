@@ -37,3 +37,6 @@ data_no_taxonID <- data_stacked %>%
 
 # old data_stacked record count = 87428
 # with dedpub by primary key count = 87256
+
+div_richness <- data_stacked %>%
+  group_by(domainID, siteID, namedLocation, eventID)
