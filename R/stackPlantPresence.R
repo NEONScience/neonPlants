@@ -114,7 +114,7 @@ stackPlantPresence <- function(
 
   # error handling
   # check if divDataList is a list
-  if(methods:is(divDataList,"list")){
+  if(methods::is(divDataList,"list")){
 
     # check that the div 1m and 10_100m data.frames are in the list
     if(length(

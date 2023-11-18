@@ -30,6 +30,7 @@ Imports:
     glue,
     lifecycle,
     magrittr,
+    methods,
     rlang,
     stringr,
     tidyr
