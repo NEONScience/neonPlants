@@ -38,3 +38,4 @@ vignettes/*.pdf
 # R Environment Variables
 .Renviron
 .Rproj.user
+dev_scripts/RELEASE-2024/
