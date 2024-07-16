@@ -12,7 +12,10 @@ bbc <- neonUtilities::loadByProduct(dpID = "DP1.10067.001",
                                     token = Sys.getenv("NEON_TOKEN"))
 
 vars <- bbc$variables_10067
-bbc_rootmass <- bbc$bbc_rootmass
+rootMass <- bbc$bbc_rootmass
+rootPool <- bbc$bbc_chemistryPooling
+rootChem <- bbc$bbc_rootChemistry
+
 
 ### Root mass required columns
 domainID
