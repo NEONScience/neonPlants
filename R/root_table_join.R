@@ -102,7 +102,7 @@ root_table_join <- function(input_mass,
 
   ##  Summarise rootChem table: Calculate means for analytical replicates;
   ##  data with QF values other than "OK" in any QF column are removed first.
-  temp <- rootChem %>%
+  temp1 <- rootChem %>%
     dplyr::group_by(cnSampleID) %>%
     dplyr::reframe(d15N = round(mean(d15N, na.rm = TRUE), digits = 1),
                    d13C = round(mean(d13C, na.rm = TRUE), digits = 1),
@@ -117,6 +117,31 @@ root_table_join <- function(input_mass,
                    chemRemarks = ifelse(is.na(remarks), NA, paste(remarks, collapse = ", "))) %>%
     dplyr::mutate(across(everything(), ~replace(., . == "NA", NA)),
                   across(everything(), ~replace(., . == "NaN", NA)))
+  
+  temp2 <- rootChem %>%
+    dplyr::group_by(cnSampleID) %>%
+    dplyr::summarise(d15N = round(mean(d15N, na.rm = TRUE), digits = 1),
+                     d13C = round(mean(d13C, na.rm = TRUE), digits = 1),
+                     nitrogenPercent = round(mean(nitrogenPercent, na.rm = TRUE), digits = 2),
+                     carbonPercent = round(mean(carbonPercent, na.rm = TRUE), digits =1),
+                     CNratio = round(mean(CNratio, na.rm = TRUE), digits = 1))
+  
+  temp3 <- rootChem %>%
+    dplyr::group_by(cnSampleID) %>%
+    dplyr::summarise(chemRepCount = n(),
+                     #d15N = round(mean(d15N, na.rm = TRUE), digits = 1),
+                     d15N = dplyr::case_when(all(is.na(d15N)) ~ NA,
+                                             TRUE ~ round(mean(d15N, na.rm = TRUE), digits = 1)),
+                     d13C = round(mean(d13C, na.rm = TRUE), digits = 1),
+                     nitrogenPercent = round(mean(nitrogenPercent, na.rm = TRUE), digits = 2),
+                     carbonPercent = round(mean(carbonPercent, na.rm = TRUE), digits =1),
+                     CNratio = round(mean(CNratio, na.rm = FALSE), digits = 1),
+                     cnIsotopeQF = dplyr::case_when(all(cnIsotopeQF == "OK") ~ "OK",
+                                                    all(is.na(cnIsotopeQF)) ~ NA,
+                                                    TRUE ~ paste(cnIsotopeQF, collapse = ", ")),
+                     cnPercentQF = dplyr::case_when(all(cnPercentQF == "OK") ~ "OK",
+                                                    TRUE ~ paste(cnPercentQF, collapse = ", "))
+                     )
 
 
 
