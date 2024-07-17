@@ -3,13 +3,16 @@
 
 #' @author Courtney Meier \email{cmeier@battelleecology.org} \cr
 
-#' @description Using NEON Plant Belowground Biomass data (DP1.10067.001) from the NEON Data
-#' Portal, or input data tables with an equivalent structure, this function uses the bbc_rootmass,
-#' bbc_chemistryPooling, and bbc_rootChemistry tables to generate a single table that contains
-#' both mass and chemistry data for each sizeCategory within a given sampleID.
+#' @description Using NEON Plant Belowground Biomass data (DP1.10067.001) retrieved using the
+#' neonUtilities::loadByProduct() function (preferred), downloaded from the NEON Data Portal,
+#' or input data tables with an equivalent structure and representing the same site x month
+#' combinations, this function joins the bbc_rootmass, bbc_chemistryPooling, and bbc_rootChemistry
+#' tables to generate a single table that contains both mass and chemistry data for each sampleID.
 #'
 #' @details For table joining to be successful, all input data frames must contain data from the
-#' same site x month combination(s).
+#' same site x month combination(s). When analytical replicates exist in the bbc_rootChemistry
+#' table, this function returns the mean and concatenates analyte-specific QF values, dataQF
+#' values, and bbc_rootChemistry remarks into a single string for all analytical replicates.
 #'
 #' @param input_mass The 'bbc_rootmass' table for the site x month combination(s) of interest.
 #' [data.frame]
@@ -63,7 +66,7 @@ root_table_join <- function(input_mass,
   rootChem <- input_chem
 
   #   Check for required columns
-  chemExpCols <- c("")
+  chemExpCols <- c("cnSampleID", "d15N", "d13C", "")
 
 
 
@@ -100,14 +103,24 @@ root_table_join <- function(input_mass,
   ##  Summarise rootChem table: Calculate means for analytical replicates;
   ##  data with QF values other than "OK" in any QF column are removed first.
   temp <- rootChem %>%
-    #--> add na.rm = TRUE to mean() arguments...
-
-  bbc_rootchem <- bbc_rootchem %>%
     dplyr::group_by(cnSampleID) %>%
-    dplyr::summarise(nitrogenPercent = mean(nitrogenPercent),
-                     carbonPercent = mean(carbonPercent),
-                     CNratio = mean(CNratio),
-                     .groups = "drop")
+    dplyr::reframe(d15N = round(mean(d15N, na.rm = TRUE), digits = 1),
+                   d13C = round(mean(d13C, na.rm = TRUE), digits = 1),
+                   nitrogenPercent = round(mean(nitrogenPercent, na.rm = TRUE), digits = 2),
+                   carbonPercent = round(mean(carbonPercent, na.rm = TRUE), digits =1),
+                   CNratio = round(mean(CNratio, na.rm = TRUE), digits = 1),
+                   cnIsotopeQF = paste(cnIsotopeQF, collapse = ", "),
+                   cnPercentQF = paste(cnPercentQF, collapse = ", "),
+                   isotopeAccuracyQF = paste(isotopeAccuracyQF, collapse = ", "),
+                   percentAccuracyQF = paste(percentAccuracyQF, collapse = ", "),
+                   chemDataQF = ifelse(is.na(dataQF), NA, paste(dataQF, collapse = ", ")),
+                   chemRemarks = ifelse(is.na(remarks), NA, paste(remarks, collapse = ", "))) %>%
+    dplyr::mutate(across(everything(), ~replace(., . == "NA", NA)),
+                  across(everything(), ~replace(., . == "NaN", NA)))
+
+
+
+
 
 
 

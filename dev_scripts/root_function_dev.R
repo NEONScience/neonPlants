@@ -1,6 +1,7 @@
 ### Scratchpad for neonPlants root function development ####
 
 #   Retrieve bbc data from NEON Portal
+library(dplyr)
 library(neonUtilities)
 
 bbc <- neonUtilities::loadByProduct(dpID = "DP1.10067.001",
