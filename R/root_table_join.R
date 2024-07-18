@@ -66,7 +66,17 @@ root_table_join <- function(input_mass,
   rootChem <- input_chem
 
   #   Check for required columns
-  chemExpCols <- c("cnSampleID", "d15N", "d13C", "")
+  chemExpCols <- c("cnSampleID", "d15N", "d13C", "nitrogenPercent", "carbonPercent", "CNratio",
+                   "cnIsotopeQF", "cnPercentQF", "isotopeAccuracyQF", "percentAccuracyQF", "dataQF", "remarks")
+  
+  if (length(setdiff(chemExpCols, colnames(rootChem))) > 0) {
+    stop(glue::glue("Expected columns missing from input_chem: {setdiff(chemExpCols, colnames(rootChem))}"))
+  }
+  
+  #   Check for data
+  if (nrow(rootChem) == 0) {
+    stop(glue::glue("Table input_chem has no data."))
+  }
 
 
 
@@ -100,48 +110,36 @@ root_table_join <- function(input_mass,
     dplyr::select(-subsampleIDList)
 
 
-  ##  Summarise rootChem table: Calculate means for analytical replicates;
-  ##  data with QF values other than "OK" in any QF column are removed first.
-  temp1 <- rootChem %>%
+  ##  Summarise rootChem table: Calculate means for analytical replicates and preserve QF values
+  rootChem <- rootChem %>%
     dplyr::group_by(cnSampleID) %>%
-    dplyr::reframe(d15N = round(mean(d15N, na.rm = TRUE), digits = 1),
-                   d13C = round(mean(d13C, na.rm = TRUE), digits = 1),
-                   nitrogenPercent = round(mean(nitrogenPercent, na.rm = TRUE), digits = 2),
-                   carbonPercent = round(mean(carbonPercent, na.rm = TRUE), digits =1),
-                   CNratio = round(mean(CNratio, na.rm = TRUE), digits = 1),
-                   cnIsotopeQF = paste(cnIsotopeQF, collapse = ", "),
-                   cnPercentQF = paste(cnPercentQF, collapse = ", "),
-                   isotopeAccuracyQF = paste(isotopeAccuracyQF, collapse = ", "),
-                   percentAccuracyQF = paste(percentAccuracyQF, collapse = ", "),
-                   chemDataQF = ifelse(is.na(dataQF), NA, paste(dataQF, collapse = ", ")),
-                   chemRemarks = ifelse(is.na(remarks), NA, paste(remarks, collapse = ", "))) %>%
-    dplyr::mutate(across(everything(), ~replace(., . == "NA", NA)),
-                  across(everything(), ~replace(., . == "NaN", NA)))
-  
-  temp2 <- rootChem %>%
-    dplyr::group_by(cnSampleID) %>%
-    dplyr::summarise(d15N = round(mean(d15N, na.rm = TRUE), digits = 1),
-                     d13C = round(mean(d13C, na.rm = TRUE), digits = 1),
-                     nitrogenPercent = round(mean(nitrogenPercent, na.rm = TRUE), digits = 2),
-                     carbonPercent = round(mean(carbonPercent, na.rm = TRUE), digits =1),
-                     CNratio = round(mean(CNratio, na.rm = TRUE), digits = 1))
-  
-  temp3 <- rootChem %>%
-    dplyr::group_by(cnSampleID) %>%
-    dplyr::summarise(chemRepCount = n(),
-                     #d15N = round(mean(d15N, na.rm = TRUE), digits = 1),
+    dplyr::summarise(analyticalRepCount = n(),
                      d15N = dplyr::case_when(all(is.na(d15N)) ~ NA,
                                              TRUE ~ round(mean(d15N, na.rm = TRUE), digits = 1)),
-                     d13C = round(mean(d13C, na.rm = TRUE), digits = 1),
-                     nitrogenPercent = round(mean(nitrogenPercent, na.rm = TRUE), digits = 2),
-                     carbonPercent = round(mean(carbonPercent, na.rm = TRUE), digits =1),
-                     CNratio = round(mean(CNratio, na.rm = FALSE), digits = 1),
+                     d13C = dplyr::case_when(all(is.na(d13C)) ~ NA,
+                                             TRUE ~ round(mean(d13C, na.rm = TRUE), digits = 1)),
+                     nitrogenPercent = dplyr::case_when(all(is.na(nitrogenPercent)) ~ NA,
+                                                        TRUE ~ round(mean(nitrogenPercent, na.rm = TRUE), digits = 2)),
+                     carbonPercent = dplyr::case_when(all(is.na(carbonPercent)) ~ NA,
+                                                      TRUE ~ round(mean(carbonPercent, na.rm = TRUE), digits =1)),
+                     CNratio = dplyr::case_when(all(is.na(CNratio)) ~ NA,
+                                                TRUE ~ round(mean(CNratio, na.rm = FALSE), digits = 1)),
                      cnIsotopeQF = dplyr::case_when(all(cnIsotopeQF == "OK") ~ "OK",
                                                     all(is.na(cnIsotopeQF)) ~ NA,
                                                     TRUE ~ paste(cnIsotopeQF, collapse = ", ")),
                      cnPercentQF = dplyr::case_when(all(cnPercentQF == "OK") ~ "OK",
-                                                    TRUE ~ paste(cnPercentQF, collapse = ", "))
-                     )
+                                                    all(is.na(cnPercentQF)) ~ NA,
+                                                    TRUE ~ paste(cnPercentQF, collapse = ", ")),
+                     isotopeAccuracyQF = dplyr::case_when(all(isotopeAccuracyQF == "OK") ~ "OK",
+                                                          all(is.na(isotopeAccuracyQF)) ~ NA,
+                                                          TRUE ~ paste(isotopeAccuracyQF, collapse = ", ")),
+                     percentAccuracyQF = dplyr::case_when(all(percentAccuracyQF == "OK") ~ "OK",
+                                                          all(is.na(percentAccuracyQF)) ~ NA,
+                                                          TRUE ~ paste(percentAccuracyQF, collapse = ", ")),
+                     rootChemistryDataQF = dplyr::case_when(all(is.na(dataQF)) ~ NA,
+                                                            TRUE ~ paste(dataQF, collapse = ", ")),
+                     rootChemistryRemarks = dplyr::case_when(all(is.na(remarks)) ~ NA,
+                                                             TRUE ~ paste(remarks, collapse = ", ")))
 
 
 
@@ -149,4 +147,4 @@ root_table_join <- function(input_mass,
 
 
 
-}
+} # end function
