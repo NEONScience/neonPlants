@@ -34,6 +34,22 @@
 #' 
 #' @examples
 #' \dontrun{
+#' #   Obtain NEON Plant Belowground Biomass data
+#' bbc <- neonUtilities::loadByProduct(
+#' dpID = "DP1.10067.001",
+#' site = "all",
+#' startdate = "2022-07",
+#' enddate = "2022-08",
+#' tabl = "all",
+#' check.size = FALSE
+#' )
+#' 
+#' #   Join downloaded root data
+#' df <- neonPlants::root_table_join(
+#' input_mass = bbc$bbc_rootmass,
+#' input_pool = bbc$bbc_chemistryPooling,
+#' input_chem = bbc$bbc_rootChemistry
+#' )
 #'
 #' }
 #' 
