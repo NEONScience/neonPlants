@@ -17,38 +17,48 @@ bbc1 <- neonUtilities::loadByProduct(dpID = "DP1.10067.001",
                                      token = Sys.getenv("NEON_TOKEN"))
 
 vars <- bbc1$variables_10067
-rootMass <- bbc1$bbc_rootmass
-rootPool <- bbc1$bbc_chemistryPooling
-rootChem <- bbc1$bbc_rootChemistry
+rootMass1 <- bbc1$bbc_rootmass
+rootPool1 <- bbc1$bbc_chemistryPooling
+rootChem1 <- bbc1$bbc_rootChemistry
 
-inputTest1 <- root_table_join(input_mass = bbc1$bbc_rootmass,
+outputTest1 <- root_table_join(input_mass = bbc1$bbc_rootmass,
                               input_pool = bbc1$bbc_chemistryPooling,
                               input_chem = bbc1$bbc_rootChemistry)
 
 
-#   Older dataset for bbc_rootmass that has rootStatus == "live" and "dead"
+#   Older dataset for bbc_rootmass that has rootStatus == "live" and "dead"; stopped sorting in 2021
 bbc2 <- neonUtilities::loadByProduct(dpID = "DP1.10067.001",
                                      site = "all",
-                                     startdate = "2017-07",
-                                     enddate = "2017-08",
+                                     startdate = "2018-07",
+                                     enddate = "2018-08",
                                      tabl = "all",
                                      check.size = FALSE,
                                      token = Sys.getenv("NEON_TOKEN"))
 
-vars <- bbc1$variables_10067
-rootMass <- bbc2$bbc_rootmass
-rootPool <- bbc2$bbc_chemistryPooling
-rootChem <- bbc2$bbc_rootChemistry
+vars <- bbc2$variables_10067
+rootMass2 <- bbc2$bbc_rootmass
+rootPool2 <- bbc2$bbc_chemistryPooling
+rootChem2 <- bbc2$bbc_rootChemistry
 
-inputTest2 <- root_table_join(input_mass = bbc2$bbc_rootmass,
-                              input_pool = bbc2$bbc_chemistryPooling,
-                              input_chem = bbc2$bbc_rootChemistry)
+#   Write out test datasets for testthat
+testDataPath <- "tests/testthat/testdata"
+
+saveRDS(object = rootMass2, 
+        file = paste(testDataPath, "root_table_join-valid-mass.RDS", sep = "/"))
+
+saveRDS(object = rootPool2,
+        file = paste(testDataPath, "root_table_join-valid-pool.RDS", sep = "/"))
+
+#   Evaluate function output
+outputTest2 <- neonPlants::root_table_join(input_mass = rootMass2,
+                                           input_pool = rootPool2,
+                                           input_chem = rootChem2)
 
 
 #   Input with input_mass missing one or more required columns
 testMass <- rootMass %>% dplyr::select(-rootStatus)
 
-inputTest3 <- root_table_join(input_mass = testMass,
+outputTest3 <- root_table_join(input_mass = testMass,
                               input_pool = bbc2$bbc_chemistryPooling,
                               input_chem = bbc2$bbc_rootChemistry)
 
@@ -57,7 +67,7 @@ inputTest3 <- root_table_join(input_mass = testMass,
 #   Input with input_mass missing all data
 testMass <- rootMass %>% dplyr::filter(rootStatus == "unicorn")
 
-inputTest4 <- root_table_join(input_mass = testMass,
+outputTest4 <- root_table_join(input_mass = testMass,
                               input_pool = bbc2$bbc_chemistryPooling,
                               input_chem = bbc2$bbc_rootChemistry)
 
