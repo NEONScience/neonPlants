@@ -43,3 +43,23 @@ rootChem <- bbc2$bbc_rootChemistry
 inputTest2 <- root_table_join(input_mass = bbc2$bbc_rootmass,
                               input_pool = bbc2$bbc_chemistryPooling,
                               input_chem = bbc2$bbc_rootChemistry)
+
+
+#   Input with input_mass missing one or more required columns
+testMass <- rootMass %>% dplyr::select(-rootStatus)
+
+inputTest3 <- root_table_join(input_mass = testMass,
+                              input_pool = bbc2$bbc_chemistryPooling,
+                              input_chem = bbc2$bbc_rootChemistry)
+
+#--> returns expected error message for single missing column and when missing two columns
+
+#   Input with input_mass missing all data
+testMass <- rootMass %>% dplyr::filter(rootStatus == "unicorn")
+
+inputTest4 <- root_table_join(input_mass = testMass,
+                              input_pool = bbc2$bbc_chemistryPooling,
+                              input_chem = bbc2$bbc_rootChemistry)
+
+
+

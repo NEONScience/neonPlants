@@ -19,7 +19,7 @@ Authors@R:
              family = "Meier",
              role = c("aut"),
              email = "cmeier@BattelleEcology.org",
-             comment = c(ORCID = "0000-0003-3576-883X")),
+             comment = c(ORCID = "0000-0003-3576-883X"))
              )
 Description: Library of R functions to work with NEON plant data.
 License: GPL (>= 3)
@@ -29,7 +29,7 @@ Suggests:
 Config/testthat/edition: 3
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.2
 Imports: 
     dplyr,
     glue,

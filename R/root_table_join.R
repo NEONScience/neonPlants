@@ -52,7 +52,8 @@ root_table_join <- function(input_mass,
   massExpCols <- c("domainID", "siteID", "plotID", "sampleID", "subsampleID", "rootStatus", "dryMass")
   
   if (length(setdiff(massExpCols, colnames(rootMass))) > 0) {
-    stop(glue::glue("Expected columns missing from input_mass: {setdiff(massExpCols, colnames(rootMass))}"))
+    #stop(glue::glue("Expected columns missing from input_mass: {setdiff(massExpCols, colnames(rootMass))}"))
+    stop(glue::glue('Required columns missing from input_mass: {paste(setdiff(massExpCols, colnames(rootMass)), collapse = ", ")}'))
   }
   
   #   Check for data
@@ -69,7 +70,7 @@ root_table_join <- function(input_mass,
   poolExpCols <- c("domainID", "siteID", "plotID", "subsampleIDList", "cnSampleID")
 
   if (length(setdiff(poolExpCols, colnames(rootPool))) > 0) {
-    stop(glue::glue("Expected columns missing from input_pool: {setdiff(poolExpCols, colnames(rootPool))}"))
+    stop(glue::glue('Required columns missing from input_pool: {paste(setdiff(poolExpCols, colnames(rootPool)), collapse = ", ")}'))
   }
 
   #   Check for data
@@ -88,7 +89,7 @@ root_table_join <- function(input_mass,
                    "cnIsotopeQF", "cnPercentQF", "isotopeAccuracyQF", "percentAccuracyQF", "dataQF", "remarks")
   
   if (length(setdiff(chemExpCols, colnames(rootChem))) > 0) {
-    stop(glue::glue("Expected columns missing from input_chem: {setdiff(chemExpCols, colnames(rootChem))}"))
+    stop(glue::glue('Required columns missing from input_chem: {paste(setdiff(chemExpCols, colnames(rootChem)), collapse = ", ")}'))
   }
   
   #   Check for data
