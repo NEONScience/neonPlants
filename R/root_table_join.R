@@ -140,6 +140,9 @@ root_table_join <- function(input_mass,
                                                             TRUE ~ paste(dataQF, collapse = ", ")),
                      rootChemistryRemarks = dplyr::case_when(all(is.na(remarks)) ~ NA,
                                                              TRUE ~ paste(remarks, collapse = ", ")))
+  
+  
+  ##  --> begin again with joining rootChem with rootPool, then joined result with rootMass
 
 
 
