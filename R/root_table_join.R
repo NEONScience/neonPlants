@@ -3,16 +3,22 @@
 
 #' @author Courtney Meier \email{cmeier@battelleecology.org} \cr
 
-#' @description Using NEON Plant Belowground Biomass data (DP1.10067.001) retrieved using the
-#' neonUtilities::loadByProduct() function (preferred), downloaded from the NEON Data Portal,
-#' or input data tables with an equivalent structure and representing the same site x month
-#' combinations, this function joins the bbc_rootmass, bbc_chemistryPooling, and bbc_rootChemistry
-#' tables to generate a single table that contains both mass and chemistry data for each sampleID.
+#' @description This function uses NEON Plant Belowground Biomass data (DP1.10067.001) retrieved 
+#' using the neonUtilities::loadByProduct() function (preferred), downloaded from the NEON Data 
+#' Portal, or input data tables with an equivalent structure and representing the same site x month
+#' combinations. The function joins the bbc_rootmass, bbc_chemistryPooling, and bbc_rootChemistry
+#' tables to generate a single table that contains both mass and chemistry data for each sampleID
+#' and subsampleID (i.e., sizeCategory).
 #'
 #' @details For table joining to be successful, all input data frames must contain data from the
 #' same site x month combination(s). When analytical replicates exist in the bbc_rootChemistry
 #' table, this function returns the mean and concatenates analyte-specific QF values, dataQF
-#' values, and bbc_rootChemistry remarks into a single string for all analytical replicates.
+#' values, and remarks into a single string for all analytical replicates. 
+#' 
+#' In the joined output table, 'rootChemistryDataQF' and 'rootChemistryRemarks' are new fields 
+#' that result from the concatenation described above, and there is a new 'analyticalRepCount'
+#' field to document the number of analytical replicates associated with each chemistry data 
+#' point.
 #'
 #' @param input_mass The 'bbc_rootmass' table for the site x month combination(s) of interest.
 #' [data.frame]
@@ -20,15 +26,17 @@
 #' interest. [data.frame]
 #' @param input_chem The 'bbc_rootChemistry' table for the site x month combination(s) of
 #' interest. [data.frame]
-
+#' 
 #' @return A table containing both root mass and root chemistry data in the same row for
-#' different root sizeCategories within a sampleID.
-
+#' different root sizeCategories (i.e., subsampleIDs) within a sampleID. The subsampleIDs in 
+#' older data with rootStatus == "dead" do not have root chemistry data, and the function returns
+#' these rows with no chemistry data.
+#' 
 #' @examples
 #' \dontrun{
 #'
 #' }
-
+#' 
 #' @export root_table_join
 
 ###################################################################################################
@@ -39,8 +47,18 @@ root_table_join <- function(input_mass,
 
   ### Verify user-supplied input_mass table contains correct data
   rootMass <- input_mass
-
-
+  
+  #   Check for required columns
+  massExpCols <- c("domainID", "siteID", "plotID", "sampleID", "subsampleID", "rootStatus", "dryMass")
+  
+  if (length(setdiff(massExpCols, colnames(rootMass))) > 0) {
+    stop(glue::glue("Expected columns missing from input_mass: {setdiff(massExpCols, colnames(rootMass))}"))
+  }
+  
+  #   Check for data
+  if (nrow(rootMass) == 0) {
+    stop(glue::glue("Table input_mass has no data."))
+  }
 
 
 
@@ -137,17 +155,46 @@ root_table_join <- function(input_mass,
                                                           all(is.na(percentAccuracyQF)) ~ NA,
                                                           TRUE ~ paste(percentAccuracyQF, collapse = ", ")),
                      rootChemistryDataQF = dplyr::case_when(all(is.na(dataQF)) ~ NA,
+                                                            dplyr::n_distinct(dataQF, na.rm = TRUE) == 1 ~ unique(dataQF),
                                                             TRUE ~ paste(dataQF, collapse = ", ")),
                      rootChemistryRemarks = dplyr::case_when(all(is.na(remarks)) ~ NA,
+                                                             dplyr::n_distinct(remarks, na.rm = TRUE) == 1 ~ unique(remarks),
                                                              TRUE ~ paste(remarks, collapse = ", ")))
   
   
-  ##  --> begin again with joining rootChem with rootPool, then joined result with rootMass
-
-
-
-
-
+  ##  Join rootPool and rootChem tables
+  rootChem <- rootPool %>%
+    dplyr::left_join(rootChem,
+                     by = "cnSampleID")
+  
+  
+  
+  ### Associate root mass data with root chemistry data
+  #   Note: qaDryMass == TRUE samples are not filtered out.
+  #   Note: for older data, rootStatus == "dead" are filtered out since these have no chem data but
+  #         share the same subsampleID as the "live" samples that do have chem data. The "dead" samples
+  #         are then added back to the joined data frame via bind.
+  
+  #   Identify rootStatus == "dead" samples
+  tempDead <- rootMass %>%
+    dplyr::filter(rootStatus == "dead")
+  
+  #   Join rootStatus == "live" and NA rootMass data with rootChem data
+  rootMass <- rootMass %>%
+    dplyr::filter(is.na(rootStatus) | rootStatus == "live") %>%
+    dplyr::left_join(rootChem,
+                     by = c("domainID", "siteID", "plotID", "subsampleID")) %>%
+    dplyr::bind_rows(tempDead) %>%
+    dplyr::arrange(domainID,
+                   siteID,
+                   plotID,
+                   sampleID,
+                   subsampleID)
+  
+  
+  
+  ### Return function output
+  return(rootMass)
 
 
 } # end function
