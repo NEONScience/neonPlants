@@ -49,10 +49,15 @@ saveRDS(object = rootMass2,
 saveRDS(object = rootPool2,
         file = paste(testDataPath, "root_table_join-valid-pool.RDS", sep = "/"))
 
+saveRDS(object = rootChem2,
+        file = paste(testDataPath, "root_table_join-valid-chem.RDS", sep = "/"))
+
 #   Evaluate function output
-outputTest2 <- neonPlants::root_table_join(input_mass = rootMass2,
-                                           input_pool = rootPool2,
-                                           input_chem = rootChem2)
+outputTest2 <- root_table_join(input_mass = rootMass2,
+                               input_pool = rootPool2,
+                               input_chem = rootChem2)
+
+
 
 
 #   Input with input_mass missing one or more required columns

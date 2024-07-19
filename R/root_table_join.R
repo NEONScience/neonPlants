@@ -148,7 +148,7 @@ root_table_join <- function(input_mass,
   ##  Summarise rootChem table: Calculate means for analytical replicates and preserve QF values
   rootChem <- rootChem %>%
     dplyr::group_by(cnSampleID) %>%
-    dplyr::summarise(analyticalRepCount = n(),
+    dplyr::summarise(analyticalRepCount = dplyr::n(),
                      d15N = dplyr::case_when(all(is.na(d15N)) ~ NA,
                                              TRUE ~ round(mean(d15N, na.rm = TRUE), digits = 1)),
                      d13C = dplyr::case_when(all(is.na(d13C)) ~ NA,
@@ -172,11 +172,14 @@ root_table_join <- function(input_mass,
                                                           all(is.na(percentAccuracyQF)) ~ NA,
                                                           TRUE ~ paste(percentAccuracyQF, collapse = ", ")),
                      rootChemistryDataQF = dplyr::case_when(all(is.na(dataQF)) ~ NA,
-                                                            dplyr::n_distinct(dataQF, na.rm = TRUE) == 1 ~ unique(dataQF),
+                                                            dplyr::n_distinct(dataQF, na.rm = TRUE) == 1 ~ 
+                                                              paste(unique(dataQF[!is.na(dataQF)]), collapse = ", "),
                                                             TRUE ~ paste(dataQF, collapse = ", ")),
                      rootChemistryRemarks = dplyr::case_when(all(is.na(remarks)) ~ NA,
-                                                             dplyr::n_distinct(remarks, na.rm = TRUE) == 1 ~ unique(remarks),
-                                                             TRUE ~ paste(remarks, collapse = ", ")))
+                                                             dplyr::n_distinct(remarks, na.rm = TRUE) == 1 ~ 
+                                                               paste(unique(remarks[!is.na(remarks)]), collapse = ", "),
+                                                             TRUE ~ paste(remarks, collapse = ", ")),
+                     .groups = "drop")
   
   
   ##  Join rootPool and rootChem tables
@@ -212,6 +215,5 @@ root_table_join <- function(input_mass,
   
   ### Return function output
   return(rootMass)
-
 
 } # end function
