@@ -6,12 +6,12 @@
 #' @description This function uses NEON Plant Belowground Biomass data (DP1.10067.001) retrieved 
 #' using the neonUtilities::loadByProduct() function (preferred), downloaded from the NEON Data 
 #' Portal, or input data tables with an equivalent structure and representing the same site x month
-#' combinations. The function joins the bbc_rootmass, bbc_chemistryPooling, and bbc_rootChemistry
+#' combinations. The function joins the 'bbc_rootmass', 'bbc_chemistryPooling', and 'bbc_rootChemistry'
 #' tables to generate a single table that contains both mass and chemistry data for each sampleID
 #' and subsampleID (i.e., sizeCategory).
 #'
 #' @details For table joining to be successful, all input data frames must contain data from the
-#' same site x month combination(s). When analytical replicates exist in the bbc_rootChemistry
+#' same site x month combination(s). When analytical replicates exist in the 'bbc_rootChemistry'
 #' table, this function returns the mean and concatenates analyte-specific QF values, dataQF
 #' values, and remarks into a single string for all analytical replicates. 
 #' 
@@ -20,11 +20,11 @@
 #' field to document the number of analytical replicates associated with each chemistry data 
 #' point.
 #'
-#' @param input_mass The 'bbc_rootmass' table for the site x month combination(s) of interest.
+#' @param inputMass The 'bbc_rootmass' table for the site x month combination(s) of interest.
 #' [data.frame]
-#' @param input_pool The 'bbc_chemistryPooling' table for the site x month combination(s) of
+#' @param inputPool The 'bbc_chemistryPooling' table for the site x month combination(s) of
 #' interest. [data.frame]
-#' @param input_chem The 'bbc_rootChemistry' table for the site x month combination(s) of
+#' @param inputChem The 'bbc_rootChemistry' table for the site x month combination(s) of
 #' interest. [data.frame]
 #' 
 #' @return A table containing both root mass and root chemistry data in the same row for
@@ -45,72 +45,74 @@
 #' )
 #' 
 #' #   Join downloaded root data
-#' df <- neonPlants::root_table_join(
-#' input_mass = bbc$bbc_rootmass,
-#' input_pool = bbc$bbc_chemistryPooling,
-#' input_chem = bbc$bbc_rootChemistry
+#' df <- neonPlants::rootTableJoin(
+#' inputMass = bbc$bbc_rootmass,
+#' inputPool = bbc$bbc_chemistryPooling,
+#' inputChem = bbc$bbc_rootChemistry
 #' )
 #'
 #' }
 #' 
-#' @export root_table_join
+#' @export rootTableJoin
 
 ###################################################################################################
 
-root_table_join <- function(input_mass,
-                            input_pool,
-                            input_chem) {
-
-  ### Verify user-supplied input_mass table contains correct data
-  rootMass <- input_mass
+rootTableJoin <- function(inputMass,
+                          inputPool,
+                          inputChem) {
+  
+  ### Verify user-supplied inputMass table contains correct data
+  rootMass <- inputMass
   
   #   Check for required columns
   massExpCols <- c("domainID", "siteID", "plotID", "sampleID", "subsampleID", "rootStatus", "dryMass")
   
   if (length(setdiff(massExpCols, colnames(rootMass))) > 0) {
-    #stop(glue::glue("Expected columns missing from input_mass: {setdiff(massExpCols, colnames(rootMass))}"))
-    stop(glue::glue('Required columns missing from input_mass: {paste(setdiff(massExpCols, colnames(rootMass)), collapse = ", ")}'))
+    #stop(glue::glue("Expected columns missing from inputMass: {setdiff(massExpCols, colnames(rootMass))}"))
+    stop(glue::glue("Required columns missing from 'inputMass':", '{paste(setdiff(massExpCols, colnames(rootMass)), collapse = ", ")}',
+                    .sep = " "))
   }
   
   #   Check for data
   if (nrow(rootMass) == 0) {
-    stop(glue::glue("Table input_mass has no data."))
+    stop(glue::glue("Table 'inputMass' has no data."))
   }
 
 
 
-  ### Verify user-supplied input_pool table contains correct data
-  rootPool <- input_pool
+  ### Verify user-supplied inputPool table contains correct data
+  rootPool <- inputPool
 
   #   Check for required columns
   poolExpCols <- c("domainID", "siteID", "plotID", "subsampleIDList", "cnSampleID")
 
   if (length(setdiff(poolExpCols, colnames(rootPool))) > 0) {
-    stop(glue::glue('Required columns missing from input_pool: {paste(setdiff(poolExpCols, colnames(rootPool)), collapse = ", ")}'))
+    stop(glue::glue("Required columns missing from 'inputPool':", '{paste(setdiff(poolExpCols, colnames(rootPool)), collapse = ", ")}',
+                    .sep = " "))
   }
 
   #   Check for data
   if (nrow(rootPool) == 0) {
-    stop(glue::glue("Table input_pool has no data."))
+    stop(glue::glue("Table 'inputPool' has no data."))
   }
 
 
 
-
-  ### Verify user-supplied input_chem table contains correct data
-  rootChem <- input_chem
+  ### Verify user-supplied inputChem table contains correct data
+  rootChem <- inputChem
 
   #   Check for required columns
   chemExpCols <- c("cnSampleID", "d15N", "d13C", "nitrogenPercent", "carbonPercent", "CNratio",
                    "cnIsotopeQF", "cnPercentQF", "isotopeAccuracyQF", "percentAccuracyQF", "dataQF", "remarks")
   
   if (length(setdiff(chemExpCols, colnames(rootChem))) > 0) {
-    stop(glue::glue('Required columns missing from input_chem: {paste(setdiff(chemExpCols, colnames(rootChem)), collapse = ", ")}'))
+    stop(glue::glue("Required columns missing from 'inputChem':", '{paste(setdiff(chemExpCols, colnames(rootChem)), collapse = ", ")}',
+                    .sep = " "))
   }
   
   #   Check for data
   if (nrow(rootChem) == 0) {
-    stop(glue::glue("Table input_chem has no data."))
+    stop(glue::glue("Table 'inputChem' has no data."))
   }
 
 
