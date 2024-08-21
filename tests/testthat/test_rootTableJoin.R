@@ -8,28 +8,36 @@ testChem <- readRDS(testthat::test_path("testdata", "rootTableJoin-valid-chem.RD
 
 
 
-### Test expected output type
+### Test: Function generates expected output type
 testthat::test_that(desc = "Output type", {
   
-  temp <- rootTableJoin(inputMass = testMass,
-                        inputPool = testPool,
-                        inputChem = testChem)
-  
-  testthat::expect_type(object = temp,
+  testthat::expect_type(object = rootTableJoin(inputMass = testMass,
+                                               inputPool = testPool,
+                                               inputChem = testChem),
                         type = "list")
   
 })
 
 
 
-### Test expected errors for issues with inputMass table
+### Test: Function generates expected output class
+testthat::test_that(desc = "Output class", {
+  
+  testthat::expect_s3_class(object = rootTableJoin(inputMass = testMass,
+                                                   inputPool = testPool,
+                                                   inputChem = testChem),
+                            class = "data.frame")
+  
+})
+
+
+
+### Test: Generate expected errors for issues with inputMass table
 # Test when inputMass lacks required column
 testthat::test_that(desc = "Table 'inputMass' missing column", {
   
-  tempMass <- testMass %>%
-    dplyr::select(-dryMass)
-  
-  testthat::expect_error(object = rootTableJoin(inputMass = tempMass,
+  testthat::expect_error(object = rootTableJoin(inputMass = testMass %>%
+                                                  dplyr::select(-dryMass),
                                                 inputPool = testPool,
                                                 inputChem = testChem),
                          regexp = "Required columns missing from 'inputMass': dryMass")
@@ -38,10 +46,8 @@ testthat::test_that(desc = "Table 'inputMass' missing column", {
 #   Test when inputMass has no data
 testthat::test_that(desc = "Table 'inputMass' missing data", {
   
-  tempMass <- testMass %>%
-    dplyr::filter(uid == "coconut")
-  
-  testthat::expect_error(object = rootTableJoin(inputMass = tempMass,
+  testthat::expect_error(object = rootTableJoin(inputMass = testMass %>%
+                                                  dplyr::filter(uid == "coconut"),
                                                 inputPool = testPool,
                                                 inputChem = testChem),
                          regexp = "Table 'inputMass' has no data.")
@@ -49,6 +55,51 @@ testthat::test_that(desc = "Table 'inputMass' missing data", {
 
 
 
-### Test expected errors for issues with inputPool table
-#   --> begin again here
+### Test: Generate expected errors for issues with inputPool table
+#   Test when inputPool lacks required column
+testthat::test_that(desc = "Table 'inputPool' missing column", {
+  
+  testthat::expect_error(object = rootTableJoin(inputMass = testMass,
+                                                inputPool = testPool %>%
+                                                  dplyr::select(-cnSampleID),
+                                                inputChem = testChem),
+                         regexp = "Required columns missing from 'inputPool': cnSampleID")
+  
+})
+
+#   Test when inputPool has no data
+testthat::test_that(desc = "Table 'inputPool' missing data", {
+  
+  testthat::expect_error(object = rootTableJoin(inputMass = testMass,
+                                                inputPool = testPool %>%
+                                                  dplyr::filter(uid == "doppelganger"),
+                                                inputChem = testChem),
+                         regexp = "Table 'inputPool' has no data.")
+  
+})
+
+
+
+### Test: Generate expected errors for issues with inputChem table 
+#   Test when inputChem lacks required column
+testthat::test_that(desc = "Table 'inputChem' missing column", {
+  
+  testthat::expect_error(object = rootTableJoin(inputMass = testMass,
+                                                inputPool = testPool,
+                                                inputChem = testChem %>%
+                                                  dplyr::select(-d15N)),
+                         regexp = "Required columns missing from 'inputChem': d15N")
+  
+})
+
+#   Test when inputChem has no data
+testthat::test_that(desc = "Table 'inputChem' missing data", {
+  
+  testthat::expect_error(object = rootTableJoin(inputMass = testMass,
+                                                inputPool = testPool,
+                                                inputChem = testChem %>%
+                                                  dplyr::filter(uid == "ministry")),
+                         regexp = "Table 'inputChem' has no data.")
+  
+})
 

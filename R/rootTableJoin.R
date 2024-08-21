@@ -121,35 +121,35 @@ rootTableJoin <- function(inputMass,
   ### Join rootChem and rootPool tables to associate the cnSampleID with the rootMass subsampleID
   #   Select needed columns from rootPool
   rootPool <- rootPool %>%
-    dplyr::select(domainID,
-                  siteID,
-                  plotID,
-                  subsampleIDList,
-                  cnSampleID)
+    dplyr::select(.data$domainID,
+                  .data$siteID,
+                  .data$plotID,
+                  .data$subsampleIDList,
+                  .data$cnSampleID)
 
 
   ##  Expand subsampleIDList if "|" exists in string; pivot_longer() approach preserves all columns in input df
   rootPool <- rootPool %>%
     #   tempSub1: If subsampleIDList contains pipe, extract everything before pipe
     #   tempSub2: If subsamleIDList contains pipe, extract everything after pipe
-    dplyr::mutate(tempSub1 = dplyr::case_when(grepl("\\|", subsampleIDList) ~ stringr::str_extract(subsampleIDList,
-                                                                                                   pattern = "^.*?(?=\\|)"),
-                                              TRUE ~ subsampleIDList),
-                  tempSub2 = dplyr::case_when(grepl("\\|", subsampleIDList) ~ stringr::str_extract(subsampleIDList,
-                                                                                                   pattern = "[^\\|]*$"),
-                                              TRUE ~ NA)) %>%
-    tidyr::pivot_longer(cols = c(tempSub1, tempSub2),
+    dplyr::mutate(tempSub1 = dplyr::case_when(grepl("\\|", .data$subsampleIDList) ~ stringr::str_extract(.data$subsampleIDList,
+                                                                                                               pattern = "^.*?(?=\\|)"),
+                                                    TRUE ~ .data$subsampleIDList),
+                  tempSub2 = dplyr::case_when(grepl("\\|", .data$subsampleIDList) ~ stringr::str_extract(.data$subsampleIDList,
+                                                                                                               pattern = "[^\\|]*$"),
+                                                    TRUE ~ NA)) %>%
+    tidyr::pivot_longer(cols = c(.data$tempSub1, .data$tempSub2),
                         names_to = NULL,
                         values_to = "subsampleID") %>%
-    dplyr::relocate(subsampleID,
-                    .before = cnSampleID) %>%
-    dplyr::filter(!is.na(subsampleID)) %>%
-    dplyr::select(-subsampleIDList)
+    dplyr::relocate(.data$subsampleID,
+                    .before = .data$cnSampleID) %>%
+    dplyr::filter(!is.na(.data$subsampleID)) %>%
+    dplyr::select(-.data$subsampleIDList)
 
 
   ##  Summarise rootChem table: Calculate means for analytical replicates and preserve QF values
   rootChem <- rootChem %>%
-    dplyr::group_by(cnSampleID) %>%
+    dplyr::group_by(.data$cnSampleID) %>%
     dplyr::summarise(analyticalRepCount = dplyr::n(),
                      d15N = dplyr::case_when(all(is.na(d15N)) ~ NA,
                                              TRUE ~ round(mean(d15N, na.rm = TRUE), digits = 1)),
@@ -199,19 +199,19 @@ rootTableJoin <- function(inputMass,
   
   #   Identify rootStatus == "dead" samples
   tempDead <- rootMass %>%
-    dplyr::filter(rootStatus == "dead")
+    dplyr::filter(.data$rootStatus == "dead")
   
   #   Join rootStatus == "live" and NA rootMass data with rootChem data
   rootMass <- rootMass %>%
-    dplyr::filter(is.na(rootStatus) | rootStatus == "live") %>%
+    dplyr::filter(is.na(.data$rootStatus) | .data$rootStatus == "live") %>%
     dplyr::left_join(rootChem,
                      by = c("domainID", "siteID", "plotID", "subsampleID")) %>%
     dplyr::bind_rows(tempDead) %>%
-    dplyr::arrange(domainID,
-                   siteID,
-                   plotID,
-                   sampleID,
-                   subsampleID)
+    dplyr::arrange(.data$domainID,
+                   .data$siteID,
+                   .data$plotID,
+                   .data$sampleID,
+                   .data$subsampleID)
   
   
   
