@@ -45,7 +45,7 @@
 #' )
 #' 
 #' #   Join downloaded root data
-#' df <- neonPlants::rootTableJoin(
+#' df <- neonPlants::rootChemJoin(
 #' inputMass = bbc$bbc_rootmass,
 #' inputPool = bbc$bbc_chemistryPooling,
 #' inputChem = bbc$bbc_rootChemistry
@@ -53,13 +53,13 @@
 #'
 #' }
 #' 
-#' @export rootTableJoin
+#' @export rootChemJoin
 
 ###################################################################################################
 
-rootTableJoin <- function(inputMass,
-                          inputPool,
-                          inputChem) {
+rootChemJoin <- function(inputMass,
+                         inputPool,
+                         inputChem) {
   
   ### Verify user-supplied inputMass table contains correct data
   rootMass <- inputMass
