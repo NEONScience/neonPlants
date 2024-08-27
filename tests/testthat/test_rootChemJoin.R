@@ -1,17 +1,17 @@
-### Unit tests for rootTableJoin function ####
+### Unit tests for rootChemJoin function ####
 ### POC: Courtney Meier, cmeier@BattelleEcology.org
 
 ### Read in test data
-testMass <- readRDS(testthat::test_path("testdata", "rootTableJoin-valid-mass.RDS"))
-testPool <- readRDS(testthat::test_path("testdata", "rootTableJoin-valid-pool.RDS"))
-testChem <- readRDS(testthat::test_path("testdata", "rootTableJoin-valid-chem.RDS"))
+testMass <- readRDS(testthat::test_path("testdata", "rootChemJoin-valid-mass.RDS"))
+testPool <- readRDS(testthat::test_path("testdata", "rootChemJoin-valid-pool.RDS"))
+testChem <- readRDS(testthat::test_path("testdata", "rootChemJoin-valid-chem.RDS"))
 
 
 
 ### Test: Function generates expected output type
 testthat::test_that(desc = "Output type", {
   
-  testthat::expect_type(object = rootTableJoin(inputMass = testMass,
+  testthat::expect_type(object = rootChemJoin(inputMass = testMass,
                                                inputPool = testPool,
                                                inputChem = testChem),
                         type = "list")
@@ -23,7 +23,7 @@ testthat::test_that(desc = "Output type", {
 ### Test: Function generates expected output class
 testthat::test_that(desc = "Output class", {
   
-  testthat::expect_s3_class(object = rootTableJoin(inputMass = testMass,
+  testthat::expect_s3_class(object = rootChemJoin(inputMass = testMass,
                                                    inputPool = testPool,
                                                    inputChem = testChem),
                             class = "data.frame")
@@ -36,7 +36,7 @@ testthat::test_that(desc = "Output class", {
 # Test when inputMass lacks required column
 testthat::test_that(desc = "Table 'inputMass' missing column", {
   
-  testthat::expect_error(object = rootTableJoin(inputMass = testMass %>%
+  testthat::expect_error(object = rootChemJoin(inputMass = testMass %>%
                                                   dplyr::select(-dryMass),
                                                 inputPool = testPool,
                                                 inputChem = testChem),
@@ -46,7 +46,7 @@ testthat::test_that(desc = "Table 'inputMass' missing column", {
 #   Test when inputMass has no data
 testthat::test_that(desc = "Table 'inputMass' missing data", {
   
-  testthat::expect_error(object = rootTableJoin(inputMass = testMass %>%
+  testthat::expect_error(object = rootChemJoin(inputMass = testMass %>%
                                                   dplyr::filter(uid == "coconut"),
                                                 inputPool = testPool,
                                                 inputChem = testChem),
@@ -59,7 +59,7 @@ testthat::test_that(desc = "Table 'inputMass' missing data", {
 #   Test when inputPool lacks required column
 testthat::test_that(desc = "Table 'inputPool' missing column", {
   
-  testthat::expect_error(object = rootTableJoin(inputMass = testMass,
+  testthat::expect_error(object = rootChemJoin(inputMass = testMass,
                                                 inputPool = testPool %>%
                                                   dplyr::select(-cnSampleID),
                                                 inputChem = testChem),
@@ -70,7 +70,7 @@ testthat::test_that(desc = "Table 'inputPool' missing column", {
 #   Test when inputPool has no data
 testthat::test_that(desc = "Table 'inputPool' missing data", {
   
-  testthat::expect_error(object = rootTableJoin(inputMass = testMass,
+  testthat::expect_error(object = rootChemJoin(inputMass = testMass,
                                                 inputPool = testPool %>%
                                                   dplyr::filter(uid == "doppelganger"),
                                                 inputChem = testChem),
@@ -84,7 +84,7 @@ testthat::test_that(desc = "Table 'inputPool' missing data", {
 #   Test when inputChem lacks required column
 testthat::test_that(desc = "Table 'inputChem' missing column", {
   
-  testthat::expect_error(object = rootTableJoin(inputMass = testMass,
+  testthat::expect_error(object = rootChemJoin(inputMass = testMass,
                                                 inputPool = testPool,
                                                 inputChem = testChem %>%
                                                   dplyr::select(-d15N)),
@@ -95,7 +95,7 @@ testthat::test_that(desc = "Table 'inputChem' missing column", {
 #   Test when inputChem has no data
 testthat::test_that(desc = "Table 'inputChem' missing data", {
   
-  testthat::expect_error(object = rootTableJoin(inputMass = testMass,
+  testthat::expect_error(object = rootChemJoin(inputMass = testMass,
                                                 inputPool = testPool,
                                                 inputChem = testChem %>%
                                                   dplyr::filter(uid == "ministry")),
