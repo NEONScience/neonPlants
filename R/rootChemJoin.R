@@ -22,8 +22,10 @@
 #'
 #' @param inputMass The 'bbc_rootmass' table for the site x month combination(s) of interest.
 #' [data.frame]
+#' 
 #' @param inputPool The 'bbc_chemistryPooling' table for the site x month combination(s) of
 #' interest. [data.frame]
+#' 
 #' @param inputChem The 'bbc_rootChemistry' table for the site x month combination(s) of
 #' interest. [data.frame]
 #' 
@@ -68,7 +70,6 @@ rootChemJoin <- function(inputMass,
   massExpCols <- c("domainID", "siteID", "plotID", "sampleID", "subsampleID", "rootStatus", "dryMass")
   
   if (length(setdiff(massExpCols, colnames(rootMass))) > 0) {
-    #stop(glue::glue("Expected columns missing from inputMass: {setdiff(massExpCols, colnames(rootMass))}"))
     stop(glue::glue("Required columns missing from 'inputMass':", '{paste(setdiff(massExpCols, colnames(rootMass)), collapse = ", ")}',
                     .sep = " "))
   }
