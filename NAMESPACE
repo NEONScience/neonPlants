@@ -2,6 +2,7 @@
 
 export("%>%")
 export(rootChemJoin)
+export(rootMassStandardize)
 export(stackPlantPresence)
 import(rlang)
 importFrom(glue,glue)

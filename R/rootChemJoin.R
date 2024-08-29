@@ -21,13 +21,13 @@
 #' point.
 #'
 #' @param inputMass The 'bbc_rootmass' table for the site x month combination(s) of interest.
-#' [data.frame]
+#' (required) [data.frame]
 #' 
 #' @param inputPool The 'bbc_chemistryPooling' table for the site x month combination(s) of
-#' interest. [data.frame]
+#' interest (required). [data.frame]
 #' 
 #' @param inputChem The 'bbc_rootChemistry' table for the site x month combination(s) of
-#' interest. [data.frame]
+#' interest (required). [data.frame]
 #' 
 #' @return A table containing both root mass and root chemistry data in the same row for
 #' different root sizeCategories (i.e., subsampleIDs) within a sampleID. The subsampleIDs in 

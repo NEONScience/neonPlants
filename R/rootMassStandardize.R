@@ -1,5 +1,5 @@
 ###################################################################################################
-#' @title Standardize Root Dry Mass Data to Current Size Category and Root Status Bins
+#' @title Standardize Root Dry Mass Data to Current Size Category Bins
 
 #' @author Courtney Meier \email{cmeier@battelleecology.org} \cr
 
@@ -16,12 +16,11 @@
 #' @details NEON weighs a minimum of 5% of samples a second time so that data users can estimate
 #' the uncertainty associated with different technicians weighing dried roots; QA samples of this
 #' nature are identified via qaDryMass == "Y". The function calculates the mean when QA masses 
-#' exist and creates a new 'repCount' field to document the number of replicates. When QA replicates
-#' exist, any 'remarks' are concatenated. Samples with Sampling Impractical values other than "OK"
+#' exist and any 'remarks' are concatenated. Samples with Sampling Impractical values other than "OK"
 #' are removed prior to summarizing the input data.
 #'
-#' @param inputMass The 'bbc_rootmass' table for the site x month combination(s) of interest.
-#' [data.frame]#' 
+#' @param inputMass The 'bbc_rootmass' table for the site x month combination(s) of interest
+#' (required). [data.frame]
 #' 
 #' @return A table containing root mass data for three sizeCategories (< 1mm, 1-2mm, and 2-10mm)
 #' and dryMass values pooled across previously utilized "live/dead" rootStatus categories. The 
@@ -39,7 +38,7 @@
 #' check.size = FALSE
 #' )
 #' 
-#' #   Join downloaded root data
+#' #   Standardize downloaded root data to current sizeCategories and rootStatus
 #' df <- neonPlants::rootMassStandardize(
 #' inputMass = bbc$bbc_rootmass
 #' )
@@ -82,8 +81,7 @@ rootMassStandardize <- function(inputMass) {
                     .data$subsampleID,
                     .data$sizeCategory,
                     .data$rootStatus) %>%
-    dplyr::summarise(repCount = dplyr::n(),
-                     dryMass = dplyr::case_when(all(is.na(dryMass)) ~ NA,
+    dplyr::summarise(dryMass = dplyr::case_when(all(is.na(dryMass)) ~ NA,
                                                 TRUE ~ round(mean(dryMass, na.rm = TRUE), digits = 4)),
                      mycorrhizaeVisible = dplyr::case_when(all(is.na(mycorrhizaeVisible)) ~ NA,
                                                            dplyr::n_distinct(mycorrhizaeVisible, na.rm = TRUE) == 1 ~ 
@@ -94,9 +92,72 @@ rootMassStandardize <- function(inputMass) {
                                                   paste(unique(remarks[!is.na(remarks)]), collapse = ", "),
                                                 TRUE ~ paste(remarks, collapse = ", ")),
                      .groups = "drop")
-  #--> appears to work just fine
   
   
+  
+  ### Combine live/dead root mass into single dryMass
+  rootMass <- rootMass %>%
+    dplyr::group_by(.data$domainID,
+                    .data$siteID,
+                    .data$plotID,
+                    .data$collectDate,
+                    .data$sampleID,
+                    .data$sizeCategory) %>%
+    dplyr::summarise(subsampleID = glue::glue(unique(.data$sampleID), unique(.data$sizeCategory), .sep = "."),
+                     dryMass = sum(dryMass, na.rm = TRUE),
+                     mycorrhizaeVisible = dplyr::case_when(all(is.na(mycorrhizaeVisible)) ~ NA,
+                                                           dplyr::n_distinct(mycorrhizaeVisible, na.rm = TRUE) == 1 ~ 
+                                                             paste(unique(mycorrhizaeVisible[!is.na(mycorrhizaeVisible)]), collapse = ", "),
+                                                           TRUE ~ paste(mycorrhizaeVisible, collapse = ", ")),
+                     remarks = dplyr::case_when(all(is.na(remarks)) ~ NA,
+                                                dplyr::n_distinct(remarks, na.rm = TRUE) == 1 ~ 
+                                                  paste(unique(remarks[!is.na(remarks)]), collapse = ", "),
+                                                TRUE ~ paste(remarks, collapse = ", ")),
+                     .groups = "drop") 
+  
+  rootMass <- rootMass %>%
+    dplyr::relocate(.data$sizeCategory,
+                    .after = .data$subsampleID)
+  
+  
+  
+  ### Combine < 0.5mm and 0.5-1mm sizeCategory dryMass into single 0-1mm sizeCategory
+  olderFineMass <- rootMass %>%
+    dplyr::filter(.data$sizeCategory %in% c("0-05", "05-1")) %>%
+    dplyr::group_by(.data$domainID,
+                    .data$siteID,
+                    .data$plotID,
+                    .data$collectDate,
+                    .data$sampleID) %>%
+    dplyr::summarise(dryMass = sum(dryMass, na.rm = TRUE),
+                     mycorrhizaeVisible = dplyr::case_when(all(is.na(mycorrhizaeVisible)) ~ NA,
+                                                           dplyr::n_distinct(mycorrhizaeVisible, na.rm = TRUE) == 1 ~ 
+                                                             paste(unique(mycorrhizaeVisible[!is.na(mycorrhizaeVisible)]), collapse = ", "),
+                                                           TRUE ~ paste(mycorrhizaeVisible, collapse = ", ")),
+                     remarks = dplyr::case_when(all(is.na(remarks)) ~ NA,
+                                                dplyr::n_distinct(remarks, na.rm = TRUE) == 1 ~ 
+                                                  paste(unique(remarks[!is.na(remarks)]), collapse = ", "),
+                                                TRUE ~ paste(remarks, collapse = ", ")),
+                     .groups = "drop") 
+  
+  olderFineMass <- olderFineMass %>%
+    dplyr::mutate(subsampleID = paste(.data$sampleID, "0-1", sep = "."),
+                  sizeCategory = "0-1",
+                  .after = sampleID)
+  
+  rootMass <- rootMass %>%
+    dplyr::filter(!.data$sizeCategory %in% c("0-05", "05-1")) %>%
+    dplyr::bind_rows(olderFineMass) %>%
+    dplyr::arrange(.data$domainID,
+                   .data$siteID,
+                   .data$plotID,
+                   .data$sampleID,
+                   .data$sizeCategory)
+  
+  
+  
+  ### Return output
+  return(rootMass)
   
 } # end function
 

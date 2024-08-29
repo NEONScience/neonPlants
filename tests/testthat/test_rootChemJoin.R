@@ -2,9 +2,9 @@
 ### POC: Courtney Meier, cmeier@BattelleEcology.org
 
 ### Read in test data
-testMass <- readRDS(testthat::test_path("testdata", "rootChemJoin-valid-mass.RDS"))
-testPool <- readRDS(testthat::test_path("testdata", "rootChemJoin-valid-pool.RDS"))
-testChem <- readRDS(testthat::test_path("testdata", "rootChemJoin-valid-chem.RDS"))
+testMass <- readRDS(testthat::test_path("testdata", "valid-rootmass-201807.RDS"))
+testPool <- readRDS(testthat::test_path("testdata", "valid-rootpool-201807.RDS"))
+testChem <- readRDS(testthat::test_path("testdata", "valid-rootchem-201807.RDS"))
 
 
 

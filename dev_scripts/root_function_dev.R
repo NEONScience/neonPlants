@@ -78,3 +78,22 @@ outputTest4 <- root_table_join(input_mass = testMass,
 
 
 
+### Evaluate function output for rootMassStandardize()
+#   Test for output using testMass data frame
+stdTest1 <- neonPlants::rootMassStandardize(inputMass = testMass)
+
+#   Test when no data frame input supplied
+stdTest2 <- neonPlants::rootMassStandardize()
+#--> expected error 'argument "inputMass" is missing, with no default'
+
+stdTest3 <- neonPlants::rootMassStandardize(inputMass = testMass %>%
+                                              dplyr::select(-dryMass))
+#--> expected error "Required columns missing from 'inputMass': dryMass
+
+stdTest3 <- neonPlants::rootMassStandardize(inputMass = testMass %>%
+                                              dplyr::filter(uid == "mangrove"))
+#--> expected error "Table 'inputMass' has no data"
+
+
+
+
