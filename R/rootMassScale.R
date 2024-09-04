@@ -4,8 +4,8 @@
 #' @author Courtney Meier \email{cmeier@battelleecology.org} \cr
 
 #' @description Join NEON Plant Belowground Biomass data tables (DP1.10067.001) to calculate fine 
-#' root biomass by sizeCategory per unit area and per unit soil volume, as well as total fine root
-#' biomass. Fine root fragment mass (root fragments < 1 cm length) can optionally be calculated 
+#' root biomass by sizeCategory as well as total fine root biomass per unit area and per unit soil
+#' volume. Fine root fragment mass (root fragments < 1 cm length) can optionally be calculated 
 #' for the subset of cores for which it is generated, and fragment mass is not included in the summed
 #' total fine root biomass.
 #' 
@@ -32,13 +32,18 @@
 #' @param inputDilution The 'bbc_dilution' table for the site x month combination(s) of interest
 #' (optional, defaults to NA). [data.frame]
 #' 
-#' @return A table containing root mass data per unit area or per unit volume for three 
-#' sizeCategories (< 1mm, 1-2mm, and 2-10mm) as well as total fine root biomass summed across all
-#' sizeCategories. The output no longer contains the 'rootStatus' field.
+#' @param includeFragments Indicator to determine whether mass of root fragments < 1 cm length 
+#' calculated from dilution sampling should be included in the 'totalDryMass' outputs. Defaults
+#' to FALSE. If set to TRUE, the 'bbc_dilution' table must be provided to the 'inputDilution' 
+#' argument. [logical]
+#' 
+#' @return A table containing root mass data per unit area ("g/m2") and per unit volume ("g/m3")
+#' for three sizeCategories (< 1mm, 1-2mm, and 2-10mm) as well as total fine root biomass summed 
+#' across all sizeCategories. The output no longer contains the 'rootStatus' field.
 #' 
 #' @examples
 #' \dontrun{
-#' #   Obtain NEON Plant Belowground Biomass data
+#' #   Obtain NEON Plant Belowground Biomass core data
 #' bbc <- neonUtilities::loadByProduct(
 #' dpID = "DP1.10067.001",
 #' site = "all",
@@ -48,11 +53,12 @@
 #' check.size = FALSE
 #' )
 #' 
-#' #   Calculate root mass per unit area
+#' #   Calculate root mass per unit area and per unit volume
 #' df <- neonPlants::rootMassScale(
 #' inputCore = bbc$bbc_percore,
 #' inputMass = bbc$bbc_rootmass,
-#' inputDilution = bbc$bbc_dilution
+#' inputDilution = bbc$bbc_dilution,
+#' includeFragments = FALSE
 #' )
 #'
 #' }
@@ -63,7 +69,8 @@
 
 rootMassScale <- function(inputCore,
                           inputMass,
-                          inputDilution = NA) {
+                          inputDilution = NA,
+                          includeFragments = FALSE) {
   
   ### Verify user-supplied inputCore table contains expected data
   rootCore <- inputCore
@@ -145,6 +152,13 @@ rootMassScale <- function(inputCore,
     dplyr::rename(coreRemarks = remarks.x,
                   massRemarks = remarks.y)
   
+  coreMass <- dplyr::arrange(.data = coreMass,
+                             domainID,
+                             siteID,
+                             eventID,
+                             plotID,
+                             subsampleID)
+  
   
   
   ### Calculate dilution sampling fragment mass, if applicable
@@ -185,18 +199,59 @@ rootMassScale <- function(inputCore,
   
   
   
-  ### Pivot sizeCategory masses wider so that total fine root biomass may be summed by sampleID
-  test <- dplyr::select(.data = coreMass, -subsampleID)
-  temp <- tidyr::pivot_wider(data = test,
-                             names_from = sizeCategory,
-                             values_from = dryMass,
-                             names_prefix = "dryMass_")
-  #--> appears to work
+  ### Pivot sizeCategory masses wider and sum to calculate total fine root biomass by sampleID
+  coreMass <- dplyr::select(.data = coreMass, -subsampleID)
+  coreMass <- tidyr::pivot_wider(data = coreMass,
+                                 names_from = sizeCategory,
+                                 values_from = dryMass,
+                                 names_prefix = "dryMass")
+  
+  #   Conditionally rename fragment column if exists
+  if (is.data.frame(inputDilution)) {
+  
+    coreMass <- dplyr::rename(.data = coreMass,
+                            dryMassFrag = dryMassfrag)
+  
+  }
   
   
   
+  ### Calculate 'totalDryMass' and scale to "g/m2" and "g/cm3", dependent on includeFragments argument
+  ##  Default: totalDryMass does not include fragment mass
+  if (isFALSE(includeFragments)) {
+    
+    coreMass <- dplyr::rowwise(data = coreMass) %>%
+      dplyr::mutate(totalDryMass = sum(`dryMass0-1`, `dryMass1-2`, `dryMass2-10`, 
+                                       na.rm = TRUE)) %>%
+      dplyr::mutate(totalMassPerArea = round(totalDryMass/rootSampleArea, digits = 1)) %>%
+      dplyr::mutate(totalMassPerVolume = round(totalDryMass/(rootSampleArea * (rootSampleDepth/100)), digits = 1)) %>%
+      dplyr::ungroup()
+    
+  }
   
   
+  ##  Include fragment mass in totalDryMass
+  if (isTRUE(includeFragments)) {
+    
+    #   Check that inputDilution data frame is provided
+    if (!is.data.frame(inputDilution)) {
+      stop("A valid 'inputDilution' data frame must be provided when 'includeFragments' is TRUE.")
+    } 
+      
+    #   Sum totalDryMass WITH fragment mass
+    coreMass <- dplyr::rowwise(data = coreMass) %>%
+      dplyr::mutate(totalDryMass = sum(`dryMass0-1`, `dryMass1-2`, `dryMass2-10`, `dryMassFrag`,
+                                       na.rm = TRUE)) %>%
+      dplyr::mutate(totalMassPerArea = round(totalDryMass/rootSampleArea, digits = 1)) %>%
+      dplyr::mutate(totalMassPerVolume = round(totalDryMass/(rootSampleArea * (rootSampleDepth/100)), digits = 1)) %>%
+      dplyr::ungroup()
+    
+  } # end fragment TRUE conditional
+  
+  
+  
+  ### Return output
+  return(coreMass)
   
   
 } # end function
