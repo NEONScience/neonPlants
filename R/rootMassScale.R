@@ -1,5 +1,5 @@
 ###################################################################################################
-#' @title Scale Root Biomass by Size Category to Area or Volume
+#' @title Scale Root Biomass by Size Category to Mass Per Area and Mass Per Volume
 
 #' @author Courtney Meier \email{cmeier@battelleecology.org} \cr
 
@@ -86,7 +86,7 @@ rootMassScale <- function(inputCore,
   
   #   Check for data
   if (nrow(rootCore) == 0) {
-    stop(glue::glue("Table 'inputCore' has no data."))
+    stop("Table 'inputCore' has no data.")
   }
   
   
@@ -105,7 +105,7 @@ rootMassScale <- function(inputCore,
   
   #   Check for data
   if (nrow(rootMass) == 0) {
-    stop(glue::glue("Table 'inputMass' has no data."))
+    stop("Table 'inputMass' has no data.")
   }
   
   #   Warn if older data were provided with deprecated 0-0.5mm and 0.5-1mm sizeCategories
@@ -130,10 +130,17 @@ rootMassScale <- function(inputCore,
     
     #   Check for data
     if (nrow(rootDilution) == 0) {
-      stop(glue::glue("Table 'inputDilution' has no data."))
+      stop("Table 'inputDilution' has no data.")
     }
     
   } # end inputDilution conditional
+  
+  
+  
+  ### Verify includeFragments is logical
+  if (!is.logical(includeFragments)) {
+    stop("The 'inputFragments' argument must be of type logical.")
+  }
   
   
   
@@ -216,42 +223,52 @@ rootMassScale <- function(inputCore,
   
   
   
-  ### Calculate 'totalDryMass' and scale to "g/m2" and "g/cm3", dependent on includeFragments argument
-  ##  Default: totalDryMass does not include fragment mass
+  ### Conditionally calculate 'totalDryMass' dependent on includeFragments argument
+  #   Default: totalDryMass does not include fragment mass
   if (isFALSE(includeFragments)) {
     
     coreMass <- dplyr::rowwise(data = coreMass) %>%
       dplyr::mutate(totalDryMass = sum(`dryMass0-1`, `dryMass1-2`, `dryMass2-10`, 
                                        na.rm = TRUE)) %>%
-      dplyr::mutate(totalMassPerArea = round(totalDryMass/rootSampleArea, digits = 1)) %>%
-      dplyr::mutate(totalMassPerVolume = round(totalDryMass/(rootSampleArea * (rootSampleDepth/100)), digits = 1)) %>%
       dplyr::ungroup()
     
   }
   
-  
-  ##  Include fragment mass in totalDryMass
+  #   Optional: Include fragment mass in totalDryMass
   if (isTRUE(includeFragments)) {
     
     #   Check that inputDilution data frame is provided
     if (!is.data.frame(inputDilution)) {
       stop("A valid 'inputDilution' data frame must be provided when 'includeFragments' is TRUE.")
     } 
-      
+    
     #   Sum totalDryMass WITH fragment mass
     coreMass <- dplyr::rowwise(data = coreMass) %>%
       dplyr::mutate(totalDryMass = sum(`dryMass0-1`, `dryMass1-2`, `dryMass2-10`, `dryMassFrag`,
                                        na.rm = TRUE)) %>%
-      dplyr::mutate(totalMassPerArea = round(totalDryMass/rootSampleArea, digits = 1)) %>%
-      dplyr::mutate(totalMassPerVolume = round(totalDryMass/(rootSampleArea * (rootSampleDepth/100)), digits = 1)) %>%
       dplyr::ungroup()
     
   } # end fragment TRUE conditional
   
   
   
+  ### Scale dryMass values to "g/m2" and "g/cm3"
+  coreMass <- dplyr::rowwise(data = coreMass) %>%
+    dplyr::mutate(totalDryMass = sum(`dryMass0-1`, `dryMass1-2`, `dryMass2-10`, 
+                                     na.rm = TRUE)) %>%
+    dplyr::mutate(`dryMass0-1PerArea` = "blah",
+                  `dryMass1-2PerArea` = "blah",
+                  `dryMass2-10PerArea` = "blah",
+                  totalMassPerArea = round(totalDryMass/rootSampleArea, digits = 1)) %>%
+    dplyr::mutate(`dryMass0-1PerVolume` = "blah",
+                  `dryMass1-2PerVolume` = "blah",
+                  `dryMass2-10PerVolume` = "blah",
+                  totalMassPerVolume = round(totalDryMass/(rootSampleArea * (rootSampleDepth/100)), digits = 1)) %>%
+    dplyr::ungroup()
+  
+  
+  
   ### Return output
   return(coreMass)
-  
   
 } # end function

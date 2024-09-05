@@ -36,21 +36,29 @@ bbc2 <- neonUtilities::loadByProduct(dpID = "DP1.10067.001",
                                      token = Sys.getenv("NEON_TOKEN"))
 
 vars <- bbc2$variables_10067
+rootCore2 <- bbc2$bbc_percore
 rootMass2 <- bbc2$bbc_rootmass
 rootPool2 <- bbc2$bbc_chemistryPooling
 rootChem2 <- bbc2$bbc_rootChemistry
+rootDilution <- bbc2$bbc_dilution
 
 #   Write out test datasets for testthat
 testDataPath <- "tests/testthat/testdata"
 
+saveRDS(object = rootCore2,
+        file = paste(testDataPath, "valid-rootcore-201807.RDS", sep = "/"))
+
 saveRDS(object = rootMass2, 
-        file = paste(testDataPath, "root_table_join-valid-mass.RDS", sep = "/"))
+        file = paste(testDataPath, "valid-rootmass-201807.RDS", sep = "/"))
 
 saveRDS(object = rootPool2,
-        file = paste(testDataPath, "root_table_join-valid-pool.RDS", sep = "/"))
+        file = paste(testDataPath, "valid-rootpool-201807.RDS", sep = "/"))
 
 saveRDS(object = rootChem2,
-        file = paste(testDataPath, "root_table_join-valid-chem.RDS", sep = "/"))
+        file = paste(testDataPath, "valid-rootchem-201807.RDS", sep = "/"))
+
+saveRDS(object = rootDilution,
+        file = paste(testDataPath, "valid-rootdilution-201807.RDS", sep = "/"))
 
 #   Evaluate function output
 outputTest2 <- root_table_join(input_mass = rootMass2,

@@ -8,13 +8,13 @@ rootChemJoin(inputMass, inputPool, inputChem)
 }
 \arguments{
 \item{inputMass}{The 'bbc_rootmass' table for the site x month combination(s) of interest.
-\link{data.frame}}
+(required) \link{data.frame}}
 
 \item{inputPool}{The 'bbc_chemistryPooling' table for the site x month combination(s) of
-interest. \link{data.frame}}
+interest (required). \link{data.frame}}
 
 \item{inputChem}{The 'bbc_rootChemistry' table for the site x month combination(s) of
-interest. \link{data.frame}}
+interest (required). \link{data.frame}}
 }
 \value{
 A table containing both root mass and root chemistry data in the same row for

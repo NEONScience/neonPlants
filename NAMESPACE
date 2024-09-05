@@ -2,6 +2,7 @@
 
 export("%>%")
 export(rootChemJoin)
+export(rootMassScale)
 export(rootMassStandardize)
 export(stackPlantPresence)
 import(rlang)

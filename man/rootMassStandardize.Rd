@@ -2,7 +2,7 @@
 % Please edit documentation in R/rootMassStandardize.R
 \name{rootMassStandardize}
 \alias{rootMassStandardize}
-\title{Standardize Root Dry Mass Data to Current Size Category and Root Status Bins}
+\title{Standardize Root Dry Mass Data to Current Size Category Bins}
 \usage{
 rootMassStandardize(inputMass)
 }
@@ -45,7 +45,7 @@ tabl = "all",
 check.size = FALSE
 )
 
-#   Join downloaded root data
+#   Standardize downloaded root data to current sizeCategories and rootStatus
 df <- neonPlants::rootMassStandardize(
 inputMass = bbc$bbc_rootmass
 )
