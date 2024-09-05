@@ -2,7 +2,7 @@
 % Please edit documentation in R/rootMassScale.R
 \name{rootMassScale}
 \alias{rootMassScale}
-\title{Scale Root Biomass by Size Category to Area or Volume}
+\title{Scale Root Biomass by Size Category to Mass Per Area and Mass Per Volume}
 \usage{
 rootMassScale(
   inputCore,

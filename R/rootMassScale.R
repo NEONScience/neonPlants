@@ -108,7 +108,7 @@ rootMassScale <- function(inputCore,
     stop("Table 'inputMass' has no data.")
   }
   
-  #   Warn if older data were provided with deprecated 0-0.5mm and 0.5-1mm sizeCategories
+  #   Message if older data were provided with deprecated 0-0.5mm and 0.5-1mm sizeCategories
   if ("0-05" %in% rootMass$sizeCategory | "05-1" %in% rootMass$sizeCategory) {
     warning("Deprecated '0-0.5mm' or '0.5-1mm' sizeCategories detected, binning output to current '0-1mm' sizeCategory.")
   }
@@ -224,7 +224,7 @@ rootMassScale <- function(inputCore,
   
   
   ### Conditionally calculate 'totalDryMass' dependent on includeFragments argument
-  #   Default: totalDryMass does not include fragment mass
+  ##  Default: totalDryMass does not include fragment mass
   if (isFALSE(includeFragments)) {
     
     coreMass <- dplyr::rowwise(data = coreMass) %>%
@@ -232,9 +232,10 @@ rootMassScale <- function(inputCore,
                                        na.rm = TRUE)) %>%
       dplyr::ungroup()
     
-  }
+  } # end fragment FALSE conditional
   
-  #   Optional: Include fragment mass in totalDryMass
+  
+  ##  Optional: Include fragment mass in totalDryMass
   if (isTRUE(includeFragments)) {
     
     #   Check that inputDilution data frame is provided
@@ -254,15 +255,13 @@ rootMassScale <- function(inputCore,
   
   ### Scale dryMass values to "g/m2" and "g/cm3"
   coreMass <- dplyr::rowwise(data = coreMass) %>%
-    dplyr::mutate(totalDryMass = sum(`dryMass0-1`, `dryMass1-2`, `dryMass2-10`, 
-                                     na.rm = TRUE)) %>%
-    dplyr::mutate(`dryMass0-1PerArea` = "blah",
-                  `dryMass1-2PerArea` = "blah",
-                  `dryMass2-10PerArea` = "blah",
+    dplyr::mutate(`dryMass0-1PerArea` = round(`dryMass0-1`/rootSampleArea, digits = 1),
+                  `dryMass1-2PerArea` = round(`dryMass1-2`/rootSampleArea, digits = 1),
+                  `dryMass2-10PerArea` = round(`dryMass2-10`/rootSampleArea, digits = 1),
                   totalMassPerArea = round(totalDryMass/rootSampleArea, digits = 1)) %>%
-    dplyr::mutate(`dryMass0-1PerVolume` = "blah",
-                  `dryMass1-2PerVolume` = "blah",
-                  `dryMass2-10PerVolume` = "blah",
+    dplyr::mutate(`dryMass0-1PerVolume` = round(`dryMass0-1`/(rootSampleArea * (rootSampleDepth/100)), digits = 1),
+                  `dryMass1-2PerVolume` = round(`dryMass1-2`/(rootSampleArea * (rootSampleDepth/100)), digits = 1),
+                  `dryMass2-10PerVolume` = round(`dryMass2-10`/(rootSampleArea * (rootSampleDepth/100)), digits = 1),
                   totalMassPerVolume = round(totalDryMass/(rootSampleArea * (rootSampleDepth/100)), digits = 1)) %>%
     dplyr::ungroup()
   

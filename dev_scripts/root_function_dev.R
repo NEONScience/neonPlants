@@ -104,4 +104,17 @@ stdTest3 <- neonPlants::rootMassStandardize(inputMass = testMass %>%
 
 
 
+### Evaluate function output for rootMassScale()
+##  Test for output with no inputDilution argument
+scale1 <- neonPlants::rootMassScale(inputCore = testCore,
+                                    inputMass = testMass)
+#--> calculations look correct
+
+
+##  Test for output with inputDilution argument but includeFragments FALSE
+
+
+
+
+
 
