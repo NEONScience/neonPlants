@@ -109,11 +109,15 @@ stdTest3 <- neonPlants::rootMassStandardize(inputMass = testMass %>%
 scale1 <- neonPlants::rootMassScale(inputCore = testCore,
                                     inputMass = testMass)
 #--> calculations look correct
+#--> number of rows is correct given length(unique(testMass$sampleID)) and two cores in testCore having
+#--> samplingImpractical == "obstruction".
 
 
 ##  Test for output with inputDilution argument but includeFragments FALSE
-
-
+scale2 <- neonPlants::rootMassScale(inputCore = testCore,
+                                    inputMass = testMass,
+                                    inputDilution = testDilution)
+#--> scale2$totalDryMass[3] == 5.5857, which correctly does not include fragment mass
 
 
 

@@ -110,7 +110,7 @@ rootMassScale <- function(inputCore,
   
   #   Message if older data were provided with deprecated 0-0.5mm and 0.5-1mm sizeCategories
   if ("0-05" %in% rootMass$sizeCategory | "05-1" %in% rootMass$sizeCategory) {
-    warning("Deprecated '0-0.5mm' or '0.5-1mm' sizeCategories detected, binning output to current '0-1mm' sizeCategory.")
+    message("Deprecated '0-0.5mm' or '0.5-1mm' sizeCategories detected, binning output to current '0-1mm' sizeCategory.")
   }
   
   
@@ -147,6 +147,29 @@ rootMassScale <- function(inputCore,
   ### Standardize rootMass data to current sizeCategory definitions and average qaDryMass = Y
   rootMass <- neonPlants::rootMassStandardize(inputMass = rootMass)
   
+  #   Collapse mycorrhizaeVisible and massRemarks to single string per sampleID to avoid downstream
+  #   dupes when pivot_wider() is used; these will be re-joined by sampleID after wide table is created
+  stringMassCols <- dplyr::select(.data = rootMass,
+                                  sampleID,
+                                  mycorrhizaeVisible,
+                                  remarks) %>%
+    dplyr::group_by(sampleID) %>%
+    dplyr::summarise(mycorrhizaeVisible = dplyr::case_when(all(is.na(mycorrhizaeVisible)) ~ NA,
+                                                           dplyr::n_distinct(mycorrhizaeVisible, na.rm = TRUE) == 1 ~ 
+                                                             paste(unique(mycorrhizaeVisible[!is.na(mycorrhizaeVisible)]), collapse = ", "),
+                                                           TRUE ~ paste(mycorrhizaeVisible, collapse = ", ")),
+                     massRemarks = dplyr::case_when(all(is.na(remarks)) ~ NA,
+                                                    dplyr::n_distinct(remarks, na.rm = TRUE) == 1 ~ 
+                                                      paste(unique(remarks[!is.na(remarks)]), collapse = ", "),
+                                                    TRUE ~ paste(remarks, collapse = ", ")),
+                     .groups = "drop")
+  
+  #   Remove mycorrhizaeVisible and remarks from rootMass for clean downstream pivot_wider() result
+  rootMass <- dplyr::select(.data = rootMass,
+                            -subsampleID,
+                            -mycorrhizaeVisible,
+                            -remarks)
+  
   
   
   ### Join rootMass data with rootCore data
@@ -156,15 +179,15 @@ rootMassScale <- function(inputCore,
   coreMass <- dplyr::full_join(x = rootCore,
                                y = rootMass,
                                by = c("domainID", "siteID", "plotID", "collectDate", "sampleID")) %>%
-    dplyr::rename(coreRemarks = remarks.x,
-                  massRemarks = remarks.y)
+    dplyr::rename(coreRemarks = remarks)
   
   coreMass <- dplyr::arrange(.data = coreMass,
                              domainID,
                              siteID,
                              eventID,
                              plotID,
-                             subsampleID)
+                             sampleID,
+                             sizeCategory)
   
   
   
@@ -184,8 +207,7 @@ rootMassScale <- function(inputCore,
                       .data$sampleID) %>%
       dplyr::summarise(dryMass = round(mean(fragMass, na.rm = TRUE), digits = 4),
                        .groups = "drop") %>%
-      dplyr::mutate(subsampleID = paste(sampleID, "DIL", sep = "."),
-                    sizeCategory = "frag",
+      dplyr::mutate(sizeCategory = "frag",
                     .after = sampleID)
     
     #   Join rootDilution data with rootCore data
@@ -194,24 +216,37 @@ rootMassScale <- function(inputCore,
                                      by = c("domainID", "siteID", "plotID", "collectDate", "sampleID")) %>%
       dplyr::rename(coreRemarks = remarks)
     
+    #   Bind standard mass rows with dilution mass rows; split out massRemarks then re-join since value is
+    #   always 'NA' for dilution rows and causes dupes when pivot_wider() is used and a value exists for
+    #   standard masses.
     coreMass <- dplyr::bind_rows(coreMass,
                                  coreDilMass) %>%
       dplyr::arrange(.data$domainID,
                      .data$siteID,
                      .data$eventID,
                      .data$plotID,
-                     .data$subsampleID)
+                     .data$sampleID,
+                     .data$sizeCategory)
     
   } # end dilution conditional
   
   
   
   ### Pivot sizeCategory masses wider and sum to calculate total fine root biomass by sampleID
-  coreMass <- dplyr::select(.data = coreMass, -subsampleID)
   coreMass <- tidyr::pivot_wider(data = coreMass,
                                  names_from = sizeCategory,
                                  values_from = dryMass,
                                  names_prefix = "dryMass")
+  
+  #   Re-join collapsed strings for mycorrhizaeVisible and massRemarks columns
+  coreMass <- dplyr::left_join(x = coreMass,
+                               y = stringMassCols,
+                               by = "sampleID")
+  
+  coreMass <- dplyr::relocate(.data = coreMass,
+                              mycorrhizaeVisible,
+                              massRemarks,
+                              .after = release)
   
   #   Conditionally rename fragment column if exists
   if (is.data.frame(inputDilution)) {
