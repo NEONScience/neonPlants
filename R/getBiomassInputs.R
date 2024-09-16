@@ -1,10 +1,10 @@
 ##############################################################################################
-#' @title getVstHbp.R
+#' @title getBiomassInputs.R
 
 #' @author
 #' Samuel M Simkin \email{ssimkin@battelleecology.org} \cr
 
-#' @description Download NEON vegetation structure (VST) data and optionally aboveground herbaceous biomass (HBP) data for usage in NEONbiomass function.
+#' @description Download NEON vegetation structure (VST) data and optionally aboveground herbaceous biomass (HBP) data for usage in calculateBiomass function.
 #' 
 #' changelog and author contributions / copyrights
 #' Samuel M Simkin (2023-09-14)  original creation
@@ -25,6 +25,9 @@
 
 #' @examples
 #' \dontrun{
+#' 
+#' library(neonUtilities)
+#' 
 #' # example with arguments at default values
 #' VstHbpData <- getVstHbp(site="all")
 #' 
@@ -32,9 +35,9 @@
 #' VstHbpData <- getVstHbp(siteID = c("HARV","JERC"), 
 #'          start = "2019", end = "2022", dataProducts = "Vst")
 #' 
-#' list2env(VstHbpData ,.GlobalEnv) # unlist all data frames for easier viewing or additional analysis
-#' saveRDS(VstHbpData$VstDat, 'VstDat.rds') # save vst portal data locally for use in NEONbiomass function
-#' saveRDS(VstHbpData$HbpDat, 'HbpDat.rds') # save hbp portal data locally for use in NEONbiomass function
+#' list2env(VstHbpData ,.GlobalEnv) # unlist VstDat list (and optionally HbpDat list) for easier viewing or additional analysis
+#' saveRDS(VstHbpData$VstDat, 'VstDat.rds') # save vst portal data locally for use in calculateBiomass function
+#' saveRDS(VstHbpData$HbpDat, 'HbpDat.rds') # save hbp portal data locally for use in calculateBiomass function
 #' 
 #' }
 
@@ -45,9 +48,6 @@ getVstHbp = function(site = "all",
                      end = as.character(as.integer(format(Sys.Date(), "%Y"))-1),
                      dataProducts = "VstHbp"
                          ) {
-
-library(neonUtilities)
-library(tidyverse)
 
 # Error if invalid dataProducts option selected
   if(dataProducts != "VstHbp" & dataProducts != "Vst"){
@@ -67,7 +67,7 @@ library(tidyverse)
 print("Downloading NEON 'Vegetation structure' data (dpID DP1.10098.001)  ..... ")
 #### ingest tree, sapling, shrub, and liana data (plus non-herbaceous perennial other data) from portal   
 
-VstDat <- loadByProduct(dpID="DP1.10098.001", 
+VstDat <- neonUtilities::loadByProduct(dpID="DP1.10098.001", 
                              site = site,
                              startdate = paste0(start,"-01"),
                              enddate = paste0(end, "-12"),
@@ -101,11 +101,3 @@ output.list <- list(
   }
 
 }
-
-#VstHbpData <- getVstHbp(site="all")
-
-#list2env(VstHbpData ,.GlobalEnv) # unlist raw data for easier viewing or additional analysis
-#saveRDS(VstHbpData$VstDat, 'VstDat.rds') # save raw data locally for further examination and if desired use in follow-up biomass and productivity functions.
-#saveRDS(VstHbpData$HbpDat, 'HbpDat.rds') # save raw data locally for further examination and if desired use in follow-up biomass and productivity functions.
-
-

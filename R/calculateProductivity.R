@@ -1,5 +1,5 @@
 ##############################################################################################
-#' @title NEONproductivity.R
+#' @title calculateProductivity.R
 
 #' @author
 #' Samuel M Simkin \email{ssimkin@battelleecology.org} \cr
@@ -9,7 +9,7 @@
 #   Samuel M Simkin (2022-07-12)  revised
 #   Samuel M Simkin (2023-08-04)  revised
 
-#' @description Using inputs from companion NEONbiomass function calculate VST woody yearly increment 
+#' @description Using inputs from companion calculateBiomass function calculate VST woody yearly increment 
 #' and mortality, and thereby annual productivity. Optionally, also calculate HBP productivity and add 
 #' to VST for a VST + HBP summary.
 #' 
@@ -18,7 +18,7 @@
 #' Samuel M Simkin (2022-07-12)  revised
 #' Samuel M Simkin (2023-08-04)  revised
 
-#' @param input  The .rds file with needed biomass input data that was produced by companion NEON_biomass_function.R   Defaults to "NEONbiomassOutputs.rds". [character]
+#' @param input  The .rds file with needed biomass input data that was produced by companion NEON_biomass_function.R   Defaults to "biomassFunctionOutputs.rds". [character]
 #' @param plotType Optional filter based on NEON plot type. Defaults to "tower" plots, which are sampled annually. Otherwise "distributed" plots are examined also, if included in the input .rds. [character]
 #' @param plotPriority NEON plots have a priority number in the event that not all plots are able to be sampled. The lower the number the higher the priority. The default is 5. [numeric]
 #' @param calcMethod Select plot-level (approach 2) or individual-level (approach 1) productivity calculations. The default is "approach_1" [character]
