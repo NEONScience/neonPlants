@@ -50,7 +50,14 @@
 #' library(neonPlants)
 #' library(devtools)
 
-devtools::install_github("NEONScience/neonPlants@dev")
+#devtools::install_github("NEONScience/neonPlants@dev", force=TRUE)
+devtools::install("C:/GitHub/samsimkin/neonPlants", force=TRUE)
+
+load(file='../data/plant_taxa_NEON.rda')
+load(file='../data/parameters.rda')
+load(file='../data/plant_taxa_char_all.rda')
+load(file='../data/priority_plots.rda')
+load(file='../data/taxon_fields.rda')
 
 #' 
 #' list2env(VstHbpData ,.GlobalEnv) # unlist R object list of lists created by wrapper function getBiomassInputs to create VstDat list (and optionally HbpDat list)
@@ -62,6 +69,7 @@ devtools::install_github("NEONScience/neonPlants@dev")
 #' 
 #' 
 #' biomassFunctionOutputs <- calculateBiomass(inputVst = VstDat, inputHbp = HbpDat, growthForm = "single and multi-bole trees", plotType = "tower", plotPriority = 5)
+#' biomassFunctionOutputs <- calculateBiomass(inputVst = NA, inputHbp = NA, growthForm = "single and multi-bole trees", plotType = "tower", plotPriority = 5)
 #' 
 #' list2env(biomassFunctionOutputs ,.GlobalEnv) # unlist all data frames for easier viewing or additional analysis
 #' saveRDS(biomassFunctionOutputs, 'biomassFunctionOutputs.rds') # save all outputs locally for further examination and 
@@ -83,10 +91,15 @@ calculateBiomass = function(inputVst = VstDat,
 
   
 # Error if no input VST data
+#if(missing(inputVst) ){
 if(missing(inputVst) ){
     
 print("An input VstDat list was not specified, therefore now downloading NEON 'Vegetation structure' data (dpID DP1.10098.001)  ..... ")
 #### ingest tree, sapling, shrub, and liana data (plus non-herbaceous perennial other data) from portal   
+
+if(is.na(start)){start = "2018"}
+if(is.na(end)){end = as.character(as.integer(format(Sys.Date(), "%Y"))-1)}
+if(is.na(site)){site = "all"}
 
 VstDat <- neonUtilities::loadByProduct(dpID="DP1.10098.001", 
                              site = site,
@@ -99,13 +112,12 @@ VstDat <- neonUtilities::loadByProduct(dpID="DP1.10098.001",
 }  
   
 # Warning if no input HBP data
-if(missing(inputHbp) ){
-    print("NEON Herbaceous biomass (HBP) data will not be aggregated since the inputHbp argument is NA.")
+if(is.na(inputHbp) ){
+    print("Since the inputHbp argument has been left at NA there will be no aggregation of NEON Herbaceous biomass (HBP) data.")
   }   else {if(class(inputHbp) != "list" ){
-    stop("The biomass function requires that the R object in the inputHbp argument is a list of dataframes (e.g. hbp_perbout, hbp_massdata),
-         or that the inputHbp argument be left at NA if aggregation of NEON Herbaceous biomass (HBP) data is not desired.")
+    stop("The biomass function requires that the R object in the input Hbp argument, if specified, be a list of dataframes (e.g. hbp_perbout, hbp_massdata).")
 }  
-  
+ 
 
 # growthForm "single shrub", "small shrub", and "" from vst_apparentIndividual will not be summarized until application of rigorous allometric equations
 # all "non-woody" growthform values from vst_non-woody table will likewise not be summarized until application of rigorous allometric equations
@@ -650,7 +662,7 @@ vst_site <- vst_plot_w_0s %>% dplyr::group_by(siteID, year) %>% dplyr::summarise
 ##### If option to include herbaceous data was selected then download and aggregate the herbaceous data #############################
 # Original hbp scripts by Eric Sokol (esokol@battelleecology) in May 2020. Merged and modified by Sam Simkin (ssimkin@battelleecology.org) in Jul 2023
   
-if(!is.na(inputHbp)) { 
+if(!missing(inputHbp)) { 
 #HbpDat <- readRDS(inputHbp)
 
   hbp_perbout <- HbpDat$hbp_perbout
@@ -714,7 +726,7 @@ vst_plot_w_0s$plotType <- NULL #  plotType field only partially populated so rem
 print("Returning biomass output data frames as a list object  ..... ")
 
 
-if(!is.na(inputHbp))    {
+if(!missing(inputHbp))    {
 output.list <- list(
    vst_agb_per_ha = vst_agb_per_ha,
    vst_plot_w_0s = vst_plot_w_0s,
