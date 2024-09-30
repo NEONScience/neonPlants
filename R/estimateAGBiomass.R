@@ -1,5 +1,5 @@
 ##############################################################################################
-#' @title calculateBiomass.R
+#' @title estimateAGBiomass.R
 
 #' @author
 #' Samuel M Simkin \email{ssimkin@battelleecology.org} \cr
@@ -53,32 +53,32 @@
 #devtools::install_github("NEONScience/neonPlants@dev", force=TRUE)
 devtools::install("C:/GitHub/samsimkin/neonPlants", force=TRUE)
 
-load(file='../data/plant_taxa_NEON.rda')
-load(file='../data/parameters.rda')
-load(file='../data/plant_taxa_char_all.rda')
-load(file='../data/priority_plots.rda')
-load(file='../data/taxon_fields.rda')
+#load(file='../data/plant_taxa_NEON.rda')
+#load(file='../data/parameters.rda')
+#load(file='../data/plant_taxa_char_all.rda')
+#load(file='../data/priority_plots.rda')
+#load(file='../data/taxon_fields.rda')
 
 #' 
 #' list2env(VstHbpData ,.GlobalEnv) # unlist R object list of lists created by wrapper function getBiomassInputs to create VstDat list (and optionally HbpDat list)
 #' 
 #' # Or alternatively, if list of lists is not in memory, load VST list of dataframes and optionally HBP list of dataframes from local files:
 #' 
-#' load('VstDat.rds') # load NEON VST portal data from a local file for use in calculateBiomass function
-#' load('HbpDat.rds') # Optionally, load NEON HBP portal data from a local file for use in calculateBiomass function
+#' load('VstDat.rds') # load NEON VST portal data from a local file for use in estimateAGBiomass function
+#' load('HbpDat.rds') # Optionally, load NEON HBP portal data from a local file for use in estimateAGBiomass function
 #' 
 #' 
-#' biomassFunctionOutputs <- calculateBiomass(inputVst = VstDat, inputHbp = HbpDat, growthForm = "single and multi-bole trees", plotType = "tower", plotPriority = 5)
-#' biomassFunctionOutputs <- calculateBiomass(inputVst = NA, inputHbp = NA, growthForm = "single and multi-bole trees", plotType = "tower", plotPriority = 5)
+#' estimateAGBiomassOutputs <- estimateAGBiomass(inputVst = VstDat, inputHbp = HbpDat, growthForm = "single and multi-bole trees", plotType = "tower", plotPriority = 5)
+#' estimateAGBiomassOutputs <- estimateAGBiomass(inputVst = NA, inputHbp = NA, growthForm = "single and multi-bole trees", plotType = "tower", plotPriority = 5)
 #' 
-#' list2env(biomassFunctionOutputs ,.GlobalEnv) # unlist all data frames for easier viewing or additional analysis
-#' saveRDS(biomassFunctionOutputs, 'biomassFunctionOutputs.rds') # save all outputs locally for further examination and 
+#' list2env(estimateAGBiomassOutputs ,.GlobalEnv) # unlist all data frames for easier viewing or additional analysis
+#' saveRDS(estimateAGBiomassOutputs, 'estimateAGBiomassOutputs.rds') # save all outputs locally for further examination and 
 #'        if desired use in the follow-up productivity function.
 #'
 
 ##############################################################################################
 
-calculateBiomass = function(inputVst = VstDat,
+estimateAGBiomass = function(inputVst = VstDat,
                        inputHbp = HbpDat,
                        site = NA,
                        start = NA, 

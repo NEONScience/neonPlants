@@ -1,5 +1,5 @@
 ##############################################################################################
-#' @title calculateProductivity.R
+#' @title estimateANPProductivity.R
 
 #' @author
 #' Samuel M Simkin \email{ssimkin@battelleecology.org} \cr
@@ -9,7 +9,7 @@
 #   Samuel M Simkin (2022-07-12)  revised
 #   Samuel M Simkin (2023-08-04)  revised
 
-#' @description Using inputs from companion calculateBiomass function calculate VST woody yearly increment 
+#' @description Using inputs from companion estimateAGBiomass function calculate VST woody yearly increment 
 #' and mortality, and thereby annual productivity. Optionally, also calculate HBP productivity and add 
 #' to VST for a VST + HBP summary.
 #' 
@@ -46,16 +46,16 @@
 #' @examples
 #' \dontrun{
 #' # example with arguments at default values
-#' NEONproductivityOutputs <- NEONproductivity(input = "NEONbiomassOutputs.rds")
+#' estimateANPProductivityOutputs <- estimateANPProductivity(input = "NEONbiomassOutputs.rds")
 #'                       
 #' # example specifying many non-default arguments
-#' NEONproductivityOutputs <- NEONproductivity(input = "NEONbiomassOutputs.rds", 
+#' estimateANPProductivityOutputs <- estimateANPProductivity(input = "NEONbiomassOutputs.rds", 
 #'                plotType = "all", plotPriority = 50, 
 #'                calcMethod = "approach_2", outlier = 2, outlier_type = "SD", 
 #'                dataProducts = "Vst")
 #' 
 #' list2env(NEONbiomassOutputs ,.GlobalEnv) # unlist all data frames for easier viewing or additional analysis
-#' saveRDS(NEONproductivityOutputs, 'NEONproductivityOutputs.rds') # save all outputs locally for further examination
+#' saveRDS(estimateANPProductivityOutputs, 'estimateANPProductivityOutputs.rds') # save all outputs locally for further examination
 #' }
 
 ##############################################################################################
@@ -63,7 +63,7 @@
 #################################################################################  
 ######    CALCULATE PLOT AND SITE-LEVEL NET PRIMARY PRODUCTIVITY (NPP)     ###### 
 
-NEONproductivity = function(
+estimateANPProductivity = function(
                          input = "NEONbiomassOutputs.rds",
                          plotType = "tower",
                          plotPriority = 5,
@@ -556,9 +556,9 @@ output.list <- list(
 
 }
 
-#NEONproductivityOutputs <- NEONproductivity(input = "NEONbiomassOutputs.rds", calcMethod = "approach_1", outlier = 1.5, outlier_type = "IQR")
-#NEONproductivityOutputs <- NEONproductivity(input = "NEONbiomassOutputs.rds", calcMethod = "approach_1", outlier = 2, outlier_type = "SD")
+#estimateANPProductivityOutputs <- estimateANPProductivity(input = "NEONbiomassOutputs.rds", calcMethod = "approach_1", outlier = 1.5, outlier_type = "IQR")
+#estimateANPProductivityOutputs <- estimateANPProductivity(input = "NEONbiomassOutputs.rds", calcMethod = "approach_1", outlier = 2, outlier_type = "SD")
 
-#list2env(NEONproductivityOutputs ,.GlobalEnv) # unlist all data frames for easier viewing or additional analysis
-#saveRDS(NEONproductivityOutputs, 'NEONproductivityOutputs.rds') # save all outputs locally for further examination
+#list2env(estimateANPProductivityOutputs ,.GlobalEnv) # unlist all data frames for easier viewing or additional analysis
+#saveRDS(estimateANPProductivityOutputs, 'estimateANPProductivityOutputs.rds') # save all outputs locally for further examination
 

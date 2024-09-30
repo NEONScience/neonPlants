@@ -36,8 +36,8 @@
 #'          start = "2019", end = "2022", dataProducts = "Vst")
 #' 
 #' list2env(VstHbpData ,.GlobalEnv) # unlist VstDat list (and optionally HbpDat list) for easier viewing or additional analysis
-#' saveRDS(VstHbpData$VstDat, 'VstDat.rds') # save vst portal data locally for use in calculateBiomass function
-#' saveRDS(VstHbpData$HbpDat, 'HbpDat.rds') # save hbp portal data locally for use in calculateBiomass function
+#' saveRDS(VstHbpData$VstDat, 'VstDat.rds') # save vst portal data locally for use in estimateAGB function
+#' saveRDS(VstHbpData$HbpDat, 'HbpDat.rds') # save hbp portal data locally for use in estimate function
 #' 
 #' }
 
@@ -67,11 +67,37 @@ getVstHbp = function(site = "all",
 print("Downloading NEON 'Vegetation structure' data (dpID DP1.10098.001)  ..... ")
 #### ingest tree, sapling, shrub, and liana data (plus non-herbaceous perennial other data) from portal   
 
+
+start_mod <- paste0((as.numeric(substr(start, 1,4))-1),"-07")
+end_mod <- paste0((as.numeric(substr(end, 1,4))+1),"-07")
+
 VstDat <- neonUtilities::loadByProduct(dpID="DP1.10098.001", 
                              site = site,
-                             startdate = paste0(start,"-01"),
-                             enddate = paste0(end, "-12"),
-                             package = "basic", check.size = FALSE, token = Sys.getenv('NEON_TOKEN')) # pulled from portal with loadByProduct on 2023 Jul 11
+                             startdate = start_mod,
+                             enddate = end_mod,
+                             package = "basic", check.size = FALSE, token = Sys.getenv('NEON_PAT'))
+
+### filter to sampling events that started in specified date range
+list2env(VstDat, envir=.GlobalEnv)
+vst_perplotperyear <- vst_perplotperyear %>% filter(as.numeric(substr(eventID, 10,13)) >= substr(start, 1,4) & as.numeric(substr(eventID, 10,13)) <= substr(end, 1,4))
+vst_apparentindividual <- vst_apparentindividual %>% filter(as.numeric(substr(eventID, 10,13)) >= substr(start, 1,4) & as.numeric(substr(eventID, 10,13)) <= substr(end, 1,4))
+#vst_non-woody <- vst_non-woody %>% filter(as.numeric(substr(eventID, 10,13)) >= substr(start, 1,4) & as.numeric(substr(eventID, 10,13)) <= substr(end, 1,4))
+vst_shrubgroup <- vst_shrubgroup %>% filter(as.numeric(substr(eventID, 10,13)) >= substr(start, 1,4) & as.numeric(substr(eventID, 10,13)) <= substr(end, 1,4))
+VstDat_mod <- list(
+   vst_perplotperyear = vst_perplotperyear,
+   vst_apparentindividual = vst_apparentindividual,
+#   vst_non-woody = vst_non-woody, # not currently used by function
+   vst_shrubgroup = vst_shrubgroup, # not currently used by function
+   vst_mappingandtagging = vst_mappingandtagging,
+#   vst_identificationHistory = vst_identificationHistory, # no data for most months and not used by function
+#   citation_10098_RELEASE-2024 = citation_10098_RELEASE-2024, # not used by function
+   categoricalCodes_10098 = categoricalCodes_10098,
+   issueLog_10098 = issueLog_10098,
+   readme_10098 = readme_10098,
+   validation_10098 = validation_10098,
+   variables_10098 = variables_10098
+   )
+
 
 
 ##### If option to include herbaceous data was selected then download the herbaceous data #############################
@@ -82,7 +108,7 @@ if(grepl("Hbp", dataProducts) )    {
 print("Downloading NEON 'Herbaceous clip harvest' data (dpID DP1.10023.00)  ..... ")
   
 HbpDat <- neonUtilities::loadByProduct(dpID = "DP1.10023.001", site = site, startdate = paste0(start,"-01"), enddate = paste0(as.character(as.integer(format(Sys.Date(), "%Y"))-1), "-12"), 
-                                           package = "basic", check.size = FALSE, token = Sys.getenv('NEON_TOKEN'))
+                                           package = "basic", check.size = FALSE, token = Sys.getenv('NEON_PAT'))
 
 
 }
