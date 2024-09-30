@@ -51,6 +51,7 @@
 #' library(devtools)
 
 #devtools::install_github("NEONScience/neonPlants@dev", force=TRUE)
+#devtools::install_github("samsimkin/neonPlants@biomass", force=TRUE)
 devtools::install("C:/GitHub/samsimkin/neonPlants", force=TRUE)
 
 #load(file='../data/plant_taxa_NEON.rda')
