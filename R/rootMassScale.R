@@ -108,11 +108,6 @@ rootMassScale <- function(inputCore,
     stop("Table 'inputMass' has no data.")
   }
   
-  #   Message if older data were provided with deprecated 0-0.5mm and 0.5-1mm sizeCategories
-  if ("0-05" %in% rootMass$sizeCategory | "05-1" %in% rootMass$sizeCategory) {
-    message("Deprecated '0-0.5mm' or '0.5-1mm' sizeCategories detected, binning output to current '0-1mm' sizeCategory.")
-  }
-  
   
   
   ### Verify inputDilution table contains expected data, if provided
@@ -123,7 +118,7 @@ rootMassScale <- function(inputCore,
     #   Check for required columns
     dilExpCols <- c("sampleID", "dilutionSubsampleVolume", "sampleVolume", "dryMass")
     
-    if (length(setdiff(massExpCols, colnames(rootMass))) > 0) {
+    if (length(setdiff(dilExpCols, colnames(rootDilution))) > 0) {
       stop(glue::glue("Required columns missing from 'inputDilution':", '{paste(setdiff(dilExpCols, colnames(rootDilution)), collapse = ", ")}',
                       .sep = " "))
     }
@@ -140,6 +135,13 @@ rootMassScale <- function(inputCore,
   ### Verify includeFragments is logical
   if (!is.logical(includeFragments)) {
     stop("The 'inputFragments' argument must be of type logical.")
+  }
+  
+  
+  
+  ### Message if older data were provided with deprecated 0-0.5mm and 0.5-1mm sizeCategories
+  if ("0-05" %in% rootMass$sizeCategory | "05-1" %in% rootMass$sizeCategory) {
+    message("Deprecated '0-0.5mm' or '0.5-1mm' sizeCategories detected, binning output to current '0-1mm' sizeCategory.")
   }
   
   
