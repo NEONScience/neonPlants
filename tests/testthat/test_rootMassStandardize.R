@@ -26,6 +26,23 @@ testthat::test_that(desc = "Output class", {
 
 
 
+### Test: Function generates data frame with expected dimensions using test data
+#   Check expected row number of data frame
+testthat::test_that(desc = "Output data frame row number", {
+  
+  testthat::expect_identical(object = nrow(rootMassStandardize(inputMass = testMass)),
+                             expected = as.integer(1365))
+})
+
+#   Check expected column number of data frame
+testthat::test_that(desc = "Output data frame column number", {
+  
+  testthat::expect_identical(object = ncol(rootMassStandardize(inputMass = testMass)),
+                             expected = as.integer(10))
+})
+
+
+
 ### Test: Generate expected errors for issues with inputMass table
 # Test when inputMass lacks required column
 testthat::test_that(desc = "Table 'inputMass' missing column", {

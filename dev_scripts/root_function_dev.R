@@ -8,22 +8,22 @@ library(neonUtilities)
 
 ### Testing 
 #   Newer site x month combos with rootStatus == NA for all subsampleIDs
-bbc1 <- neonUtilities::loadByProduct(dpID = "DP1.10067.001",
-                                     site = "all",
-                                     startdate = "2022-07",
-                                     enddate = "2022-08",
-                                     tabl = "all",
-                                     check.size = FALSE,
-                                     token = Sys.getenv("NEON_TOKEN"))
+bbcNew <- neonUtilities::loadByProduct(dpID = "DP1.10067.001",
+                                       site = "all",
+                                       startdate = "2022-07",
+                                       enddate = "2022-08",
+                                       tabl = "all",
+                                       check.size = FALSE,
+                                       token = Sys.getenv("NEON_TOKEN"))
 
-vars <- bbc1$variables_10067
-rootMass1 <- bbc1$bbc_rootmass
-rootPool1 <- bbc1$bbc_chemistryPooling
-rootChem1 <- bbc1$bbc_rootChemistry
+vars <- bbcNew$variables_10067
+rootMassNew <- bbcNew$bbc_rootmass
+rootPoolNew <- bbcNew$bbc_chemistryPooling
+rootChemNew <- bbcNew$bbc_rootChemistry
 
-outputTest1 <- root_table_join(input_mass = bbc1$bbc_rootmass,
-                              input_pool = bbc1$bbc_chemistryPooling,
-                              input_chem = bbc1$bbc_rootChemistry)
+outputTestNew <- rootChemJoin(inputMass = bbcNew$bbc_rootmass,
+                              inputPool = bbcNew$bbc_chemistryPooling,
+                              inputChem = bbcNew$bbc_rootChemistry)
 
 
 #   Older dataset for bbc_rootmass that has rootStatus == "live" and "dead"; stopped sorting in 2021
@@ -102,6 +102,9 @@ stdTest3 <- neonPlants::rootMassStandardize(inputMass = testMass %>%
                                               dplyr::filter(uid == "mangrove"))
 #--> expected error "Table 'inputMass' has no data"
 
+#   Test when new data lacking old sizeCategory bins are supplied
+stdTest4 <- rootMassStandardize(inputMass = rootMassNew)
+#--> Calculates mean when qaDryMass == Y, no changes to sizeCategories as expected
 
 
 ### Evaluate function output for rootMassScale()
