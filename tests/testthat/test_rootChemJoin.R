@@ -32,6 +32,28 @@ testthat::test_that(desc = "Output class", {
 
 
 
+### Test: Function generates data frame with expected dimensions using test data
+#   Check expected row number of data frame
+testthat::test_that(desc = "Output data frame row number", {
+  
+  testthat::expect_identical(object = nrow(rootChemJoin(inputMass = testMass,
+                                                        inputPool = testPool,
+                                                        inputChem = testChem)),
+                             expected = as.integer(3882))
+})
+
+
+#   Check expected column number of data frame
+testthat::test_that(desc = "Output data frame column number", {
+  
+  testthat::expect_identical(object = ncol(rootChemJoin(inputMass = testMass,
+                                                        inputPool = testPool,
+                                                        inputChem = testChem)),
+                             expected = as.integer(35))
+})
+
+
+
 ### Test: Generate expected errors for issues with inputMass table
 # Test when inputMass lacks required column
 testthat::test_that(desc = "Table 'inputMass' missing column", {
