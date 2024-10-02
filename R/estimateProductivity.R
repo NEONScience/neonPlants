@@ -1,24 +1,15 @@
 ##############################################################################################
-#' @title estimateANPProductivity.R
+#' @title Estimate NEON plot and site-level ANPP (Aboveground Primary Productivity) contributed by woody and herbaceous vegetation
 
 #' @author
 #' Samuel M Simkin \email{ssimkin@battelleecology.org} \cr
-#' 
-# changelog and author contributions / copyrights
-#   Samuel M Simkin (2021-03-30)  original creation
-#   Samuel M Simkin (2022-07-12)  revised
-#   Samuel M Simkin (2023-08-04)  revised
 
 #' @description Using inputs from companion estimateAGBiomass function calculate VST woody yearly increment 
 #' and mortality, and thereby annual productivity. Optionally, also calculate HBP productivity and add 
 #' to VST for a VST + HBP summary.
 #' 
-#' changelog and author contributions / copyrights
-#' Samuel M Simkin (2021-03-30)  original creation
-#' Samuel M Simkin (2022-07-12)  revised
-#' Samuel M Simkin (2023-08-04)  revised
 
-#' @param input  The .rds file with needed biomass input data that was produced by companion NEON_biomass_function.R   Defaults to "biomassFunctionOutputs.rds". [character]
+#' @param input  Specify a loaded R list object (e.g. estimateBiomassOutputs) that was produced by companion estimateBiomass.R function. [character]
 #' @param plotType Optional filter based on NEON plot type. Defaults to "tower" plots, which are sampled annually. Otherwise "distributed" plots are examined also, if included in the input .rds. [character]
 #' @param plotPriority NEON plots have a priority number in the event that not all plots are able to be sampled. The lower the number the higher the priority. The default is 5. [numeric]
 #' @param calcMethod Select plot-level (approach 2) or individual-level (approach 1) productivity calculations. The default is "approach_1" [character]
@@ -26,7 +17,7 @@
 #' @param outlier_type Specify the type of outlier, either SD (standard deviations) or IQR (interquartile range). The default is "IQR". [character]
 #' @param dataProducts Select whether to analyse only woody biomass "Vst" or woody plus herbaceous "VstHbp" [character]
 #' 
-#' @details Biomass data input files (in .rds format) created by the companion NEON_biomass_function.R script are read in and aboveground net primary 
+#' @details Biomass data input files (in loaded R list object) created by the companion estimateBiomass.R function are read in and aboveground net primary 
 #' productivity (ANPP) is calculated for woody vegetation (from NEON "Vegetation structure" data product (dpID "DP1.10098.001")). Herbaceous vegetation ANPP 
 #' (from NEON "Herbaceous clip harvest (dpID "DP1.10023.001")) is also included if herbaceous data is present in the input file). Both a whole plot 
 #' level approach and an individual-level approach calculation method are used, and output from the desired calculation method is returned. The individual-level 
@@ -46,25 +37,27 @@
 #' @examples
 #' \dontrun{
 #' # example with arguments at default values
-#' estimateANPProductivityOutputs <- estimateANPProductivity(input = "NEONbiomassOutputs.rds")
+#' estimateProductivityOutputs <- estimateProductivity(input = estimateBiomassOutputs)
 #'                       
 #' # example specifying many non-default arguments
-#' estimateANPProductivityOutputs <- estimateANPProductivity(input = "NEONbiomassOutputs.rds", 
+#' estimateProductivityOutputs <- estimateProductivity(input = "estimateBiomassOutputs", 
 #'                plotType = "all", plotPriority = 50, 
 #'                calcMethod = "approach_2", outlier = 2, outlier_type = "SD", 
 #'                dataProducts = "Vst")
 #' 
-#' list2env(NEONbiomassOutputs ,.GlobalEnv) # unlist all data frames for easier viewing or additional analysis
-#' saveRDS(estimateANPProductivityOutputs, 'estimateANPProductivityOutputs.rds') # save all outputs locally for further examination
+#' list2env(estimateProductivityOutputs ,.GlobalEnv) # unlist all data frames for easier viewing
+#' saveRDS(estimateProductivityOutputs, 'estimateProductivityOutputs.rds') # save output locally
 #' }
 
-##############################################################################################
-      
+# changelog and author contributions / copyrights
+#   Samuel M Simkin (2021-03-30)  original creation
+#   Samuel M Simkin (2022-07-12)  revised
+#   Samuel M Simkin (2023-08-04)  revised
+#   Samuel M Simkin (2024-09-30)  revised
 #################################################################################  
-######    CALCULATE PLOT AND SITE-LEVEL NET PRIMARY PRODUCTIVITY (NPP)     ###### 
 
-estimateANPProductivity = function(
-                         input = "NEONbiomassOutputs.rds",
+estimateProductivity = function(
+                         input = estimateBiomassOutputs,
                          plotType = "tower",
                          plotPriority = 5,
                          calcMethod = "approach_1",
@@ -73,11 +66,9 @@ estimateANPProductivity = function(
                          dataProducts = "VstHbp"
                          ) {
   
-library(tidyverse)
 options(dplyr.summarise.inform = FALSE)
 
-NEONbiomassOutputs <- readRDS(input) #  read in static copy
-list2env(NEONbiomassOutputs ,.GlobalEnv)
+list2env(input ,.GlobalEnv)
 
 # Error if invalid plotType option selected
   if(plotType != "tower" & plotType != "all"){
@@ -112,8 +103,19 @@ if(dataProducts == "VstHbp" & !exists("hbp_agb_per_ha")){
 start <- min(vst_plot_w_0s$year)
 end  <- max(vst_plot_w_0s$year)
 
+### Verify user-supplied inputMass table contains correct data
+  #   Check for required columns
+  vst_plot_w_0s_ExpCols <- c("domainID", "siteID", "plotID", "eventID","year","plot_eventID","nlcdClass","taxonID","agb_Mg_per_ha__Live","agb_Mg_per_ha__Dead_or_Lost",
+                   "specificModuleSamplingPriority","plotType")
+  
+  if (length(setdiff(vst_plot_w_0s_ExpCols, colnames(vst_plot_w_0s))) > 0) {
+    stop(glue::glue("Required columns missing from 'vst_plot_w_0s':", '{paste(setdiff(vst_plot_w_0s_ExpCols, colnames(vst_plot_w_0s)), collapse = ", ")}',
+                    .sep = " "))
+  }
+  
+
 # Error if not at least 2 years of data
-  if(as.numeric(end) - as.numeric(start) < 2){
+  if(as.numeric(end) - as.numeric(start) < 1){
     print("At least 2 years of data are needed to calculate productivity (more for plots sampled less frequently than annually). Current dataset only has woody biomass data from: ")
     print(unique(vst_agb_per_ha$year))
     stop( )
@@ -201,11 +203,11 @@ vst_ANPP_plot_w_taxa_2$wood_ANPP__Mg_ha_yr <- vst_ANPP_plot_w_taxa_2$Mg_per_ha_i
 vst_ANPP_plot_2 <- vst_ANPP_plot_w_taxa_2 %>% dplyr::group_by(siteID, plotID, plotType, nlcdClass, year) %>% dplyr::summarise(wood_ANPP__Mg_ha_yr = round(sum(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3)) %>% ungroup()
 vst_ANPP_plot_2 <- vst_ANPP_plot_2 %>% dplyr::filter(!is.na(wood_ANPP__Mg_ha_yr)) %>% dplyr::select(siteID,plotID,plotType,year,wood_ANPP__Mg_ha_yr) # remove records with missing productivity
 
+if(nrow(vst_agb_zeros) >0){
 vst_agb_zeros_plot <- vst_agb_zeros
     vst_agb_zeros_plot$eventID <- vst_agb_zeros_plot$plot_eventID <- NULL
   vst_agb_zeros_plot$wood_ANPP__Mg_ha_yr <- 0 
-
-vst_ANPP_plot_2 <- rbind(vst_ANPP_plot_2, vst_agb_zeros_plot)
+vst_ANPP_plot_2 <- rbind(vst_ANPP_plot_2, vst_agb_zeros_plot)}
 
 priority_plots_add <- vst_plot_w_0s %>% dplyr::select(plotID, specificModuleSamplingPriority)
 priority_plots_add <- unique(priority_plots_add)
@@ -451,13 +453,13 @@ vst_ANPP_plot <- vst_ANPP_plot %>% dplyr::filter(!is.na(wood_ANPP__Mg_ha_yr)) %>
 
 # ADD PLOTS WITH 0 BIOMASS AND HERB BIOMASS 
   
-vst_agb_zeros_ind <- vst_agb_zeros
+if(nrow(vst_agb_zeros) >0){
+  vst_agb_zeros_ind <- vst_agb_zeros
     vst_agb_zeros_ind$eventID <- vst_agb_zeros_ind$plot_eventID <- NULL
     vst_agb_zeros_ind$outlier_threshold <- paste0(outlier,"_",outlier_type)
+    vst_agb_zeros_ind$wood_ANPP__Mg_ha_yr <- 0 
+    vst_ANPP_plot <- rbind(vst_ANPP_plot, vst_agb_zeros_ind)}
 
-  vst_agb_zeros_ind$wood_ANPP__Mg_ha_yr <- 0 
-
-vst_ANPP_plot <- rbind(vst_ANPP_plot, vst_agb_zeros_ind)
 vst_ANPP_plot <- vst_ANPP_plot %>% dplyr::filter(year >= start) # make sure that records from before the start year have been removed
 vst_ANPP_plot <- merge(vst_ANPP_plot, priority_plots_add, by = c("plotID"), all.x=TRUE)
 vst_ANPP_plot <- vst_ANPP_plot %>% dplyr::filter(plotType == "tower") # if plotType argument to function is "tower" then remove distributed plots
@@ -556,9 +558,9 @@ output.list <- list(
 
 }
 
-#estimateANPProductivityOutputs <- estimateANPProductivity(input = "NEONbiomassOutputs.rds", calcMethod = "approach_1", outlier = 1.5, outlier_type = "IQR")
-#estimateANPProductivityOutputs <- estimateANPProductivity(input = "NEONbiomassOutputs.rds", calcMethod = "approach_1", outlier = 2, outlier_type = "SD")
+#estimateProductivityOutputs <- estimateProductivity(input = "NEONbiomassOutputs.rds", calcMethod = "approach_1", outlier = 1.5, outlier_type = "IQR")
+#estimateProductivityOutputs <- estimateProductivity(input = "NEONbiomassOutputs.rds", calcMethod = "approach_1", outlier = 2, outlier_type = "SD")
 
-#list2env(estimateANPProductivityOutputs ,.GlobalEnv) # unlist all data frames for easier viewing or additional analysis
-#saveRDS(estimateANPProductivityOutputs, 'estimateANPProductivityOutputs.rds') # save all outputs locally for further examination
+#list2env(estimateProductivityOutputs ,.GlobalEnv) # unlist all data frames for easier viewing or additional analysis
+#saveRDS(estimateProductivityOutputs, 'estimateProductivityOutputs.rds') # save all outputs locally for further examination
 

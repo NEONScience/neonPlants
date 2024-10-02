@@ -1,18 +1,13 @@
 ##############################################################################################
-#' @title estimateAGBiomass.R
+#' @title Estimate aboveground biomass (AGB) of woody and herbaceous vegetation
 
 #' @author
 #' Samuel M Simkin \email{ssimkin@battelleecology.org} \cr
 
 #' @description Use allometric equations to calculate biomass for each VST woody record and 
 #' summarise biomass by siteID, plotID, taxonID. Optionally summarise HBP aboveground herbaceous
-#' biomass as well.
-#' 
-#' changelog and author contributions / copyrights
-#' Samuel M Simkin (2021-03-30)  original creation
-#' Samuel M Simkin (2022-07-12)  revised
-#' Samuel M Simkin (2023-08-04)  revised
-#' Samuel M Simkin (2023-09-14)  revised
+#' biomass as well. Biomass outputs can, if desired, be used as utputs can also be locally for further examination and 
+#'        if desired use in the follow-up productivity function.
 
 #' @param inputVst Specify a loaded R list object (e.g. VstDat) that contains NEON portal VST data. [character]
 #' @param inputHbp Optionally, specify a loaded R list object (e.g. HbpDat) that contains NEON portal HBP data. [character]
@@ -22,7 +17,6 @@
 #' @param growthForm Select which growth forms to analyse [character]
 #' @param plotType Optional filter based on NEON plot type. Defaults to "tower" plots, which are sampled annually. Otherwise "distributed" plots are examined also. [character]
 #' @param plotPriority NEON plots have a priority number in the event that not all plots are able to be sampled. The lower the number the higher the priority. The default is 5. [numeric]
-
 
 #' @details All available data from the NEON "Vegetation structure" data product (dpID "DP1.10098.001") meeting the site and year query criteria 
 #' will be downloaded using the neonUtilities::loadByProduct function. Supplemental static tables with allometric equation parameters and taxon 
@@ -44,42 +38,29 @@
 #' \dontrun{
 #' # example with arguments at default values
 #' 
-#' library(neonUtilities)
-#' library(dplyr)
-#' library(pkg)
-#' library(neonPlants)
-#' library(devtools)
+#' 
+#' list2env(VstHbpData ,.GlobalEnv) # unlist list of lists created by function getBiomassInputs
+#' 
+#' # If list of lists is not in memory, load VST and HBP list of dataframes from local files:
+#' load('VstDat.rds') # load NEON VST portal data from a local file
+#' load('HbpDat.rds') # Optionally, load NEON HBP portal data from a local file
+#' 
+#' estimateBiomassOutputs <- estimateBiomass(inputVst = VstDat, inputHbp = HbpDat)
+#' estimateBiomassOutputs <- estimateBiomass(growthForm = "all trees", plotPriority = 5)
+#' 
+#' list2env(estimateBiomassOutputs ,.GlobalEnv) # unlist all data frames
+#' saveRDS(estimateBiomassOutputs, 'estimateBiomassOutputs.rds') # save all outputs locally
+#' }
 
-#devtools::install_github("NEONScience/neonPlants@dev", force=TRUE)
-#devtools::install_github("samsimkin/neonPlants@biomass", force=TRUE)
-devtools::install("C:/GitHub/samsimkin/neonPlants", force=TRUE)
-
-#load(file='../data/plant_taxa_NEON.rda')
-#load(file='../data/parameters.rda')
-#load(file='../data/plant_taxa_char_all.rda')
-#load(file='../data/priority_plots.rda')
-#load(file='../data/taxon_fields.rda')
-
-#' 
-#' list2env(VstHbpData ,.GlobalEnv) # unlist R object list of lists created by wrapper function getBiomassInputs to create VstDat list (and optionally HbpDat list)
-#' 
-#' # Or alternatively, if list of lists is not in memory, load VST list of dataframes and optionally HBP list of dataframes from local files:
-#' 
-#' load('VstDat.rds') # load NEON VST portal data from a local file for use in estimateAGBiomass function
-#' load('HbpDat.rds') # Optionally, load NEON HBP portal data from a local file for use in estimateAGBiomass function
-#' 
-#' 
-#' estimateAGBiomassOutputs <- estimateAGBiomass(inputVst = VstDat, inputHbp = HbpDat, growthForm = "single and multi-bole trees", plotType = "tower", plotPriority = 5)
-#' estimateAGBiomassOutputs <- estimateAGBiomass(inputVst = NA, inputHbp = NA, growthForm = "single and multi-bole trees", plotType = "tower", plotPriority = 5)
-#' 
-#' list2env(estimateAGBiomassOutputs ,.GlobalEnv) # unlist all data frames for easier viewing or additional analysis
-#' saveRDS(estimateAGBiomassOutputs, 'estimateAGBiomassOutputs.rds') # save all outputs locally for further examination and 
-#'        if desired use in the follow-up productivity function.
-#'
-
+# changelog and author contributions / copyrights
+# Samuel M Simkin (2021-03-30)  original creation
+# Samuel M Simkin (2022-07-12)  revised
+# Samuel M Simkin (2023-08-04)  revised
+# Samuel M Simkin (2023-09-14)  revised
+# Samuel M Simkin (2024-09-30)  revised
 ##############################################################################################
 
-estimateAGBiomass = function(inputVst = VstDat,
+estimateBiomass = function(inputVst = VstDat,
                        inputHbp = HbpDat,
                        site = NA,
                        start = NA, 
@@ -89,10 +70,8 @@ estimateAGBiomass = function(inputVst = VstDat,
                        plotPriority = 5
                          ) {
 
-
   
 # Error if no input VST data
-#if(missing(inputVst) ){
 if(missing(inputVst) ){
     
 print("An input VstDat list was not specified, therefore now downloading NEON 'Vegetation structure' data (dpID DP1.10098.001)  ..... ")
@@ -107,15 +86,15 @@ VstDat <- neonUtilities::loadByProduct(dpID="DP1.10098.001",
                              startdate = paste0(start,"-01"),
                              enddate = paste0(end, "-12"),
                              package = "basic", check.size = FALSE, token = Sys.getenv('NEON_TOKEN')) 
-}  else {if(class(inputVst) != "list" ){
+}  else {if(!is(inputVst, class = "list" )){
     stop("The biomass function requires that the R object in the inputVst argument is a list of dataframes (e.g. vst_apparentindividual, vst_mappingandtagging, etc.),
          or that the inputVst argument be left at NA to trigger a fresh download from the NEON portalinput NEON vegetation structure (VST) data, specified in the inputVst argument, to be a list.")
 }  
   
 # Warning if no input HBP data
-if(is.na(inputHbp) ){
+if(missing(inputHbp) ){
     print("Since the inputHbp argument has been left at NA there will be no aggregation of NEON Herbaceous biomass (HBP) data.")
-  }   else {if(class(inputHbp) != "list" ){
+}  else {if(!is(inputHbp, class = "list" )){
     stop("The biomass function requires that the R object in the input Hbp argument, if specified, be a list of dataframes (e.g. hbp_perbout, hbp_massdata).")
 }  
  
