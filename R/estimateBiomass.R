@@ -118,8 +118,6 @@ if(missing(inputHbp) ){
   }  
 
   
-#VstDat <- readRDS(inputVst)
-  
 perplot <- VstDat$vst_perplotperyear ## read in plot sample area for each growthForm by eventID combo from vst_perplotperyear table
 perplot$year <- as.numeric(substr(perplot$eventID,10,13) )
 start_from_input <- as.character(min(as.numeric(substr(perplot$date, 1,4))))
@@ -164,8 +162,6 @@ perplot <- perplot %>% filter(year >= as.numeric(start) & year <= as.numeric(end
 #                   dplyr::filter(str_detect(specificModule, "vst"))  %>% dplyr::select(c(plotID,specificModuleSamplingPriority, plotType) ) 
 #priority_plots <- read.table('../suppl_data/UniquePlotIDsSamplingModulesPriorityLists.NEON-OS_spatial_data.repo.vst.csv', header=TRUE, sep = ",", stringsAsFactors = F) 
   # The specificModuleSamplingPriority field is used in the productivity script to optionally filter only to plots with priority 1-5 (the plots that are most likely to have been sampled the year they were scheduled)
-#priority_plots <- load(file='../data/priority_plots.rda')
-#pkg::priority_plots
 priority_plots_all = data.frame() 
 endYear <- as.numeric((as.numeric(end)) : (as.numeric(start)) )
 for(i in 1:length(endYear)){ # loop through all possible years
@@ -643,7 +639,6 @@ vst_site <- vst_plot_w_0s %>% dplyr::group_by(siteID, year) %>% dplyr::summarise
 # Original hbp scripts by Eric Sokol (esokol@battelleecology) in May 2020. Merged and modified by Sam Simkin (ssimkin@battelleecology.org) in Jul 2023
   
 if(!missing(inputHbp)) { 
-#HbpDat <- readRDS(inputHbp)
 
   hbp_perbout <- HbpDat$hbp_perbout
   hbp_massdata <- HbpDat$hbp_massdata
