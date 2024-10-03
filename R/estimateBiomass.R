@@ -624,8 +624,16 @@ vst_plot_w_0s <- vst_plot_w_0s %>% dplyr::filter(year >= start) # remove records
 if(plotType == "tower") {vst_plot_w_0s <- vst_plot_w_0s %>% dplyr::filter(plotType == "tower") } # if arg plotType = "tower" then filter to just tower plots, otherwise keep all plots from input data
 vst_plot_w_0s <- vst_plot_w_0s %>% dplyr::filter(specificModuleSamplingPriority <= plotPriority) # remove lower priority plots that aren't required to be sampled every year (default is 5 (the 5 highest priority plots))
 
-vst_site <- vst_plot_w_0s %>% dplyr::group_by(siteID, year) %>% dplyr::summarise(live_Mg_per_ha_n = n(), live_Mg_per_ha_ave = round(mean(agb_Mg_per_ha__Live, na.rm = TRUE),3), 
-      live_Mg_per_ha_min = round(min(agb_Mg_per_ha__Live, na.rm = TRUE),3), live_Mg_per_ha_max = round(max(agb_Mg_per_ha__Live, na.rm = TRUE),3), live_Mg_per_ha_sd = round(sd(agb_Mg_per_ha__Live, na.rm = TRUE),3))   
+vst_plot_w_0s_sum_taxa <- vst_plot_w_0s
+if(nrow(vst_plot_w_0s_sum_taxa > 0)) {vst_plot_w_0s_sum_taxa <- vst_plot_w_0s %>% dplyr::group_by(plot_eventID, eventID, siteID, plotID, plotType, nlcdClass, year) %>% dplyr::summarise(agb_Mg_per_ha__Live = sum(agb_Mg_per_ha__Live, na.rm = TRUE),
+             agb_Mg_per_ha__Dead_or_Lost = sum(agb_Mg_per_ha__Dead_or_Lost, na.rm = TRUE) ) # sum the taxonIDs within each plot in preparation for creating site level averages and other metrics
+} else {
+  vst_plot_w_0s_sum_taxa$agb_Mg_per_ha__Live = 0
+  vst_plot_w_0s_sum_taxa$agb_Mg_per_ha__Dead_or_Lost= 0
+}
+
+vst_site <- vst_plot_w_0s_sum_taxa %>% dplyr::group_by(siteID, year) %>% dplyr::summarise(vst_live_Mg_per_ha_plot_n = n(), vst_live_Mg_per_ha_ave = round(mean(agb_Mg_per_ha__Live, na.rm = TRUE),3), 
+      vst_live_Mg_per_ha_min = round(min(agb_Mg_per_ha__Live, na.rm = TRUE),3), vst_live_Mg_per_ha_max = round(max(agb_Mg_per_ha__Live, na.rm = TRUE),3), vst_live_Mg_per_ha_sd = round(sd(agb_Mg_per_ha__Live, na.rm = TRUE),3))   
   # calculate site - level averages of plots (including plots with 0 biomass), along with plot min, max, standard deviation and plot count
 
 # if(grepl("Ltr", dataProducts) )    {
@@ -689,7 +697,7 @@ print("Combining above-ground woody and herbaceous biomass summaries  ..... ")
 
 VstHbp_site <- merge(vst_site, herb_site_summary, by=c("siteID","year"), all=TRUE)
  
-VstHbp_site$agb_Mg_per_ha_ave <- VstHbp_site$live_Mg_per_ha_ave + VstHbp_site$herb_peak_Mg_per_ha_ave
+VstHbp_site$agb_Mg_per_ha_ave <- VstHbp_site$vst_live_Mg_per_ha_ave + VstHbp_site$herb_peak_Mg_per_ha_ave
 }
   
 priority_plots$year <- NULL
@@ -719,9 +727,7 @@ output.list <- list(
    vst_agb_zeros = vst_agb_zeros,
    vst_site = vst_site
 )
+   }
   }
-
-}
-  
  }
 }

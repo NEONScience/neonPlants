@@ -26,7 +26,7 @@
 #' VstHbpData <- getBiomassInputs(site="all")
 #' 
 #' # examples specifying multiple non-default arguments
-#' VstHbpData <- getBiomassInputs(site="HARV", start = 2021, end = 2021, dataProducts = "Vst")
+#' VstHbpData <- getBiomassInputs(site="HARV", start = 2021, end = 2022, dataProducts = "VstHbp")
 #' 
 #' VstHbpData <- getBiomassInputs(siteID = c("HARV","JERC"), 
 #'          start = "2019", end = "2022", dataProducts = "Vst")
