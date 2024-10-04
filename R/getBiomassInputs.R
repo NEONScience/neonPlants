@@ -81,7 +81,7 @@ list2env(VstDat, envir=.GlobalEnv)
 vstList <- names(VstDat)
 vst_perplotperyear <- vst_perplotperyear %>% filter(as.numeric(substr("eventID", 10,13)) >= start & as.numeric(substr("eventID", 10,13)) <= end)
 vst_apparentindividual <- vst_apparentindividual %>% filter(as.numeric(substr("eventID", 10,13)) >= start & as.numeric(substr("eventID", 10,13)) <= end)
-`vst_non-woody` <- `vst_non-woody` %>% filter(as.numeric(substr("eventID", 10,13)) >= start & as.numeric(substr("eventID", 10,13)) <= end)
+if(exists('`vst_non-woody`')) {`vst_non-woody` <- `vst_non-woody` %>% filter(as.numeric(substr("eventID", 10,13)) >= start & as.numeric(substr("eventID", 10,13)) <= end)}
 VstDat <-  mget(vstList, envir = sys.frame())
 
 ##### If option to include herbaceous data was selected then download the herbaceous data #############################
