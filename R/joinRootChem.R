@@ -1,33 +1,36 @@
-###################################################################################################
-#' @title Join NEON Plant Belowground Biomass Root Mass and Root Chemistry Data Into a Single Table
+#' @title Join NEON Plant Below Ground Biomass Root Mass and Root Chemistry Data Into a Single Table
 
 #' @author Courtney Meier \email{cmeier@battelleecology.org} \cr
 
-#' @description This function uses NEON Plant Belowground Biomass data (DP1.10067.001) retrieved 
-#' using the neonUtilities::loadByProduct() function (preferred), downloaded from the NEON Data 
-#' Portal, or input data tables with an equivalent structure and representing the same site x month
-#' combinations. The function joins the 'bbc_rootmass', 'bbc_chemistryPooling', and 'bbc_rootChemistry'
-#' tables to generate a single table that contains both mass and chemistry data for each sampleID
-#' and subsampleID (i.e., sizeCategory).
+#' @description Join the 'bbc_rootmass', 'bbc_chemistryPooling', and 'bbc_rootChemistry' tables to
+#' generate a single table that contains both mass and chemistry data for each sampleID and 
+#' subsampleID (i.e., sizeCategory). Data inputs are NEON Plant Belowground Biomass data 
+#' (DP1.10067.001) retrieved using the neonUtilities::loadByProduct() function (preferred), data 
+#' downloaded from the NEON Data Portal, or input data tables with an equivalent structure and 
+#' representing the same site x month combinations. 
 #'
-#' @details For table joining to be successful, all input data frames must contain data from the
-#' same site x month combination(s). When analytical replicates exist in the 'bbc_rootChemistry'
-#' table, this function returns the mean and concatenates analyte-specific QF values, dataQF
+#' @details For table joining to be successful, inputs must contain data from the same site x month
+#' combination(s) for all tables. When analytical replicates exist in the 'bbc_rootChemistry'
+#' table, the function returns the mean and concatenates analyte-specific QF values, dataQF
 #' values, and remarks into a single string for all analytical replicates. 
 #' 
 #' In the joined output table, 'rootChemistryDataQF' and 'rootChemistryRemarks' are new fields 
 #' that result from the concatenation described above, and there is a new 'analyticalRepCount'
 #' field to document the number of analytical replicates associated with each chemistry data 
 #' point.
+#' 
+#' @param inputRootList A list object comprised of Plant Below Ground Biomass tables (DP1.10067.001) 
+#' downloaded using the neonUtilities::loadByProduct function (defaults to required). If a list 
+#' input is provided, all table inputs must be NA. [list]
 #'
 #' @param inputMass The 'bbc_rootmass' table for the site x month combination(s) of interest.
-#' (required) [data.frame]
+#' (defaults to NA) [data.frame]
 #' 
 #' @param inputPool The 'bbc_chemistryPooling' table for the site x month combination(s) of
-#' interest (required). [data.frame]
+#' interest (defaults to NA). [data.frame]
 #' 
 #' @param inputChem The 'bbc_rootChemistry' table for the site x month combination(s) of
-#' interest (required). [data.frame]
+#' interest (defaults to NA). [data.frame]
 #' 
 #' @return A table containing both root mass and root chemistry data in the same row for
 #' different root sizeCategories (i.e., subsampleIDs) within a sampleID. The subsampleIDs in 
@@ -39,33 +42,101 @@
 #' #   Obtain NEON Plant Belowground Biomass data
 #' bbc <- neonUtilities::loadByProduct(
 #' dpID = "DP1.10067.001",
-#' site = "all",
-#' startdate = "2022-07",
-#' enddate = "2022-08",
+#' site = "LENO",
+#' startdate = "2018-07",
+#' enddate = "2018-08",
 #' tabl = "all",
 #' check.size = FALSE
 #' )
 #' 
 #' #   Join downloaded root data
-#' df <- neonPlants::rootChemJoin(
-#' inputMass = bbc$bbc_rootmass,
-#' inputPool = bbc$bbc_chemistryPooling,
-#' inputChem = bbc$bbc_rootChemistry
+#' df <- neonPlants::joinRootChem(
+#' inputRootList = bbc,
+#' inputMass = NA,
+#' inputPool = NA,
+#' inputChem = NA
 #' )
 #'
 #' }
 #' 
-#' @export rootChemJoin
+#' @export joinRootChem
 
-###################################################################################################
 
-rootChemJoin <- function(inputMass,
-                         inputPool,
-                         inputChem) {
+joinRootChem <- function(inputRootList,
+                         inputMass = NA,
+                         inputPool = NA,
+                         inputChem = NA) {
   
-  ### Verify user-supplied inputMass table contains correct data
-  rootMass <- inputMass
+  ### Test that user has supplied arguments as required by function ####
   
+  ### Verify user-supplied inputRootList object contains correct data if not NA
+  if (!is.logical(inputRootList)) {
+    
+    #   Check that input is a list
+    if (class(inputRootList) != "list") {
+      stop(glue::glue("Argument 'inputRootList' must be a list object from neonUtilities::loadByProduct();
+                     supplied input object is {class(inputRootList)}"))
+    }
+    
+    #   Check that required tables within list match expected names
+    listExpNames <- c("bbc_rootmass", "bbc_chemistryPooling", "bbc_rootChemistry")
+    
+    if (length(setdiff(listExpNames, names(inputRootList))) > 0) {
+      stop(glue::glue("Required tables missing from 'inputRootList':",
+                      '{paste(setdiff(listExpNames, names(inputRootList)), collapse = ", ")}',
+                      .sep = " "))
+    }
+  }
+  
+  
+  
+  ### Verify table inputs are NA if inputRootList is supplied
+  if (class(inputRootList) == "list" & (!is.logical(inputMass) | !is.logical(inputPool) | !is.logical(inputChem))) {
+    stop("When 'inputRootList' is supplied all table input arguments must be NA")
+  }
+  
+  
+  
+  ### Verify inputRootList is NA if table inputs are supplied
+  if (!is.logical(inputRootList) & 
+      (class(inputMass) == "data.frame" | class(inputPool) == "data.frame" | class(inputChem) == "data.frame")) {
+    
+    stop("Argument 'inputRootList' must be NA when table inputs are supplied")
+    
+  }
+  
+  
+  
+  ### Verify all table inputs are data frames if inputRootList is NA
+  if (is.logical(inputRootList) & 
+      (class(inputMass) != "data.frame" | class(inputPool) != "data.frame" | class(inputChem) != "data.frame")) {
+    
+    stop("Data frames must be supplied for all table inputs if 'inputRootList' is NA")
+    
+  }
+  
+  
+  
+  ### Conditionally define input tables ####
+  if (class(inputRootList) == "list") {
+    
+    rootMass <- inputRootList$bbc_rootmass
+    rootPool <- inputRootList$bbc_chemistryPooling
+    rootChem <- inputRootList$bbc_rootChemistry
+    
+  } else {
+    
+    rootMass <- inputMass
+    rootPool <- inputPool
+    rootChem <- inputChem
+    
+  }
+  
+  
+  
+  ### Verify input tables contain required columns and data ####
+  
+  ### Verify 'rootMass' table contains required data
   #   Check for required columns
   massExpCols <- c("domainID", "siteID", "plotID", "sampleID", "subsampleID", "rootStatus", "dryMass")
   
@@ -81,9 +152,7 @@ rootChemJoin <- function(inputMass,
 
 
 
-  ### Verify user-supplied inputPool table contains correct data
-  rootPool <- inputPool
-
+  ### Verify 'inputPool' table contains required data
   #   Check for required columns
   poolExpCols <- c("domainID", "siteID", "plotID", "subsampleIDList", "cnSampleID")
 
@@ -99,9 +168,7 @@ rootChemJoin <- function(inputMass,
 
 
 
-  ### Verify user-supplied inputChem table contains correct data
-  rootChem <- inputChem
-
+  ### Verify 'inputChem' table contains required data
   #   Check for required columns
   chemExpCols <- c("cnSampleID", "d15N", "d13C", "nitrogenPercent", "carbonPercent", "CNratio",
                    "cnIsotopeQF", "cnPercentQF", "isotopeAccuracyQF", "percentAccuracyQF", "dataQF", "remarks")
@@ -115,18 +182,19 @@ rootChemJoin <- function(inputMass,
   if (nrow(rootChem) == 0) {
     stop(glue::glue("Table 'inputChem' has no data."))
   }
-
-
-
+  
+  
+  
+  ### Table joining ####
 
   ### Join rootChem and rootPool tables to associate the cnSampleID with the rootMass subsampleID
   #   Select needed columns from rootPool
   rootPool <- rootPool %>%
-    dplyr::select(.data$domainID,
-                  .data$siteID,
-                  .data$plotID,
-                  .data$subsampleIDList,
-                  .data$cnSampleID)
+    dplyr::select("domainID",
+                  "siteID",
+                  "plotID",
+                  "subsampleIDList",
+                  "cnSampleID")
 
 
   ##  Expand subsampleIDList if "|" exists in string; pivot_longer() approach preserves all columns in input df
@@ -134,18 +202,18 @@ rootChemJoin <- function(inputMass,
     #   tempSub1: If subsampleIDList contains pipe, extract everything before pipe
     #   tempSub2: If subsamleIDList contains pipe, extract everything after pipe
     dplyr::mutate(tempSub1 = dplyr::case_when(grepl("\\|", .data$subsampleIDList) ~ stringr::str_extract(.data$subsampleIDList,
-                                                                                                               pattern = "^.*?(?=\\|)"),
-                                                    TRUE ~ .data$subsampleIDList),
+                                                                                                         pattern = "^.*?(?=\\|)"),
+                                              TRUE ~ .data$subsampleIDList),
                   tempSub2 = dplyr::case_when(grepl("\\|", .data$subsampleIDList) ~ stringr::str_extract(.data$subsampleIDList,
-                                                                                                               pattern = "[^\\|]*$"),
-                                                    TRUE ~ NA)) %>%
-    tidyr::pivot_longer(cols = c(.data$tempSub1, .data$tempSub2),
+                                                                                                         pattern = "[^\\|]*$"),
+                                              TRUE ~ NA)) %>%
+    tidyr::pivot_longer(cols = c("tempSub1", "tempSub2"),
                         names_to = NULL,
                         values_to = "subsampleID") %>%
-    dplyr::relocate(.data$subsampleID,
-                    .before = .data$cnSampleID) %>%
+    dplyr::relocate("subsampleID",
+                    .before = "cnSampleID") %>%
     dplyr::filter(!is.na(.data$subsampleID)) %>%
-    dplyr::select(-.data$subsampleIDList)
+    dplyr::select(-"subsampleIDList")
 
 
   ##  Summarise rootChem table: Calculate means for analytical replicates and preserve QF values

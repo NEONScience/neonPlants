@@ -6,7 +6,34 @@ library(neonUtilities)
 
 
 
-### Testing 
+### Create test dataset in list form for testing with new list input ####
+#   Retrieve test data for LENO (site with fewest records in this site x month)
+bbcTest <- neonUtilities::loadByProduct(dpID = "DP1.10067.001",
+                                        site = "LENO",
+                                        startdate = "2018-07",
+                                        enddate = "2018-08",
+                                        tabl = "all",
+                                        check.size = FALSE,
+                                        token = Sys.getenv("NEON_TOKEN"))
+
+#   Recreate small list object for testing purposes
+testList <- list(bbc_percore = bbcTest$bbc_percore,
+                 bbc_rootmass = bbcTest$bbc_rootmass,
+                 bbc_chemistryPooling = bbcTest$bbc_chemistryPooling,
+                 bbc_rootChemistry = bbcTest$bbc_rootChemistry,
+                 bbc_dilution = bbcTest$bbc_dilution)
+
+#   Write out test dataset for testthat
+testDataPath <- "tests/testthat/testdata"
+
+saveRDS(object = testList,
+        file = paste(testDataPath, "valid-rootdatalist-201807.RDS", sep = "/"))
+
+
+
+
+
+### Testing of initial functions ####
 #   Newer site x month combos with rootStatus == NA for all subsampleIDs
 bbcNew <- neonUtilities::loadByProduct(dpID = "DP1.10067.001",
                                        site = "all",
