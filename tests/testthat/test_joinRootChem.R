@@ -9,30 +9,26 @@ testChem <- testList$bbc_rootChemistry
 
 
 
-# ### Test: Function generates expected output type
-# testthat::test_that(desc = "Output type", {
-#   
-#   testthat::expect_type(object = rootChemJoin(inputMass = testMass,
-#                                                inputPool = testPool,
-#                                                inputChem = testChem),
-#                         type = "list")
-#   
-# })
-# 
-# 
-# 
-# ### Test: Function generates expected output class
-# testthat::test_that(desc = "Output class", {
-#   
-#   testthat::expect_s3_class(object = rootChemJoin(inputMass = testMass,
-#                                                    inputPool = testPool,
-#                                                    inputChem = testChem),
-#                             class = "data.frame")
-#   
-# })
-# 
-# 
-# 
+### Test: Function generates expected output type with list input
+testthat::test_that(desc = "Output type", {
+
+  testthat::expect_type(object = joinRootChem(inputRootList = testList),
+                        type = "list")
+
+})
+
+
+
+### Test: Function generates expected output class with list input
+testthat::test_that(desc = "Output class", {
+
+  testthat::expect_s3_class(object = joinRootChem(inputRootList = testList),
+                            class = "data.frame")
+
+})
+
+
+
 # ### Test: Function generates data frame with expected dimensions using test data
 # #   Check expected row number of data frame
 # testthat::test_that(desc = "Output data frame row number", {

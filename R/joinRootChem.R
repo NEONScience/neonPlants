@@ -73,7 +73,7 @@ joinRootChem <- function(inputRootList,
   if (!is.logical(inputRootList)) {
     
     #   Check that input is a list
-    if (class(inputRootList) != "list") {
+    if (!inherits(inputRootList, "list")) {
       stop(glue::glue("Argument 'inputRootList' must be a list object from neonUtilities::loadByProduct();
                      supplied input object is {class(inputRootList)}"))
     }
@@ -91,7 +91,7 @@ joinRootChem <- function(inputRootList,
   
   
   ### Verify table inputs are NA if inputRootList is supplied
-  if (class(inputRootList) == "list" & (!is.logical(inputMass) | !is.logical(inputPool) | !is.logical(inputChem))) {
+  if (inherits(inputRootList, "list") & (!is.logical(inputMass) | !is.logical(inputPool) | !is.logical(inputChem))) {
     stop("When 'inputRootList' is supplied all table input arguments must be NA")
   }
   
@@ -99,7 +99,7 @@ joinRootChem <- function(inputRootList,
   
   ### Verify inputRootList is NA if table inputs are supplied
   if (!is.logical(inputRootList) & 
-      (class(inputMass) == "data.frame" | class(inputPool) == "data.frame" | class(inputChem) == "data.frame")) {
+      (inherits(inputMass, "data.frame") | inherits(inputPool, "data.frame") | inherits(inputChem, "data.frame"))) {
     
     stop("Argument 'inputRootList' must be NA when table inputs are supplied")
     
@@ -109,7 +109,7 @@ joinRootChem <- function(inputRootList,
   
   ### Verify all table inputs are data frames if inputRootList is NA
   if (is.logical(inputRootList) & 
-      (class(inputMass) != "data.frame" | class(inputPool) != "data.frame" | class(inputChem) != "data.frame")) {
+      (!inherits(inputMass, "data.frame") | !inherits(inputPool, "data.frame") | !inherits(inputChem, "data.frame"))) {
     
     stop("Data frames must be supplied for all table inputs if 'inputRootList' is NA")
     
@@ -118,7 +118,7 @@ joinRootChem <- function(inputRootList,
   
   
   ### Conditionally define input tables ####
-  if (class(inputRootList) == "list") {
+  if (inherits(inputRootList, "list")) {
     
     rootMass <- inputRootList$bbc_rootmass
     rootPool <- inputRootList$bbc_chemistryPooling
