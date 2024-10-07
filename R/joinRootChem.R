@@ -97,16 +97,6 @@ joinRootChem <- function(inputRootList,
   
   
   
-  ### Verify inputRootList is NA if table inputs are supplied
-  if (!is.logical(inputRootList) & 
-      (inherits(inputMass, "data.frame") | inherits(inputPool, "data.frame") | inherits(inputChem, "data.frame"))) {
-    
-    stop("Argument 'inputRootList' must be NA when table inputs are supplied")
-    
-  }
-  
-  
-  
   ### Verify all table inputs are data frames if inputRootList is NA
   if (is.logical(inputRootList) & 
       (!inherits(inputMass, "data.frame") | !inherits(inputPool, "data.frame") | !inherits(inputChem, "data.frame"))) {

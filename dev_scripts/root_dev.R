@@ -31,6 +31,15 @@ saveRDS(object = testList,
 
 
 
+### Create output data frame with test list input
+joinTestOut <- neonPlants::joinRootChem(inputRootList = testList)
+
+#--> returns data frame with 320 rows and 35 columns
+
+
+
+
+
 
 
 ### Testing of initial functions ####
