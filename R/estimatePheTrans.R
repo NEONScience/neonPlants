@@ -1,4 +1,4 @@
-#' @title Calculate Phenological Transition Dates
+#' @title Estimate Phenological Transition Dates
 #'
 #' @author
 #' Katie Jones \email{kjones@battelleecology.org} \cr
@@ -6,7 +6,7 @@
 #' @description This function uses observation data from the NEON Plant Phenology Observation (DP1.10055.001) to calculate phenophase transition dates and descriptive statistics.
 #'
 #'
-#' @param pheData data.frame from NEON Plant Phenology Observation (DP1.10055.001) phe_statusintensity table as returned from neonUtilities::loadByProduct().
+#' @param pheData data list from NEON Plant Phenology Observation (DP1.10055.001) as returned from neonUtilities::loadByProduct().
 #
 #' @details
 #' This function creates a time series for each phenophase reported for each individual in the data set and identifies transition dates for beginning and end of a given phenophase as well as explanatory metrics about that estimate for the time frame provided in the input data frame.
@@ -43,15 +43,19 @@
 #'   check.size = FALSE)
 #'
 #'out <- estimatePheTrans(inputDataList = pheDat)
+#'out2 <- estimatePheTrans(inputStatus = pheDat$phe_statusintensity)
 #' }
 
 ##############################################################################################
 
 
 estimatePheTrans <- function(
-    inputDataList = NA,
-    inputStatus = NA
+    inputDataList = NULL,
+    inputStatus = NULL
     ){
+  if(!is.null(inputDataList) && !is.null(inputStatus)){
+    stop("Please provide either a list of data frames (inputDataList) or a single data frame (inputStatus), but not both.")
+  }
   if(is.list(inputDataList)){
   df <- inputDataList$phe_statusintensity
   }else{
