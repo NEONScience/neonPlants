@@ -14,7 +14,7 @@
 #' @param plotPriority NEON plots have a priority number in the event that not all plots are able to be sampled. The lower the number the higher the priority. The default is 5. [numeric]
 #' @param calcMethod Select plot-level (approach 2) or individual-level (approach 1) productivity calculations. The default is "approach_1" [character]
 #' @param outlier Specify how much (if any) outlier removal should be performed. The default is 1.5. [numeric]
-#' @param outlier_type Specify the type of outlier, either SD (standard deviations) or IQR (interquartile range). The default is "IQR". [character]
+#' @param outlierType Specify the type of outlier, either SD (standard deviations) or IQR (interquartile range). The default is "IQR". [character]
 #' @param dataProducts Select whether to analyse only woody biomass "Vst" or woody plus herbaceous "VstHbp" [character]
 #' 
 #' @details Biomass data input files (in loaded R list object) created by the companion estimateBiomass.R function are read in and aboveground net primary 
@@ -42,7 +42,7 @@
 #' # example specifying many non-default arguments
 #' estimateProductivityOutputs <- estimateProductivity(input = "estimateBiomassOutputs", 
 #'                plotType = "all", plotPriority = 50, 
-#'                calcMethod = "approach_2", outlier = 2, outlier_type = "SD", 
+#'                calcMethod = "approach_2", outlier = 2, outlierType = "SD", 
 #'                dataProducts = "Vst")
 #' 
 #' list2env(estimateProductivityOutputs ,.GlobalEnv) # unlist all data frames for easier viewing
@@ -62,7 +62,7 @@ estimateProductivity = function(
                          plotPriority = 5,
                          calcMethod = "approach_1",
                          outlier = 1.5,
-                         outlier_type = "IQR",
+                         outlierType = "IQR",
                          dataProducts = "VstHbp"
                          ) {
   
@@ -82,11 +82,11 @@ list2env(input ,.GlobalEnv)
   
 # Error if invalid calcMethod selected
   if(calcMethod != "approach_1" & calcMethod != "approach_2"){
-    stop("The only valid outlier_type options are 'approach_1' or 'approach_2'.")
+    stop("The only valid outlierType options are 'approach_1' or 'approach_2'.")
   }
 
-# Error if invalid outlier_type selected
-  if(outlier_type != "SD" & outlier_type != "IQR"){
+# Error if invalid outlierType selected
+  if(outlierType != "SD" & outlierType != "IQR"){
     stop("The only valid calcMethod options are 'SD' or 'IQR'.")
   }
 
@@ -142,7 +142,7 @@ for(i in 2:length(yearList)){
   vst_increment <- vst_increment %>% dplyr::mutate(!!increment_column_name := (!!sym(column_name)) - !!sym(column_name_prev) ) 
 }
 
-vst_increment_long <- vst_increment %>% dplyr::select(-contains("Mg_per_ha_2"))  %>% 
+vst_increment_long <- vst_increment %>% dplyr::select(-dplyr::contains("Mg_per_ha_2"))  %>% 
   tidyr::pivot_longer( cols = !c(plotID,siteID,taxonID,nlcdClass,plotType), names_to = "year",  names_prefix = "Mg_per_ha_increment_", values_to = "Mg_per_ha_increment" )
 
 ### PLOT-LEVEL MORTALITY
@@ -168,7 +168,7 @@ for(i in 2:length(yearList)){
   column_name_prev <- paste0("status_", yearList[i-1])
   column_name <- paste0("status_", yearList[i])
     transitionType_column_name <- paste0("transitionType_", yearList[i])
-  transitions <- transitions %>% dplyr::mutate(!!transitionType_column_name := case_when(
+  transitions <- transitions %>% dplyr::mutate(!!transitionType_column_name := dplyr::case_when(
   (!!sym(column_name)) == 'Dead_or_Lost' & !!sym(column_name_prev) == 'Live' ~ 'mortality',
     ))
 }
@@ -180,7 +180,7 @@ mortality$mortality_Mg_per_ha <- NA
 for(i in 2:length(yearList)){
   year_previous <- yearList[i-1]
   column_name <- paste0("transitionType_", yearList[i])
-  mortality <- mortality %>% dplyr::mutate(mortality_Mg_per_ha = case_when(
+  mortality <- mortality %>% dplyr::mutate(mortality_Mg_per_ha = dplyr::case_when(
   (!!sym(column_name)) == 'mortality' & yearList[i] == year_previous ~ agb_Mg_per_ha, TRUE ~ mortality_Mg_per_ha
     ))
 }
@@ -196,11 +196,11 @@ plot_mortality <- mortality %>% dplyr::group_by(siteID, plotID, taxonID, year) %
 vst_ANPP_plot_w_taxa_2 <- merge (vst_increment_long, plot_mortality, by=c("siteID","plotID","taxonID","year"), all.x=TRUE )
  vst_ANPP_plot_w_taxa_2$year <- as.numeric(vst_ANPP_plot_w_taxa_2$year)
  vst_ANPP_plot_w_taxa_2 <- vst_ANPP_plot_w_taxa_2 %>% dplyr::filter(!is.na(Mg_per_ha_increment) ) # remove records with NA increment; this line is VERY important - without it ~75% of lines have NAs for both increment and mortality, which then turn into false zeros during group_by
- vst_ANPP_plot_w_taxa_2$Mg_per_ha_mortality <- if_else(is.na(vst_ANPP_plot_w_taxa_2$Mg_per_ha_mortality) & !is.na(vst_ANPP_plot_w_taxa_2$Mg_per_ha_increment), 0, vst_ANPP_plot_w_taxa_2$Mg_per_ha_mortality, vst_ANPP_plot_w_taxa_2$Mg_per_ha_mortality)
- vst_ANPP_plot_w_taxa_2 <- vst_ANPP_plot_w_taxa_2 %>% dplyr::group_by(siteID, plotID, plotType, nlcdClass, taxonID, year) %>%  dplyr::summarise(across(where(is.numeric), ~ sum(.x, na.rm = TRUE)))
+ vst_ANPP_plot_w_taxa_2$Mg_per_ha_mortality <- dplyr::if_else(is.na(vst_ANPP_plot_w_taxa_2$Mg_per_ha_mortality) & !is.na(vst_ANPP_plot_w_taxa_2$Mg_per_ha_increment), 0, vst_ANPP_plot_w_taxa_2$Mg_per_ha_mortality, vst_ANPP_plot_w_taxa_2$Mg_per_ha_mortality)
+ vst_ANPP_plot_w_taxa_2 <- vst_ANPP_plot_w_taxa_2 %>% dplyr::group_by(siteID, plotID, plotType, nlcdClass, taxonID, year) %>%  dplyr::summarise(dplyr::across(dplyr::where(is.numeric), ~ sum(.x, na.rm = TRUE)))
 vst_ANPP_plot_w_taxa_2$wood_ANPP__Mg_ha_yr <- vst_ANPP_plot_w_taxa_2$Mg_per_ha_increment + vst_ANPP_plot_w_taxa_2$Mg_per_ha_mortality
 
-vst_ANPP_plot_2 <- vst_ANPP_plot_w_taxa_2 %>% dplyr::group_by(siteID, plotID, plotType, nlcdClass, year) %>% dplyr::summarise(wood_ANPP__Mg_ha_yr = round(sum(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3)) %>% ungroup()
+vst_ANPP_plot_2 <- vst_ANPP_plot_w_taxa_2 %>% dplyr::group_by(siteID, plotID, plotType, nlcdClass, year) %>% dplyr::summarise(wood_ANPP__Mg_ha_yr = round(sum(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3)) %>% dplyr::ungroup()
 vst_ANPP_plot_2 <- vst_ANPP_plot_2 %>% dplyr::filter(!is.na(wood_ANPP__Mg_ha_yr)) %>% dplyr::select(siteID,plotID,plotType,year,wood_ANPP__Mg_ha_yr) # remove records with missing productivity
 
 if(nrow(vst_agb_zeros) >0){
@@ -215,11 +215,11 @@ vst_ANPP_plot_2 <- merge(vst_ANPP_plot_2, priority_plots_add, by = c("plotID"), 
 if(plotType == "tower") {vst_ANPP_plot_2 <- vst_ANPP_plot_2 %>% dplyr::filter(plotType == "tower") } # if arg plotType = "tower" then filter to just tower plots, otherwise keep all plots from input data
 vst_ANPP_plot_2 <- vst_ANPP_plot_2 %>% dplyr::filter(specificModuleSamplingPriority <= plotPriority) # remove lower priority plots that aren't required to be sampled every year (default is 5 (the 5 highest priority plots))
 
-vst_NPP_plot_yearFirst <- vst_ANPP_plot_2 %>% dplyr::group_by(siteID, plotID, plotType) %>% dplyr::summarise(wood_N = n(), 
-          wood_ANPP__Mg_ha_yr_min = round(min(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_max = round(max(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_sd = round(sd(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), 
+vst_NPP_plot_yearFirst <- vst_ANPP_plot_2 %>% dplyr::group_by(siteID, plotID, plotType) %>% dplyr::summarise(wood_N = dplyr::n(), 
+          wood_ANPP__Mg_ha_yr_min = round(min(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_max = round(max(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_sd = round(stats::sd(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), 
           wood_ANPP__Mg_ha_yr_se = round((wood_ANPP__Mg_ha_yr_sd / sqrt(wood_N)), 3),  wood_ANPP__Mg_ha_yr = round(mean(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3) ) %>% dplyr::mutate(wood_count_type = "years")
-vst_ANPP_site_2 <- vst_NPP_plot_yearFirst %>% dplyr::group_by(siteID) %>% dplyr::summarise(wood_N = n(), 
-          wood_ANPP__Mg_ha_yr_min = round(min(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_max = round(max(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_sd = round(sd(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), 
+vst_ANPP_site_2 <- vst_NPP_plot_yearFirst %>% dplyr::group_by(siteID) %>% dplyr::summarise(wood_N = dplyr::n(), 
+          wood_ANPP__Mg_ha_yr_min = round(min(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_max = round(max(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_sd = round(stats::sd(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), 
           wood_ANPP__Mg_ha_yr_se = round((wood_ANPP__Mg_ha_yr_sd / sqrt(wood_N)), 3),  wood_ANPP__Mg_ha_yr = round(mean(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3) ) %>% dplyr::mutate(wood_count_type = "plots")
 
 if(grepl("Hbp", dataProducts) )    {
@@ -229,23 +229,23 @@ print("Summarizing above-ground herbaceous productivity  ..... ")
 ### productivity by site and year
 hbp_event_means <- hbp_agb_per_ha %>% 
   dplyr::group_by(domainID, siteID, plotID, plotType, eventID, year, bout, nlcdClass, exclosure, peak) %>% # 
-  dplyr::summarise(mean_herb_Mg_per_ha = mean(herb_Mg_per_ha, na.rm = TRUE),
-            n_obs = length(na.omit(herb_Mg_per_ha))) # calc the mean biomass of the individual plots within eventID and identify of plots contributing to that mean
+  dplyr::summarise("mean_herb_Mg_per_ha" = mean(herb_Mg_per_ha, na.rm = TRUE),
+            n_obs = length(stats::na.omit("herb_Mg_per_ha"))) # calc the mean biomass of the individual plots within eventID and identify of plots contributing to that mean
 
-if(nrow(hbp_event_means %>% filter(exclosure == "Y")) > 0 ) {
+if(nrow(hbp_event_means %>% dplyr::filter(exclosure == "Y")) > 0 ) {
 df_ <- hbp_event_means %>% 
   dplyr::select(-n_obs) %>%
   tidyr::spread(exclosure, mean_herb_Mg_per_ha) %>% # convert from long format with exclosures and non-exclosures in rows, to wide format with exclosure (Y) and non-exclosure (N) columns
-  dplyr::mutate(C = Y - N)    # C is consumption, calculated as biomass in exclosure (Y) minus biomass outside of exclosure (N)
+  dplyr::mutate(`C` = Y - N)    # C is consumption, calculated as biomass in exclosure (Y) minus biomass outside of exclosure (N)
 
 herb_NPP <- df_ %>% dplyr::group_by(domainID, siteID, plotID, plotType, nlcdClass, year) %>%
   dplyr::summarise(
-    total_C = sum(na.omit(C)),
-    n_bouts_used_for_C = length(na.omit(C)),
-    last_bout = last(bout),
-    last_bout_mean_herb_Mg_per_ha = last(N),
-    herb_NPP__Mg_per_ha_per_yr = total_C + last_bout_mean_herb_Mg_per_ha
-  ) %>% ungroup()
+    total_C = sum(stats::na.omit(`C`)),
+    n_bouts_used_for_C = length(stats::na.omit(`C`)),
+    last_bout = dplyr::last(bout),
+    "last_bout_mean_herb_Mg_per_ha" = dplyr::last(N),
+    "herb_NPP__Mg_per_ha_per_yr" = total_C + "last_bout_mean_herb_Mg_per_ha"
+  ) %>% dplyr::ungroup()
 
  herb_NPP <- dplyr::rename(herb_NPP, "herb_NPP__Mg_ha_yr" = "herb_NPP__Mg_per_ha_per_yr") 
  herb_NPP$siteID <- substr(herb_NPP$plotID, 1, 4)
@@ -254,18 +254,18 @@ herb_NPP <- df_ %>% dplyr::group_by(domainID, siteID, plotID, plotType, nlcdClas
  herb_NPP <- herb_NPP %>% dplyr::select(siteID,plotID,plotType,year,herb_NPP__Mg_ha_yr)
 herb_NPP_temporal_ave <- herb_NPP %>% dplyr::group_by(plotID) %>% dplyr::summarise(herb_NPP__Mg_ha_yr_temporal_ave = round(mean(herb_NPP__Mg_ha_yr, na.rm = TRUE),3))
 
-herb_yearFirst <- herb_NPP %>% dplyr::group_by(siteID, plotID, plotType) %>% dplyr::summarise(herb_N = n(), 
-          herb_NPP__Mg_ha_yr_min = round(min(herb_NPP__Mg_ha_yr, na.rm = TRUE),3), herb_NPP__Mg_ha_yr_max = round(max(herb_NPP__Mg_ha_yr, na.rm = TRUE),3), herb_NPP__Mg_ha_yr_sd = round(sd(herb_NPP__Mg_ha_yr, na.rm = TRUE),3), 
+herb_yearFirst <- herb_NPP %>% dplyr::group_by(siteID, plotID, plotType) %>% dplyr::summarise(herb_N = dplyr::n(), 
+          herb_NPP__Mg_ha_yr_min = round(min(herb_NPP__Mg_ha_yr, na.rm = TRUE),3), herb_NPP__Mg_ha_yr_max = round(max(herb_NPP__Mg_ha_yr, na.rm = TRUE),3), herb_NPP__Mg_ha_yr_sd = round(stats::sd(herb_NPP__Mg_ha_yr, na.rm = TRUE),3), 
           herb_NPP__Mg_ha_yr_se = round((herb_NPP__Mg_ha_yr_sd / sqrt(herb_N)), 3),  herb_NPP__Mg_ha_yr = round(mean(herb_NPP__Mg_ha_yr, na.rm = TRUE),3) ) %>% dplyr::mutate(herb_count_type ="years")
-herb_yearThenSite <- herb_yearFirst %>% dplyr::group_by(siteID) %>% dplyr::summarise(herb_N = n(), 
-          herb_NPP__Mg_ha_yr_min = round(min(herb_NPP__Mg_ha_yr, na.rm = TRUE),3), herb_NPP__Mg_ha_yr_max = round(max(herb_NPP__Mg_ha_yr, na.rm = TRUE),3), herb_NPP__Mg_ha_yr_sd = round(sd(herb_NPP__Mg_ha_yr, na.rm = TRUE),3), 
+herb_yearThenSite <- herb_yearFirst %>% dplyr::group_by(siteID) %>% dplyr::summarise(herb_N = dplyr::n(), 
+          herb_NPP__Mg_ha_yr_min = round(min(herb_NPP__Mg_ha_yr, na.rm = TRUE),3), herb_NPP__Mg_ha_yr_max = round(max(herb_NPP__Mg_ha_yr, na.rm = TRUE),3), herb_NPP__Mg_ha_yr_sd = round(stats::sd(herb_NPP__Mg_ha_yr, na.rm = TRUE),3), 
           herb_NPP__Mg_ha_yr_se = round((herb_NPP__Mg_ha_yr_sd / sqrt(herb_N)), 3),  herb_NPP__Mg_ha_yr = round(mean(herb_NPP__Mg_ha_yr, na.rm = TRUE),3) ) %>% dplyr::mutate(herb_count_type ="plots")
 
-herb_siteFirst <- herb_NPP %>% dplyr::group_by(siteID, year) %>% dplyr::summarise(herb_N = n(), 
-          herb_NPP__Mg_ha_yr_min = round(min(herb_NPP__Mg_ha_yr, na.rm = TRUE),3), herb_NPP__Mg_ha_yr_max = round(max(herb_NPP__Mg_ha_yr, na.rm = TRUE),3), herb_NPP__Mg_ha_yr_sd = round(sd(herb_NPP__Mg_ha_yr, na.rm = TRUE),3), 
+herb_siteFirst <- herb_NPP %>% dplyr::group_by(siteID, year) %>% dplyr::summarise(herb_N = dplyr::n(), 
+          herb_NPP__Mg_ha_yr_min = round(min(herb_NPP__Mg_ha_yr, na.rm = TRUE),3), herb_NPP__Mg_ha_yr_max = round(max(herb_NPP__Mg_ha_yr, na.rm = TRUE),3), herb_NPP__Mg_ha_yr_sd = round(stats::sd(herb_NPP__Mg_ha_yr, na.rm = TRUE),3), 
           herb_NPP__Mg_ha_yr_se = round((herb_NPP__Mg_ha_yr_sd / sqrt(herb_N)), 3),  herb_NPP__Mg_ha_yr = round(mean(herb_NPP__Mg_ha_yr, na.rm = TRUE),3) ) %>% dplyr::mutate(herb_count_type ="plots")
-herb_siteThenYear <- herb_siteFirst %>% dplyr::group_by(siteID) %>% dplyr::summarise(herb_N = n(), 
-          herb_NPP__Mg_ha_yr_min = round(min(herb_NPP__Mg_ha_yr, na.rm = TRUE),3), herb_NPP__Mg_ha_yr_max = round(max(herb_NPP__Mg_ha_yr, na.rm = TRUE),3), herb_NPP__Mg_ha_yr_sd = round(sd(herb_NPP__Mg_ha_yr, na.rm = TRUE),3), 
+herb_siteThenYear <- herb_siteFirst %>% dplyr::group_by(siteID) %>% dplyr::summarise(herb_N = dplyr::n(), 
+          herb_NPP__Mg_ha_yr_min = round(min(herb_NPP__Mg_ha_yr, na.rm = TRUE),3), herb_NPP__Mg_ha_yr_max = round(max(herb_NPP__Mg_ha_yr, na.rm = TRUE),3), herb_NPP__Mg_ha_yr_sd = round(stats::sd(herb_NPP__Mg_ha_yr, na.rm = TRUE),3), 
           herb_NPP__Mg_ha_yr_se = round((herb_NPP__Mg_ha_yr_sd / sqrt(herb_N)), 3),  herb_NPP__Mg_ha_yr = round(mean(herb_NPP__Mg_ha_yr, na.rm = TRUE),3) ) %>% dplyr::mutate(herb_count_type ="years")
 
 
@@ -284,7 +284,7 @@ ANPP_site_2$herb_percent_of_NPP_se <- round((abs(ANPP_site_2$herb_percent_of_NPP
                                                     (ANPP_site_2$vstHbp_NPP__Mg_ha_yr_yr_se / ANPP_site_2$vstHbp_NPP__Mg_ha_yr)^2) ), 1)
 
 ANPP_site_2 <- ANPP_site_2 %>% dplyr::select(siteID, wood_N, wood_count_type, wood_ANPP__Mg_ha_yr_se, wood_ANPP__Mg_ha_yr, herb_N, herb_NPP__Mg_ha_yr_se, herb_NPP__Mg_ha_yr, vstHbp_NPP__Mg_ha_yr, 
-                                          herb_percent_of_NPP_se, herb_percent_of_NPP) %>% arrange(herb_percent_of_NPP)
+                                          herb_percent_of_NPP_se, herb_percent_of_NPP) %>% dplyr::arrange(herb_percent_of_NPP)
 
 } else {
   dataProducts = "Vst"
@@ -331,8 +331,8 @@ increment_qf_all = data.frame()
 endYear <- as.numeric((startAGB) : endAGB )
 for(i in 2:length(endYear)){
 transitions <- vst_agb_per_ha
- transitions$keep <- if_else(transitions$year < endYear[i] & transitions$plantStatus2 == "Live", "keep","discard","discard")
- transitions$keep <- if_else(transitions$year == endYear[i] & !is.na(transitions$plantStatus2), "keep",transitions$keep,transitions$keep)
+ transitions$keep <- dplyr::if_else(transitions$year < endYear[i] & transitions$plantStatus2 == "Live", "keep","discard","discard")
+ transitions$keep <- dplyr::if_else(transitions$year == endYear[i] & !is.na(transitions$plantStatus2), "keep",transitions$keep,transitions$keep)
  transitions <- transitions %>% dplyr::filter(keep == "keep") %>% dplyr::select(-keep) # remove records that aren't live in earlier years 
 increment <- transitions %>% dplyr::filter(!(year == endYear[i] & plantStatus2 == "Dead_or_Lost") ) # remove records that are dead in end year
  increment <- rbind(increment, dummy_rows) # only year populated, workaround to get blank columns for all years
@@ -342,53 +342,53 @@ increment <- transitions %>% dplyr::filter(!(year == endYear[i] & plantStatus2 =
  increment <- increment %>% dplyr::filter(!is.na(plotID) ) # remove artifact row with NAs from dummy row
  increment$increment1 <- increment$agb_Mg_per_ha_0 - increment$agb_Mg_per_ha_1
    increment_stats <- increment %>% dplyr::group_by(siteID) %>% dplyr::filter(!is.na(increment1)) %>% 
-      dplyr::summarise(increment1_n = n(), increment1_sd = round(sd(increment1, na.rm = TRUE),3), increment1_se = round(increment1_sd / sqrt(increment1_n), 3), increment1_mn = round(mean(increment1, na.rm = TRUE),3),
-         increment1_firstQuart = quantile(increment1, probs = c(0.25), na.rm=TRUE), increment1_thirdQuart = quantile(increment1, probs = c(0.75), na.rm=TRUE), increment1_IQR = increment1_thirdQuart - increment1_firstQuart)
+      dplyr::summarise("increment1_n" = dplyr::n(), "increment1_sd" = round(stats::sd(increment1, na.rm = TRUE),3), increment1_se = round(increment1_sd / sqrt(increment1_n), 3), increment1_mn = round(mean(increment1, na.rm = TRUE),3),
+         "increment1_firstQuart" = stats::quantile(increment1, probs = c(0.25), na.rm=TRUE), "increment1_thirdQuart" = stats::quantile(increment1, probs = c(0.75), na.rm=TRUE), increment1_IQR = increment1_thirdQuart - increment1_firstQuart)
    increment <- merge(increment, increment_stats, by="siteID", all.x=TRUE)
-    increment$increment1_IQRqf <- if_else((increment$increment1 < increment$increment1_firstQuart-(increment$increment1_IQR * outlier)) | (increment$increment1 > increment$increment1_thirdQuart+(increment$increment1_IQR * outlier)  ), "flag","ok","ok")
-    increment$increment1_SDqf <- if_else(abs(increment$increment1 - increment$increment1_mn) > (increment$increment1_sd * outlier), "flag","ok","ok")
+    increment$increment1_IQRqf <- dplyr::if_else((increment$increment1 < increment$increment1_firstQuart-(increment$increment1_IQR * outlier)) | (increment$increment1 > increment$increment1_thirdQuart+(increment$increment1_IQR * outlier)  ), "flag","ok","ok")
+    increment$increment1_SDqf <- dplyr::if_else(abs(increment$increment1 - increment$increment1_mn) > (increment$increment1_sd * outlier), "flag","ok","ok")
 increment$increment2 <- (increment$agb_Mg_per_ha_0 - increment$agb_Mg_per_ha_2)/2
    increment_stats <- increment %>% dplyr::group_by(siteID) %>% dplyr::filter(!is.na(increment2)) %>% 
-      dplyr::summarise(increment2_n = n(), increment2_sd = round(sd(increment2, na.rm = TRUE),3), increment2_se = round(increment2_sd / sqrt(increment2_n), 3), increment2_mn = round(mean(increment2, na.rm = TRUE),3),
-         increment2_firstQuart = quantile(increment2, probs = c(0.25), na.rm=TRUE), increment2_thirdQuart = quantile(increment2, probs = c(0.75), na.rm=TRUE), increment2_IQR = increment2_thirdQuart - increment2_firstQuart)
+      dplyr::summarise(increment2_n = dplyr::n(), increment2_sd = round(stats::sd(increment2, na.rm = TRUE),3), increment2_se = round(increment2_sd / sqrt(increment2_n), 3), increment2_mn = round(mean(increment2, na.rm = TRUE),3),
+         increment2_firstQuart = stats::quantile(increment2, probs = c(0.25), na.rm=TRUE), increment2_thirdQuart = stats::quantile(increment2, probs = c(0.75), na.rm=TRUE), increment2_IQR = increment2_thirdQuart - increment2_firstQuart)
    increment <- merge(increment, increment_stats, by="siteID", all.x=TRUE)
-    increment$increment2_IQRqf <- if_else((increment$increment2 < increment$increment2_firstQuart-(increment$increment2_IQR * outlier)) | (increment$increment2 > increment$increment2_thirdQuart+(increment$increment2_IQR * outlier)  ), "flag","ok","ok")
-    increment$increment2_SDqf <- if_else(abs(increment$increment2 - increment$increment2_mn) > (increment$increment2_sd * outlier), "flag","ok","ok")
+    increment$increment2_IQRqf <- dplyr::if_else((increment$increment2 < increment$increment2_firstQuart-(increment$increment2_IQR * outlier)) | (increment$increment2 > increment$increment2_thirdQuart+(increment$increment2_IQR * outlier)  ), "flag","ok","ok")
+    increment$increment2_SDqf <- dplyr::if_else(abs(increment$increment2 - increment$increment2_mn) > (increment$increment2_sd * outlier), "flag","ok","ok")
  increment$increment3 <- (increment$agb_Mg_per_ha_0 - increment$agb_Mg_per_ha_3)/3
    increment_stats <- increment %>% dplyr::group_by(siteID) %>% dplyr::filter(!is.na(increment3)) %>% 
-      dplyr::summarise(increment3_n = n(), increment3_sd = round(sd(increment3, na.rm = TRUE),3), increment3_se = round(increment3_sd / sqrt(increment3_n), 3), increment3_mn = round(mean(increment3, na.rm = TRUE),3),
-         increment3_firstQuart = quantile(increment3, probs = c(0.25), na.rm=TRUE), increment3_thirdQuart = quantile(increment3, probs = c(0.75), na.rm=TRUE), increment3_IQR = increment3_thirdQuart - increment3_firstQuart)
+      dplyr::summarise(increment3_n = dplyr::n(), increment3_sd = round(stats::sd(increment3, na.rm = TRUE),3), increment3_se = round(increment3_sd / sqrt(increment3_n), 3), increment3_mn = round(mean(increment3, na.rm = TRUE),3),
+         increment3_firstQuart = stats::quantile(increment3, probs = c(0.25), na.rm=TRUE), increment3_thirdQuart = stats::quantile(increment3, probs = c(0.75), na.rm=TRUE), increment3_IQR = increment3_thirdQuart - increment3_firstQuart)
    increment <- merge(increment, increment_stats, by="siteID", all.x=TRUE)
-    increment$increment3_IQRqf <- if_else((increment$increment3 < increment$increment3_firstQuart-(increment$increment3_IQR * outlier)) | (increment$increment3 > increment$increment3_thirdQuart+(increment$increment3_IQR * outlier)  ), "flag","ok","ok")
-    increment$increment3_SDqf <- if_else(abs(increment$increment3 - increment$increment3_mn) > (increment$increment3_sd * outlier), "flag","ok","ok")
+    increment$increment3_IQRqf <- dplyr::if_else((increment$increment3 < increment$increment3_firstQuart-(increment$increment3_IQR * outlier)) | (increment$increment3 > increment$increment3_thirdQuart+(increment$increment3_IQR * outlier)  ), "flag","ok","ok")
+    increment$increment3_SDqf <- dplyr::if_else(abs(increment$increment3 - increment$increment3_mn) > (increment$increment3_sd * outlier), "flag","ok","ok")
  increment$increment4 <- (increment$agb_Mg_per_ha_0 - increment$agb_Mg_per_ha_4)/4
    increment_stats <- increment %>% dplyr::group_by(siteID) %>% dplyr::filter(!is.na(increment4)) %>% 
-      dplyr::summarise(increment4_n = n(), increment4_sd = round(sd(increment4, na.rm = TRUE),3), increment4_se = round(increment4_sd / sqrt(increment4_n), 3), increment4_mn = round(mean(increment4, na.rm = TRUE),3),
-         increment4_firstQuart = quantile(increment4, probs = c(0.25), na.rm=TRUE), increment4_thirdQuart = quantile(increment4, probs = c(0.75), na.rm=TRUE), increment4_IQR = increment4_thirdQuart - increment4_firstQuart)
+      dplyr::summarise(increment4_n = dplyr::n(), increment4_sd = round(stats::sd(increment4, na.rm = TRUE),3), increment4_se = round(increment4_sd / sqrt(increment4_n), 3), increment4_mn = round(mean(increment4, na.rm = TRUE),3),
+         increment4_firstQuart = stats::quantile(increment4, probs = c(0.25), na.rm=TRUE), increment4_thirdQuart = stats::quantile(increment4, probs = c(0.75), na.rm=TRUE), increment4_IQR = increment4_thirdQuart - increment4_firstQuart)
    increment <- merge(increment, increment_stats, by="siteID", all.x=TRUE)
-    increment$increment4_IQRqf <- if_else((increment$increment4 < increment$increment4_firstQuart-(increment$increment4_IQR * outlier)) | (increment$increment4 > increment$increment4_thirdQuart+(increment$increment4_IQR * outlier)  ), "flag","ok","ok")
-    increment$increment4_SDqf <- if_else(abs(increment$increment4 - increment$increment4_mn) > (increment$increment4_sd * outlier), "flag","ok","ok")
+    increment$increment4_IQRqf <- dplyr::if_else((increment$increment4 < increment$increment4_firstQuart-(increment$increment4_IQR * outlier)) | (increment$increment4 > increment$increment4_thirdQuart+(increment$increment4_IQR * outlier)  ), "flag","ok","ok")
+    increment$increment4_SDqf <- dplyr::if_else(abs(increment$increment4 - increment$increment4_mn) > (increment$increment4_sd * outlier), "flag","ok","ok")
  increment$increment5 <- (increment$agb_Mg_per_ha_0 - increment$agb_Mg_per_ha_5)/5
    increment_stats <- increment %>% dplyr::group_by(siteID) %>% dplyr::filter(!is.na(increment5)) %>% 
-      dplyr::summarise(increment5_n = n(), increment5_sd = round(sd(increment5, na.rm = TRUE),3), increment5_se = round(increment5_sd / sqrt(increment5_n), 3), increment5_mn = round(mean(increment5, na.rm = TRUE),3),
-         increment5_firstQuart = quantile(increment5, probs = c(0.25), na.rm=TRUE), increment5_thirdQuart = quantile(increment5, probs = c(0.75), na.rm=TRUE), increment5_IQR = increment5_thirdQuart - increment5_firstQuart)
+      dplyr::summarise(increment5_n = dplyr::n(), increment5_sd = round(stats::sd(increment5, na.rm = TRUE),3), increment5_se = round(increment5_sd / sqrt(increment5_n), 3), increment5_mn = round(mean(increment5, na.rm = TRUE),3),
+         increment5_firstQuart = stats::quantile(increment5, probs = c(0.25), na.rm=TRUE), increment5_thirdQuart = stats::quantile(increment5, probs = c(0.75), na.rm=TRUE), increment5_IQR = increment5_thirdQuart - increment5_firstQuart)
    increment <- merge(increment, increment_stats, by="siteID", all.x=TRUE)
-    increment$increment5_IQRqf <- if_else((increment$increment5 < increment$increment5_firstQuart-(increment$increment5_IQR * outlier)) | (increment$increment5 > increment$increment5_thirdQuart+(increment$increment5_IQR * outlier)  ), "flag","ok","ok")
-    increment$increment5_SDqf <- if_else(abs(increment$increment5 - increment$increment5_mn) > (increment$increment5_sd * outlier), "flag","ok","ok")
+    increment$increment5_IQRqf <- dplyr::if_else((increment$increment5 < increment$increment5_firstQuart-(increment$increment5_IQR * outlier)) | (increment$increment5 > increment$increment5_thirdQuart+(increment$increment5_IQR * outlier)  ), "flag","ok","ok")
+    increment$increment5_SDqf <- dplyr::if_else(abs(increment$increment5 - increment$increment5_mn) > (increment$increment5_sd * outlier), "flag","ok","ok")
  increment$increment6 <- (increment$agb_Mg_per_ha_0 - increment$agb_Mg_per_ha_6)/6
    increment_stats <- increment %>% dplyr::group_by(siteID) %>% dplyr::filter(!is.na(increment6)) %>% 
-      dplyr::summarise(increment6_n = n(), increment6_sd = round(sd(increment6, na.rm = TRUE),3), increment6_se = round(increment6_sd / sqrt(increment6_n), 3), increment6_mn = round(mean(increment6, na.rm = TRUE),3),
-         increment6_firstQuart = quantile(increment6, probs = c(0.25), na.rm=TRUE), increment6_thirdQuart = quantile(increment6, probs = c(0.75), na.rm=TRUE), increment6_IQR = increment6_thirdQuart - increment6_firstQuart)
+      dplyr::summarise(increment6_n = dplyr::n(), increment6_sd = round(stats::sd(increment6, na.rm = TRUE),3), increment6_se = round(increment6_sd / sqrt(increment6_n), 3), increment6_mn = round(mean(increment6, na.rm = TRUE),3),
+         increment6_firstQuart = stats::quantile(increment6, probs = c(0.25), na.rm=TRUE), increment6_thirdQuart = stats::quantile(increment6, probs = c(0.75), na.rm=TRUE), increment6_IQR = increment6_thirdQuart - increment6_firstQuart)
    increment <- merge(increment, increment_stats, by="siteID", all.x=TRUE)
-     increment$increment6_IQRqf <- if_else((increment$increment6 < increment$increment6_firstQuart-(increment$increment6_IQR * outlier)) | (increment$increment6 > increment$increment6_thirdQuart+(increment$increment6_IQR * outlier)  ), "flag","ok","ok")
-    increment$increment6_SDqf <- if_else(abs(increment$increment6 - increment$increment6_mn) > (increment$increment6_sd * outlier), "flag","ok","ok")
+     increment$increment6_IQRqf <- dplyr::if_else((increment$increment6 < increment$increment6_firstQuart-(increment$increment6_IQR * outlier)) | (increment$increment6 > increment$increment6_thirdQuart+(increment$increment6_IQR * outlier)  ), "flag","ok","ok")
+    increment$increment6_SDqf <- dplyr::if_else(abs(increment$increment6 - increment$increment6_mn) > (increment$increment6_sd * outlier), "flag","ok","ok")
  increment$increment7 <- (increment$agb_Mg_per_ha_0 - increment$agb_Mg_per_ha_7)/7
    increment_stats <- increment %>% dplyr::group_by(siteID) %>% dplyr::filter(!is.na(increment7)) %>% 
-      dplyr::summarise(increment7_n = n(), increment7_sd = round(sd(increment7, na.rm = TRUE),3), increment7_se = round(increment7_sd / sqrt(increment7_n), 3), increment7_mn = round(mean(increment7, na.rm = TRUE),3),
-         increment7_firstQuart = quantile(increment7, probs = c(0.25), na.rm=TRUE), increment7_thirdQuart = quantile(increment7, probs = c(0.75), na.rm=TRUE), increment7_IQR = increment7_thirdQuart - increment7_firstQuart)
+      dplyr::summarise(increment7_n = dplyr::n(), increment7_sd = round(stats::sd(increment7, na.rm = TRUE),3), increment7_se = round(increment7_sd / sqrt(increment7_n), 3), increment7_mn = round(mean(increment7, na.rm = TRUE),3),
+         increment7_firstQuart = stats::quantile(increment7, probs = c(0.25), na.rm=TRUE), increment7_thirdQuart = stats::quantile(increment7, probs = c(0.75), na.rm=TRUE), increment7_IQR = increment7_thirdQuart - increment7_firstQuart)
    increment <- merge(increment, increment_stats, by="siteID", all.x=TRUE)
-    increment$increment7_IQRqf <- if_else((increment$increment7 < increment$increment7_firstQuart-(increment$increment7_IQR * outlier)) | (increment$increment7 > increment$increment7_thirdQuart+(increment$increment7_IQR * outlier)  ), "flag","ok","ok")
-    increment$increment7_SDqf <- if_else(abs(increment$increment7 - increment$increment7_mn) > (increment$increment7_sd * outlier), "flag","ok","ok")
+    increment$increment7_IQRqf <- dplyr::if_else((increment$increment7 < increment$increment7_firstQuart-(increment$increment7_IQR * outlier)) | (increment$increment7 > increment$increment7_thirdQuart+(increment$increment7_IQR * outlier)  ), "flag","ok","ok")
+    increment$increment7_SDqf <- dplyr::if_else(abs(increment$increment7 - increment$increment7_mn) > (increment$increment7_sd * outlier), "flag","ok","ok")
  increment$Mg_per_ha_per_yr <- ifelse(!is.na(increment$increment7), increment$increment7, NA)
     increment$bestIncrement <- ifelse(!is.na(increment$increment7), 7, NA)
  increment$Mg_per_ha_per_yr <- ifelse(!is.na(increment$increment6), increment$increment6, increment$Mg_per_ha_per_yr)
@@ -403,21 +403,21 @@ increment$increment2 <- (increment$agb_Mg_per_ha_0 - increment$agb_Mg_per_ha_2)/
     increment$bestIncrement <- ifelse(!is.na(increment$increment2), 2, increment$bestIncrement)
  increment$Mg_per_ha_per_yr <- ifelse(!is.na(increment$increment1), increment$increment1, increment$Mg_per_ha_per_yr)
     increment$bestIncrement <- ifelse(!is.na(increment$increment1), 1, increment$bestIncrement)
- increment <- increment %>% dplyr::filter(!is.na(Mg_per_ha_per_yr)) %>% mutate(endYear = endYear[i])   # remove missing increment values and add endYear column
+ increment <- increment %>% dplyr::filter(!is.na(Mg_per_ha_per_yr)) %>% dplyr::mutate(endYear = endYear[i])   # remove missing increment values and add endYear column
  increment <- dplyr::rename(increment, "Mg_per_ha_per_yr_inc" = "Mg_per_ha_per_yr", "bestIncrement_inc" = "bestIncrement")
-increment_all = dplyr::bind_rows(increment_all, increment) %>% mutate(outlier_threshold = paste0(outlier,"_",outlier_type))
+increment_all = dplyr::bind_rows(increment_all, increment) %>% dplyr::mutate(outlier_threshold = paste0(outlier,"_",outlierType))
 }
 
 if(nrow(increment_all) > 0){
 
-if(outlier_type == "SD") {
-increment_ok <- increment_all %>% dplyr::filter(increment1_SDqf != "flag" & increment2_SDqf != "flag"  & increment3_SDqf != "flag" & increment4_SDqf != "flag" & increment5_SDqf != "flag" & increment6_SDqf != "flag" & increment7_SDqf != "flag") # remove increments that are flagged as being excessive for the specified timeframes
-increment_outlier <- increment_all %>% dplyr::filter(increment1_SDqf == "flag" | increment2_SDqf == "flag"  | increment3_SDqf == "flag" | increment4_SDqf == "flag" | increment5_SDqf == "flag" | increment6_SDqf == "flag" | increment7_SDqf == "flag") # increments that are flagged as being excessive for the specified timeframes
+if(outlierType == "SD") {
+increment_ok <- increment_all %>% dplyr::filter("increment1_SDqf" != "flag" & "increment2_SDqf" != "flag"  & "increment3_SDqf" != "flag" & "increment4_SDqf" != "flag" & "increment5_SDqf" != "flag" & "increment6_SDqf" != "flag" & "increment7_SDqf" != "flag") # remove increments that are flagged as being excessive for the specified timeframes
+increment_outlier <- increment_all %>% dplyr::filter("increment1_SDqf" == "flag" | "increment2_SDqf" == "flag"  | "increment3_SDqf" == "flag" | "increment4_SDqf" == "flag" | "increment5_SDqf" == "flag" | "increment6_SDqf" == "flag" | "increment7_SDqf" == "flag") # increments that are flagged as being excessive for the specified timeframes
 increment_outlier <- increment_outlier %>% dplyr::select(outlier_threshold, siteID, plotID, individualID, taxonID, Mg_per_ha_per_yr_inc, bestIncrement_inc, endYear)
 } 
-if(outlier_type == "IQR") {
-increment_ok <- increment_all %>% dplyr::filter(increment1_IQRqf != "flag" & increment2_IQRqf != "flag"  & increment3_IQRqf != "flag" & increment4_IQRqf != "flag" & increment5_IQRqf != "flag" & increment6_IQRqf != "flag" & increment7_IQRqf != "flag") # remove increments that are flagged as being excessive for the specified timeframes
-increment_outlier <- increment_all %>% dplyr::filter(increment1_IQRqf == "flag" | increment2_IQRqf == "flag"  | increment3_IQRqf == "flag" | increment4_IQRqf == "flag" | increment5_IQRqf == "flag" | increment6_IQRqf == "flag" | increment7_IQRqf == "flag") # increments that are flagged as being excessive for the specified timeframes
+if(outlierType == "IQR") {
+increment_ok <- increment_all %>% dplyr::filter("increment1_IQRqf" != "flag" & "increment2_IQRqf" != "flag"  & "increment3_IQRqf" != "flag" & "increment4_IQRqf" != "flag" & "increment5_IQRqf" != "flag" & "increment6_IQRqf" != "flag" & "increment7_IQRqf" != "flag") # remove increments that are flagged as being excessive for the specified timeframes
+increment_outlier <- increment_all %>% dplyr::filter("increment1_IQRqf" == "flag" | "increment2_IQRqf" == "flag"  | "increment3_IQRqf" == "flag" | "increment4_IQRqf" == "flag" | "increment5_IQRqf" == "flag" | "increment6_IQRqf" == "flag" | "increment7_IQRqf" == "flag") # increments that are flagged as being excessive for the specified timeframes
 increment_outlier <- increment_outlier %>% dplyr::select(outlier_threshold, siteID, plotID, individualID, taxonID, Mg_per_ha_per_yr_inc, bestIncrement_inc, endYear)
 }
 
@@ -444,10 +444,10 @@ product_all <- dplyr::rename(product_all, "year" = "endYear")
 productivity <- merge(product_all, plotType_df, by = "plotID", all.x = T)
 
 # sum the individualIDs by plot and taxonID
-vst_ANPP_plot_w_taxa <- productivity %>% dplyr::select(-bestIncrement_inc) %>% dplyr::group_by(outlier_threshold, siteID, plotID, plotType, year, taxonID) %>%  dplyr::summarise(across(where(is.numeric), ~ sum(.x, na.rm = TRUE)))
+vst_ANPP_plot_w_taxa <- productivity %>% dplyr::select(-bestIncrement_inc) %>% dplyr::group_by(outlier_threshold, siteID, plotID, plotType, year, taxonID) %>%  dplyr::summarise(dplyr::across(dplyr::where(is.numeric), ~ sum(.x, na.rm = TRUE)))
 
 # sum the individualIDs by plot
-vst_ANPP_plot <- vst_ANPP_plot_w_taxa %>% dplyr::group_by(outlier_threshold, siteID, plotID, plotType, year) %>%  dplyr::summarise(across(where(is.numeric), ~ sum(.x, na.rm = TRUE))) %>% ungroup()
+vst_ANPP_plot <- vst_ANPP_plot_w_taxa %>% dplyr::group_by(outlier_threshold, siteID, plotID, plotType, year) %>%  dplyr::summarise(dplyr::across(dplyr::where(is.numeric), ~ sum(.x, na.rm = TRUE))) %>% dplyr::ungroup()
 
 vst_ANPP_plot <- vst_ANPP_plot %>% dplyr::filter(!is.na(wood_ANPP__Mg_ha_yr)) %>% dplyr::select(outlier_threshold,siteID,plotID,plotType,year,wood_ANPP__Mg_ha_yr) # remove records with missing productivity
 
@@ -456,7 +456,7 @@ vst_ANPP_plot <- vst_ANPP_plot %>% dplyr::filter(!is.na(wood_ANPP__Mg_ha_yr)) %>
 if(nrow(vst_agb_zeros) >0){
   vst_agb_zeros_ind <- vst_agb_zeros
     vst_agb_zeros_ind$eventID <- vst_agb_zeros_ind$plot_eventID <- NULL
-    vst_agb_zeros_ind$outlier_threshold <- paste0(outlier,"_",outlier_type)
+    vst_agb_zeros_ind$outlier_threshold <- paste0(outlier,"_",outlierType)
     vst_agb_zeros_ind$wood_ANPP__Mg_ha_yr <- 0 
     vst_ANPP_plot <- rbind(vst_ANPP_plot, vst_agb_zeros_ind)}
 
@@ -465,22 +465,22 @@ vst_ANPP_plot <- merge(vst_ANPP_plot, priority_plots_add, by = c("plotID"), all.
 vst_ANPP_plot <- vst_ANPP_plot %>% dplyr::filter(plotType == "tower") # if plotType argument to function is "tower" then remove distributed plots
 vst_ANPP_plot <- vst_ANPP_plot %>% dplyr::filter(specificModuleSamplingPriority <= 5) # as specified in argument to function, remove lower priority plots that aren't required to be sampled every year
 
-wood_siteGrandMean <- vst_ANPP_plot %>% dplyr::group_by(outlier_threshold, siteID) %>% dplyr::summarise(wood_N = n(), 
-          wood_ANPP__Mg_ha_yr_min = round(min(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_max = round(max(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_sd = round(sd(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), 
+wood_siteGrandMean <- vst_ANPP_plot %>% dplyr::group_by(outlier_threshold, siteID) %>% dplyr::summarise(wood_N = dplyr::n(), 
+          wood_ANPP__Mg_ha_yr_min = round(min(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_max = round(max(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_sd = round(stats::sd(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), 
           wood_ANPP__Mg_ha_yr_se = round((wood_ANPP__Mg_ha_yr_sd / sqrt(wood_N)), 3),  wood_ANPP__Mg_ha_yr = round(mean(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3) ) %>% dplyr::mutate(wood_count_type = "plotXYearcombos")
 
-wood_siteFirst <- vst_ANPP_plot %>% dplyr::group_by(outlier_threshold, siteID, year) %>% dplyr::summarise(wood_N = n(), 
-          wood_ANPP__Mg_ha_yr_min = round(min(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_max = round(max(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_sd = round(sd(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), 
+wood_siteFirst <- vst_ANPP_plot %>% dplyr::group_by(outlier_threshold, siteID, year) %>% dplyr::summarise(wood_N = dplyr::n(), 
+          wood_ANPP__Mg_ha_yr_min = round(min(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_max = round(max(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_sd = round(stats::sd(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), 
           wood_ANPP__Mg_ha_yr_se = round((wood_ANPP__Mg_ha_yr_sd / sqrt(wood_N)), 3),  wood_ANPP__Mg_ha_yr = round(mean(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3) ) %>% dplyr::mutate(wood_count_type = "plots")
-wood_siteThenYear <- wood_siteFirst %>% dplyr::group_by(outlier_threshold, siteID) %>% dplyr::summarise(wood_N = n(), 
-          wood_ANPP__Mg_ha_yr_min = round(min(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_max = round(max(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_sd = round(sd(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), 
+wood_siteThenYear <- wood_siteFirst %>% dplyr::group_by(outlier_threshold, siteID) %>% dplyr::summarise(wood_N = dplyr::n(), 
+          wood_ANPP__Mg_ha_yr_min = round(min(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_max = round(max(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_sd = round(stats::sd(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), 
           wood_ANPP__Mg_ha_yr_se = round((wood_ANPP__Mg_ha_yr_sd / sqrt(wood_N)), 3),  wood_ANPP__Mg_ha_yr = round(mean(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3) ) %>% dplyr::mutate(wood_count_type = "years")
 
-wood_yearFirst <- vst_ANPP_plot %>% dplyr::group_by(outlier_threshold, siteID, plotID, plotType) %>% dplyr::summarise(wood_N = n(), 
-          wood_ANPP__Mg_ha_yr_min = round(min(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_max = round(max(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_sd = round(sd(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), 
+wood_yearFirst <- vst_ANPP_plot %>% dplyr::group_by(outlier_threshold, siteID, plotID, plotType) %>% dplyr::summarise(wood_N = dplyr::n(), 
+          wood_ANPP__Mg_ha_yr_min = round(min(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_max = round(max(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_sd = round(stats::sd(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), 
           wood_ANPP__Mg_ha_yr_se = round((wood_ANPP__Mg_ha_yr_sd / sqrt(wood_N)), 3),  wood_ANPP__Mg_ha_yr = round(mean(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3) ) %>% dplyr::mutate(wood_count_type = "years")
-vst_ANPP_site <- wood_yearFirst %>% dplyr::group_by(outlier_threshold, siteID) %>% dplyr::summarise(wood_N = n(), 
-          wood_ANPP__Mg_ha_yr_min = round(min(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_max = round(max(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_sd = round(sd(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), 
+vst_ANPP_site <- wood_yearFirst %>% dplyr::group_by(outlier_threshold, siteID) %>% dplyr::summarise(wood_N = dplyr::n(), 
+          wood_ANPP__Mg_ha_yr_min = round(min(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_max = round(max(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_sd = round(stats::sd(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), 
           wood_ANPP__Mg_ha_yr_se = round((wood_ANPP__Mg_ha_yr_sd / sqrt(wood_N)), 3),  wood_ANPP__Mg_ha_yr = round(mean(wood_ANPP__Mg_ha_yr, na.rm = TRUE),3) ) %>% dplyr::mutate(wood_count_type = "plots")
 
 # toggle on one of the three choices above to pick which ANPP_optimize input is used: 1) average across plots and years all in one step, 2)average within years then by site, or 3) average within sites then by year (if all toggled on then the last will be used)
@@ -504,7 +504,7 @@ ANPP_site$herb_percent_of_NPP_se <- round((abs(ANPP_site$herb_percent_of_NPP) * 
                                                     (ANPP_site$vstHbp_NPP__Mg_ha_yr_yr_se / ANPP_site$vstHbp_NPP__Mg_ha_yr)^2) ), 1)
 
 ANPP_site <- ANPP_site %>% dplyr::select(siteID, wood_N, wood_count_type, wood_ANPP__Mg_ha_yr_se, wood_ANPP__Mg_ha_yr, herb_N, herb_NPP__Mg_ha_yr_se, herb_NPP__Mg_ha_yr, vstHbp_NPP__Mg_ha_yr, 
-                                          herb_percent_of_NPP_se, herb_percent_of_NPP) %>% arrange(herb_percent_of_NPP)
+                                          herb_percent_of_NPP_se, herb_percent_of_NPP) %>% dplyr::arrange(herb_percent_of_NPP)
 }
 
 print("Returning productivity summary data frames as a list object, calculated using approach 1  ..... ")
@@ -558,8 +558,8 @@ output.list <- list(
 
 }
 
-#estimateProductivityOutputs <- estimateProductivity(input = "NEONbiomassOutputs.rds", calcMethod = "approach_1", outlier = 1.5, outlier_type = "IQR")
-#estimateProductivityOutputs <- estimateProductivity(input = "NEONbiomassOutputs.rds", calcMethod = "approach_1", outlier = 2, outlier_type = "SD")
+#estimateProductivityOutputs <- estimateProductivity(input = "NEONbiomassOutputs.rds", calcMethod = "approach_1", outlier = 1.5, outlierType = "IQR")
+#estimateProductivityOutputs <- estimateProductivity(input = "NEONbiomassOutputs.rds", calcMethod = "approach_1", outlier = 2, outlierType = "SD")
 
 #list2env(estimateProductivityOutputs ,.GlobalEnv) # unlist all data frames for easier viewing or additional analysis
 #saveRDS(estimateProductivityOutputs, 'estimateProductivityOutputs.rds') # save all outputs locally for further examination

@@ -5,8 +5,8 @@
 \title{Estimate aboveground biomass (AGB) of woody and herbaceous vegetation}
 \usage{
 estimateBiomass(
-  inputVst = VstDat,
-  inputHbp = HbpDat,
+  inputDataListVst = VstDat,
+  inputDataListHbp = HbpDat,
   site = NA,
   start = NA,
   end = NA,
@@ -16,15 +16,15 @@ estimateBiomass(
 )
 }
 \arguments{
-\item{inputVst}{Specify a loaded R list object (e.g. VstDat) that contains NEON portal VST data. \link{character}}
+\item{inputDataListVst}{Specify a loaded R list object (e.g. VstDat) that contains NEON portal VST data. \link{character}}
 
-\item{inputHbp}{Optionally, specify a loaded R list object (e.g. HbpDat) that contains NEON portal HBP data. \link{character}}
+\item{inputDataListHbp}{Optionally, specify a loaded R list object (e.g. HbpDat) that contains NEON portal HBP data. \link{character}}
 
-\item{site}{Either NA, meaning all available sites from inputVst and inputHBP data, or a character vector of 4-letter NEON site codes, e.g. c('ONAQ','RMNP'). Defaults to all. \link{list}}
+\item{site}{Either NA, meaning all available sites from inputDataListVst and inputHBP data, or a character vector of 4-letter NEON site codes, e.g. c('ONAQ','RMNP'). Defaults to all. \link{list}}
 
-\item{start}{Either NA, meaning all available years from inputVst and inputHBP data, or a character vector specifying start year in the form YYYY, e.g. 2019. The default and earliest allowable option is 2018. \link{character}}
+\item{start}{Either NA, meaning all available years from inputDataListVst and inputHBP data, or a character vector specifying start year in the form YYYY, e.g. 2019. The default and earliest allowable option is 2018. \link{character}}
 
-\item{end}{Either NA, meaning all available years from inputVst and inputHBP data after the start year, or a character vector specifying start year in the form YYYY, e.g. 2021. Data from the current calendar year are excluded since they would be incomplete. \link{character}}
+\item{end}{Either NA, meaning all available years from inputDataListVst and inputHBP data after the start year, or a character vector specifying start year in the form YYYY, e.g. 2021. Data from the current calendar year are excluded since they would be incomplete. \link{character}}
 
 \item{growthForm}{Select which growth forms to analyse \link{character}}
 
@@ -67,8 +67,24 @@ list2env(VstHbpData ,.GlobalEnv) # unlist list of lists created by function getB
 load('VstDat.rds') # load NEON VST portal data from a local file
 load('HbpDat.rds') # Optionally, load NEON HBP portal data from a local file
 
-estimateBiomassOutputs <- estimateBiomass(inputVst = VstDat, inputHbp = HbpDat)
-estimateBiomassOutputs <- estimateBiomass(growthForm = "all trees", plotPriority = 5)
+
+# example with arguments at default values
+estimateBiomassOutputs <- estimateBiomass(inputDataListVst = VstDat, inputDataListHbp = HbpDat)
+
+# example with just VST data
+estimateBiomassOutputs <- estimateBiomass(inputDataListVst = VstDat, inputDataListHbp = NA)
+
+# example with inputDataListVst = NA that triggers a fresh NEON portal data download
+estimateBiomassOutputs <- estimateBiomass(inputDataListVst = NA, site = "STEI", 
+                                           inputDataListHbp = NA)
+
+# example with just a subset of inputDataListVst data being utilized
+estimateBiomassOutputs <- estimateBiomass(inputDataListVst = VstDat, start = 2022, 
+                                           inputDataListHbp = NA)
+
+# example specifying several non-default arguments
+estimateBiomassOutputs <- estimateBiomass(inputDataListVst = VstDat, inputDataListHbp = NA,
+                                             growthForm = "all trees", plotPriority = 4)
 
 list2env(estimateBiomassOutputs ,.GlobalEnv) # unlist all data frames
 saveRDS(estimateBiomassOutputs, 'estimateBiomassOutputs.rds') # save all outputs locally

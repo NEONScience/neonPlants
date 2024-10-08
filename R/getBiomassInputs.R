@@ -28,8 +28,8 @@
 #' # examples specifying multiple non-default arguments
 #' VstHbpData <- getBiomassInputs(site="HARV", start = 2021, end = 2022, dataProducts = "VstHbp")
 #' 
-#' VstHbpData <- getBiomassInputs(siteID = c("HARV","JERC"), 
-#'          start = "2019", end = "2022", dataProducts = "Vst")
+#' VstHbpData <- getBiomassInputs(site = c("HARV","JERC"), start = 2019, end = 2022, 
+#'                                        dataProducts = "VstHbp")
 #' 
 #' list2env(VstHbpData ,.GlobalEnv) # unlist VstDat list (and optionally HbpDat list)
 #' saveRDS(VstHbpData$VstDat, 'VstDat.rds') # save vst data locally
@@ -79,9 +79,9 @@ VstDat <- neonUtilities::loadByProduct(dpID="DP1.10098.001",
 ### filter to sampling events that started in specified date range
 list2env(VstDat, envir=.GlobalEnv)
 vstList <- names(VstDat)
-vst_perplotperyear <- vst_perplotperyear %>% filter(as.numeric(substr("eventID", 10,13)) >= start & as.numeric(substr("eventID", 10,13)) <= end)
-vst_apparentindividual <- vst_apparentindividual %>% filter(as.numeric(substr("eventID", 10,13)) >= start & as.numeric(substr("eventID", 10,13)) <= end)
-if(exists('`vst_non-woody`')) {`vst_non-woody` <- `vst_non-woody` %>% filter(as.numeric(substr("eventID", 10,13)) >= start & as.numeric(substr("eventID", 10,13)) <= end)}
+vst_perplotperyear <- vst_perplotperyear %>% dplyr::filter(as.numeric(substr("eventID", 10,13)) >= start & as.numeric(substr("eventID", 10,13)) <= end)
+vst_apparentindividual <- vst_apparentindividual %>% dplyr::filter(as.numeric(substr("eventID", 10,13)) >= start & as.numeric(substr("eventID", 10,13)) <= end)
+if(exists('`vst_non-woody`')) {`vst_non-woody` <- `vst_non-woody` %>% dplyr::filter(as.numeric(substr("eventID", 10,13)) >= start & as.numeric(substr("eventID", 10,13)) <= end)}
 VstDat <-  mget(vstList, envir = sys.frame())
 
 ##### If option to include herbaceous data was selected then download the herbaceous data #############################

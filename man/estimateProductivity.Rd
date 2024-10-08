@@ -10,7 +10,7 @@ estimateProductivity(
   plotPriority = 5,
   calcMethod = "approach_1",
   outlier = 1.5,
-  outlier_type = "IQR",
+  outlierType = "IQR",
   dataProducts = "VstHbp"
 )
 }
@@ -25,7 +25,7 @@ estimateProductivity(
 
 \item{outlier}{Specify how much (if any) outlier removal should be performed. The default is 1.5. \link{numeric}}
 
-\item{outlier_type}{Specify the type of outlier, either SD (standard deviations) or IQR (interquartile range). The default is "IQR". \link{character}}
+\item{outlierType}{Specify the type of outlier, either SD (standard deviations) or IQR (interquartile range). The default is "IQR". \link{character}}
 
 \item{dataProducts}{Select whether to analyse only woody biomass "Vst" or woody plus herbaceous "VstHbp" \link{character}}
 }
@@ -61,7 +61,7 @@ estimateProductivityOutputs <- estimateProductivity(input = estimateBiomassOutpu
 # example specifying many non-default arguments
 estimateProductivityOutputs <- estimateProductivity(input = "estimateBiomassOutputs", 
                plotType = "all", plotPriority = 50, 
-               calcMethod = "approach_2", outlier = 2, outlier_type = "SD", 
+               calcMethod = "approach_2", outlier = 2, outlierType = "SD", 
                dataProducts = "Vst")
 
 list2env(estimateProductivityOutputs ,.GlobalEnv) # unlist all data frames for easier viewing
