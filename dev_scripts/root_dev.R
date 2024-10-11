@@ -9,12 +9,25 @@ library(neonUtilities)
 ### Create test dataset in list form for testing with new list input ####
 #   Retrieve test data for LENO (site with fewest records in this site x month)
 bbcTest <- neonUtilities::loadByProduct(dpID = "DP1.10067.001",
-                                        site = "LENO",
+                                        site = "all",
                                         startdate = "2018-07",
                                         enddate = "2018-08",
                                         tabl = "all",
                                         check.size = FALSE,
                                         token = Sys.getenv("NEON_TOKEN"))
+
+#   Check record count by siteID for those sites with qaDryMass == Y; test dataset needs QA dryMass samples
+testSumm <- bbcTest$bbc_rootmass %>%
+  dplyr::group_by(siteID,
+                  qaDryMass) %>%
+  dplyr::summarise(count = n())
+
+#--> DEJU has fewest records and also has qaDryMass == Y
+
+
+
+### Create test dataset using DEJU data from 2018-07 to 2018-08
+
 
 #   Recreate small list object for testing purposes
 testList <- list(bbc_percore = bbcTest$bbc_percore,
