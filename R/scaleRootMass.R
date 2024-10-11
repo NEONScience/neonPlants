@@ -1,4 +1,3 @@
-###################################################################################################
 #' @title Scale Root Biomass by Size Category to Mass Per Area and Mass Per Volume
 
 #' @author Courtney Meier \email{cmeier@battelleecology.org} \cr
@@ -23,10 +22,10 @@
 #' are combined into the current 0-1mm sizeCategory.
 #' 
 #' @param inputRootList A list object comprised of Plant Below Ground Biomass tables (DP1.10067.001) 
-#' downloaded using the neonUtilities::loadByProduct function (defaults to required). If a list 
+#' downloaded using the neonUtilities::loadByProduct() function (defaults to required). If list 
 #' input is provided, the table input arguments must all be NA. [list]
 #' 
-#' #' @param includeDilution Indicator for whether mass of root fragments < 1 cm length should be
+#' @param includeDilution Indicator for whether mass of root fragments < 1 cm length should be
 #' calculated, as estimated via the Dilution Sampling method (Defaults to TRUE). If TRUE and
 #' inputDilution is NA, the 'bbc_dilution' table will be extracted from the list input. [logical]
 #' 
@@ -34,19 +33,21 @@
 #' (defaults to NA). If table input is provided, the 'inputRootList' argument must be NA. [data.frame]
 #'
 #' @param inputMass The 'bbc_rootmass' table for the site x month combination(s) of interest
-#' (required). If table input is provided, the 'inputRootList' argument must be NA. [data.frame]
+#' (defaults to NA). If table input is provided, the 'inputRootList' argument must be NA. [data.frame]
 #' 
 #' @param inputDilution The 'bbc_dilution' table for the site x month combination(s) of interest
 #' (optional, defaults to NA). If table input is provided, the 'inputRootList' argument must be 
 #' NA. [data.frame]
 #' 
-#' @param includeFragmentsWithTotal Indicator for whether mass of root fragments < 1 cm length 
-#' calculated from dilution sampling should be included in the 'totalDryMass' outputs. Defaults
-#' to FALSE. If set to TRUE, a table must be provided to the 'inputDilution' argument. [logical]
+#' @param includeFragInTotal Indicator for whether mass of root fragments < 1 cm length 
+#' calculated from dilution sampling should be included when summing across sizeCategory to 
+#' calculate the 'totalDryMass'. Defaults to FALSE. If set to TRUE and 'inputRootList' is NA, 
+#' the 'bbc_dilution' table must be provided to the 'inputDilution' argument. [logical]
 #' 
 #' @return A table containing root mass data per unit area ("g/m2") and per unit volume ("g/m3")
 #' for three sizeCategories (< 1mm, 1-2mm, and 2-10mm) as well as total fine root biomass summed 
-#' across all sizeCategories. The output no longer contains the 'rootStatus' field.
+#' across all sizeCategories. The output no longer contains the 'rootStatus' field and QA dryMass
+#' samples are averaged.
 #' 
 #' @examples
 #' \dontrun{
@@ -67,25 +68,122 @@
 #' inputCore = NA,
 #' inputMass = NA,
 #' inputDilution = NA,
-#' includeFragments = FALSE
+#' includeFragInTotal = FALSE
 #' )
 #'
 #' }
 #' 
 #' @export scaleRootMass
 
-###################################################################################################
 
 scaleRootMass <- function(inputRootList,
                           includeDilution = TRUE,
                           inputCore = NA,
                           inputMass = NA,
                           inputDilution = NA,
-                          includeFragments = FALSE) {
+                          includeFragInTotal = FALSE) {
+  
+  ### Test that user has supplied arguments as required by function ####
+  
+  ### Verify 'includeDilution' and 'includeFragInTotal' are of type logical
+  #   Check 'includeDilution'
+  if (!is.logical(includeDilution)) {
+    stop(glue::glue("Argument 'includeDilution' must be type logical; supplied input is {class(includeDilution)}"))
+  }
+  
+  #   Check 'includeFragInTotal'
+  if (!is.logical(includeFragInTotal)) {
+    stop(glue::glue("Agrument 'includeFragInTotal' must be type logical; supplied input is {class(includeFragInTotal)}"))
+  }
   
   
   
-  #--> Begin standardizing with other functions
+  ### Verify user-supplied 'inputRootList' object contains correct data if not NA
+  if (!is.logical(inputRootList)) {
+    
+    #   Check that input is a list
+    if (!inherits(inputRootList, "list")) {
+      stop(glue::glue("Argument 'inputRootList' must be a list object from neonUtilities::loadByProduct();
+                     supplied input object is {class(inputRootList)}"))
+    }
+    
+    #   Check that required tables within list match expected names
+    listExpNames <- c("bbc_percore", "bbc_rootmass", "bbc_dilution")
+    
+    #   Account for includeDilution argument and whether 'bbc_dilution' is required
+    if (isTRUE(includeDilution)) {
+      
+      #   All expected tables required when includeDilution == TRUE
+      if (length(setdiff(listExpNames, names(inputRootList))) > 0) {
+        stop(glue::glue("Required tables missing from 'inputRootList':",
+                        '{paste(setdiff(listExpNames, names(inputRootList)), collapse = ", ")}',
+                        .sep = " "))
+      }
+      
+    } else if (isFALSE(includeDilution)) {
+      
+      #   Table 'bbc_dilution' not required when includeDilution == FALSE
+      if (length(setdiff(listExpNames[1:2], names(inputRootList))) > 0) {
+        stop(glue::glue("Required tables missing from 'inputRootList':",
+                        '{paste(setdiff(listExpNames, names(inputRootList)), collapse = ", ")}',
+                        .sep = " "))
+      }
+      
+    } # end includeDilution conditional
+  } # end is.logical 'inputRootList'
+  
+  
+  
+  ### Verify table inputs are NA if 'inputRootList' is supplied
+  if (inherits(inputRootList, "list") & (!is.logical(inputCore) | !is.logical(inputMass) | !is.logical(inputDilution))) {
+    stop("When 'inputRootList' is supplied all table input arguments must be NA")
+  }
+  
+  
+  
+  ### Verify 'inputCore' and 'inputMass' are data frames if 'inputRootList' is NA
+  if (is.logical(inputRootList) & 
+      (!inherits(inputCore, "data.frame") | !inherits(inputMass, "data.frame"))) {
+    
+    stop("Data frames must be supplied for all table inputs if 'inputRootList' is NA")
+  }
+  
+  
+  
+  ### Verify 'inputDilution' is a data frame if 'inputRootList' is NA and 'includeDilution' is TRUE
+  if (is.logical(inputRootList) & isTRUE(includeDilution) & !inherits(inputDilution, "data.frame")) {
+    
+    stop("A data frame must be supplied to 'inputDilution' when 'inputRootList' is NA and includeDilution is TRUE")
+  }
+  
+  
+  
+  ### Conditionally define input tables ####
+  if (inherits(inputRootList, "list")) {
+    
+    rootCore <- inputRootList$bbc_percore
+    rootMass <- inputRootList$bbc_rootmass
+    
+    if (isTRUE(includeDilution)) {
+      rootDilution <- inputRootList$bbc_dilution
+    }
+    
+  } else {
+    
+    rootCore <- inputCore
+    rootMass <- inputMass
+    
+    if (isTRUE(includeDilution)) {
+      rootDilution <- inputDilution
+    }
+    
+  }
+  
+  
+  ###---> continue with table-specific tests below
+  
+  
+  
   
   ### Verify user-supplied inputCore table contains expected data
   rootCore <- inputCore

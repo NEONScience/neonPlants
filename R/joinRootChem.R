@@ -20,7 +20,7 @@
 #' point.
 #' 
 #' @param inputRootList A list object comprised of Plant Below Ground Biomass tables (DP1.10067.001) 
-#' downloaded using the neonUtilities::loadByProduct function (defaults to required). If a list 
+#' downloaded using the neonUtilities::loadByProduct function (defaults to required). If list 
 #' input is provided, all table inputs must be NA. [list]
 #'
 #' @param inputMass The 'bbc_rootmass' table for the site x month combination(s) of interest.
@@ -62,6 +62,7 @@
 #' }
 #' 
 #' @export joinRootChem
+
 
 
 joinRootChem <- function(inputRootList,
