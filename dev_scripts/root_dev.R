@@ -27,14 +27,21 @@ testSumm <- bbcTest$bbc_rootmass %>%
 
 
 ### Create test dataset using DEJU data from 2018-07 to 2018-08
+dejuTest <- neonUtilities::loadByProduct(dpID = "DP1.10067.001",
+                                         site = "DEJU",
+                                         startdate = "2018-07",
+                                         enddate = "2018-08",
+                                         tabl = "all",
+                                         check.size = FALSE,
+                                         token = Sys.getenv("NEON_TOKEN"))
 
 
 #   Recreate small list object for testing purposes
-testList <- list(bbc_percore = bbcTest$bbc_percore,
-                 bbc_rootmass = bbcTest$bbc_rootmass,
-                 bbc_chemistryPooling = bbcTest$bbc_chemistryPooling,
-                 bbc_rootChemistry = bbcTest$bbc_rootChemistry,
-                 bbc_dilution = bbcTest$bbc_dilution)
+testList <- list(bbc_percore = dejuTest$bbc_percore,
+                 bbc_rootmass = dejuTest$bbc_rootmass,
+                 bbc_chemistryPooling = dejuTest$bbc_chemistryPooling,
+                 bbc_rootChemistry = dejuTest$bbc_rootChemistry,
+                 bbc_dilution = dejuTest$bbc_dilution)
 
 #   Write out test dataset for testthat
 testDataPath <- "tests/testthat/testdata"
@@ -44,18 +51,22 @@ saveRDS(object = testList,
 
 
 
-### Create output data frame with test list input
+### Create output data frames with test list input
+
 joinTestOut <- neonPlants::joinRootChem(inputRootList = testList)
+#--> returns data frame with 477 rows and 35 columns
 
-#--> returns data frame with 320 rows and 35 columns
+standardizeTestOut <- neonPlants::standardizeRootMass(inputRootList = testList)
+#--> returns data frame with 159 rows and 10 columns
+
+scaleTestOut <- ""
 
 
 
 
 
 
-
-### Testing of initial functions ####
+### Development of initial functions ####---> deprecated
 #   Newer site x month combos with rootStatus == NA for all subsampleIDs
 bbcNew <- neonUtilities::loadByProduct(dpID = "DP1.10067.001",
                                        site = "all",

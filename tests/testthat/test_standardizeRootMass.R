@@ -1,21 +1,22 @@
-### Unit tests for rootMassStandardize function ####
+### Unit tests for standardizeRootMass function ####
 ### POC: Courtney Meier, cmeier@BattelleEcology.org
 
-# ### Read in test data
-# testMass <- readRDS(testthat::test_path("testdata", "valid-rootmass-201807.RDS"))
-# 
-# 
-# 
+### Read in test data
+testList <- readRDS(testthat::test_path("testdata", "valid-rootdatalist-201807.RDS"))
+testMass <- testList$bbc_rootmass
+
+
+
 # ### Test: Function generates expected output type
 # testthat::test_that(desc = "Output type", {
-#   
+# 
 #   testthat::expect_type(object = rootMassStandardize(inputMass = testMass),
 #                         type = "list")
-#   
+# 
 # })
-# 
-# 
-# 
+
+
+
 # ### Test: Function generates expected output class
 # testthat::test_that(desc = "Output class", {
 #   

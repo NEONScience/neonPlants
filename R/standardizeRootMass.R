@@ -25,7 +25,7 @@
 #' input is provided, the 'inputMass' table input argument must be NA. [list]
 #'
 #' @param inputMass The 'bbc_rootmass' table for the site x month combination(s) of interest
-#' (defaults to NA) If a table input is provided, the 'inputRootList' argument must be NA. [data.frame]
+#' (defaults to NA). If table input is provided, the 'inputRootList' argument must be NA. [data.frame]
 #' 
 #' @return A table containing root mass data for three sizeCategories (< 1mm, 1-2mm, and 2-10mm)
 #' and dryMass values pooled across previously utilized "live/dead" rootStatus categories. The 
@@ -137,8 +137,8 @@ standardizeRootMass <- function(inputRootList,
                     .data$subsampleID,
                     .data$sizeCategory,
                     .data$rootStatus) %>%
-    dplyr::summarise(dryMass = dplyr::case_when(all(is.na(dryMass)) ~ NA,
-                                                TRUE ~ round(mean(dryMass, na.rm = TRUE), digits = 4)),
+    dplyr::summarise(dryMass = dplyr::case_when(all(is.na(.data$dryMass)) ~ NA,
+                                                TRUE ~ round(mean(.data$dryMass, na.rm = TRUE), digits = 4)),
                      mycorrhizaeVisible = dplyr::case_when(all(is.na(mycorrhizaeVisible)) ~ NA,
                                                            dplyr::n_distinct(mycorrhizaeVisible, na.rm = TRUE) == 1 ~ 
                                                              paste(unique(mycorrhizaeVisible[!is.na(mycorrhizaeVisible)]), collapse = ", "),
@@ -160,7 +160,7 @@ standardizeRootMass <- function(inputRootList,
                     .data$sampleID,
                     .data$sizeCategory) %>%
     dplyr::summarise(subsampleID = glue::glue(unique(.data$sampleID), unique(.data$sizeCategory), .sep = "."),
-                     dryMass = sum(dryMass, na.rm = TRUE),
+                     dryMass = sum(.data$dryMass, na.rm = TRUE),
                      mycorrhizaeVisible = dplyr::case_when(all(is.na(mycorrhizaeVisible)) ~ NA,
                                                            dplyr::n_distinct(mycorrhizaeVisible, na.rm = TRUE) == 1 ~ 
                                                              paste(unique(mycorrhizaeVisible[!is.na(mycorrhizaeVisible)]), collapse = ", "),
@@ -185,7 +185,7 @@ standardizeRootMass <- function(inputRootList,
                     .data$plotID,
                     .data$collectDate,
                     .data$sampleID) %>%
-    dplyr::summarise(dryMass = sum(dryMass, na.rm = TRUE),
+    dplyr::summarise(dryMass = sum(.data$dryMass, na.rm = TRUE),
                      mycorrhizaeVisible = dplyr::case_when(all(is.na(mycorrhizaeVisible)) ~ NA,
                                                            dplyr::n_distinct(mycorrhizaeVisible, na.rm = TRUE) == 1 ~ 
                                                              paste(unique(mycorrhizaeVisible[!is.na(mycorrhizaeVisible)]), collapse = ", "),
@@ -199,7 +199,7 @@ standardizeRootMass <- function(inputRootList,
   olderFineMass <- olderFineMass %>%
     dplyr::mutate(subsampleID = paste(.data$sampleID, "0-1", sep = "."),
                   sizeCategory = "0-1",
-                  .after = sampleID)
+                  .after = "sampleID")
   
   rootMass <- rootMass %>%
     dplyr::filter(!.data$sizeCategory %in% c("0-05", "05-1")) %>%

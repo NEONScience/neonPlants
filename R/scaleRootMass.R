@@ -6,13 +6,12 @@
 #' @description Join NEON Plant Belowground Biomass data tables (DP1.10067.001) to calculate fine 
 #' root biomass by sizeCategory as well as total fine root biomass per unit area and per unit soil
 #' volume. Fine root fragment mass (root fragments < 1 cm length) can optionally be calculated 
-#' for the subset of cores for which it is generated, and fragment mass is not included in the summed
-#' total fine root biomass.
+#' for the subset of cores for which it is generated, and fragment mass can optionally be included
+#' in the summed total fine root biomass.
 #' 
-#' Input data should be the 'bbc_percore' and 'bbc_rootmass' tables retrieved using the 
-#' neonUtilities::loadByProduct() function (preferred), downloaded from the NEON Data Portal, or
-#' input data tables with an equivalent structure and representing the same site x month 
-#' combinations. 
+#' Data inputs are NEON Plant Belowground Biomass data (DP1.10067.001) retrieved using the 
+#' neonUtilities::loadByProduct() function (preferred), data downloaded from the NEON Data Portal, 
+#' or input data tables with an equivalent structure and representing the same site x month combinations. 
 #'
 #' @details NEON weighs a minimum of 5% of samples a second time so that data users can estimate
 #' the uncertainty associated with different technicians weighing dried roots; QA samples of this
@@ -23,19 +22,27 @@
 #' If inputMass data collected prior to 2019 are provided, the 0-0.5mm and 0.5-1mm sizeCategories
 #' are combined into the current 0-1mm sizeCategory.
 #' 
+#' @param inputRootList A list object comprised of Plant Below Ground Biomass tables (DP1.10067.001) 
+#' downloaded using the neonUtilities::loadByProduct function (defaults to required). If a list 
+#' input is provided, the table input arguments must all be NA. [list]
+#' 
+#' #' @param includeDilution Indicator for whether mass of root fragments < 1 cm length should be
+#' calculated, as estimated via the Dilution Sampling method (Defaults to TRUE). If TRUE and
+#' inputDilution is NA, the 'bbc_dilution' table will be extracted from the list input. [logical]
+#' 
 #' @param inputCore The 'bbc_percore' table for the site x month combination(s) of interest
-#' (required). [data.frame]
+#' (defaults to NA). If table input is provided, the 'inputRootList' argument must be NA. [data.frame]
 #'
 #' @param inputMass The 'bbc_rootmass' table for the site x month combination(s) of interest
-#' (required). [data.frame]
+#' (required). If table input is provided, the 'inputRootList' argument must be NA. [data.frame]
 #' 
 #' @param inputDilution The 'bbc_dilution' table for the site x month combination(s) of interest
-#' (optional, defaults to NA). [data.frame]
+#' (optional, defaults to NA). If table input is provided, the 'inputRootList' argument must be 
+#' NA. [data.frame]
 #' 
-#' @param includeFragments Indicator to determine whether mass of root fragments < 1 cm length 
+#' @param includeFragmentsWithTotal Indicator for whether mass of root fragments < 1 cm length 
 #' calculated from dilution sampling should be included in the 'totalDryMass' outputs. Defaults
-#' to FALSE. If set to TRUE, the 'bbc_dilution' table must be provided to the 'inputDilution' 
-#' argument. [logical]
+#' to FALSE. If set to TRUE, a table must be provided to the 'inputDilution' argument. [logical]
 #' 
 #' @return A table containing root mass data per unit area ("g/m2") and per unit volume ("g/m3")
 #' for three sizeCategories (< 1mm, 1-2mm, and 2-10mm) as well as total fine root biomass summed 
@@ -54,23 +61,31 @@
 #' )
 #' 
 #' #   Calculate root mass per unit area and per unit volume
-#' df <- neonPlants::rootMassScale(
-#' inputCore = bbc$bbc_percore,
-#' inputMass = bbc$bbc_rootmass,
-#' inputDilution = bbc$bbc_dilution,
+#' df <- neonPlants::scaleRootMass(
+#' inputRootList = bbc,
+#' includeDilution = TRUE,
+#' inputCore = NA,
+#' inputMass = NA,
+#' inputDilution = NA,
 #' includeFragments = FALSE
 #' )
 #'
 #' }
 #' 
-#' @export rootMassScale
+#' @export scaleRootMass
 
 ###################################################################################################
 
-rootMassScale <- function(inputCore,
-                          inputMass,
+scaleRootMass <- function(inputRootList,
+                          includeDilution = TRUE,
+                          inputCore = NA,
+                          inputMass = NA,
                           inputDilution = NA,
                           includeFragments = FALSE) {
+  
+  
+  
+  #--> Begin standardizing with other functions
   
   ### Verify user-supplied inputCore table contains expected data
   rootCore <- inputCore
@@ -147,7 +162,7 @@ rootMassScale <- function(inputCore,
   
   
   ### Standardize rootMass data to current sizeCategory definitions and average qaDryMass = Y
-  rootMass <- neonPlants::rootMassStandardize(inputMass = rootMass)
+  rootMass <- neonPlants::standardizeRootMass(inputMass = rootMass)
   
   #   Collapse mycorrhizaeVisible and massRemarks to single string per sampleID to avoid downstream
   #   dupes when pivot_wider() is used; these will be re-joined by sampleID after wide table is created

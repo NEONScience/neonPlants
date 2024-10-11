@@ -24,13 +24,15 @@
 #' input is provided, all table inputs must be NA. [list]
 #'
 #' @param inputMass The 'bbc_rootmass' table for the site x month combination(s) of interest.
-#' (defaults to NA) [data.frame]
+#' (defaults to NA). If table input is provided, the 'inputRootList' argument must be NA. [data.frame]
 #' 
 #' @param inputPool The 'bbc_chemistryPooling' table for the site x month combination(s) of
-#' interest (defaults to NA). [data.frame]
+#' interest (defaults to NA). If table input is provided, the 'inputRootList' argument must be 
+#' NA.[data.frame]
 #' 
 #' @param inputChem The 'bbc_rootChemistry' table for the site x month combination(s) of
-#' interest (defaults to NA). [data.frame]
+#' interest (defaults to NA). If table input is provided, the 'inputRootList' argument must be 
+#' NA. [data.frame]
 #' 
 #' @return A table containing both root mass and root chemistry data in the same row for
 #' different root sizeCategories (i.e., subsampleIDs) within a sampleID. The subsampleIDs in 

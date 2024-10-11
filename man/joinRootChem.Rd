@@ -12,13 +12,15 @@ downloaded using the neonUtilities::loadByProduct function (defaults to required
 input is provided, all table inputs must be NA. \link{list}}
 
 \item{inputMass}{The 'bbc_rootmass' table for the site x month combination(s) of interest.
-(defaults to NA) \link{data.frame}}
+(defaults to NA). If table input is provided, the 'inputRootList' argument must be NA. \link{data.frame}}
 
 \item{inputPool}{The 'bbc_chemistryPooling' table for the site x month combination(s) of
-interest (defaults to NA). \link{data.frame}}
+interest (defaults to NA). If table input is provided, the 'inputRootList' argument must be
+NA.\link{data.frame}}
 
 \item{inputChem}{The 'bbc_rootChemistry' table for the site x month combination(s) of
-interest (defaults to NA). \link{data.frame}}
+interest (defaults to NA). If table input is provided, the 'inputRootList' argument must be
+NA. \link{data.frame}}
 }
 \value{
 A table containing both root mass and root chemistry data in the same row for

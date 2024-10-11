@@ -34,7 +34,7 @@ testthat::test_that(desc = "Output class", {
 testthat::test_that(desc = "Output data frame row number", {
 
   testthat::expect_identical(object = nrow(joinRootChem(inputRootList = testList)),
-                             expected = as.integer(320))
+                             expected = as.integer(477))
 })
 
 

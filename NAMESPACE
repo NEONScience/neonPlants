@@ -2,9 +2,9 @@
 
 export("%>%")
 export(joinRootChem)
-export(rootMassScale)
-export(rootMassStandardize)
+export(scaleRootMass)
 export(stackPlantPresence)
+export(standardizeRootMass)
 import(rlang)
 importFrom(glue,glue)
 importFrom(lifecycle,deprecated)
