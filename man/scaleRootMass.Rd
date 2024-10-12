@@ -10,15 +10,15 @@ scaleRootMass(
   inputCore = NA,
   inputMass = NA,
   inputDilution = NA,
-  includeFragments = FALSE
+  includeFragInTotal = FALSE
 )
 }
 \arguments{
 \item{inputRootList}{A list object comprised of Plant Below Ground Biomass tables (DP1.10067.001)
-downloaded using the neonUtilities::loadByProduct function (defaults to required). If a list
-input is provided, the table input arguments must all be NA. \link{list}
+downloaded using the neonUtilities::loadByProduct() function (defaults to required). If list
+input is provided, the table input arguments must all be NA. \link{list}}
 
-#' @param includeDilution Indicator for whether mass of root fragments < 1 cm length should be
+\item{includeDilution}{Indicator for whether mass of root fragments < 1 cm length should be
 calculated, as estimated via the Dilution Sampling method (Defaults to TRUE). If TRUE and
 inputDilution is NA, the 'bbc_dilution' table will be extracted from the list input. \link{logical}}
 
@@ -26,20 +26,22 @@ inputDilution is NA, the 'bbc_dilution' table will be extracted from the list in
 (defaults to NA). If table input is provided, the 'inputRootList' argument must be NA. \link{data.frame}}
 
 \item{inputMass}{The 'bbc_rootmass' table for the site x month combination(s) of interest
-(required). If table input is provided, the 'inputRootList' argument must be NA. \link{data.frame}}
+(defaults to NA). If table input is provided, the 'inputRootList' argument must be NA. \link{data.frame}}
 
 \item{inputDilution}{The 'bbc_dilution' table for the site x month combination(s) of interest
 (optional, defaults to NA). If table input is provided, the 'inputRootList' argument must be
 NA. \link{data.frame}}
 
-\item{includeFragmentsWithTotal}{Indicator for whether mass of root fragments < 1 cm length
-calculated from dilution sampling should be included in the 'totalDryMass' outputs. Defaults
-to FALSE. If set to TRUE, a table must be provided to the 'inputDilution' argument. \link{logical}}
+\item{includeFragInTotal}{Indicator for whether mass of root fragments < 1 cm length
+calculated from dilution sampling should be included when summing across sizeCategory to
+calculate the 'totalDryMass'. Defaults to FALSE. If set to TRUE and 'inputRootList' is NA,
+the 'bbc_dilution' table must be provided to the 'inputDilution' argument. \link{logical}}
 }
 \value{
 A table containing root mass data per unit area ("g/m2") and per unit volume ("g/m3")
 for three sizeCategories (< 1mm, 1-2mm, and 2-10mm) as well as total fine root biomass summed
-across all sizeCategories. The output no longer contains the 'rootStatus' field.
+across all sizeCategories. The output no longer contains the 'rootStatus' field and QA dryMass
+samples are averaged.
 }
 \description{
 Join NEON Plant Belowground Biomass data tables (DP1.10067.001) to calculate fine
@@ -81,7 +83,7 @@ includeDilution = TRUE,
 inputCore = NA,
 inputMass = NA,
 inputDilution = NA,
-includeFragments = FALSE
+includeFragInTotal = FALSE
 )
 
 }

@@ -8,8 +8,8 @@ standardizeRootMass(inputRootList, inputMass = NA)
 }
 \arguments{
 \item{inputRootList}{A list object comprised of Plant Below Ground Biomass tables (DP1.10067.001)
-downloaded using the neonUtilities::loadByProduct function (defaults to required). If a list
-input is provided, the 'inputMass' table input argument must be NA. \link{list}}
+downloaded using the neonUtilities::loadByProduct function (defaults to required). If list
+input is provided, the 'inputMass' table argument must be NA. \link{list}}
 
 \item{inputMass}{The 'bbc_rootmass' table for the site x month combination(s) of interest
 (defaults to NA). If table input is provided, the 'inputRootList' argument must be NA. \link{data.frame}}
@@ -17,7 +17,7 @@ input is provided, the 'inputMass' table input argument must be NA. \link{list}}
 \value{
 A table containing root mass data for three sizeCategories (< 1mm, 1-2mm, and 2-10mm)
 and dryMass values pooled across previously utilized "live/dead" rootStatus categories. The
-output no longer contains the 'rootStatus' field.
+output no longer contains the 'rootStatus' field, and any QA dryMass samples are averaged.
 }
 \description{
 NEON root mass data collected prior to 2019 were sorted to four sizeCategories and
@@ -28,7 +28,7 @@ into the current < 1mm category and pools together roots previously categorized 
 "dead".
 
 Data inputs are NEON Plant Belowground Biomass data (DP1.10067.001) retrieved using the
-neonUtilities::loadByProduct() function (preferred), data downloaded from the NEON Data Portal,
+neonUtilities::loadByProduct function (preferred), data downloaded from the NEON Data Portal,
 or input data tables with an equivalent structure and representing the same site x month combinations.
 }
 \details{

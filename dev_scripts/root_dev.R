@@ -56,7 +56,7 @@ saveRDS(object = testList,
 joinTestOut <- neonPlants::joinRootChem(inputRootList = testList)
 #--> returns data frame with 477 rows and 35 columns
 
-standardizeTestOut <- neonPlants::standardizeRootMass(inputRootList = testList)
+stdTestOut <- neonPlants::standardizeRootMass(inputRootList = testList)
 #--> returns data frame with 159 rows and 10 columns
 
 scaleTestOut <- ""

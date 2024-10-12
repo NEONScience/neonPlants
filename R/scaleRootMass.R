@@ -180,14 +180,10 @@ scaleRootMass <- function(inputRootList,
   }
   
   
-  ###---> continue with table-specific tests below
   
+  ### Verify input tables contain required columns and data ####
   
-  
-  
-  ### Verify user-supplied inputCore table contains expected data
-  rootCore <- inputCore
-  
+  ### Verify 'inputCore' table contains required data
   #   Check for required columns
   coreExpCols <- c("domainID", "siteID", "plotID", "clipID", "coreID", "collectDate", "eventID", "sampleID",
                    "rootSampleArea", "rootSampleDepth")
@@ -204,9 +200,7 @@ scaleRootMass <- function(inputRootList,
   
   
   
-  ### Verify user-supplied inputMass table contains expected data
-  rootMass <- inputMass
-  
+  ### Verify 'inputMass' table contains expected data
   #   Check for required columns
   massExpCols <- c("domainID", "siteID", "plotID", "samplingImpractical", "sampleID", "subsampleID", 
                    "sizeCategory", "rootStatus", "dryMass", "qaDryMass", "remarks")
@@ -224,9 +218,7 @@ scaleRootMass <- function(inputRootList,
   
   
   ### Verify inputDilution table contains expected data, if provided
-  if (is.data.frame(inputDilution)) {
-    
-    rootDilution <- inputDilution
+  if (is.data.frame(rootDilution)) {
     
     #   Check for required columns
     dilExpCols <- c("sampleID", "dilutionSubsampleVolume", "sampleVolume", "dryMass")
@@ -245,13 +237,6 @@ scaleRootMass <- function(inputRootList,
   
   
   
-  ### Verify includeFragments is logical
-  if (!is.logical(includeFragments)) {
-    stop("The 'inputFragments' argument must be of type logical.")
-  }
-  
-  
-  
   ### Message if older data were provided with deprecated 0-0.5mm and 0.5-1mm sizeCategories
   if ("0-05" %in% rootMass$sizeCategory | "05-1" %in% rootMass$sizeCategory) {
     message("Deprecated '0-0.5mm' or '0.5-1mm' sizeCategories detected, binning output to current '0-1mm' sizeCategory.")
@@ -260,76 +245,77 @@ scaleRootMass <- function(inputRootList,
   
   
   ### Standardize rootMass data to current sizeCategory definitions and average qaDryMass = Y
-  rootMass <- neonPlants::standardizeRootMass(inputMass = rootMass)
+  rootMass <- neonPlants::standardizeRootMass(inputRootList = NA,
+                                              inputMass = rootMass)
   
   #   Collapse mycorrhizaeVisible and massRemarks to single string per sampleID to avoid downstream
   #   dupes when pivot_wider() is used; these will be re-joined by sampleID after wide table is created
   stringMassCols <- dplyr::select(.data = rootMass,
-                                  sampleID,
-                                  mycorrhizaeVisible,
-                                  remarks) %>%
-    dplyr::group_by(sampleID) %>%
-    dplyr::summarise(mycorrhizaeVisible = dplyr::case_when(all(is.na(mycorrhizaeVisible)) ~ NA,
-                                                           dplyr::n_distinct(mycorrhizaeVisible, na.rm = TRUE) == 1 ~ 
-                                                             paste(unique(mycorrhizaeVisible[!is.na(mycorrhizaeVisible)]), collapse = ", "),
-                                                           TRUE ~ paste(mycorrhizaeVisible, collapse = ", ")),
-                     massRemarks = dplyr::case_when(all(is.na(remarks)) ~ NA,
-                                                    dplyr::n_distinct(remarks, na.rm = TRUE) == 1 ~ 
-                                                      paste(unique(remarks[!is.na(remarks)]), collapse = ", "),
-                                                    TRUE ~ paste(remarks, collapse = ", ")),
+                                  "sampleID",
+                                  "mycorrhizaeVisible",
+                                  "remarks") %>%
+    dplyr::group_by(.data$sampleID) %>%
+    dplyr::summarise(mycorrhizaeVisible = dplyr::case_when(all(is.na(.data$mycorrhizaeVisible)) ~ NA,
+                                                           dplyr::n_distinct(.data$mycorrhizaeVisible, na.rm = TRUE) == 1 ~ 
+                                                             paste(unique(.data$mycorrhizaeVisible[!is.na(.data$mycorrhizaeVisible)]), collapse = ", "),
+                                                           TRUE ~ paste(.data$mycorrhizaeVisible, collapse = ", ")),
+                     massRemarks = dplyr::case_when(all(is.na(.data$remarks)) ~ NA,
+                                                    dplyr::n_distinct(.data$remarks, na.rm = TRUE) == 1 ~ 
+                                                      paste(unique(.data$remarks[!is.na(.data$remarks)]), collapse = ", "),
+                                                    TRUE ~ paste(.data$remarks, collapse = ", ")),
                      .groups = "drop")
   
   #   Remove mycorrhizaeVisible and remarks from rootMass for clean downstream pivot_wider() result
   rootMass <- dplyr::select(.data = rootMass,
-                            -subsampleID,
-                            -mycorrhizaeVisible,
-                            -remarks)
+                            -"subsampleID",
+                            -"mycorrhizaeVisible",
+                            -"remarks")
   
   
   
   ### Join rootMass data with rootCore data
   rootCore <- dplyr::filter(.data = rootCore,
-                            samplingImpractical == "OK")
+                            .data$samplingImpractical == "OK")
   
   coreMass <- dplyr::full_join(x = rootCore,
                                y = rootMass,
                                by = c("domainID", "siteID", "plotID", "collectDate", "sampleID")) %>%
-    dplyr::rename(coreRemarks = remarks)
+    dplyr::rename(coreRemarks = "remarks")
   
   coreMass <- dplyr::arrange(.data = coreMass,
-                             domainID,
-                             siteID,
-                             eventID,
-                             plotID,
-                             sampleID,
-                             sizeCategory)
+                             .data$domainID,
+                             .data$siteID,
+                             .data$eventID,
+                             .data$plotID,
+                             .data$sampleID,
+                             .data$sizeCategory)
   
   
   
   ### Calculate dilution sampling fragment mass, if applicable
-  if (is.data.frame(inputDilution)) {
+  if (is.data.frame(rootDilution)) {
     
     rootDilution <- rootDilution %>%
       dplyr::filter(!is.na(.data$dryMass)) %>%
-      dplyr::mutate(fragMass = round(dryMass*(sampleVolume/dilutionSubsampleVolume),
+      dplyr::mutate(fragMass = round(.data$dryMass * (.data$sampleVolume / .data$dilutionSubsampleVolume),
                                      digits = 4),
-                    .before = dryMass) %>%
+                    .before = "dryMass") %>%
       dplyr::filter(.data$fragMass >= 0) %>%
       dplyr::group_by(.data$domainID,
                       .data$siteID,
                       .data$plotID,
                       .data$collectDate,
                       .data$sampleID) %>%
-      dplyr::summarise(dryMass = round(mean(fragMass, na.rm = TRUE), digits = 4),
+      dplyr::summarise(dryMass = round(mean(.data$fragMass, na.rm = TRUE), digits = 4),
                        .groups = "drop") %>%
       dplyr::mutate(sizeCategory = "frag",
-                    .after = sampleID)
+                    .after = "sampleID")
     
     #   Join rootDilution data with rootCore data
     coreDilMass <- dplyr::right_join(x = rootCore,
                                      y = rootDilution,
                                      by = c("domainID", "siteID", "plotID", "collectDate", "sampleID")) %>%
-      dplyr::rename(coreRemarks = remarks)
+      dplyr::rename(coreRemarks = "remarks")
     
     #   Bind standard mass rows with dilution mass rows; split out massRemarks then re-join since value is
     #   always 'NA' for dilution rows and causes dupes when pivot_wider() is used and a value exists for
@@ -349,8 +335,8 @@ scaleRootMass <- function(inputRootList,
   
   ### Pivot sizeCategory masses wider and sum to calculate total fine root biomass by sampleID
   coreMass <- tidyr::pivot_wider(data = coreMass,
-                                 names_from = sizeCategory,
-                                 values_from = dryMass,
+                                 names_from = "sizeCategory",
+                                 values_from = "dryMass",
                                  names_prefix = "dryMass")
   
   #   Re-join collapsed strings for mycorrhizaeVisible and massRemarks columns
@@ -359,26 +345,26 @@ scaleRootMass <- function(inputRootList,
                                by = "sampleID")
   
   coreMass <- dplyr::relocate(.data = coreMass,
-                              mycorrhizaeVisible,
-                              massRemarks,
-                              .after = release)
+                              "mycorrhizaeVisible",
+                              "massRemarks",
+                              .after = "release")
   
   #   Conditionally rename fragment column if exists
-  if (is.data.frame(inputDilution)) {
+  if (is.data.frame(rootDilution)) {
   
     coreMass <- dplyr::rename(.data = coreMass,
-                            dryMassFrag = dryMassfrag)
+                            dryMassFrag = "dryMassfrag")
   
   }
   
   
   
-  ### Conditionally calculate 'totalDryMass' dependent on includeFragments argument
-  ##  Default: totalDryMass does not include fragment mass
-  if (isFALSE(includeFragments)) {
+  ### Conditionally calculate 'totalDryMass' dependent on 'includeFragInTotal' argument
+  ##  Default: 'totalDryMass' does not include fragment mass
+  if (isFALSE(includeFragInTotal)) {
     
     coreMass <- dplyr::rowwise(data = coreMass) %>%
-      dplyr::mutate(totalDryMass = sum(`dryMass0-1`, `dryMass1-2`, `dryMass2-10`, 
+      dplyr::mutate(totalDryMass = sum(.data$`dryMass0-1`, .data$`dryMass1-2`, .data$`dryMass2-10`, 
                                        na.rm = TRUE)) %>%
       dplyr::ungroup()
     
@@ -386,16 +372,16 @@ scaleRootMass <- function(inputRootList,
   
   
   ##  Optional: Include fragment mass in totalDryMass
-  if (isTRUE(includeFragments)) {
+  if (isTRUE(includeFragInTotal)) {
     
     #   Check that inputDilution data frame is provided
     if (!is.data.frame(inputDilution)) {
-      stop("A valid 'inputDilution' data frame must be provided when 'includeFragments' is TRUE.")
+      stop("A valid 'inputDilution' data frame must be provided when 'includeFragInTotal' is TRUE.")
     } 
     
     #   Sum totalDryMass WITH fragment mass
     coreMass <- dplyr::rowwise(data = coreMass) %>%
-      dplyr::mutate(totalDryMass = sum(`dryMass0-1`, `dryMass1-2`, `dryMass2-10`, `dryMassFrag`,
+      dplyr::mutate(totalDryMass = sum(.data$`dryMass0-1`, .data$`dryMass1-2`, .data$`dryMass2-10`, .data$`dryMassFrag`,
                                        na.rm = TRUE)) %>%
       dplyr::ungroup()
     
@@ -405,14 +391,22 @@ scaleRootMass <- function(inputRootList,
   
   ### Scale dryMass values to "g/m2" and "g/cm3"
   coreMass <- dplyr::rowwise(data = coreMass) %>%
-    dplyr::mutate(`dryMass0-1PerArea` = round(`dryMass0-1`/rootSampleArea, digits = 1),
-                  `dryMass1-2PerArea` = round(`dryMass1-2`/rootSampleArea, digits = 1),
-                  `dryMass2-10PerArea` = round(`dryMass2-10`/rootSampleArea, digits = 1),
-                  totalMassPerArea = round(totalDryMass/rootSampleArea, digits = 1)) %>%
-    dplyr::mutate(`dryMass0-1PerVolume` = round(`dryMass0-1`/(rootSampleArea * (rootSampleDepth/100)), digits = 1),
-                  `dryMass1-2PerVolume` = round(`dryMass1-2`/(rootSampleArea * (rootSampleDepth/100)), digits = 1),
-                  `dryMass2-10PerVolume` = round(`dryMass2-10`/(rootSampleArea * (rootSampleDepth/100)), digits = 1),
-                  totalMassPerVolume = round(totalDryMass/(rootSampleArea * (rootSampleDepth/100)), digits = 1)) %>%
+    dplyr::mutate(`dryMass0-1PerArea` = round(.data$`dryMass0-1` / .data$rootSampleArea, 
+                                              digits = 1),
+                  `dryMass1-2PerArea` = round(.data$`dryMass1-2` / .data$rootSampleArea, 
+                                              digits = 1),
+                  `dryMass2-10PerArea` = round(.data$`dryMass2-10` / .data$rootSampleArea, 
+                                               digits = 1),
+                  totalMassPerArea = round(.data$totalDryMass / .data$rootSampleArea, 
+                                           digits = 1)) %>%
+    dplyr::mutate(`dryMass0-1PerVolume` = round(.data$`dryMass0-1` / (.data$rootSampleArea * (.data$rootSampleDepth/100)), 
+                                                digits = 1),
+                  `dryMass1-2PerVolume` = round(.data$`dryMass1-2` / (.data$rootSampleArea * (.data$rootSampleDepth/100)), 
+                                                digits = 1),
+                  `dryMass2-10PerVolume` = round(.data$`dryMass2-10` / (.data$rootSampleArea * (.data$rootSampleDepth/100)), 
+                                                 digits = 1),
+                  totalMassPerVolume = round(.data$totalDryMass / (.data$rootSampleArea * (.data$rootSampleDepth/100)), 
+                                             digits = 1)) %>%
     dplyr::ungroup()
   
   

@@ -8,7 +8,7 @@ joinRootChem(inputRootList, inputMass = NA, inputPool = NA, inputChem = NA)
 }
 \arguments{
 \item{inputRootList}{A list object comprised of Plant Below Ground Biomass tables (DP1.10067.001)
-downloaded using the neonUtilities::loadByProduct function (defaults to required). If a list
+downloaded using the neonUtilities::loadByProduct function (defaults to required). If list
 input is provided, all table inputs must be NA. \link{list}}
 
 \item{inputMass}{The 'bbc_rootmass' table for the site x month combination(s) of interest.
