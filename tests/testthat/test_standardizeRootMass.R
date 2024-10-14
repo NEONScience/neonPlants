@@ -2,7 +2,7 @@
 ### POC: Courtney Meier, cmeier@BattelleEcology.org
 
 ### Read in test data
-testList <- readRDS(testthat::test_path("testdata", "valid-rootdatalist-201807.RDS"))
+testList <- readRDS(testthat::test_path("testdata", "rootdatalist-201807.RDS"))
 testMass <- testList$bbc_rootmass
 
 
