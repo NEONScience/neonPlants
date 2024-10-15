@@ -47,7 +47,10 @@ testList <- list(bbc_percore = dejuTest$bbc_percore,
 testDataPath <- "tests/testthat/testdata"
 
 saveRDS(object = testList,
-        file = paste(testDataPath, "valid-rootdatalist-201807.RDS", sep = "/"))
+        file = paste(testDataPath, "rootdatalist-201807.RDS", sep = "/"))
+
+#   Read in test dataset
+testList <- readRDS(paste(testDataPath, "rootdatalist-201807.RDS", sep = "/"))
 
 
 
@@ -59,7 +62,9 @@ joinTestOut <- neonPlants::joinRootChem(inputRootList = testList)
 stdTestOut <- neonPlants::standardizeRootMass(inputRootList = testList)
 #--> returns data frame with 159 rows and 10 columns
 
-scaleTestOut <- ""
+scaleTestOut1 <- neonPlants::scaleRootMass(inputRootList = testList,
+                                           includeDilution = FALSE)
+#--> returns data frame with 53 rows and 49 columns
 
 
 

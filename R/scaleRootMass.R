@@ -12,14 +12,14 @@
 #' neonUtilities::loadByProduct() function (preferred), data downloaded from the NEON Data Portal, 
 #' or input data tables with an equivalent structure and representing the same site x month combinations. 
 #'
-#' @details NEON weighs a minimum of 5% of samples a second time so that data users can estimate
+#' @details #' If inputMass data collected prior to 2019 are provided, the 0-0.5mm and 0.5-1mm 
+#' sizeCategories are combined into the current 0-1mm sizeCategory.
+#' 
+#' NEON weighs a minimum of 5% of samples a second time so that data users can estimate
 #' the uncertainty associated with different technicians weighing dried roots; QA samples of this
 #' nature are identified via qaDryMass == "Y". The function calculates the mean when QA masses 
 #' exist and any 'remarks' are concatenated. Samples with Sampling Impractical values other than "OK"
 #' are removed prior to generating output data.
-#' 
-#' If inputMass data collected prior to 2019 are provided, the 0-0.5mm and 0.5-1mm sizeCategories
-#' are combined into the current 0-1mm sizeCategory.
 #' 
 #' @param inputRootList A list object comprised of Plant Below Ground Biomass tables (DP1.10067.001) 
 #' downloaded using the neonUtilities::loadByProduct() function (defaults to required). If list 
@@ -166,16 +166,15 @@ scaleRootMass <- function(inputRootList,
     
     if (isTRUE(includeDilution)) {
       rootDilution <- inputRootList$bbc_dilution
+    } else {
+      rootDilution <- inputDilution
     }
     
   } else {
     
     rootCore <- inputCore
     rootMass <- inputMass
-    
-    if (isTRUE(includeDilution)) {
-      rootDilution <- inputDilution
-    }
+    rootDilution <- inputDilution
     
   }
   
@@ -217,7 +216,7 @@ scaleRootMass <- function(inputRootList,
   
   
   
-  ### Verify inputDilution table contains expected data, if provided
+  ### Verify inputDilution table contains expected data, if required
   if (is.data.frame(rootDilution)) {
     
     #   Check for required columns
