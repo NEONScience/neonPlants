@@ -5,15 +5,16 @@
 
 #VstHbpData <- getBiomassInputs(site="HARV", start = 2021, end = 2022, dataProducts = "Vst")
 
-VstDat <- readRDS(testthat::test_path("testdata", "VstDat.rds"))
-HbpDat <- readRDS(testthat::test_path("testdata", "HbpDat.rds"))
+VstHbpData <- readRDS(testthat::test_path("testdata", "VstHbpData.rds"))
+VstDat <- VstHbpData$Vst
+HbpDat <- VstHbpData$Hbp
 
-estimateBiomassOutputs <- estimateBiomass(inputVst = VstDat, inputHbp = HbpDat)
+estimateBiomassOutputs <- estimateBiomass(inputDataListVst = VstDat, inputDataListHbp = HbpDat)
 
 ### Test: Function generates expected output type
 testthat::test_that(desc = "Output type", {
 
-  testthat::expect_type(object = estimateBiomass(inputVst = VstDat, inputHbp = HbpDat),
+  testthat::expect_type(object = estimateBiomass(inputDataListVst = VstDat, inputDataListHbp = HbpDat),
                         type = "list")
 
 })

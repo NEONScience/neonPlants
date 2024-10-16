@@ -5,10 +5,11 @@
 
 #VstHbpData <- getBiomassInputs(site="HARV", start = 2021, end = 2022, dataProducts = "VstHbp")
 
-VstDat <- readRDS(testthat::test_path("testdata", "VstDat.rds"))
-HbpDat <- readRDS(testthat::test_path("testdata", "HbpDat.rds"))
+VstHbpData <- readRDS(testthat::test_path("testdata", "VstHbpData.rds"))
+VstDat <- VstHbpData$Vst
+HbpDat <- VstHbpData$Hbp
 
-estimateBiomassOutputs <- estimateBiomass(inputVst = VstDat, inputHbp = HbpDat)
+estimateBiomassOutputs <- estimateBiomass(inputDataListVst = VstDat, inputDataListHbp = HbpDat)
 estimateProductivityOutputs <- estimateProductivity(input = estimateBiomassOutputs)
 
 ### Test: Function generates expected output type
@@ -35,7 +36,7 @@ testthat::test_that(desc = "Output class", {
 testthat::test_that(desc = "Output data frame row number", {
   
   testthat::expect_identical(object = nrow(estimateProductivityOutputs$vst_ANPP_plot_w_taxa),
-                             expected = as.integer(30))
+                             expected = as.integer(31))
 })
 
 #   Check expected column number of data frame
