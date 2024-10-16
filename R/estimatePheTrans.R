@@ -51,18 +51,36 @@
 
 estimatePheTrans <- function(
     inputDataList = NULL,
-    inputStatus = NULL
+    inputStatus = NULL,
+
     ){
+
+  # Verify that only one input is provided
   if(!is.null(inputDataList) && !is.null(inputStatus)){
     stop("Please provide either a list of data frames (inputDataList) or a single data frame (inputStatus), but not both.")
   }
+
+  if(!is.null(inputDataList) && !"phe_statusintensity"%in%ls(inputDataList)){
+    stop("'phe_statusintensity' table missing from inputDataList")
+  }
+
+  if(!is.null(inputDataList) && !"phe_perindividual"%in%ls(inputDataList)){
+    stop("'phe_perindividual' table missing from inputDataList")
+  }
+
+  # Assign working data frame
   if(is.list(inputDataList)){
   df <- inputDataList$phe_statusintensity
   }else{
     df <- inputStatus
   }
+
+
+  # Print data range for input data set
   print(paste("Observation date range:", min(df$date), "to", max(df$date)))
-    df%>%
+
+  # Format output dataframe
+  step_one <-df%>%
     # extract year from date
     dplyr::mutate(year = substr(date, 1,4))%>%
     dplyr::group_by(individualID, phenophaseName) %>%
@@ -70,21 +88,32 @@ estimatePheTrans <- function(
     dplyr::filter(phenophaseStatus!="uncertain") %>%
     # get status, doy previous observation, create transition type for current obs
     dplyr::mutate(status_lag = dplyr::lag(phenophaseStatus),
-           date_lag = dplyr::lag(date), doy_lag = dplyr::lag(dayOfYear), transitionType = paste0(status_lag, "-", phenophaseStatus)) %>%
-    # remove first observation with no preceding observation & steps with no transition
+           date_lag = dplyr::lag(date), doy_lag = dplyr::lag(dayOfYear),
+           transitionType = paste0(status_lag, "-", phenophaseStatus))
+
+  # verify input data set contains transitions
+  if(any(step_one$transitionType%in%c('no-yes', 'yes-no'))==FALSE){
+    stop("input dataset does not contain any phenophase transitions")
+  }
+
+  step_two <- step_one%>%  # remove first observation with no preceding observation & steps with no transition
     dplyr::filter(!is.na(status_lag), phenophaseStatus != status_lag) %>%
     #calculate values for each time step
-    dplyr::mutate(transition_date = as.Date(date_lag + (date - date_lag) / 2),
-           doy_transition = lubridate::yday(transition_date),
-           uncertainty = as.numeric(difftime(date, date_lag, units = "days"))/2,
+    dplyr::mutate(date_transition = as.Date(date_lag + (date - date_lag) / 2),
+           doy_transition = lubridate::yday(date_transition),
+           precision_days = as.numeric(difftime(date, date_lag, units = "days"))/2,
            samplingInterval = as.numeric(difftime(date, date_lag, units = "days"))) %>%
     dplyr::group_by(year,individualID, phenophaseName)%>%
     #count number of onsets (per year, individual, phenophase)
     dplyr::mutate(nth_transition = cumsum(status_lag == "no" & phenophaseStatus == "yes"))%>%
     #clean up outputs
     dplyr::select(year, siteID, individualID, phenophaseName, transitionType, nth_transition, date, date_lag,
-           doy_lag, samplingInterval, transition_date, doy_transition, uncertainty)%>%
+           doy_lag, samplingInterval, date_transition, doy_transition, precision_days)%>%
     dplyr::arrange(year, phenophaseName, individualID)
+
+  return(step_two)
+
+
 }
 
 
