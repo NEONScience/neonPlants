@@ -20,8 +20,7 @@ testthat::test_that(desc = "Output type list input", {
 #   Test table input
 testthat::test_that(desc = "Output type table input", {
   
-  testthat::expect_type(object = scaleRootMass(inputRootList = NA,
-                                               inputCore = testCore,
+  testthat::expect_type(object = scaleRootMass(inputCore = testCore,
                                                inputMass = testMass,
                                                inputDilution = testDilution),
                         type = "list")
@@ -40,8 +39,7 @@ testthat::test_that(desc = "Output class list input", {
 #   Test table input
 testthat::test_that(desc = "Output class table input", {
   
-  testthat::expect_s3_class(object = scaleRootMass(inputRootList = NA,
-                                                   inputCore = testCore,
+  testthat::expect_s3_class(object = scaleRootMass(inputCore = testCore,
                                                    inputMass = testMass,
                                                    inputDilution = testDilution),
                             class = "data.frame")
@@ -118,12 +116,123 @@ testthat::test_that(desc = "Output totalDryMass with includeFragInTotal TRUE", {
 
 
 
+### Test: Generate expected error when 'inputRootList' is not a list
+testthat::test_that(desc = "Arg 'inputRootList' is list object", {
+  
+  testthat::expect_error(object = scaleRootMass(inputRootList = "wish-i-were-a-list"),
+                         regexp = "Argument 'inputRootList' must be a list object from neonUtilities")
+})
+
+
+
+### Test: Generate expected error when inputRootList is missing required table
+#   Check when includeDilution is TRUE (default)
+testthat::test_that(desc = "Input list missing table includeDilution TRUE", {
+  
+  testthat::expect_error(object = scaleRootMass(inputRootList = testList[1:2],
+                                                includeDilution = TRUE),
+                         regexp = "Required tables missing from 'inputRootList'")
+})
+
+#   Check when includeDilution is FALSE
+testthat::test_that(desc = "Input list missing table includeDilution FALSE", {
+  
+  testthat::expect_error(object = scaleRootMass(inputRootList = testList[2:3],
+                                                includeDilution = FALSE),
+                         regexp = "Required tables missing from 'inputRootList'")
+})
+
+
+
+### Test: Arguments are LOGICAL when required
+#   Check 'includeDilution' is logical with list input
+testthat::test_that(desc = "Argument includeDilution is logical list input", {
+  
+  testthat::expect_error(object = scaleRootMass(inputRootList = testList,
+                                                includeDilution = "toast"),
+                         regexp = "Argument 'includeDilution' must be type logical")
+})
+
+#   Check 'includeDilution' is logical with table input
+testthat::test_that(desc = "Argument includeDilution is logical table input", {
+  
+  testthat::expect_error(object = scaleRootMass(includeDilution = "bacon",
+                                                inputCore = testCore,
+                                                inputMass = testMass,
+                                                inputDilution = testDilution),
+                         regexp = "Argument 'includeDilution' must be type logical")
+})
+
+#   Check 'includeFragInTotal' is logical with list input
+testthat::test_that(desc = "Argument includeFragInTotal is logical list input", {
+  
+  testthat::expect_error(object = scaleRootMass(inputRootList = testList,
+                                                includeFragInTotal = as.integer(1)),
+                         regexp = "Argument 'includeFragInTotal' must be type logical")
+})
+
+#   Check 'includeFragInTotal' is logical with table input
+testthat::test_that(desc = "Argument includeFragInTotal is logical table input", {
+  
+  testthat::expect_error(object = scaleRootMass(inputCore = testCore,
+                                                inputMass = testMass,
+                                                inputDilution = testDilution,
+                                                includeFragInTotal = data.frame()),
+                         regexp = "Argument 'includeFragInTotal' must be type logical")
+})
+
+
+
+### Test: Generate expected error when input list AND tables supplied
+testthat::test_that(desc = "Both 'inputRootList' and input tables supplied", {
+  
+  testthat::expect_error(object = scaleRootMass(inputRootList = testList,
+                                                inputCore = testCore),
+                         regexp = "When 'inputRootList' is supplied all table input arguments must be NA")
+})
+
+
+
+### Test: Generate error when 'inputRootList' missing and required tables not supplied
+testthat::test_that(desc = "List missing and 'inputCore' missing", {
+  
+  testthat::expect_error(object = scaleRootMass(inputMass = testMass,
+                                                inputDilution = testDilution),
+                         regexp = "Data frames must be supplied for all table inputs if 'inputRootList' is not provided")
+})
+
+
+
+### Test: Generate error when 'inputRootList' missing and 'inputDilution' is not a data frame
+testthat::test_that(desc = "List missing and 'inputDilution' missing", {
+  
+  testthat::expect_error(object = scaleRootMass(includeDilution = TRUE,
+                                                inputCore = testCore,
+                                                inputMass = testMass,
+                                                inputDilution = "chariot"),
+                         regexp = "A data frame must be supplied to 'inputDilution' when 'inputRootList' is not provided")
+})
+
+
+
+### Test: Generate error when 'includeDilution' is FALSE and 'includeFragInTotal' is TRUE
+testthat::test_that(desc = "Args 'includeDilution' FALSE and 'includeFragInTotal' TRUE", {
+  
+  testthat::expect_error(object = scaleRootMass(includeDilution = FALSE,
+                                                inputCore = testCore,
+                                                inputMass = testMass,
+                                                inputDilution = testDilution,
+                                                includeFragInTotal = TRUE),
+                         regexp = "Valid dilution sampling data must be provided and 'includeDilution' must be TRUE")
+})
+
+
+
 ### Test: Generate expected errors for issues with inputCore table
 #   Test when inputCore lacks required column
 testthat::test_that(desc = "Table 'inputCore' missing column", {
 
-  testthat::expect_error(object = scaleRootMass(inputRootList = NA,
-                                                inputCore = testCore %>%
+  testthat::expect_error(object = scaleRootMass(inputCore = testCore %>%
                                                   dplyr::select(-rootSampleArea),
                                                 inputMass = testMass,
                                                 includeDilution = FALSE),
@@ -133,8 +242,7 @@ testthat::test_that(desc = "Table 'inputCore' missing column", {
 #   Test when inputCore has no data
 testthat::test_that(desc = "Table 'inputCore' has no data", {
 
-  testthat::expect_error(object = scaleRootMass(inputRootList = NA,
-                                                inputCore = testCore %>%
+  testthat::expect_error(object = scaleRootMass(inputCore = testCore %>%
                                                   dplyr::filter(rootSamplingMethod == "spade"),
                                                 inputMass = testMass,
                                                 includeDilution = FALSE),
@@ -143,67 +251,46 @@ testthat::test_that(desc = "Table 'inputCore' has no data", {
 
 
 
-# ### Test: Generate expected errors for issues with inputMass table
-# #   Test when inputMass lacks required column
-# testthat::test_that(desc = "Table 'inputMass' missing column", {
-#   
-#   testthat::expect_error(object = rootMassScale(inputCore = testCore,
-#                                                 inputMass = testMass %>%
-#                                                   dplyr::select(-dryMass)),
-#                          regexp = "Required columns missing from 'inputMass': dryMass")
-# })
-# 
-# #   Test when inputMass has no data
-# testthat::test_that(desc = "Table 'inputMass' has no data", {
-#   
-#   testthat::expect_error(object = rootMassScale(inputCore = testCore,
-#                                                 inputMass = testMass %>%
-#                                                   dplyr::filter(sizeCategory == "pickle")),
-#                          regexp = "Table 'inputMass' has no data.")
-# })
-# 
-# 
-# 
-# ### Test: Generate expected errors for issues with inputDilution table
-# #   Test when inputDilution lacks required column
-# testthat::test_that(desc = "Table 'inputDilution' missing column", {
-#   
-#   testthat::expect_error(object = rootMassScale(inputCore = testCore,
-#                                                 inputMass = testMass,
-#                                                 inputDilution = testDilution %>%
-#                                                   dplyr::select(-sampleVolume)),
-#                          regexp = "Required columns missing from 'inputDilution': sampleVolume")
-# })
-# 
-# #   Test when inputDilution has no data
-# testthat::test_that(desc = "Table 'inputDilution' has no data", {
-#   
-#   testthat::expect_error(object = rootMassScale(inputCore = testCore,
-#                                                 inputMass = testMass,
-#                                                 inputDilution = testDilution %>%
-#                                                   dplyr::filter(sampleID == "zappa")),
-#                          regexp = "Table 'inputDilution' has no data.")
-# })
-# 
-# 
-# 
-# ### Test: Argument includeFragments is not LOGICAL
-# testthat::test_that(desc = "Argument includeFragments is not logical", {
-#   
-#   testthat::expect_error(object = rootMassScale(inputCore = testCore,
-#                                                 inputMass = testMass,
-#                                                 inputDilution = testDilution,
-#                                                 includeFragments = "TOAST"),
-#                          regexp = "The 'inputFragments' argument must be of type logical.")
-# })
-# 
-# 
-# 
-# ### Test: inputDilution provided when includeFragments TRUE
-# testthat::test_that(desc = "Data 'inputDilution' present when includeFragments TRUE", {
-#   
-#   testthat::expect_error(object = rootMassScale(inputCore = testCore,
-#                                                 inputMass = testMass,
-#                                                 includeFragments = TRUE),
-#                          regexp = "A valid 'inputDilution' data frame must be provided when 'includeFragments' is TRUE.")
-# })
+### Test: Generate expected errors for issues with inputMass table
+#   Test when inputMass lacks required column
+testthat::test_that(desc = "Table 'inputMass' missing column", {
+
+  testthat::expect_error(object = scaleRootMass(inputCore = testCore,
+                                                inputMass = testMass %>%
+                                                  dplyr::select(-dryMass),
+                                                includeDilution = FALSE),
+                         regexp = "Required columns missing from 'inputMass': dryMass")
+})
+
+#   Test when inputMass has no data
+testthat::test_that(desc = "Table 'inputMass' has no data", {
+
+  testthat::expect_error(object = scaleRootMass(inputCore = testCore,
+                                                inputMass = testMass %>%
+                                                  dplyr::filter(sizeCategory == "pickle"),
+                                                includeDilution = FALSE),
+                         regexp = "Table 'inputMass' has no data.")
+})
+
+
+
+### Test: Generate expected errors for issues with inputDilution table
+#   Test when inputDilution lacks required column
+testthat::test_that(desc = "Table 'inputDilution' missing column", {
+
+  testthat::expect_error(object = scaleRootMass(inputCore = testCore,
+                                                inputMass = testMass,
+                                                inputDilution = testDilution %>%
+                                                  dplyr::select(-sampleVolume)),
+                         regexp = "Required columns missing from 'inputDilution': sampleVolume")
+})
+
+#   Test when inputDilution has no data
+testthat::test_that(desc = "Table 'inputDilution' has no data", {
+
+  testthat::expect_error(object = scaleRootMass(inputCore = testCore,
+                                                inputMass = testMass,
+                                                inputDilution = testDilution %>%
+                                                  dplyr::filter(sampleID == "zappa")),
+                         regexp = "Table 'inputDilution' has no data.")
+})

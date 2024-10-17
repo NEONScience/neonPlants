@@ -70,6 +70,20 @@ scaleTestOut2 <- neonPlants::scaleRootMass(inputRootList = testList,
                                            includeFragInTotal = TRUE)
 #--> returns data frame with 53 rows and 50 columns
 
+scaleTestOut3 <- neonPlants::scaleRootMass(inputCore = testCore,
+                                           inputMass = testMass,
+                                           inputDilution = testDilution)
+
+scaleTestOut4 <- neonPlants::scaleRootMass(inputRootList = testList,
+                                           includeDilution = FALSE,
+                                           includeFragInTotal = TRUE)
+
+scaleTestOut5 <- neonPlants::scaleRootMass(includeDilution = FALSE,
+                                           inputCore = testCore,
+                                           inputMass = testMass,
+                                           inputDilution = testDilution,
+                                           includeFragInTotal = TRUE)
+
 
 
 

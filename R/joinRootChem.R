@@ -9,7 +9,11 @@
 #' downloaded from the NEON Data Portal, or input data tables with an equivalent structure and 
 #' representing the same site x month combinations. 
 #'
-#' @details For table joining to be successful, inputs must contain data from the same site x month
+#' @details Input data may be provided either as a list generated from the neonUtilities::laodByProduct()
+#' function or as individual tables. However, if both list and table inputs are provided at the same time
+#' the function will error out.
+#' 
+#' For table joining to be successful, inputs must contain data from the same site x month
 #' combination(s) for all tables. When analytical replicates exist in the 'bbc_rootChemistry'
 #' table, the function returns the mean and concatenates analyte-specific QF values, dataQF
 #' values, and remarks into a single string for all analytical replicates. 
@@ -20,19 +24,21 @@
 #' point.
 #' 
 #' @param inputRootList A list object comprised of Plant Below Ground Biomass tables (DP1.10067.001) 
-#' downloaded using the neonUtilities::loadByProduct function (defaults to required). If list 
-#' input is provided, all table inputs must be NA. [list]
+#' downloaded using the neonUtilities::loadByProduct function. If list input is provided, the table
+#' input arguments must all be NA; similarly, if list input is missing, table inputs must be
+#' provided. [list]
 #'
 #' @param inputMass The 'bbc_rootmass' table for the site x month combination(s) of interest.
-#' (defaults to NA). If table input is provided, the 'inputRootList' argument must be NA. [data.frame]
+#' (defaults to NA). If table input is provided, the 'inputRootList' argument must be missing.
+#' [data.frame]
 #' 
 #' @param inputPool The 'bbc_chemistryPooling' table for the site x month combination(s) of
 #' interest (defaults to NA). If table input is provided, the 'inputRootList' argument must be 
-#' NA.[data.frame]
+#' missing. [data.frame]
 #' 
 #' @param inputChem The 'bbc_rootChemistry' table for the site x month combination(s) of
 #' interest (defaults to NA). If table input is provided, the 'inputRootList' argument must be 
-#' NA. [data.frame]
+#' missing. [data.frame]
 #' 
 #' @return A table containing both root mass and root chemistry data in the same row for
 #' different root sizeCategories (i.e., subsampleIDs) within a sampleID. The subsampleIDs in 
@@ -73,7 +79,7 @@ joinRootChem <- function(inputRootList,
   ### Test that user has supplied arguments as required by function ####
   
   ### Verify user-supplied inputRootList object contains correct data if not NA
-  if (!is.logical(inputRootList)) {
+  if (!missing(inputRootList)) {
     
     #   Check that input is a list
     if (!inherits(inputRootList, "list")) {
@@ -89,7 +95,11 @@ joinRootChem <- function(inputRootList,
                       '{paste(setdiff(listExpNames, names(inputRootList)), collapse = ", ")}',
                       .sep = " "))
     }
-  }
+  } else {
+    
+    inputRootList <- NULL
+    
+  } # end missing conditional
   
   
   
@@ -101,10 +111,10 @@ joinRootChem <- function(inputRootList,
   
   
   ### Verify all table inputs are data frames if inputRootList is NA
-  if (is.logical(inputRootList) & 
+  if (is.null(inputRootList) & 
       (!inherits(inputMass, "data.frame") | !inherits(inputPool, "data.frame") | !inherits(inputChem, "data.frame"))) {
     
-    stop("Data frames must be supplied for all table inputs if 'inputRootList' is NA")
+    stop("Data frames must be supplied for all table inputs if 'inputRootList' is missing")
     
   }
   

@@ -19,8 +19,7 @@ testthat::test_that(desc = "Output type list input", {
 #   Test table input
 testthat::test_that(desc = "Output type table input", {
   
-  testthat::expect_type(object = standardizeRootMass(inputRootList = NA,
-                                                     inputMass = testMass),
+  testthat::expect_type(object = standardizeRootMass(inputMass = testMass),
                         type = "list")
 })
 
@@ -38,8 +37,7 @@ testthat::test_that(desc = "Output class list input", {
 #   Test table input
 testthat::test_that(desc = "Output class table input", {
   
-  testthat::expect_s3_class(object = standardizeRootMass(inputRootList = NA,
-                                                         inputMass = testMass),
+  testthat::expect_s3_class(object = standardizeRootMass(inputMass = testMass),
                             class = "data.frame")
 })
 
@@ -88,12 +86,11 @@ testthat::test_that(desc = "Table inputs NA when required", {
 
 
 ### Test: Generate expected errors for 'inputMass'
-#   Test 'inputMass' is data frame if 'inputRootList' is NA
+#   Test 'inputMass' is data frame if 'inputRootList' is missing
 testthat::test_that(desc = "Table input is data frame when required", {
   
-  testthat::expect_error(object = standardizeRootMass(inputRootList = NA,
-                                                      inputMass = testList),
-                         regexp = "A data frame must be supplied for 'inputMass' if 'inputRootList' is NA")
+  testthat::expect_error(object = standardizeRootMass(inputMass = testList),
+                         regexp = "A data frame must be supplied for 'inputMass' if 'inputRootList' is not provided")
 })
 
 
@@ -102,8 +99,7 @@ testthat::test_that(desc = "Table input is data frame when required", {
 # Test when inputMass lacks required column
 testthat::test_that(desc = "Table 'inputMass' missing column", {
   
-  testthat::expect_error(object = standardizeRootMass(inputRootList = NA,
-                                                      inputMass = testMass %>%
+  testthat::expect_error(object = standardizeRootMass(inputMass = testMass %>%
                                                         dplyr::select(-dryMass)),
                          regexp = "Required columns missing from 'inputMass': dryMass")
 })
@@ -111,8 +107,7 @@ testthat::test_that(desc = "Table 'inputMass' missing column", {
 #   Test when inputMass has no data
 testthat::test_that(desc = "Table 'inputMass' missing data", {
   
-  testthat::expect_error(object = standardizeRootMass(inputRootList = NA,
-                                                      inputMass = testMass %>%
+  testthat::expect_error(object = standardizeRootMass(inputMass = testMass %>%
                                                         dplyr::filter(uid == "mangrove")),
                          regexp = "Table 'inputMass' has no data.")
 })

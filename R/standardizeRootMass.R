@@ -13,18 +13,24 @@
 #' neonUtilities::loadByProduct function (preferred), data downloaded from the NEON Data Portal, 
 #' or input data tables with an equivalent structure and representing the same site x month combinations. 
 #' 
-#' @details NEON weighs a minimum of 5% of samples a second time so that data users can estimate
+#' @details Input data may be provided either as a list generated from the neonUtilities::laodByProduct()
+#' function or as individual tables. However, if both list and table inputs are provided at the same time
+#' the function will error out.
+#' 
+#' NEON weighs a minimum of 5% of samples a second time so that data users can estimate
 #' the uncertainty associated with different technicians weighing dried roots; QA samples of this
 #' nature are identified via qaDryMass == "Y". The function calculates the mean when QA masses 
 #' exist and any 'remarks' are concatenated. Samples with Sampling Impractical values other than "OK"
 #' are removed prior to summarizing the input data.
 #' 
 #' @param inputRootList A list object comprised of Plant Below Ground Biomass tables (DP1.10067.001) 
-#' downloaded using the neonUtilities::loadByProduct function (defaults to required). If list 
-#' input is provided, the 'inputMass' table argument must be NA. [list]
+#' downloaded using the neonUtilities::loadByProduct function (defaults to required). If list input is 
+#' provided, the table input argument must be NA; similarly, if list input is missing, the 'inputMass'
+#' table input must be provided. [list]
 #'
 #' @param inputMass The 'bbc_rootmass' table for the site x month combination(s) of interest
-#' (defaults to NA). If table input is provided, the 'inputRootList' argument must be NA. [data.frame]
+#' (defaults to NA). If table input is provided, the 'inputRootList' argument must be missing.
+#' [data.frame]
 #' 
 #' @return A table containing root mass data for three sizeCategories (< 1mm, 1-2mm, and 2-10mm)
 #' and dryMass values pooled across previously utilized "live/dead" rootStatus categories. The 
@@ -60,7 +66,7 @@ standardizeRootMass <- function(inputRootList,
   ### Test that user has supplied arguments as required by function ####
   
   ### Verify user-supplied inputRootList object contains correct data if not NA
-  if (!is.logical(inputRootList)) {
+  if (!missing(inputRootList)) {
     
     #   Check that input is a list
     if (!inherits(inputRootList, "list")) {
@@ -76,7 +82,11 @@ standardizeRootMass <- function(inputRootList,
                       '{paste(setdiff(listExpNames, names(inputRootList)), collapse = ", ")}',
                       .sep = " "))
     }
-  }
+  } else {
+    
+    inputRootList <- NULL
+    
+  } # end missing conditional
   
   
   
@@ -88,9 +98,9 @@ standardizeRootMass <- function(inputRootList,
   
   
   ### Verify inputMass is a data frame if inputRootList is NA
-  if (is.logical(inputRootList) & !inherits(inputMass, "data.frame")) {
+  if (is.null(inputRootList) & !inherits(inputMass, "data.frame")) {
     
-    stop("A data frame must be supplied for 'inputMass' if 'inputRootList' is NA")
+    stop("A data frame must be supplied for 'inputMass' if 'inputRootList' is not provided")
   }
   
   

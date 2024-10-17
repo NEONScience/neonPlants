@@ -8,19 +8,21 @@ joinRootChem(inputRootList, inputMass = NA, inputPool = NA, inputChem = NA)
 }
 \arguments{
 \item{inputRootList}{A list object comprised of Plant Below Ground Biomass tables (DP1.10067.001)
-downloaded using the neonUtilities::loadByProduct function (defaults to required). If list
-input is provided, all table inputs must be NA. \link{list}}
+downloaded using the neonUtilities::loadByProduct function. If list input is provided, the table
+input arguments must all be NA; similarly, if list input is missing, table inputs must be
+provided. \link{list}}
 
 \item{inputMass}{The 'bbc_rootmass' table for the site x month combination(s) of interest.
-(defaults to NA). If table input is provided, the 'inputRootList' argument must be NA. \link{data.frame}}
+(defaults to NA). If table input is provided, the 'inputRootList' argument must be missing.
+\link{data.frame}}
 
 \item{inputPool}{The 'bbc_chemistryPooling' table for the site x month combination(s) of
 interest (defaults to NA). If table input is provided, the 'inputRootList' argument must be
-NA.\link{data.frame}}
+missing. \link{data.frame}}
 
 \item{inputChem}{The 'bbc_rootChemistry' table for the site x month combination(s) of
 interest (defaults to NA). If table input is provided, the 'inputRootList' argument must be
-NA. \link{data.frame}}
+missing. \link{data.frame}}
 }
 \value{
 A table containing both root mass and root chemistry data in the same row for
@@ -37,6 +39,10 @@ downloaded from the NEON Data Portal, or input data tables with an equivalent st
 representing the same site x month combinations.
 }
 \details{
+Input data may be provided either as a list generated from the neonUtilities::laodByProduct()
+function or as individual tables. However, if both list and table inputs are provided at the same time
+the function will error out.
+
 For table joining to be successful, inputs must contain data from the same site x month
 combination(s) for all tables. When analytical replicates exist in the 'bbc_rootChemistry'
 table, the function returns the mean and concatenates analyte-specific QF values, dataQF

@@ -8,11 +8,13 @@ standardizeRootMass(inputRootList, inputMass = NA)
 }
 \arguments{
 \item{inputRootList}{A list object comprised of Plant Below Ground Biomass tables (DP1.10067.001)
-downloaded using the neonUtilities::loadByProduct function (defaults to required). If list
-input is provided, the 'inputMass' table argument must be NA. \link{list}}
+downloaded using the neonUtilities::loadByProduct function (defaults to required). If list input is
+provided, the table input argument must be NA; similarly, if list input is missing, the 'inputMass'
+table input must be provided. \link{list}}
 
 \item{inputMass}{The 'bbc_rootmass' table for the site x month combination(s) of interest
-(defaults to NA). If table input is provided, the 'inputRootList' argument must be NA. \link{data.frame}}
+(defaults to NA). If table input is provided, the 'inputRootList' argument must be missing.
+\link{data.frame}}
 }
 \value{
 A table containing root mass data for three sizeCategories (< 1mm, 1-2mm, and 2-10mm)
@@ -32,6 +34,10 @@ neonUtilities::loadByProduct function (preferred), data downloaded from the NEON
 or input data tables with an equivalent structure and representing the same site x month combinations.
 }
 \details{
+Input data may be provided either as a list generated from the neonUtilities::laodByProduct()
+function or as individual tables. However, if both list and table inputs are provided at the same time
+the function will error out.
+
 NEON weighs a minimum of 5\% of samples a second time so that data users can estimate
 the uncertainty associated with different technicians weighing dried roots; QA samples of this
 nature are identified via qaDryMass == "Y". The function calculates the mean when QA masses

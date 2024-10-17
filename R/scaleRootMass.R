@@ -12,7 +12,11 @@
 #' neonUtilities::loadByProduct() function (preferred), data downloaded from the NEON Data Portal, 
 #' or input data tables with an equivalent structure and representing the same site x month combinations. 
 #'
-#' @details #' If inputMass data collected prior to 2019 are provided, the 0-0.5mm and 0.5-1mm 
+#' @details Input data may be provided either as a list generated from the neonUtilities::laodByProduct()
+#' function or as individual tables. However, if both list and table inputs are provided at the same time
+#' the function will error out. 
+#' 
+#' If inputMass data collected prior to 2019 are provided, the 0-0.5mm and 0.5-1mm 
 #' sizeCategories are combined into the current 0-1mm sizeCategory.
 #' 
 #' NEON weighs a minimum of 5% of samples a second time so that data users can estimate
@@ -22,26 +26,29 @@
 #' are removed prior to generating output data.
 #' 
 #' @param inputRootList A list object comprised of Plant Below Ground Biomass tables (DP1.10067.001) 
-#' downloaded using the neonUtilities::loadByProduct() function (defaults to required). If list 
-#' input is provided, the table input arguments must all be NA. [list]
+#' downloaded using the neonUtilities::loadByProduct() function. If list input is provided, the table
+#' input arguments must all be NA; similarly, if list input is missing, table inputs must be
+#' provided for 'inputCore' and 'inputMass' arguments at a minimum. [list]
 #' 
 #' @param includeDilution Indicator for whether mass of root fragments < 1 cm length should be
 #' calculated, as estimated via the Dilution Sampling method (Defaults to TRUE). If TRUE and
-#' inputDilution is NA, the 'bbc_dilution' table will be extracted from the list input. [logical]
+#' 'inputDilution' is NA, the 'bbc_dilution' table will be extracted from the list input. [logical]
 #' 
 #' @param inputCore The 'bbc_percore' table for the site x month combination(s) of interest
-#' (defaults to NA). If table input is provided, the 'inputRootList' argument must be NA. [data.frame]
+#' (defaults to NA). If table input is provided, the 'inputRootList' argument must be missing.
+#' [data.frame]
 #'
 #' @param inputMass The 'bbc_rootmass' table for the site x month combination(s) of interest
-#' (defaults to NA). If table input is provided, the 'inputRootList' argument must be NA. [data.frame]
+#' (defaults to NA). If table input is provided, the 'inputRootList' argument must be missing.
+#' [data.frame]
 #' 
 #' @param inputDilution The 'bbc_dilution' table for the site x month combination(s) of interest
 #' (optional, defaults to NA). If table input is provided, the 'inputRootList' argument must be 
-#' NA. [data.frame]
+#' missing. [data.frame]
 #' 
 #' @param includeFragInTotal Indicator for whether mass of root fragments < 1 cm length 
 #' calculated from dilution sampling should be included when summing across sizeCategory to 
-#' calculate the 'totalDryMass'. Defaults to FALSE. If set to TRUE and 'inputRootList' is NA, 
+#' calculate the 'totalDryMass'. Defaults to FALSE. If set to TRUE and 'inputRootList' is missing, 
 #' the 'bbc_dilution' table must be provided to the 'inputDilution' argument. [logical]
 #' 
 #' @return A table containing root mass data per unit area ("g/m2") and per unit volume ("g/m3")
@@ -93,13 +100,13 @@ scaleRootMass <- function(inputRootList,
   
   #   Check 'includeFragInTotal'
   if (!is.logical(includeFragInTotal)) {
-    stop(glue::glue("Agrument 'includeFragInTotal' must be type logical; supplied input is {class(includeFragInTotal)}"))
+    stop(glue::glue("Argument 'includeFragInTotal' must be type logical; supplied input is {class(includeFragInTotal)}"))
   }
   
   
   
-  ### Verify user-supplied 'inputRootList' object contains correct data if not NA
-  if (!is.logical(inputRootList)) {
+  ### Verify user-supplied 'inputRootList' object contains correct data if not missing
+  if (!missing(inputRootList)) {
     
     #   Check that input is a list
     if (!inherits(inputRootList, "list")) {
@@ -130,7 +137,12 @@ scaleRootMass <- function(inputRootList,
       }
       
     } # end includeDilution conditional
-  } # end is.logical 'inputRootList'
+    
+  } else {
+    
+    inputRootList <- NULL
+    
+  } # end missing conditional
   
   
   
@@ -141,19 +153,27 @@ scaleRootMass <- function(inputRootList,
   
   
   
-  ### Verify 'inputCore' and 'inputMass' are data frames if 'inputRootList' is NA
-  if (is.logical(inputRootList) & 
+  ### Verify 'inputCore' and 'inputMass' are data frames if 'inputRootList' is missing
+  if (is.null(inputRootList) & 
       (!inherits(inputCore, "data.frame") | !inherits(inputMass, "data.frame"))) {
     
-    stop("Data frames must be supplied for all table inputs if 'inputRootList' is NA")
+    stop("Data frames must be supplied for all table inputs if 'inputRootList' is not provided")
   }
   
   
   
-  ### Verify 'inputDilution' is a data frame if 'inputRootList' is NA and 'includeDilution' is TRUE
-  if (is.logical(inputRootList) & isTRUE(includeDilution) & !inherits(inputDilution, "data.frame")) {
+  ### Verify 'inputDilution' is a data frame if 'inputRootList' is missing and 'includeDilution' is TRUE
+  if (is.null(inputRootList) & isTRUE(includeDilution) & !inherits(inputDilution, "data.frame")) {
     
-    stop("A data frame must be supplied to 'inputDilution' when 'inputRootList' is NA and includeDilution is TRUE")
+    stop("A data frame must be supplied to 'inputDilution' when 'inputRootList' is not provided and includeDilution is TRUE")
+  }
+  
+  
+  
+  ### Verify 'includeDilution' is TRUE if 'includeFragInTotal' is TRUE
+  if (isTRUE(includeFragInTotal) & isFALSE(includeDilution)) {
+    
+    stop("Valid dilution sampling data must be provided and 'includeDilution' must be TRUE when includeFragInTotal is TRUE")
   }
   
   
@@ -170,7 +190,7 @@ scaleRootMass <- function(inputRootList,
       rootDilution <- inputDilution
     }
     
-  } else {
+  } else if (is.null(inputRootList)) {
     
     rootCore <- inputCore
     rootMass <- inputMass
@@ -244,8 +264,7 @@ scaleRootMass <- function(inputRootList,
   
   
   ### Standardize rootMass data to current sizeCategory definitions and average qaDryMass = Y
-  rootMass <- neonPlants::standardizeRootMass(inputRootList = NA,
-                                              inputMass = rootMass)
+  rootMass <- neonPlants::standardizeRootMass(inputMass = rootMass)
   
   #   Collapse mycorrhizaeVisible and massRemarks to single string per sampleID to avoid downstream
   #   dupes when pivot_wider() is used; these will be re-joined by sampleID after wide table is created
