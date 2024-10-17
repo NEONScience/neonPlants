@@ -50,9 +50,29 @@ testthat::test_that(desc = "Output class table input", {
 
 
 ### Test: Function generates data frame with expected dimensions using test data
-##  Tests with no inputDilution argument
+##  Tests with includeDilution == TRUE (default) and includeFragInTotal == FALSE (default)
 #   Check expected row number of data frame
-testthat::test_that(desc = "Output data frame row number", {
+testthat::test_that(desc = "Output data frame row number with defaults", {
+  
+  testthat::expect_identical(object = nrow(scaleRootMass(inputRootList = testList,
+                                                         includeDilution = TRUE,
+                                                         includeFragInTotal = FALSE)),
+                             expected = as.integer(53))
+})
+
+#   Check expected column number of data frame
+testthat::test_that(desc = "Output data frame column number with defaults", {
+  
+  testthat::expect_identical(object = ncol(scaleRootMass(inputRootList = testList,
+                                                         includeDilution = TRUE,
+                                                         includeFragInTotal = FALSE)),
+                             expected = as.integer(50))
+})
+
+
+##  Tests with includeDilution == FALSE
+#   Check expected row number of data frame
+testthat::test_that(desc = "Output data frame row number includeDilution FALSE", {
 
   testthat::expect_identical(object = nrow(scaleRootMass(inputRootList = testList,
                                                          includeDilution = FALSE)),
@@ -61,7 +81,7 @@ testthat::test_that(desc = "Output data frame row number", {
 })
 
 #   Check expected column number of data frame
-testthat::test_that(desc = "Output data frame column number", {
+testthat::test_that(desc = "Output data frame column number includeDilution FALSE", {
 
   testthat::expect_identical(object = ncol(scaleRootMass(inputRootList = testList,
                                                          includeDilution = FALSE)),
@@ -70,80 +90,59 @@ testthat::test_that(desc = "Output data frame column number", {
 })
 
 
-# ##  Tests with inputDilution argument supplied and includeFragments == FALSE (default)
-# #   Check expected row number of data frame
-# testthat::test_that(desc = "Output row number with inputDilution arg", {
-#   
-#   testthat::expect_identical(object = nrow(rootMassScale(inputCore = testCore,
-#                                                          inputMass = testMass,
-#                                                          inputDilution = testDilution)),
-#                              expected = as.integer(455))
-#   
-# })
-# 
-# #   Check expected column number of data frame
-# testthat::test_that(desc = "Output column number with inputDilution arg", {
-#   
-#   testthat::expect_identical(object = ncol(rootMassScale(inputCore = testCore,
-#                                                          inputMass = testMass,
-#                                                          inputDilution = testDilution)),
-#                              expected = as.integer(50))
-#   
-# })
-# 
-# #   Check expected totalDryMass does not contain fragment mass when latter is present
-# testthat::test_that(desc = "Output totalDryMass with includeFragments FALSE", {
-#   
-#   #   Row 3 of output data has fragment mass present but not included in totalDryMass
-#   test <- rootMassScale(inputCore = testCore,
-#                         inputMass = testMass,
-#                         inputDilution = testDilution,
-#                         includeFragments = FALSE)
-#   
-#   testthat::expect_equal(object = test$totalDryMass[3],
-#                          expected = 5.5857)
-#   
-# })
-# 
-# 
-# ##  Tests with inputDilution argument supplied and includeFragments == TRUE
-# #   Check expected totalDryMass includes fragment mass for record where fragment mass is present
-# testthat::test_that(desc = "Output totalDryMass with includeFragments TRUE", {
-#   
-#   #   Row 3 of output data has fragment mass present and included in totalDryMass
-#   test <- rootMassScale(inputCore = testCore,
-#                         inputMass = testMass,
-#                         inputDilution = testDilution,
-#                         includeFragments = TRUE)
-#   
-#   testthat::expect_equal(object = test$totalDryMass[3],
-#                          expected = 7.4667)
-#   
-# })
-# 
-# 
-# 
-# ### Test: Generate expected errors for issues with inputCore table
-# #   Test when inputCore lacks required column
-# testthat::test_that(desc = "Table 'inputCore' missing column", {
-#   
-#   testthat::expect_error(object = rootMassScale(inputCore = testCore %>%
-#                                                   dplyr::select(-rootSampleArea),
-#                                                 inputMass = testMass),
-#                          regexp = "Required columns missing from 'inputCore': rootSampleArea")
-# })
-# 
-# #   Test when inputCore has no data
-# testthat::test_that(desc = "Table 'inputCore' has no data", {
-#   
-#   testthat::expect_error(object = rootMassScale(inputCore = testCore %>%
-#                                                   dplyr::filter(rootSamplingMethod == "spade"),
-#                                                 inputMass = testMass),
-#                          regexp = "Table 'inputCore' has no data.")
-# })
-# 
-# 
-# 
+
+### Test: Function includeFragInTotal correctly handles fragment mass
+#   Check totalDryMass does not contain fragment mass with function defaults; row 3 has frag mass data
+testthat::test_that(desc = "Output totalDryMass with includeFragInTotal FALSE", {
+  
+  test <- scaleRootMass(inputRootList = testList,
+                        includeDilution = TRUE,
+                        includeFragInTotal = FALSE)
+  
+  testthat::expect_equal(object = test$totalDryMass[3],
+                         expected = 8.1535)
+  
+})
+
+#   Check totalDryMass includes fragment mass where appropriate when includeFragInTotal is TRUE
+testthat::test_that(desc = "Output totalDryMass with includeFragInTotal TRUE", {
+  
+  test <- scaleRootMass(inputRootList = testList,
+                        includeDilution = TRUE,
+                        includeFragInTotal = TRUE)
+  
+  testthat::expect_equal(object = test$totalDryMass[3],
+                         expected = 9.1953)
+  
+})
+
+
+
+### Test: Generate expected errors for issues with inputCore table
+#   Test when inputCore lacks required column
+testthat::test_that(desc = "Table 'inputCore' missing column", {
+
+  testthat::expect_error(object = scaleRootMass(inputRootList = NA,
+                                                inputCore = testCore %>%
+                                                  dplyr::select(-rootSampleArea),
+                                                inputMass = testMass,
+                                                includeDilution = FALSE),
+                         regexp = "Required columns missing from 'inputCore': rootSampleArea")
+})
+
+#   Test when inputCore has no data
+testthat::test_that(desc = "Table 'inputCore' has no data", {
+
+  testthat::expect_error(object = scaleRootMass(inputRootList = NA,
+                                                inputCore = testCore %>%
+                                                  dplyr::filter(rootSamplingMethod == "spade"),
+                                                inputMass = testMass,
+                                                includeDilution = FALSE),
+                         regexp = "Table 'inputCore' has no data.")
+})
+
+
+
 # ### Test: Generate expected errors for issues with inputMass table
 # #   Test when inputMass lacks required column
 # testthat::test_that(desc = "Table 'inputMass' missing column", {

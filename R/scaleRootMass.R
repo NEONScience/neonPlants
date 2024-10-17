@@ -374,7 +374,7 @@ scaleRootMass <- function(inputRootList,
   if (isTRUE(includeFragInTotal)) {
     
     #   Check that inputDilution data frame is provided
-    if (!is.data.frame(inputDilution)) {
+    if (!is.data.frame(rootDilution)) {
       stop("A valid 'inputDilution' data frame must be provided when 'includeFragInTotal' is TRUE.")
     } 
     

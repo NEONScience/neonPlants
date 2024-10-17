@@ -63,8 +63,12 @@ stdTestOut <- neonPlants::standardizeRootMass(inputRootList = testList)
 #--> returns data frame with 159 rows and 10 columns
 
 scaleTestOut1 <- neonPlants::scaleRootMass(inputRootList = testList,
-                                           includeDilution = FALSE)
-#--> returns data frame with 53 rows and 49 columns
+                                           includeDilution = TRUE)
+#--> returns data frame with 53 rows and 50 columns
+
+scaleTestOut2 <- neonPlants::scaleRootMass(inputRootList = testList,
+                                           includeFragInTotal = TRUE)
+#--> returns data frame with 53 rows and 50 columns
 
 
 
