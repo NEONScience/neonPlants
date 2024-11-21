@@ -101,7 +101,7 @@ inputDataListVst <- neonUtilities::loadByProduct(dpID="DP1.10098.001",
                              site = site_pull,
                              startdate = paste0(start,"-01"),
                              enddate = paste0(end, "-12"),
-                             package = "basic", check.size = FALSE, token = Sys.getenv('NEON_TOKEN'))     
+                             package = "basic", check.size = FALSE, token = Sys.getenv('NEON_PAT'))     
   }
  }
 }
@@ -156,7 +156,6 @@ site_from_input <- unique(perplot$siteID)
 
 # Warning if start date filter is before input data
   if (!is.na(start)) {if(as.numeric(start) < as.numeric(start_from_input)){  start = as.numeric(start_from_input)
-    perplot <- perplot %>% dplyr::filter("year" >= as.numeric(start) ) 
     print("The start year is earlier than the input data. The start year in current run of function has automatically been changed to:")
     print(start_from_input)
   }} else {start = as.numeric(start_from_input)}
@@ -189,7 +188,7 @@ if (!is.na(site)) {
     stop(paste0("One or more sites are not in the input data (re-pull data for desired sites from the portal using separate function). The following site(s) are not in the input data: ", sites_not_in_input) ) 
      }} else site = site_from_input}
 
-perplot <- perplot %>% dplyr::filter(year >= as.numeric(start) & year <= as.numeric(end) & siteID %in% site)
+#perplot <- perplot %>% dplyr::filter(year >= as.numeric(start) & year <= as.numeric(end) & siteID %in% site)
 
 
 # obtained "UniquePlotIDsSamplingModulesPriorityLists" from GitHub NEON-OS_spatial_data repo and then filtered and selected to relevant records and columns: 
@@ -208,7 +207,7 @@ perplot <- merge(perplot, priority_plots_all, by=c("plotID","plotType","eventID"
 perplot <- perplot[order(perplot$date),] # intent here is to sort by date before removing duplicates so that if duplicates are from different dates the record from latest date will be retained
     perplot <- perplot[!duplicated(perplot$plot_eventID, fromLast=TRUE), ] # sorting by date and then using fromLast=TRUE should retain the most recent version of duplicates
 
-perplot_not_SI <- perplot %>% dplyr::filter("samplingImpractical" == "OK" | "samplingImpractical" == "" | is.na("samplingImpractical"))
+perplot_not_SI <- perplot %>% dplyr::filter(samplingImpractical == "OK" | samplingImpractical == "" | is.na(samplingImpractical)) %>% dplyr::filter(year >= as.numeric(start) & year <= as.numeric(end) & siteID %in% site)
   # create list of ALL plot by eventID combos from the vst_perplotperyear tables from vst woody, vst non-herb perennial, or both, regardless of whether they have biomass
  plot_eventID_list <- unique(perplot_not_SI$plot_eventID) # list of all unique combos of plotID and eventID where full sampling should have taken place
 perplot <- perplot %>% dplyr::select("plot_eventID", "plotID", "eventID", "year", "nlcdClass", "plotType", "eventType", "dataCollected", "targetTaxaPresent", 
@@ -294,10 +293,7 @@ vst_agb_per_ha_other <- vst_agb_final_other %>% dplyr::group_by("plot_eventID", 
 map <- inputDataListVst$vst_mappingandtagging 
 map <- map[order(map$date),]
 map <- map[!duplicated(map$individualID, fromLast=TRUE), ] # keep the most recent record which should have a more specific or considered taxonID; in QA older dupes are periodically deleted
-    taxonID_df <- map %>% dplyr::select("taxonID", "scientificName", "taxonRank") %>% unique()  # add family once it is a published field in vst_mappingandtagging
-      taxonID_df <- taxonID_df %>% dplyr::left_join(plant_taxa_NEON, by = "taxonID")  # remove line and plant_taxa_NEON table once family is a published field
-      taxonID_df$genus <- gsub( " .*$", "", taxonID_df$scientificName )
-      taxonID_df$genus <- dplyr::if_else(taxonID_df$taxonRank == "kingdom" | taxonID_df$taxonRank == "family", "", taxonID_df$genus, taxonID_df$genus)
+    taxonID_df <- map %>% dplyr::select("taxonID", "scientificName", "family", "genus", "taxonRank") %>% unique()  
     vst_taxonIDs <- taxonID_df$taxonID
  map <- map %>% dplyr::select("individualID", "taxonID")
 
@@ -335,28 +331,14 @@ taxon_fields <- taxon_fields %>% dplyr::select("taxonID", "spg_gcm3", "density_s
   # assignment of allometry IDs in Choj dataframe requires taxonID, spg_gcm3, decid_vs_ever, woodland_vs_forest, and fields specifying source for each of those variables
     taxon_fields_list <- unique(taxon_fields$taxonID)
 ### read in USDA Plants characteristics to get PLANTS.Floristic.Area and Native.Status  - filtered to records that have PLANTS.Floristic.Area, Native.Status, or both
-#plant_taxa_char_all <- read.table('../suppl_data/USDA_Plants_characteristics_15Sep2020_filt.txt', sep="\t", stringsAsFactors = F, header=TRUE)
-plant_taxa_char_all <- dplyr::rename(plant_taxa_char_all, taxonID = "Symbol")
-plant_char <- merge(taxonID_df, plant_taxa_char_all, by="taxonID", all.x=TRUE) # add floristic area and native status
-plant_char$PLANTS.Floristic.Area<-ifelse(plant_char$PLANTS.Floristic.Area=="" | is.na(plant_char$PLANTS.Floristic.Area),"unknown",plant_char$PLANTS.Floristic.Area)
-plant_char$Native.Status <- ifelse(plant_char$Native.Status=="" | is.na(plant_char$Native.Status),"unknown",plant_char$Native.Status)
+#plantIntTrop <- read.table('../suppl_data/USDA_Plants_characteristics_15Sep2020_filt.txt', sep="\t", stringsAsFactors = F, header=TRUE)
+plant_char <- merge(taxonID_df, plantIntTrop, by="taxonID", all.x=TRUE) # add tropical floristic area and/or introduced status
 
 ## programatically assign a Chojnacky allometry_ID based on genus, family, specific gravity, deciduous vs. evergreen, and/or woodland vs. forest habit
 Choj <- merge(taxon_fields,plant_char, by="taxonID", all=TRUE)
  Choj <- Choj[Choj$taxonID %in% vst_taxonIDs,] # retain only taxonIDs found in the vst mapping and tagging data 
-Choj$Native.Status <- ifelse(Choj$taxonID=="FRAM2/FRPE","L48(N)HI(I)CAN(N)",Choj$Native.Status)
-Choj$Native.Status <- ifelse(Choj$taxonID=="SARA2/SANI4","L48(N)AK(N)CAN(N)",Choj$Native.Status)
-introduced <- c("HI(I)PR(I)VI(I)","HI(I?)PR(N)VI(N)","L48(I)","L48(I)CAN(I)","L48(I)HI(I)CAN(I)","L48(I)HI(I)PR(I)",
-  "L48(I)HI(I)PR(I)CAN(I)","L48(I)HI(I)PR(I)VI(I)","L48(I)HI(I)PR(N)VI(N)","L48(I)PR(I)","L48(I)PR(I)VI(I)","L48(I)VI(I)")
-tropical <-c("HI","PR","VI", "PR, VI", "NAHI, PR, VI",
-             "NA (L48, GU, NAV, PB), VI",     "NA (L48, GU, PB), HI, PR, VI",
-             "NA (L48, GU, PB), PR, VI",      "NA (L48, NAV), HI, PR, VI",
-             "NA (L48, NAV), PR, VI",         "NA (L48), HI, PR, VI",
-             "NA (L48), PR, VI",              "NA (L48), PR",
-             "NA (L48, PB)",                  "NA (PB)")
-Choj$Native.Status2 <- ifelse(Choj$Native.Status %in% introduced, "intro", "native")
- Choj$Native.Status2 <- ifelse(Choj$Native.Status=="unknown" | is.na(Choj$Native.Status), "unknown", Choj$Native.Status2)
-Choj$tropical <- ifelse(Choj$PLANTS.Floristic.Area %in% tropical, "tropical", "temperate")
+Choj$nativeStatus <- if_else(Choj$nativeStatus=="int", "introduced", "native", "native")
+Choj$tropical <- if_else(Choj$tropical == "trop", "tropical", "temperate", "temperate")
 Choj$allometry_ID <- NA
 Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest=="forest" & Choj$genus=="Abies" & Choj$spg_gcm3<0.35, "C1", Choj$allometry_ID) 
 Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest=="forest" & Choj$genus=="Abies" & Choj$spg_gcm3>=0.35, "C2", Choj$allometry_ID) 
@@ -411,8 +393,8 @@ Choj$allometry_ID <- ifelse(Choj$taxonID=="FABACE", "H9", Choj$allometry_ID)
 Choj$source <- ifelse(!is.na(Choj$allometry_ID), "yes_ref_in_Choj", "not_ref_in_Choj")
 Choj$allometry_ID <- ifelse(Choj$source=="not_ref_in_Choj", "H7", Choj$allometry_ID) 
 no_Choj_allometry <- Choj %>% dplyr::filter("source"=="not_ref_in_Choj") %>% dplyr::select("allometry_ID", "taxonID", "family", "genus", "spg_gcm3", 
-              "woodland_vs_forest", "decid_vs_ever", "tropical", "Native.Status2") # create list records where Choj allometry can't be calculated
-Choj <- Choj %>% dplyr::select("taxonID","scientificName","allometry_ID","source","spg_gcm3","Native.Status2","tropical","family")
+              "woodland_vs_forest", "decid_vs_ever", "tropical", "nativeStatus") # create list records where Choj allometry can't be calculated
+Choj <- Choj %>% dplyr::select("taxonID","scientificName","allometry_ID","source","spg_gcm3","nativeStatus","tropical","family")
 Choj <- merge(parameters, Choj, by="allometry_ID", all.y=TRUE)
 
 ## calculate biomass from various allometric equations after making some data corrections
@@ -462,7 +444,7 @@ vst_agb_no_dia <- vst_agb %>% dplyr::filter(is.na("stemDiameter") & is.na("basal
 vst_agb <- vst_agb %>% dplyr::select("taxonID", "scientificName", "individualID", "indEvent", "eventID", "date", "siteID","plotID", "growthForm", "nlcdClass", 
           "totalSampledAreaTrees", "totalSampledAreaShrubSapling", "totalSampledAreaLiana","plantStatus", "stemDiameter", "stemDiameterFlag", "height", 
           "measurementHeight", "basalStemDiameter", "basalStemDiameterMsrmntHeight","maxCrownDiameter","ninetyCrownDiameter","allometry_ID", "b0", "b1", 
-          "minDiameter", "maxDiameter", "spg_gcm3","Native.Status2","tropical","family")
+          "minDiameter", "maxDiameter", "spg_gcm3","nativeStatus","tropical","family")
 vst_agb$plantStatus2 <- ifelse(vst_agb$plantStatus %in% c("Live", "Live, disease damaged", "Live, insect damaged", "Live,  other damage", "Live, physically damaged","Live, broken bole"), "Live", "Dead_or_Lost")
 
 # assumption: Chojnacky et al 2014 allometric equations are the best first estimate of biomass
@@ -591,7 +573,7 @@ vst_agb_final <- vst_agb %>% dplyr::group_by(plot_eventID, eventID, siteID, plot
   vst_agb_final$sampledAreaM2 <- ifelse(vst_agb_final$growthForm == "single shrub" | vst_agb_final$growthForm == "small shrub" | vst_agb_final$growthForm == "sapling"  | vst_agb_final$growthForm == "small tree", 
                                   vst_agb_final$totalSampledAreaShrubSapling, vst_agb_final$sampledAreaM2 )
   vst_agb_final$sampledAreaM2 <- ifelse(vst_agb_final$growthForm == "liana", vst_agb_final$totalSampledAreaLiana, vst_agb_final$sampledAreaM2 )
-  vst_agb_final <- vst_agb_final %>% dplyr::filter(!is.na("sampledAreaM2") ) # remove records that can't be scaled to area basis
+  vst_agb_final <- vst_agb_final %>% dplyr::filter(!is.na(sampledAreaM2) ) # remove records that can't be scaled to area basis
     vst_agb_final$agb_Mg_per_ha <- round(vst_agb_final$agb * 0.001 * (10000/vst_agb_final$sampledAreaM2), 6)   # multiply by 0.001 to convert from kg to Mg and then convert to ha (10,000m2) based on plot area
   
   if(growthForm == "single and multi-bole trees") {

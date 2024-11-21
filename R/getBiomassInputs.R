@@ -74,6 +74,7 @@ VstDat <- neonUtilities::loadByProduct(dpID="DP1.10098.001",
                              site = site,
                              startdate = start_mod,
                              enddate = end_mod,
+                             release = "LATEST",
                              package = "basic", check.size = FALSE, token = Sys.getenv('NEON_PAT'))
 
 ### filter to sampling events that started in specified date range
