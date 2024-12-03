@@ -15,7 +15,7 @@
 #'  * transition_type - indicating the phenophase status values of the transition
 #'  * sampling interval - the number of days between observations
 #'  * uncertainty - sampling interval/2
-#'  * nth tranition - a count of onset events per individualID, phenophase name, within a given calendar year
+#'  * nth transition - a count of onset events per individualID, phenophase name, within a given calendar year
 #'
 #'
 #' @return This function returns a data frame
