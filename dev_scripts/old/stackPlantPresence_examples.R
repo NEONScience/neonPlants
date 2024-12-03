@@ -58,34 +58,6 @@ data_stacked_10 <- allDiv %>%
   filter(totalSampledArea == 10)
 
 
-# stack the data
-data_stacked <- stackPlantPresence(
-  div_1m2Data = allDiv$div_1m2Data,
-  div_10m2Data100m2Data = allDiv$div_10m2Data100m2Data)
-
-# warning when sending a list and dataframes
-data_stacked <- stackPlantPresence(
-  divDataList = allDiv,
-  div_1m2Data = allDiv$div_1m2Data,
-  div_10m2Data100m2Data = allDiv$div_10m2Data100m2Data)
-
-# informative errors
-data_stacked <- stackPlantPresence(
-  divDataList = NA,
-  div_1m2Data = NA,
-  div_10m2Data100m2Data = NA)
-
-data_stacked <- stackPlantPresence(
-  divDataList = NA,
-  div_1m2Data = my_1m_data,
-  div_10m2Data100m2Data = NA)
-
-data_stacked <- stackPlantPresence(
-  divDataList = my_1m_data,
-  div_1m2Data = NA,
-  div_10m2Data100m2Data = NA)
-
-
 
 
 # stack the data and filter to 10m plot
