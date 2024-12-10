@@ -10,7 +10,7 @@
 #
 #' @details
 #' This function creates a time series for each phenophase reported for each individual in the data set and identifies transition dates for beginning and end of a given phenophase as well as explanatory metrics about that estimate for the time frame provided in the input data frame.
-#' Calculated values inclued:
+#' Calculated values include:
 #'  * transition date - the mid-point between two consecutive dates with different phenophase status values
 #'  * transition_type - indicating the phenophase status values of the transition
 #'  * sampling interval - the number of days between observations
@@ -69,7 +69,7 @@ estimatePheTransByTag <- function(
   }
 
   # Assign working data frame
-  if(is.list(inputDataList)){
+  if(exists("inputDataList")==TRUE & is.list(inputDataList)){
   obs <- inputDataList$phe_statusintensity
   tags <- inputDataList$phe_perindividual
   }else{
