@@ -54,9 +54,11 @@ estimatePheTransByTag <- function(
     inputStatus = NULL,
     inputTags = NULL
     ){
+  
+  require(dplyr)
 
   # Verify that only one input is provided
-  if(!is.null(inputDataList) && !is.null(inputStatus) | !is.null(inputTags)){
+  if(!is.null(inputDataList) && !is.null(inputStatus) |!is.null(inputDataList) && !is.null(inputTags)){
     stop("Please provide either a list of data frames, inputDataList, OR individual data frames for inputStatus and inputTags, but not both.")
   }
 
@@ -79,7 +81,7 @@ estimatePheTransByTag <- function(
 
   #check for duplicate tags
   if(any(duplicated(tags$individualID))){
-    stop(paste("duplicate records present for", tags$individualID[duplicated(tags$individualID)],
+    stop(paste("duplicate records present for", unique(tags$individualID[duplicated(tags$individualID)]),
                "please resolve before running estimatePheTrans"))
   }
 
@@ -129,7 +131,7 @@ estimatePheTransByTag <- function(
 # Join with Obs
     dplyr::right_join(., step_two)%>%
 # reorder fields
-    dplyr::select(year, siteID, taxonID, scientificName, phenophaseName, transitionType,
+    dplyr::select(year, siteID, individualID, taxonID, scientificName, phenophaseName, transitionType,
                   nth_transition, date_intervalStart,  doy_intervalStart,
                   date_intervalEnd=date,  doy_intervalEnd = dayOfYear,
                    date_transition, doy_transition, samplingInterval, precision_days)
