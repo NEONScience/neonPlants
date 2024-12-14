@@ -64,10 +64,9 @@ estimatePheDurationByTag <- function(
     inputStatus = NULL,
     inputTags = NULL
 ){
-  
   trans <- estimatePheTransByTag(inputDataList=inputDataList,
-                                    inputStatus = inputStatus,
-                                    inputTags = inputStatus)
+                                 inputStatus = inputStatus,
+                                 inputTags = inputTags)
   
   out <- trans%>%
     dplyr::group_by(year, siteID, individualID, taxonID, scientificName, phenophaseName, nth_transition)%>%
