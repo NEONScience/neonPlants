@@ -76,8 +76,8 @@
 # Samuel M Simkin (2024-09-30)  revised
 ##############################################################################################
 
-estimateBiomass = function(inputDataListVst = VstDat,
-                       inputDataListHbp = HbpDat,
+estimateBiomass = function(inputDataListVst,
+                       inputDataListHbp,
                        site = NA,
                        start = NA, 
                        end = NA,
@@ -110,8 +110,84 @@ if(!methods::is(inputDataListVst, class = "list" )){ if(length(inputDataListVst)
   stop("The inputDataListVst argument is expected to be either a list or NA. Another argument (e.g. a dataframe) is not allowed.")
  }  
 }
+ 
+list2env(inputDataListVst ,.GlobalEnv)  
+
+vst_mappingandtagging <- inputDataListVst$vst_mappingandtagging
+vst_perplotperyear <- inputDataListVst$vst_perplotperyear
+vst_apparentindividual <- inputDataListVst$vst_apparentindividual
+'vst_non-woody' <- inputDataListVst$'vst_non-woody'
+
+
+#   Check that required tables within list match expected names
+listExpNames <- c("vst_apparentindividual", "vst_mappingandtagging", "vst_non-woody", "vst_perplotperyear")
+    
+if (length(setdiff(listExpNames, names(inputDataListVst))) > 0) {
+      stop(glue::glue("Required tables missing from 'inputDataListVst':",
+                      '{paste(setdiff(listExpNames, names(inputDataListVst)), collapse = ", ")}',
+                      .sep = " "))
+} 
+
+ ### Verify input tables contain required columns and data ####
   
+  ### Verify 'vst_mappingandtagging' table contains required data
+  #   Check for required columns
+  mapExpCols <- c("domainID", "siteID", "plotID", "individualID", "taxonID")
+
+  if (length(setdiff(mapExpCols, colnames(vst_mappingandtagging))) > 0) {
+    stop(glue::glue("Required columns missing from 'vst_mappingandtagging':", '{paste(setdiff(mapExpCols, colnames(vst_mappingandtagging)), collapse = ", ")}',
+                    .sep = " "))
+  }
+
+  #   Check for data
+  if (nrow(vst_mappingandtagging) == 0) {
+    stop(glue::glue("Table 'vst_mappingandtagging' has no data."))
+  }
+
+
+  ### Verify 'vst_perplotperyear' table contains required data
+  #   Check for required columns
+  plotExpCols <- c("domainID", "siteID", "plotID", "plotType", "nlcdClass", "eventID", "totalSampledAreaTrees", "totalSampledAreaShrubSapling", "totalSampledAreaLiana", 
+                  "totalSampledAreaFerns", "totalSampledAreaOther")
+
+  if (length(setdiff(plotExpCols, colnames(vst_perplotperyear))) > 0) {
+    stop(glue::glue("Required columns missing from 'vst_perplotperyear':", '{paste(setdiff(plotExpCols, colnames(vst_perplotperyear)), collapse = ", ")}',
+                    .sep = " "))
+  }
+
+  #   Check for data
+  if (nrow(vst_perplotperyear) == 0) {
+    stop(glue::glue("Table 'vst_perplotperyear' has no data."))
+  }
+
+
+  ### Verify 'vst_apparentindividual' table contains required data
+  #   Check for required columns
+  appIndExpCols <- c("domainID", "siteID", "plotID", "individualID", "growthForm", "plantStatus", "date", "eventID", "stemDiameter", "basalStemDiameter")
   
+  if (length(setdiff(appIndExpCols, colnames(vst_apparentindividual))) > 0) {
+    stop(glue::glue("Required columns missing from 'vst_apparentindividual':", '{paste(setdiff(appIndExpCols, colnames(vst_apparentindividual)), collapse = ", ")}',
+                    .sep = " "))
+  }
+  
+  #   Check for data
+  if (nrow(vst_apparentindividual) == 0) {
+    stop(glue::glue("Table 'vst_apparentindividual' has no data."))
+  }
+
+
+
+  ### Verify 'vst_non-woody' table contains required data
+  #   Check for required columns
+  nonwoodyExpCols <- c("domainID", "siteID", "plotID", "individualID", "growthForm", "plantStatus", "date", "stemDiameter", "basalStemDiameter", "taxonID", 
+                       "height", "leafNumber", "meanLeafLength", "meanPetioleLength", "meanBladeLength")
+  
+#  if (class('vst_non-woody') == "data.frame"){if(length(setdiff(nonwoodyExpCols, colnames('vst_non-woody'))) > 0) {
+  if(methods::is('vst_non-woody', class = "data.frame" )){if(length(setdiff(nonwoodyExpCols, colnames('vst_non-woody'))) > 0) {
+    stop(glue::glue("Required columns missing from 'vst_non-woody':", '{paste(setdiff(nonwoodyExpCols, colnames(vst_non-woody), collapse = ", ")}',
+                    .sep = " "))
+  }
+}
   
 # Check whether inputDataListHbp is something other than a list or NA
  
@@ -149,7 +225,7 @@ if(!methods::is(inputDataListHbp, class = "list" )){ if(length(inputDataListHbp)
   
 perplot <- inputDataListVst$vst_perplotperyear ## read in plot sample area for each growthForm by eventID combo from vst_perplotperyear table
 perplot$year <- as.numeric(substr(perplot$eventID,10,13) )
-start_from_input <- as.character(min(as.numeric(substr(perplot$date, 1,4))))
+start_from_input <- as.character(min(as.numeric(substr(perplot$year, 1,4)))) # year component of eventID, which on rare occasions may be before the year component of earliest collect date)
 end_from_input <- as.character(max(as.numeric(substr(perplot$date, 1,4))))
 site_from_input <- unique(perplot$siteID)
 
@@ -188,11 +264,11 @@ if (!is.na(site)) {
     stop(paste0("One or more sites are not in the input data (re-pull data for desired sites from the portal using separate function). The following site(s) are not in the input data: ", sites_not_in_input) ) 
      }} else site = site_from_input}
 
-#perplot <- perplot %>% dplyr::filter(year >= as.numeric(start) & year <= as.numeric(end) & siteID %in% site)
+#perplot <- perplot %>% dplyr::filter(.data$year >= as.numeric(start) & .data$year <= as.numeric(end) & .data$siteID %in% site)
 
 
 # obtained "UniquePlotIDsSamplingModulesPriorityLists" from GitHub NEON-OS_spatial_data repo and then filtered and selected to relevant records and columns: 
-#                   dplyr::filter(str_detect(specificModule, "vst"))  %>% dplyr::select("plotID","specificModuleSamplingPriority", "plotType") 
+#                   dplyr::filter(str_detect(.data$specificModule, "vst"))  %>% dplyr::select("plotID","specificModuleSamplingPriority", "plotType") 
 #priority_plots <- read.table('../suppl_data/UniquePlotIDsSamplingModulesPriorityLists.NEON-OS_spatial_data.repo.vst.csv', header=TRUE, sep = ",", stringsAsFactors = F) 
   # The specificModuleSamplingPriority field is used in the productivity script to optionally filter only to plots with priority 1-5 (the plots that are most likely to have been sampled the year they were scheduled)
 priority_plots_all = data.frame() 
@@ -207,7 +283,7 @@ perplot <- merge(perplot, priority_plots_all, by=c("plotID","plotType","eventID"
 perplot <- perplot[order(perplot$date),] # intent here is to sort by date before removing duplicates so that if duplicates are from different dates the record from latest date will be retained
     perplot <- perplot[!duplicated(perplot$plot_eventID, fromLast=TRUE), ] # sorting by date and then using fromLast=TRUE should retain the most recent version of duplicates
 
-perplot_not_SI <- perplot %>% dplyr::filter(samplingImpractical == "OK" | samplingImpractical == "" | is.na(samplingImpractical)) %>% dplyr::filter(year >= as.numeric(start) & year <= as.numeric(end) & siteID %in% site)
+perplot_not_SI <- perplot %>% dplyr::filter(.data$samplingImpractical == "OK" | .data$samplingImpractical == "" | is.na(.data$samplingImpractical)) %>% dplyr::filter(.data$year >= as.numeric(start) & .data$year <= as.numeric(end) & .data$siteID %in% site)
   # create list of ALL plot by eventID combos from the vst_perplotperyear tables from vst woody, vst non-herb perennial, or both, regardless of whether they have biomass
  plot_eventID_list <- unique(perplot_not_SI$plot_eventID) # list of all unique combos of plotID and eventID where full sampling should have taken place
 perplot <- perplot %>% dplyr::select("plot_eventID", "plotID", "eventID", "year", "nlcdClass", "plotType", "eventType", "dataCollected", "targetTaxaPresent", 
@@ -220,7 +296,7 @@ plotType_df <- inputDataListVst$vst_perplotperyear
 
 if(grepl("non-woody", growthForm) )    {
 vst_agb_other <- inputDataListVst$'vst_non-woody'
-#vst_agb_other <- vst_agb_other %>% dplyr::filter(as.numeric(substr(date,1,4)) >= as.numeric(start) & as.numeric(substr(date,1,4)) <= as.numeric(end) & siteID %in% site)
+#vst_agb_other <- vst_agb_other %>% dplyr::filter(as.numeric(substr(.data$date,1,4)) >= as.numeric(start) & as.numeric(substr(.data$date,1,4)) <= as.numeric(end) & .data$siteID %in% site)
 
 
 print("Calculating biomass from vst_non-woody table ..... ")
@@ -272,20 +348,21 @@ vst_agb_other$agb <- ifelse(vst_agb_other$agb_source == "Gholz_et_al_1999", vst_
 vst_agb_other$plot_eventID <- paste0(vst_agb_other$plotID, "_", vst_agb_other$eventID)
 agb_other_plot_eventID <- unique(vst_agb_other$plot_eventID)
 vst_agb_other$year <- as.numeric(substr(vst_agb_other$eventID,10,13) )
-vst_agb_other <- vst_agb_other %>% dplyr::filter(!is.na("plantStatus") & "plantStatus" != "No longer qualifies" & "plantStatus" != "Removed" & "plantStatus" != "Lost, fate unknown" & "plantStatus" != "Lost, tag damaged" & "plantStatus" != "Lost, herbivory" & 
-                          "plantStatus" != "Lost, burned" & "plantStatus" != "Lost, presumed dead" & "plantStatus" != "Downed") # remove records with status that doesn't include unambiguous live or dead individuals
+vst_agb_other <- vst_agb_other %>% dplyr::filter(!is.na(.data$plantStatus) & .data$plantStatus != "No longer qualifies" & .data$plantStatus != "Removed" & .data$plantStatus != "Lost, fate unknown" & 
+                  .data$plantStatus != "Lost, tag damaged" & .data$plantStatus != "Lost, herbivory" & .data$plantStatus != "Lost, burned" & .data$plantStatus != "Lost, presumed dead" & 
+                  .data$plantStatus != "Downed") # remove records with status that doesn't include unambiguous live or dead individuals
 vst_agb_other$plantStatus2 <- dplyr::if_else(vst_agb_other$plantStatus %in% c("Live", "Live, disease damaged", "Live, insect damaged", "Live,  other damage", "Live, physically damaged", "Live, broken bole"), "Live", "Dead_or_Lost", "Live")
-vst_agb_other <- vst_agb_other %>% dplyr::filter(!is.na("agb") ) # remove records that have NA for biomass, before they become misleading zeros as a result of group_by function
+vst_agb_other <- vst_agb_other %>% dplyr::filter(!is.na(.data$agb) ) # remove records that have NA for biomass, before they become misleading zeros as a result of group_by function
 vst_agb_other <- vst_agb_other %>% dplyr::select(-"uid",-"namedLocation",-"publicationDate",-"stemCount",-"branchCount",-"meanBranchLength",-"identificationReferences",
              -"identificationQualifier",-"morphospeciesID",-"measuredBy",-"recordedBy",-"nestedSubplotID",-"subplotID")
 # Aggregate vst non-herbaceous perennial (other) biomass data and express on a Mg/ha basis
-vst_agb_final_other <- vst_agb_other %>% dplyr::group_by("plot_eventID", "eventID", "siteID", "plotID", "taxonID", "individualID", "plantStatus2", "growthForm", "year") %>% dplyr::summarise(agb = sum(agb, na.rm = TRUE)) 
+vst_agb_final_other <- vst_agb_other %>% dplyr::group_by(.data$plot_eventID, .data$eventID, .data$siteID, .data$plotID, .data$taxonID, .data$individualID, .data$plantStatus2, .data$growthForm, .data$year) %>% dplyr::summarise(agb = sum(.data$agb, na.rm = TRUE)) 
   # if there are multiple records per individualID, sum them
- vst_agb_final_other  <- merge(vst_agb_final_other, perplot, by=c("plot_eventID", "eventID", "year","plotID"), all.x=TRUE) # add total sampled areas
-  vst_agb_final_other <- vst_agb_final_other %>% dplyr::filter(!is.na("totalSampledAreaOther") ) # remove records that can't be scaled to area basis
+ vst_agb_final_other  <- merge(vst_agb_final_other, perplot, by=c("plot_eventID", "eventID", "year", "plotID"), all.x=TRUE) # add total sampled areas
+  vst_agb_final_other <- vst_agb_final_other %>% dplyr::filter(!is.na(.data$totalSampledAreaOther) ) # remove records that can't be scaled to area basis
     vst_agb_final_other$agb_Mg_per_ha <- round(vst_agb_final_other$agb * 0.001 * (10000/vst_agb_final_other$totalSampledAreaOther), 5)
 
-vst_agb_per_ha_other <- vst_agb_final_other %>% dplyr::group_by("plot_eventID", "eventID", "siteID", "plotID", "plotType", "nlcdClass", "taxonID", "individualID", "plantStatus2", "year") %>% dplyr::summarise(agb_Mg_per_ha = sum(agb_Mg_per_ha, na.rm = TRUE)) %>% dplyr::ungroup()
+vst_agb_per_ha_other <- vst_agb_final_other %>% dplyr::group_by(.data$plot_eventID, .data$eventID, .data$siteID, .data$plotID, .data$plotType, .data$nlcdClass, .data$taxonID, .data$individualID, .data$plantStatus2, .data$year) %>% dplyr::summarise(agb_Mg_per_ha = sum(.data$agb_Mg_per_ha, na.rm = TRUE)) %>% dplyr::ungroup()
     # add up biomass per unit area for each plot x individualID x year x plantStatus2 x nlcdClass combo (growthForm no longer needed since area has been calculated in previous steps)
 }
   
@@ -298,7 +375,7 @@ map <- map[!duplicated(map$individualID, fromLast=TRUE), ] # keep the most recen
  map <- map %>% dplyr::select("individualID", "taxonID")
 
 appInd <- inputDataListVst$vst_apparentindividual
-appInd <- appInd %>% dplyr::filter(as.numeric(substr(date,1,4)) >= as.numeric(start) & as.numeric(substr(date,1,4)) <= as.numeric(end) & siteID %in% site)
+appInd <- appInd %>% dplyr::filter(as.numeric(substr(.data$date,1,4)) >= as.numeric(start) & as.numeric(substr(.data$date,1,4)) <= as.numeric(end) & .data$siteID %in% site)
 
 
 print("Assembling allometric equation parameters ..... ")
@@ -317,7 +394,7 @@ appInd <- merge(appInd, map, by="individualID", all.x=TRUE) # add taxonID to app
 appInd <- merge(appInd, perplot, by=c("plotID", "eventID"), all.x=TRUE) # add total sampled areas
 appInd$plotEvent <- paste(appInd$plotID, appInd$eventID, sep="_")
 appInd$indEvent <- paste(appInd$individualID, appInd$eventID, sep="_")
-  appInd_miss_taxonID <- appInd %>% dplyr::filter(is.na("taxonID")) # create list of records that are missing taxonID
+  appInd_miss_taxonID <- appInd %>% dplyr::filter(is.na(.data$taxonID)) # create list of records that are missing taxonID
 appInd$taxonID <- ifelse(is.na(appInd$taxonID), "2PLANT", appInd$taxonID) # if taxonID missing then assign the unknown "2PLANT" code
  appInd$taxonID <- ifelse(appInd$taxonID == "BEGL/BENA", "BEGL", appInd$taxonID) # Betula glandulosa - B. nana complex, assign to B. glandulosa
 
@@ -325,20 +402,19 @@ appInd$taxonID <- ifelse(is.na(appInd$taxonID), "2PLANT", appInd$taxonID) # if t
 #parameters <- read.csv('../suppl_data/chojnacky_parameters.csv', stringsAsFactors = F)
 parameters<- parameters %>% dplyr::select("allometry_ID", "b0", "b1", "minDiameter", "maxDiameter")
   
-## read in wood density, veg type, and other data needed to assign species to Chojnacky allometry groups
-#taxon_fields <- read.csv('../suppl_data/wood_density_and_veg_types.csv',  stringsAsFactors = F)
-taxon_fields <- taxon_fields %>% dplyr::select("taxonID", "spg_gcm3", "density_source", "decid_vs_ever", "decid_vs_ever_source", "woodland_vs_forest", "woodland_vs_forest_source")
-  # assignment of allometry IDs in Choj dataframe requires taxonID, spg_gcm3, decid_vs_ever, woodland_vs_forest, and fields specifying source for each of those variables
-    taxon_fields_list <- unique(taxon_fields$taxonID)
-### read in USDA Plants characteristics to get PLANTS.Floristic.Area and Native.Status  - filtered to records that have PLANTS.Floristic.Area, Native.Status, or both
-#plantIntTrop <- read.table('../suppl_data/USDA_Plants_characteristics_15Sep2020_filt.txt', sep="\t", stringsAsFactors = F, header=TRUE)
+## load wood density, veg type, and other data needed to assign species to Chojnacky allometry groups
+taxon_fields <- taxon_fields
+  taxon_fields_list <- unique(taxon_fields$taxonID)
+  
+## load USDA Plants characteristics to get PLANTS.Floristic.Area and Native.Status  - filtered to records that have PLANTS.Floristic.Area, Native.Status, or both
+plantIntTrop <- plantIntTrop # load from data folder
 plant_char <- merge(taxonID_df, plantIntTrop, by="taxonID", all.x=TRUE) # add tropical floristic area and/or introduced status
 
 ## programatically assign a Chojnacky allometry_ID based on genus, family, specific gravity, deciduous vs. evergreen, and/or woodland vs. forest habit
 Choj <- merge(taxon_fields,plant_char, by="taxonID", all=TRUE)
  Choj <- Choj[Choj$taxonID %in% vst_taxonIDs,] # retain only taxonIDs found in the vst mapping and tagging data 
-Choj$nativeStatus <- if_else(Choj$nativeStatus=="int", "introduced", "native", "native")
-Choj$tropical <- if_else(Choj$tropical == "trop", "tropical", "temperate", "temperate")
+Choj$nativeStatus <- dplyr::if_else(Choj$nativeStatus=="int", "introduced", "native", "native")
+Choj$tropical <- dplyr::if_else(Choj$tropical == "trop", "tropical", "temperate", "temperate")
 Choj$allometry_ID <- NA
 Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest=="forest" & Choj$genus=="Abies" & Choj$spg_gcm3<0.35, "C1", Choj$allometry_ID) 
 Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest=="forest" & Choj$genus=="Abies" & Choj$spg_gcm3>=0.35, "C2", Choj$allometry_ID) 
@@ -392,7 +468,7 @@ Choj$allometry_ID <- ifelse(Choj$taxonID=="FABACE", "H9", Choj$allometry_ID)
  # arbitrarily picked H9 (forest) over W2 (woodland)
 Choj$source <- ifelse(!is.na(Choj$allometry_ID), "yes_ref_in_Choj", "not_ref_in_Choj")
 Choj$allometry_ID <- ifelse(Choj$source=="not_ref_in_Choj", "H7", Choj$allometry_ID) 
-no_Choj_allometry <- Choj %>% dplyr::filter("source"=="not_ref_in_Choj") %>% dplyr::select("allometry_ID", "taxonID", "family", "genus", "spg_gcm3", 
+no_Choj_allometry <- Choj %>% dplyr::filter(.data$source=="not_ref_in_Choj") %>% dplyr::select("allometry_ID", "taxonID", "family", "genus", "spg_gcm3", 
               "woodland_vs_forest", "decid_vs_ever", "tropical", "nativeStatus") # create list records where Choj allometry can't be calculated
 Choj <- Choj %>% dplyr::select("taxonID","scientificName","allometry_ID","source","spg_gcm3","nativeStatus","tropical","family")
 Choj <- merge(parameters, Choj, by="allometry_ID", all.y=TRUE)
@@ -434,7 +510,7 @@ vst_agb$stemDiameter <- dplyr::if_else(!(vst_agb$growthForm == "sapling" | vst_a
 
 vst_agb$stemDiameter <- dplyr::if_else( (vst_agb$stemDiameter > vst_agb$basalStemDiameter) & (vst_agb$growthForm == "single shrub" | vst_agb$growthForm == "small shrub"), vst_agb$basalStemDiameter, vst_agb$stemDiameter, vst_agb$stemDiameter)
 
-vst_agb_no_dia <- vst_agb %>% dplyr::filter(is.na("stemDiameter") & is.na("basalStemDiameter")) # create list of records with missing diameters
+vst_agb_no_dia <- vst_agb %>% dplyr::filter(is.na(.data$stemDiameter) & is.na(.data$basalStemDiameter)) # create list of records with missing diameters
 
 # assumption: it's better to replace extreme outlier stemDiameter values of lianas with a low-end estimate of 1 cm than to leave in place extremely large values or to assign a value of 0 or NA
     vst_agb$stemDiameter <- dplyr::if_else(vst_agb$growthForm =="liana" & vst_agb$stemDiameter > 20, 1, vst_agb$stemDiameter, vst_agb$stemDiameter) # instead of removing arbitrarily give them new diameter of 1 cm
@@ -560,29 +636,29 @@ vst_agb$growthForm <- dplyr::if_else(vst_agb$growthForm == "unknown" & vst_agb$s
 vst_agb$plot_eventID <- paste0(vst_agb$plotID, "_", vst_agb$eventID)
     vst_agb$year <- as.numeric(substr(vst_agb$eventID,10,13) )
 
-vst_agb <- vst_agb %>% dplyr::filter(!is.na(plantStatus) & plantStatus != "No longer qualifies" & plantStatus != "Removed" & plantStatus != "Lost, fate unknown" & plantStatus != "Lost, tag damaged" & plantStatus != "Lost, herbivory" & 
-                                plantStatus != "Lost, burned" & plantStatus != "Lost, presumed dead" & plantStatus != "Downed") # remove records with status that doesn't include unambiguous live or dead individuals
-vst_agb <- vst_agb %>% dplyr::filter(!is.na(agb) ) # remove records that have NA for biomass, before they become misleading zeros as a result of group_by function
+vst_agb <- vst_agb %>% dplyr::filter(!is.na(.data$plantStatus) & .data$plantStatus != "No longer qualifies" & .data$plantStatus != "Removed" & .data$plantStatus != "Lost, fate unknown" & .data$plantStatus != "Lost, tag damaged" & .data$plantStatus != "Lost, herbivory" & 
+                                .data$plantStatus != "Lost, burned" & .data$plantStatus != "Lost, presumed dead" & .data$plantStatus != "Downed") # remove records with status that doesn't include unambiguous live or dead individuals
+vst_agb <- vst_agb %>% dplyr::filter(!is.na(.data$agb) ) # remove records that have NA for biomass, before they become misleading zeros as a result of group_by function
 
 # Aggregate vst woody biomass data (assume that multiple instances of same individualID are true multiple boles and not accidental duplicates)
-vst_agb_final <- vst_agb %>% dplyr::group_by(plot_eventID, eventID, siteID, plotID, taxonID, individualID, plantStatus2, growthForm,  year) %>% dplyr::summarise(agb = sum(agb, na.rm = TRUE)) %>% dplyr::ungroup()
+vst_agb_final <- vst_agb %>% dplyr::group_by(.data$plot_eventID, .data$eventID, .data$siteID, .data$plotID, .data$taxonID, .data$individualID, .data$plantStatus2, .data$growthForm,.data$year) %>% dplyr::summarise(agb = sum(.data$agb, na.rm = TRUE)) %>% dplyr::ungroup()
   # This is the final biomass value for each individualID by year by plantStatus2 combo, which is subsequently used for both annual biomass summaries and NPP calculations for specified consecutive years
 
- vst_agb_final  <- merge(vst_agb_final , perplot, by=c("plot_eventID", "eventID", "plotID", "year"), all.x=TRUE) # add total sampled areas
+ vst_agb_final  <- merge(vst_agb_final, perplot, by=c("plot_eventID", "eventID", "plotID", "year"), all.x=TRUE) # add total sampled areas
   vst_agb_final$sampledAreaM2 <- ifelse(vst_agb_final$growthForm == "single bole tree" | vst_agb_final$growthForm == "multi-bole tree", vst_agb_final$totalSampledAreaTrees, NA )
   vst_agb_final$sampledAreaM2 <- ifelse(vst_agb_final$growthForm == "single shrub" | vst_agb_final$growthForm == "small shrub" | vst_agb_final$growthForm == "sapling"  | vst_agb_final$growthForm == "small tree", 
                                   vst_agb_final$totalSampledAreaShrubSapling, vst_agb_final$sampledAreaM2 )
   vst_agb_final$sampledAreaM2 <- ifelse(vst_agb_final$growthForm == "liana", vst_agb_final$totalSampledAreaLiana, vst_agb_final$sampledAreaM2 )
-  vst_agb_final <- vst_agb_final %>% dplyr::filter(!is.na(sampledAreaM2) ) # remove records that can't be scaled to area basis
+  vst_agb_final <- vst_agb_final %>% dplyr::filter(!is.na(.data$sampledAreaM2) ) # remove records that can't be scaled to area basis
     vst_agb_final$agb_Mg_per_ha <- round(vst_agb_final$agb * 0.001 * (10000/vst_agb_final$sampledAreaM2), 6)   # multiply by 0.001 to convert from kg to Mg and then convert to ha (10,000m2) based on plot area
   
   if(growthForm == "single and multi-bole trees") {
-      vst_agb_final <- vst_agb_final %>% dplyr::filter(growthForm == "single bole tree" | growthForm == "multi-bole tree") }
+      vst_agb_final <- vst_agb_final %>% dplyr::filter(.data$growthForm == "single bole tree" | .data$growthForm == "multi-bole tree") }
   
   if(growthForm == "all trees") {
-      vst_agb_final <- vst_agb_final %>% dplyr::filter(growthForm == "single bole tree" | growthForm == "multi-bole tree"  | growthForm == "sapling" | growthForm == "small tree") }
+      vst_agb_final <- vst_agb_final %>% dplyr::filter(.data$growthForm == "single bole tree" | .data$growthForm == "multi-bole tree"  | .data$growthForm == "sapling" | .data$growthForm == "small tree") }
   
-  vst_agb_per_ha <- vst_agb_final %>% dplyr::group_by(plot_eventID, eventID, siteID, plotID, plotType, nlcdClass, taxonID, individualID, plantStatus2, year) %>% dplyr::summarise(agb_Mg_per_ha = sum(agb_Mg_per_ha, na.rm = TRUE)) %>% dplyr::ungroup()
+  vst_agb_per_ha <- vst_agb_final %>% dplyr::group_by(.data$plot_eventID, .data$eventID, .data$siteID, .data$plotID, .data$plotType, .data$nlcdClass, .data$taxonID, .data$individualID, .data$plantStatus2, .data$year) %>% dplyr::summarise(agb_Mg_per_ha = sum(.data$agb_Mg_per_ha, na.rm = TRUE)) %>% dplyr::ungroup()
     # add up biomass per unit area for each plot x individualID x year x plantStatus2 x nlcdClass combo (growthForm no longer needed since area has been calculated in previous steps)
 
 agb_ind_eventID_list <- unique(vst_agb_per_ha$plot_eventID) # build list of plot_eventIDs that had qualifying veg (e.g. large trees) sampled in perplot - later diff against perplot
@@ -606,15 +682,15 @@ vst_agb_zeros <- as.data.frame(vst_agb_zeros)
 
 
 ####### PLOT AND SITE-LEVEL BIOMASS SUMMARIES - not concerned here with year to year continuity or transitions from live to dead, etc.
-vst_plot_summary <- vst_agb_per_ha %>% dplyr::group_by(plot_eventID, eventID, siteID, plotID, plotType, nlcdClass, taxonID, plantStatus2, year) %>% dplyr::summarise(agb_Mg_per_ha = sum(agb_Mg_per_ha, na.rm = TRUE)) 
+vst_plot_summary <- vst_agb_per_ha %>% dplyr::group_by(.data$plot_eventID, .data$eventID, .data$siteID, .data$plotID, .data$plotType, .data$nlcdClass, .data$taxonID, .data$plantStatus2, .data$year) %>% dplyr::summarise(agb_Mg_per_ha = sum(.data$agb_Mg_per_ha, na.rm = TRUE)) 
         # add up biomass per unit area for each plot x year x plantStatus2 x nlcdClass combo (aggegate individualIDs
-vst_plot_wide <- tidyr::pivot_wider(vst_plot_summary, id_cols = c(plot_eventID, eventID, siteID, plotID, plotType, nlcdClass ,taxonID, year), names_from = plantStatus2, names_prefix = "agb_Mg_per_ha__", values_from = agb_Mg_per_ha)  # transpose live and dead rows into separate columns
+vst_plot_wide <- tidyr::pivot_wider(vst_plot_summary, id_cols = c("plot_eventID", "eventID", "siteID", "plotID", "plotType", "nlcdClass", "taxonID", "year"), names_from = "plantStatus2", names_prefix = "agb_Mg_per_ha__", values_from = "agb_Mg_per_ha")  # transpose live and dead rows into separate columns
 vst_plot_wide$DP <- "treSapShrLia"
 
 if(grepl("non-woody", growthForm) )    {
-other_plot_summary <- vst_agb_per_ha_other %>% dplyr::group_by(plot_eventID, eventID, siteID, plotID, nlcdClass, taxonID, plantStatus2, year) %>% dplyr::summarise(agb_Mg_per_ha = sum(agb_Mg_per_ha, na.rm = TRUE)) 
+other_plot_summary <- vst_agb_per_ha_other %>% dplyr::group_by(.data$plot_eventID, .data$eventID, .data$siteID, .data$plotID, .data$nlcdClass, .data$taxonID, .data$plantStatus2, .data$year) %>% dplyr::summarise(agb_Mg_per_ha = sum(.data$agb_Mg_per_ha, na.rm = TRUE)) 
    # add up biomass per unit area for each plot x year x plantStatus2 x nlcdClass combo (aggegate individualIDs)
-other_plot_wide <- tidyr::pivot_wider(other_plot_summary, id_cols = c(plot_eventID,eventID,siteID,plotID,nlcdClass,taxonID,year), names_from = plantStatus2, names_prefix = "agb_Mg_per_ha__", values_from = agb_Mg_per_ha)
+other_plot_wide <- tidyr::pivot_wider(other_plot_summary, id_cols = c("plot_eventID", "eventID", "siteID", "plotID", "nlcdClass", "taxonID", "year"), names_from = "plantStatus2", names_prefix = "agb_Mg_per_ha__", values_from = "agb_Mg_per_ha")
 other_plot_wide$DP <- "nonHerbPer"
 
 ## Combine woody (trees and shrubs) from vst_apparentIndividual) with "other" (vst_non-woody) vegetation
@@ -624,11 +700,11 @@ vst_plot_wide <- rbind(vst_plot_wide, other_plot_wide) # combine trees and other
 vst_plot_wide[is.na(vst_plot_wide)] <- 0 # NAs created during transpose. Assumption that if Live individuals sampled then Dead were too, and vice versa
 
 ## Aggregate data such that species IDs are retained but tree vs. woody distinction is lost
-if(nrow(vst_plot_wide > 0)) {vst_plot_wide <- vst_plot_wide %>% dplyr::group_by(plot_eventID, eventID, siteID, plotID, plotType, nlcdClass, taxonID, year) %>% dplyr::summarise("agb_Mg_per_ha__Live" = sum(agb_Mg_per_ha__Live, na.rm = TRUE),
-             "agb_Mg_per_ha__Dead_or_Lost" = sum(agb_Mg_per_ha__Dead_or_Lost, na.rm = TRUE) ) # if same taxonID present in tree df and other df, sum them - loses the treSapShrLia vs nonHerbPer DP source distinction
+if(nrow(vst_plot_wide > 0)) {vst_plot_wide <- vst_plot_wide %>% dplyr::group_by(.data$plot_eventID, .data$eventID, .data$siteID, .data$plotID, .data$plotType, .data$nlcdClass, .data$taxonID, .data$year) %>% dplyr::summarise(agb_Mg_per_ha__Live = sum(.data$agb_Mg_per_ha__Live, na.rm = TRUE),
+             agb_Mg_per_ha__Dead_or_Lost = sum(.data$agb_Mg_per_ha__Dead_or_Lost, na.rm = TRUE) ) # if same taxonID present in tree df and other df, sum them - loses the treSapShrLia vs nonHerbPer DP source distinction
 } else {
   vst_plot_wide$agb_Mg_per_ha__Live = 0
-  vst_plot_wideagb_Mg_per_ha__Dead_or_Lost= 0
+  vst_plot_wide$agb_Mg_per_ha__Dead_or_Lost= 0
 }
 
 # ADD PLOTS WITH 0 BIOMASS AND HERB BIOMASS - FORK FROM NPP CALCULATIONS   
@@ -641,28 +717,28 @@ vst_plot_w_0s <- rbind(vst_plot_wide, vst_agb_zeros_plot) # toggle on to add zer
 priority_plots_without_plotType <- priority_plots_all %>% dplyr::select(-"plotType")
 vst_plot_w_0s <- merge(vst_plot_w_0s, priority_plots_without_plotType, by=c("plotID","eventID","year"), all.x=TRUE)
 
-vst_plot_w_0s <- vst_plot_w_0s %>% dplyr::filter(!is.na("agb_Mg_per_ha__Live") & !is.na("agb_Mg_per_ha__Dead_or_Lost") ) # remove records that are missing any productivity values
-vst_plot_w_0s <- vst_plot_w_0s %>% dplyr::filter(year >= start) # remove records from before the time of interest
-if(plotType == "tower") {vst_plot_w_0s <- vst_plot_w_0s %>% dplyr::filter(plotType == "tower") } # if arg plotType = "tower" then filter to just tower plots, otherwise keep all plots from input data
-vst_plot_w_0s <- vst_plot_w_0s %>% dplyr::filter(specificModuleSamplingPriority <= plotPriority) # remove lower priority plots that aren't required to be sampled every year (default is 5 (the 5 highest priority plots))
+vst_plot_w_0s <- vst_plot_w_0s %>% dplyr::filter(!is.na(.data$agb_Mg_per_ha__Live) & !is.na(.data$agb_Mg_per_ha__Dead_or_Lost) ) # remove records that are missing any productivity values
+vst_plot_w_0s <- vst_plot_w_0s %>% dplyr::filter(.data$year >= start) # remove records from before the time of interest
+if(plotType == "tower") {vst_plot_w_0s <- vst_plot_w_0s %>% dplyr::filter(.data$plotType == "tower") } # if arg plotType = "tower" then filter to just tower plots, otherwise keep all plots from input data
+vst_plot_w_0s <- vst_plot_w_0s %>% dplyr::filter(.data$specificModuleSamplingPriority <= plotPriority) # remove lower priority plots that aren't required to be sampled every year (default is 5 (the 5 highest priority plots))
 
 vst_plot_w_0s_sum_taxa <- vst_plot_w_0s
-if(nrow(vst_plot_w_0s_sum_taxa > 0)) {vst_plot_w_0s_sum_taxa <- vst_plot_w_0s %>% dplyr::group_by("plot_eventID", "eventID", siteID, "plotID", "plotType", "nlcdClass", year) %>% dplyr::summarise("agb_Mg_per_ha__Live" = sum(agb_Mg_per_ha__Live, na.rm = TRUE),
-             "agb_Mg_per_ha__Dead_or_Lost" = sum(agb_Mg_per_ha__Dead_or_Lost, na.rm = TRUE) ) # sum the taxonIDs within each plot in preparation for creating site level averages and other metrics
+if(nrow(vst_plot_w_0s_sum_taxa) > 0) {vst_plot_w_0s_sum_taxa <- vst_plot_w_0s %>% dplyr::group_by(.data$plot_eventID, .data$eventID, .data$siteID, .data$plotID, .data$plotType, .data$nlcdClass, .data$year) %>% dplyr::summarise(agb_Mg_per_ha__Live = sum(.data$agb_Mg_per_ha__Live, na.rm = TRUE),
+             agb_Mg_per_ha__Dead_or_Lost = sum(.data$agb_Mg_per_ha__Dead_or_Lost, na.rm = TRUE) ) # sum the taxonIDs within each plot in preparation for creating site level averages and other metrics
 } else {
   vst_plot_w_0s_sum_taxa$agb_Mg_per_ha__Live = 0
   vst_plot_w_0s_sum_taxa$agb_Mg_per_ha__Dead_or_Lost= 0
 }
 
-vst_site <- vst_plot_w_0s_sum_taxa %>% dplyr::group_by(siteID, year) %>% dplyr::summarise(vst_live_Mg_per_ha_plot_n = dplyr::n(), vst_live_Mg_per_ha_ave = round(mean(agb_Mg_per_ha__Live, na.rm = TRUE),3), 
-      vst_live_Mg_per_ha_min = round(min(agb_Mg_per_ha__Live, na.rm = TRUE),3), vst_live_Mg_per_ha_max = round(max(agb_Mg_per_ha__Live, na.rm = TRUE),3), vst_live_Mg_per_ha_sd = round(stats::sd(agb_Mg_per_ha__Live, na.rm = TRUE),3))   
+vst_site <- vst_plot_w_0s_sum_taxa %>% dplyr::group_by(.data$siteID, .data$year) %>% dplyr::summarise(vst_live_Mg_per_ha_plot_n = dplyr::n(), vst_live_Mg_per_ha_ave = round(mean(.data$agb_Mg_per_ha__Live, na.rm = TRUE),3), 
+      vst_live_Mg_per_ha_min = round(min(.data$agb_Mg_per_ha__Live, na.rm = TRUE),3), vst_live_Mg_per_ha_max = round(max(.data$agb_Mg_per_ha__Live, na.rm = TRUE),3), vst_live_Mg_per_ha_sd = round(stats::sd(.data$agb_Mg_per_ha__Live, na.rm = TRUE),3))   
   # calculate site - level averages of plots (including plots with 0 biomass), along with plot min, max, standard deviation and plot count
 
 # if(grepl("Ltr", dataProducts) )    {
 # ltr_NPP <- read.csv('../output/ltr_Mg_ha_yr_after_data_filling.csv', stringsAsFactors = F)
-#  ltr_NPP <- dplyr::rename(ltr_NPP, "year" = "yearBoutBegan") 
+#  ltr_NPP <- dplyr::rename(ltr_NPP, year = yearBoutBegan) 
 #  ltr_NPP <- merge(ltr_NPP, plotType, by="plotID")
-#  ltr_NPP <- ltr_NPP %>% dplyr::filter("plotType" == "tower" & !is.na("ltr_NPP__Mg_ha_yr")) %>% dplyr::select("plotID","year","ltr_NPP__Mg_ha_yr")
+#  ltr_NPP <- ltr_NPP %>% dplyr::filter(.data$plotType == "tower" & !is.na(.data$ltr_NPP__Mg_ha_yr)) %>% dplyr::select("plotID","year","ltr_NPP__Mg_ha_yr")
 # } 
 
 ##### If option to include herbaceous data was selected then download and aggregate the herbaceous data #############################
@@ -670,30 +746,30 @@ vst_site <- vst_plot_w_0s_sum_taxa %>% dplyr::group_by(siteID, year) %>% dplyr::
   
 if(!missing(inputDataListHbp)) { 
 
-  hbp_perbout <- HbpDat$hbp_perbout
-  hbp_massdata <- HbpDat$hbp_massdata
+  hbp_perbout <- inputDataListHbp$hbp_perbout
+  hbp_massdata <- inputDataListHbp$hbp_massdata
 
 print("Calculating above-ground herbaceous biomass  ..... ")
 
 # filter mass data to retain only qaDryMass == N (to avoid duplicates when there is a qa sample too)
 hbp_massdata$herbGroup <- ifelse(is.na(hbp_massdata$herbGroup), "Unknown", hbp_massdata$herbGroup)
-hbp_massdata <- hbp_massdata %>% dplyr::filter(qaDryMass == 'N' & herbGroup != "Bryophyte") %>% dplyr::select("sampleID", "subsampleID", "herbGroup", "dryMass")
+hbp_massdata <- hbp_massdata %>% dplyr::filter(.data$qaDryMass == 'N' & .data$herbGroup != "Bryophyte") %>% dplyr::select("sampleID", "subsampleID", "herbGroup", "dryMass")
                                         
 hbp_perbout <- hbp_perbout %>% dplyr::select("namedLocation", "domainID", "siteID", "plotID", "subplotID", "clipID", "nlcdClass", "plotType", "plotSize", 
                                              "plotManagement", "collectDate", "eventID", "sampleID", "clipArea", "exclosure")
 
 hbp <- dplyr::right_join(hbp_perbout, hbp_massdata, by = "sampleID")
-hbp_off_peak_biomass <- hbp %>% dplyr::filter(herbGroup == 'All herbaceous plants') %>% dplyr::mutate(peak = "off-peak")
-hbp_peak_biomass_herb_groups <- hbp %>% dplyr::filter(herbGroup != 'All herbaceous plants') %>% dplyr::mutate(peak = "at-peak")
+hbp_off_peak_biomass <- hbp %>% dplyr::filter(.data$herbGroup == 'All herbaceous plants') %>% dplyr::mutate(peak = "off-peak")
+hbp_peak_biomass_herb_groups <- hbp %>% dplyr::filter(.data$herbGroup != 'All herbaceous plants') %>% dplyr::mutate(peak = "at-peak")
 
 # aggregate dryMass among herbGroups in peak biomass bouts
-hbp_peak_biomass_no_groups <- hbp_peak_biomass_herb_groups %>% dplyr::group_by_at(dplyr::vars(-dryMass, -subsampleID, -herbGroup)) %>% dplyr::summarise(dryMass = sum(dryMass)) %>%  # sum together all the functional groups
+hbp_peak_biomass_no_groups <- hbp_peak_biomass_herb_groups %>% dplyr::group_by_at(dplyr::vars(-"dryMass", -"subsampleID", -"herbGroup")) %>% dplyr::summarise(dryMass = sum(.data$dryMass)) %>%  # sum together all the functional groups
   dplyr::mutate(herbGroup = 'All herbaceous plants')  # rename the sum to be herbGroup 'All herbaceous plants', as if the component functional groups never existed
 
 hbp2 <- dplyr::bind_rows(hbp_off_peak_biomass, hbp_peak_biomass_no_groups) %>% dplyr::select(-"subsampleID", -"herbGroup") %>%  # combine off-peak and peak records (the former needed for productivity at grazed sites)
-  dplyr::mutate(standing_biomass = dryMass / clipArea) # express biomass on a meter squared basis (clipArea is typically either 0.2 or 1 m2)y
+  dplyr::mutate(standing_biomass = .data$dryMass / .data$clipArea) # express biomass on a meter squared basis (clipArea is typically either 0.2 or 1 m2)y
 hbp_standing_biomass_in_clip_cells <- hbp2 %>%
-  tidyr::separate(eventID, into = c('data_prod', 'year','siteID2','bout'), sep = '\\.', remove = FALSE, extra = 'drop')
+  tidyr::separate("eventID", into = c('data_prod', 'year','siteID2','bout'), sep = '\\.', remove = FALSE, extra = 'drop')
 
 # group by event ID (that's the bout) and average across clipcells (across plots) within a treatment group (exclosure Y/N)
 # Possible for consumption to be negative. To get total NPP = last bout Standing biomass + consumption estimated for each time step. 
@@ -703,17 +779,17 @@ hbp_agb_per_ha <- hbp_standing_biomass_in_clip_cells
 hbp_agb_per_ha$herb_Mg_per_ha <- hbp_agb_per_ha$standing_biomass * 10000 * 0.000001
  # convert g/m2 to Mg/ha ;   g/m2 x 10,000 m2/ha x 0.000001 Mg/g = Mg/ha
 hbp_plot <- hbp_agb_per_ha %>% 
-  dplyr::filter(peak == 'at-peak' & exclosure == 'N') %>% 
-  dplyr::group_by(siteID, plotID, year, nlcdClass) %>% #  
-  dplyr::summarise("herb_peak_Mg_per_ha" = round(mean(herb_Mg_per_ha, na.rm = TRUE),3)) # calculate ave per plot if there are multiple subplots
+  dplyr::filter(.data$peak == 'at-peak' & .data$exclosure == 'N') %>% 
+  dplyr::group_by(.data$siteID, .data$plotID, .data$year, .data$nlcdClass) %>% #  
+  dplyr::summarise(herb_peak_Mg_per_ha = round(mean(.data$herb_Mg_per_ha, na.rm = TRUE),3)) # calculate ave per plot if there are multiple subplots
 
 hbp_plot <- hbp_plot[order(hbp_plot$year),] # intent here is to sort by date and then keep latest year
 hbp_plot <- hbp_plot[!duplicated(hbp_plot$plotID, fromLast=TRUE), ] # toggle on to keep just the most recent year
 
-herb_site_summary <- hbp_plot %>% dplyr::group_by(siteID, year) %>% dplyr::summarise(herb_n = length(stats::na.omit(herb_peak_Mg_per_ha)), herb_peak_Mg_per_ha_ave = round(mean(herb_peak_Mg_per_ha, na.rm = TRUE),3),  
-    herb_peak_Mg_per_ha_min = round(min(herb_peak_Mg_per_ha, na.rm = TRUE),3), 
-    herb_peak_Mg_per_ha_max = round(max(herb_peak_Mg_per_ha, na.rm = TRUE),3), 
-    herb_Mg_per_ha_sd = round(stats::sd(herb_peak_Mg_per_ha, na.rm = TRUE),3)) 
+herb_site_summary <- hbp_plot %>% dplyr::group_by(.data$siteID, .data$year) %>% dplyr::summarise(herb_n = length(stats::na.omit(.data$herb_peak_Mg_per_ha)), herb_peak_Mg_per_ha_ave = round(mean(.data$herb_peak_Mg_per_ha, na.rm = TRUE),3),  
+    herb_peak_Mg_per_ha_min = round(min(.data$herb_peak_Mg_per_ha, na.rm = TRUE),3), 
+    herb_peak_Mg_per_ha_max = round(max(.data$herb_peak_Mg_per_ha, na.rm = TRUE),3), 
+    herb_Mg_per_ha_sd = round(stats::sd(.data$herb_peak_Mg_per_ha, na.rm = TRUE),3)) 
  # calc the mean biomass of the individual plots within eventID and identify number of plots contributing to that mean after filtering to just peak biomass bout outside exclosures
 
 print("Combining above-ground woody and herbaceous biomass summaries  ..... ")
@@ -750,6 +826,6 @@ output.list <- list(
    vst_agb_zeros = vst_agb_zeros,
    vst_site = vst_site
 )
-   
+  return(output.list)
  }
 }

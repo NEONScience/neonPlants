@@ -5,8 +5,8 @@
 \title{Estimate aboveground biomass (AGB) of woody and herbaceous vegetation}
 \usage{
 estimateBiomass(
-  inputDataListVst = VstDat,
-  inputDataListHbp = HbpDat,
+  inputDataListVst,
+  inputDataListHbp,
   site = NA,
   start = NA,
   end = NA,

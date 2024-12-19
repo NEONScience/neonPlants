@@ -52,6 +52,18 @@ getBiomassInputs = function(site = "all",
   if(dataProducts != "VstHbp" & dataProducts != "Vst"){
     stop("Currently the only valid dataProducts options are 'VstHbp' or 'Vst'.")
   }
+  
+if(!methods::is(site, class = "character" )){
+  stop("The site argument is expected to be either 'all', a four-letter NEON siteID, or set of NEON siteIDs. A numeric, data.frame, or list object is not allowed.")
+ }  
+
+if(!methods::is(start, class = "numeric" )){
+  stop("The start argument is expected to be numeric. A character, data.frame, or list object is not allowed.")
+ }  
+
+if(!methods::is(end, class = "numeric" )){
+  stop("The end argument is expected to be numeric. A character, data.frame, or list object is not allowed.")
+ }     
 
 # Warning if start date is too early
   if(as.numeric(start) < 2018){  start = "2018"

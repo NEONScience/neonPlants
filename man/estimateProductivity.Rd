@@ -5,7 +5,7 @@
 \title{Estimate NEON plot and site-level ANPP (Aboveground Primary Productivity) contributed by woody and herbaceous vegetation}
 \usage{
 estimateProductivity(
-  input = estimateBiomassOutputs,
+  input,
   plotType = "tower",
   plotPriority = 5,
   calcMethod = "approach_1",
@@ -59,7 +59,7 @@ added. Plots can be filtered to more frequently sampled plots using plotType and
 estimateProductivityOutputs <- estimateProductivity(input = estimateBiomassOutputs)
                       
 # example specifying many non-default arguments
-estimateProductivityOutputs <- estimateProductivity(input = "estimateBiomassOutputs", 
+estimateProductivityOutputs <- estimateProductivity(input = estimateBiomassOutputs, 
                plotType = "all", plotPriority = 50, 
                calcMethod = "approach_2", outlier = 2, outlierType = "SD", 
                dataProducts = "Vst")
