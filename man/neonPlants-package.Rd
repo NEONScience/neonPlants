@@ -15,6 +15,7 @@ Authors:
 \itemize{
   \item Dave Barnett
   \item Sam Simkin \email{ssimkin@battelleecology.org} (\href{https://orcid.org/0000-0003-2418-4265}{ORCID})
+  \item Courtney Meier \email{cmeier@BattelleEcology.org} (\href{https://orcid.org/0000-0003-3576-883X}{ORCID})
 }
 
 }

@@ -1,0 +1,210 @@
+### Scratchpad for neonPlants root function development ####
+
+#   Retrieve bbc data from NEON Portal
+library(dplyr)
+library(neonUtilities)
+
+
+
+### Create test dataset in list form for testing with new list input ####
+#   Retrieve test data for LENO (site with fewest records in this site x month)
+bbcTest <- neonUtilities::loadByProduct(dpID = "DP1.10067.001",
+                                        site = "all",
+                                        startdate = "2018-07",
+                                        enddate = "2018-08",
+                                        tabl = "all",
+                                        check.size = FALSE,
+                                        token = Sys.getenv("NEON_TOKEN"))
+
+#   Check record count by siteID for those sites with qaDryMass == Y; test dataset needs QA dryMass samples
+testSumm <- bbcTest$bbc_rootmass %>%
+  dplyr::group_by(siteID,
+                  qaDryMass) %>%
+  dplyr::summarise(count = n())
+
+#--> DEJU has fewest records and also has qaDryMass == Y
+
+
+
+### Create test dataset using DEJU data from 2018-07 to 2018-08
+dejuTest <- neonUtilities::loadByProduct(dpID = "DP1.10067.001",
+                                         site = "DEJU",
+                                         startdate = "2018-07",
+                                         enddate = "2018-08",
+                                         tabl = "all",
+                                         check.size = FALSE,
+                                         token = Sys.getenv("NEON_TOKEN"))
+
+
+#   Recreate small list object for testing purposes
+testList <- list(bbc_percore = dejuTest$bbc_percore,
+                 bbc_rootmass = dejuTest$bbc_rootmass,
+                 bbc_chemistryPooling = dejuTest$bbc_chemistryPooling,
+                 bbc_rootChemistry = dejuTest$bbc_rootChemistry,
+                 bbc_dilution = dejuTest$bbc_dilution)
+
+#   Write out test dataset for testthat
+testDataPath <- "tests/testthat/testdata"
+
+saveRDS(object = testList,
+        file = paste(testDataPath, "rootdatalist-201807.RDS", sep = "/"))
+
+#   Read in test dataset
+testList <- readRDS(paste(testDataPath, "rootdatalist-201807.RDS", sep = "/"))
+
+
+
+### Create output data frames with test list input
+
+joinTestOut <- neonPlants::joinRootChem(inputRootList = testList)
+#--> returns data frame with 477 rows and 35 columns
+
+stdTestOut <- neonPlants::standardizeRootMass(inputRootList = testList)
+#--> returns data frame with 159 rows and 10 columns
+
+scaleTestOut1 <- neonPlants::scaleRootMass(inputRootList = testList,
+                                           includeDilution = TRUE)
+#--> returns data frame with 53 rows and 50 columns
+
+scaleTestOut2 <- neonPlants::scaleRootMass(inputRootList = testList,
+                                           includeFragInTotal = TRUE)
+#--> returns data frame with 53 rows and 50 columns
+
+scaleTestOut3 <- neonPlants::scaleRootMass(inputCore = testCore,
+                                           inputMass = testMass,
+                                           inputDilution = testDilution)
+
+scaleTestOut4 <- neonPlants::scaleRootMass(inputRootList = testList,
+                                           includeDilution = FALSE,
+                                           includeFragInTotal = TRUE)
+
+scaleTestOut5 <- neonPlants::scaleRootMass(includeDilution = FALSE,
+                                           inputCore = testCore,
+                                           inputMass = testMass,
+                                           inputDilution = testDilution,
+                                           includeFragInTotal = TRUE)
+
+
+
+
+
+
+### Development of initial functions ####---> deprecated
+#   Newer site x month combos with rootStatus == NA for all subsampleIDs
+bbcNew <- neonUtilities::loadByProduct(dpID = "DP1.10067.001",
+                                       site = "all",
+                                       startdate = "2022-07",
+                                       enddate = "2022-08",
+                                       tabl = "all",
+                                       check.size = FALSE,
+                                       token = Sys.getenv("NEON_TOKEN"))
+
+vars <- bbcNew$variables_10067
+rootMassNew <- bbcNew$bbc_rootmass
+rootPoolNew <- bbcNew$bbc_chemistryPooling
+rootChemNew <- bbcNew$bbc_rootChemistry
+
+outputTestNew <- rootChemJoin(inputMass = bbcNew$bbc_rootmass,
+                              inputPool = bbcNew$bbc_chemistryPooling,
+                              inputChem = bbcNew$bbc_rootChemistry)
+
+
+#   Older dataset for bbc_rootmass that has rootStatus == "live" and "dead"; stopped sorting in 2021
+bbc2 <- neonUtilities::loadByProduct(dpID = "DP1.10067.001",
+                                     site = "all",
+                                     startdate = "2018-07",
+                                     enddate = "2018-08",
+                                     tabl = "all",
+                                     check.size = FALSE,
+                                     token = Sys.getenv("NEON_TOKEN"))
+
+vars <- bbc2$variables_10067
+rootCore2 <- bbc2$bbc_percore
+rootMass2 <- bbc2$bbc_rootmass
+rootPool2 <- bbc2$bbc_chemistryPooling
+rootChem2 <- bbc2$bbc_rootChemistry
+rootDilution <- bbc2$bbc_dilution
+
+#   Write out test datasets for testthat
+testDataPath <- "tests/testthat/testdata"
+
+saveRDS(object = rootCore2,
+        file = paste(testDataPath, "valid-rootcore-201807.RDS", sep = "/"))
+
+saveRDS(object = rootMass2, 
+        file = paste(testDataPath, "valid-rootmass-201807.RDS", sep = "/"))
+
+saveRDS(object = rootPool2,
+        file = paste(testDataPath, "valid-rootpool-201807.RDS", sep = "/"))
+
+saveRDS(object = rootChem2,
+        file = paste(testDataPath, "valid-rootchem-201807.RDS", sep = "/"))
+
+saveRDS(object = rootDilution,
+        file = paste(testDataPath, "valid-rootdilution-201807.RDS", sep = "/"))
+
+#   Evaluate function output
+outputTest2 <- root_table_join(input_mass = rootMass2,
+                               input_pool = rootPool2,
+                               input_chem = rootChem2)
+
+
+
+
+#   Input with input_mass missing one or more required columns
+testMass <- rootMass %>% dplyr::select(-rootStatus)
+
+outputTest3 <- root_table_join(input_mass = testMass,
+                              input_pool = bbc2$bbc_chemistryPooling,
+                              input_chem = bbc2$bbc_rootChemistry)
+
+#--> returns expected error message for single missing column and when missing two columns
+
+#   Input with input_mass missing all data
+testMass <- rootMass %>% dplyr::filter(rootStatus == "unicorn")
+
+outputTest4 <- root_table_join(input_mass = testMass,
+                              input_pool = bbc2$bbc_chemistryPooling,
+                              input_chem = bbc2$bbc_rootChemistry)
+
+
+
+### Evaluate function output for rootMassStandardize()
+#   Test for output using testMass data frame
+stdTest1 <- neonPlants::rootMassStandardize(inputMass = testMass)
+
+#   Test when no data frame input supplied
+stdTest2 <- neonPlants::rootMassStandardize()
+#--> expected error 'argument "inputMass" is missing, with no default'
+
+stdTest3 <- neonPlants::rootMassStandardize(inputMass = testMass %>%
+                                              dplyr::select(-dryMass))
+#--> expected error "Required columns missing from 'inputMass': dryMass
+
+stdTest3 <- neonPlants::rootMassStandardize(inputMass = testMass %>%
+                                              dplyr::filter(uid == "mangrove"))
+#--> expected error "Table 'inputMass' has no data"
+
+#   Test when new data lacking old sizeCategory bins are supplied
+stdTest4 <- rootMassStandardize(inputMass = rootMassNew)
+#--> Calculates mean when qaDryMass == Y, no changes to sizeCategories as expected
+
+
+### Evaluate function output for rootMassScale()
+##  Test for output with no inputDilution argument
+scale1 <- neonPlants::rootMassScale(inputCore = testCore,
+                                    inputMass = testMass)
+#--> calculations look correct
+#--> number of rows is correct given length(unique(testMass$sampleID)) and two cores in testCore having
+#--> samplingImpractical == "obstruction".
+
+
+##  Test for output with inputDilution argument but includeFragments FALSE
+scale2 <- neonPlants::rootMassScale(inputCore = testCore,
+                                    inputMass = testMass,
+                                    inputDilution = testDilution)
+#--> scale2$totalDryMass[3] == 5.5857, which correctly does not include fragment mass
+
+
+
+

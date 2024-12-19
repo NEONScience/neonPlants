@@ -14,12 +14,17 @@ Authors@R:
              family = "Simkin", 
              role = c("aut"),
              email = "ssimkin@battelleecology.org", 
-             comment = c(ORCID = "0000-0003-2418-4265"))
+             comment = c(ORCID = "0000-0003-2418-4265")),
+      person(given = "Courtney",
+             family = "Meier",
+             role = c("aut"),
+             email = "cmeier@BattelleEcology.org",
+             comment = c(ORCID = "0000-0003-3576-883X"))
              )
 Description: Library of R functions to work with NEON plant data.
 License: GPL (>= 3)
 Suggests: 
-    neonUtilities (>= 2.3.0),
+    neonUtilities (>= 2.4.0),
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Encoding: UTF-8
