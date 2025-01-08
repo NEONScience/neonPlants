@@ -15,7 +15,7 @@
 #'  * trans_doy_start - ordinal day of year of the estimated transition onset
 #'  * trans_date_end - calendar date of the estimated transition end
 #'  * trans_doy_end - ordinal day of year of the estimated transition end
-#'  * duration - difference in days from the onset day of year to the transition end 
+#'  * duration - difference in days from the onset day of year to the transition end
 #'  * transition_type - indicator that output is for phenophase duration
 #'  * precision_duration - sum of precision_days for estimated oneset and end
 #'  * nth transition - a count of onset events per individualID, phenophase name, within a given calendar year
@@ -49,11 +49,11 @@
 #'
 #'WORKS
 #'
-#'out2 <- estimatePheDurationByTag(inputStatus = pheDat$phe_statusintensity, 
-#'                              inputTags = pheDat$phe_perindividual) 
+#'out2 <- estimatePheDurationByTag(inputStatus = pheDat$phe_statusintensity,
+#'                              inputTags = pheDat$phe_perindividual)
 #'
-#'FLAGGING NON EXISTANT DUPLICATES                              
-#'                              
+#'FLAGGING NON EXISTANT DUPLICATES
+#'
 #' }
 
 ##############################################################################################
@@ -67,23 +67,16 @@ estimatePheDurationByTag <- function(
   trans <- estimatePheTransByTag(inputDataList=inputDataList,
                                  inputStatus = inputStatus,
                                  inputTags = inputTags)
-  
+
   out <- trans%>%
     dplyr::group_by(year, siteID, individualID, taxonID, scientificName, phenophaseName, nth_transition)%>%
     #filter(n()>1)%>%
-    dplyr::summarise(trans_date_start=min(date_transition), trans_doy_start=min(doy_transition), 
+    dplyr::summarise(trans_date_start=min(date_transition), trans_doy_start=min(doy_transition),
               trans_date_end=max(date_transition), trans_doy_end=max(doy_transition),
-              duration = doy_transition[transitionType=='end']-doy_transition[transitionType=='onset'], 
+              duration = doy_transition[transitionType=='end']-doy_transition[transitionType=='onset'],
               precision_duration=sum(precision_days), ## does sum of precision_days make sense for duration metrics?
               transitionType = 'duration')
-  
+
   return(out)
 }
 
-
-phaseDuration <- estimatePheDurationByTag(
-    inputDataList = pheDat)
-
-phaseDuration2 <- estimatePheDurationByTag(
-  inputStatus = pheDat$phe_statusintensity,
-  inputTags = pheDat$phe_perindividual)
