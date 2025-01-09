@@ -69,12 +69,20 @@ estimatePheDurationByTag <- function(
                                  inputTags = inputTags)
 
   out <- trans%>%
-    dplyr::group_by(year, siteID, individualID, taxonID, scientificName, phenophaseName, nth_transition)%>%
+    dplyr::group_by(.data$year, 
+                    .data$siteID, 
+                    .data$individualID, 
+                    .data$taxonID, 
+                    .data$scientificName, 
+                    .data$phenophaseName, 
+                    .data$nth_transition)%>%
     #filter(n()>1)%>%
-    dplyr::summarise(trans_date_start=min(date_transition), trans_doy_start=min(doy_transition),
-              trans_date_end=max(date_transition), trans_doy_end=max(doy_transition),
-              duration = doy_transition[transitionType=='end']-doy_transition[transitionType=='onset'],
-              precision_duration=sum(precision_days), ## does sum of precision_days make sense for duration metrics?
+    dplyr::reframe(trans_date_start=min(.data$date_transition),
+                   trans_doy_start=min(.data$doy_transition),
+                   trans_date_end=max(.data$date_transition), 
+                   trans_doy_end=max(.data$doy_transition),
+                   duration = .data$doy_transition[.data$transitionType=='end']-.data$doy_transition[.data$transitionType=='onset'],
+              precision_duration=sum(.data$precision_days), ## does sum of precision_days make sense for duration metrics?
               transitionType = 'duration')
 
   return(out)

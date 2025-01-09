@@ -91,10 +91,11 @@ estimatePheTransByTag <- function(
   # Format transition output dataframe
   step_one <-obs%>%
     # extract year from date
-    dplyr::mutate(year = substr(date, 1,4))%>%
-    dplyr::group_by(individualID, phenophaseName) %>%
+    dplyr::mutate(year = substr(.data$date, 1,4))%>%
+    dplyr::group_by(.data$individualID, 
+                    .data$phenophaseName) %>%
     # remove uninformative phenophaseStatuses
-    dplyr::filter(phenophaseStatus!="uncertain") %>%
+    dplyr::filter(.data$phenophaseStatus!="uncertain") %>%
     # get status, doy previous observation, create transition type for current obs
     dplyr::mutate(status_lag = dplyr::lag(phenophaseStatus),
                   date_intervalStart = dplyr::lag(date), doy_intervalStart = dplyr::lag(dayOfYear),
@@ -106,19 +107,23 @@ estimatePheTransByTag <- function(
   }
 
   step_two <- step_one%>%  # remove first observation with no preceding observation & steps with no transition
-    dplyr::filter(!is.na(status_lag), phenophaseStatus != status_lag) %>%
+    dplyr::filter(!is.na(.data$status_lag), phenophaseStatus != .data$status_lag) %>%
     #calculate values for each time step
-    dplyr::mutate(date_transition = as.Date(date_intervalStart + (date - date_intervalStart) / 2),
-           doy_transition = lubridate::yday(date_transition),
-           precision_days = as.numeric(difftime(date, date_intervalStart, units = "days"))/2,
-           samplingInterval = as.numeric(difftime(date, date_intervalStart, units = "days"))) %>%
-    dplyr::group_by(year,individualID, phenophaseName)%>%
+    dplyr::mutate(date_transition = as.Date(.data$date_intervalStart + (.data$date - .data$date_intervalStart) / 2),
+                  doy_transition = lubridate::yday(.data$date_transition),
+                  precision_days = as.numeric(difftime(.data$date, .data$date_intervalStart, units = "days"))/2,
+                  samplingInterval = as.numeric(difftime(.data$date, .data$date_intervalStart, units = "days"))) %>%
+    dplyr::group_by(.data$year,
+                    .data$individualID, 
+                    .data$phenophaseName)%>%
     #count number of onsets (per year, individual, phenophase)
-    dplyr::mutate(nth_transition = cumsum(status_lag == "no" & phenophaseStatus == "yes"))%>%
+    dplyr::mutate(nth_transition = cumsum(.data$status_lag == "no" & .data$phenophaseStatus == "yes"))%>%
     #clean up outputs
-    dplyr::select(year, siteID, individualID, phenophaseName, transitionType, nth_transition, date, date_intervalStart,
-           dayOfYear, doy_intervalStart, samplingInterval, date_transition, doy_transition, precision_days)%>%
-    dplyr::arrange(year, phenophaseName, individualID)
+    dplyr::select("year", "siteID", "individualID", "phenophaseName", "transitionType",
+                  "nth_transition", "date", "date_intervalStart", "dayOfYear",
+                  "doy_intervalStart", "samplingInterval", "date_transition", "doy_transition", 
+                  "precision_days")%>%
+    dplyr::arrange(.data$year, .data$phenophaseName, .data$individualID)
 
 # rename transition type to onset/offset
   step_two$transitionType <- ifelse(step_two$transitionType=='no-yes', 'onset',
@@ -127,14 +132,15 @@ estimatePheTransByTag <- function(
 
 # prep tags df
   out <- tags%>%
-    dplyr::select(individualID, taxonID, scientificName, growthForm)%>%
+    dplyr::select("individualID", "taxonID", "scientificName", "growthForm")%>%
 # Join with Obs
     dplyr::right_join(., step_two)%>%
 # reorder fields
-    dplyr::select(year, siteID, individualID, taxonID, scientificName, phenophaseName, transitionType,
-                  nth_transition, date_intervalStart,  doy_intervalStart,
-                  date_intervalEnd=date,  doy_intervalEnd = dayOfYear,
-                   date_transition, doy_transition, samplingInterval, precision_days)
+    dplyr::select("year", "siteID", "individualID", "taxonID", "scientificName", 
+                  "phenophaseName", "transitionType", "nth_transition", 
+                  "date_intervalStart", "doy_intervalStart", "date_intervalEnd"="date",
+                  "doy_intervalEnd" = "dayOfYear", "date_transition", 
+                  "doy_transition", "samplingInterval", "precision_days")
   return(out)
 
 }
