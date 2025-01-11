@@ -31,18 +31,32 @@ testthat::test_that(desc = "Output type table input", {
 ### Test: Function generates expected output class
 #   Test list input
 testthat::test_that(desc = "Output class list input", {
+  
+  temp <- scaleRootMass(inputRootList = testList)
 
-  testthat::expect_s3_class(object = scaleRootMass(inputRootList = testList),
+  testthat::expect_s3_class(object = temp$coreRootMass,
                             class = "data.frame")
+  testthat::expect_s3_class(object = temp$plotRootMass,
+                            class = "data.frame")
+  testthat::expect_s3_class(object = temp$siteRootMass,
+                            class = "data.frame")
+  
 })
 
 #   Test table input
 testthat::test_that(desc = "Output class table input", {
   
-  testthat::expect_s3_class(object = scaleRootMass(inputCore = testCore,
-                                                   inputMass = testMass,
-                                                   inputDilution = testDilution),
+  temp <- scaleRootMass(inputCore = testCore,
+                        inputMass = testMass,
+                        inputDilution = testDilution)
+  
+  testthat::expect_s3_class(object = temp$coreRootMass,
                             class = "data.frame")
+  testthat::expect_s3_class(object = temp$plotRootMass,
+                            class = "data.frame")
+  testthat::expect_s3_class(object = temp$siteRootMass,
+                            class = "data.frame")
+  
 })
 
 
