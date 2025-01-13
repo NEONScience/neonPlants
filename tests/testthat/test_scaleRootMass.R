@@ -61,69 +61,131 @@ testthat::test_that(desc = "Output class table input", {
 
 
 
-### Test: Function generates data frame with expected dimensions using test data
+### Test: Function generates "coreRootMass" data frame with expected dimensions using test data
 ##  Tests with includeDilution == TRUE (default) and includeFragInTotal == FALSE (default)
 #   Check expected row number of data frame
-testthat::test_that(desc = "Output data frame row number with defaults", {
+testthat::test_that(desc = "Output 'coreRootMass' row number with defaults", {
   
-  testthat::expect_identical(object = nrow(scaleRootMass(inputRootList = testList,
-                                                         includeDilution = TRUE,
-                                                         includeFragInTotal = FALSE)),
+  temp <- scaleRootMass(inputRootList = testList,
+                        includeDilution = TRUE,
+                        includeFragInTotal = FALSE)
+  
+  testthat::expect_identical(object = nrow(temp$coreRootMass),
                              expected = as.integer(53))
 })
 
 #   Check expected column number of data frame
-testthat::test_that(desc = "Output data frame column number with defaults", {
+testthat::test_that(desc = "Output 'coreRootMass' column number with defaults", {
   
-  testthat::expect_identical(object = ncol(scaleRootMass(inputRootList = testList,
-                                                         includeDilution = TRUE,
-                                                         includeFragInTotal = FALSE)),
-                             expected = as.integer(50))
+  temp <- scaleRootMass(inputRootList = testList,
+                        includeDilution = TRUE,
+                        includeFragInTotal = FALSE)
+  
+  testthat::expect_identical(object = ncol(temp$coreRootMass),
+                             expected = as.integer(51))
 })
 
 
 ##  Tests with includeDilution == FALSE
 #   Check expected row number of data frame
-testthat::test_that(desc = "Output data frame row number includeDilution FALSE", {
+testthat::test_that(desc = "Output 'coreRootMass' row number includeDilution FALSE", {
+  
+  temp <- scaleRootMass(inputRootList = testList,
+                        includeDilution = FALSE)
 
-  testthat::expect_identical(object = nrow(scaleRootMass(inputRootList = testList,
-                                                         includeDilution = FALSE)),
+  testthat::expect_identical(object = nrow(temp$coreRootMass),
                              expected = as.integer(53))
 
 })
 
 #   Check expected column number of data frame
-testthat::test_that(desc = "Output data frame column number includeDilution FALSE", {
+testthat::test_that(desc = "Output 'coreRootMass' column number includeDilution FALSE", {
+  
+  temp <- scaleRootMass(inputRootList = testList,
+                        includeDilution = FALSE)
 
-  testthat::expect_identical(object = ncol(scaleRootMass(inputRootList = testList,
-                                                         includeDilution = FALSE)),
-                             expected = as.integer(49))
+  testthat::expect_identical(object = ncol(temp$coreRootMass),
+                             expected = as.integer(50))
 
+})
+
+
+
+### Test: Function generates "plotRootMass" data frame with expected dimensions using test data
+##  Tests with includeDilution == TRUE (default) and includeFragInTotal == FALSE (default)
+#   Check expected row number of data frame
+testthat::test_that(desc = "Output 'plotRootMass' row number with defaults", {
+  
+  temp <- scaleRootMass(inputRootList = testList,
+                        includeDilution = TRUE,
+                        includeFragInTotal = FALSE)
+  
+  testthat::expect_identical(object = nrow(temp$plotRootMass),
+                             expected = as.integer(20))
+})
+
+#   Check expected column number of data frame
+testthat::test_that(desc = "Output 'plotRootMass' column number with defaults", {
+  
+  temp <- scaleRootMass(inputRootList = testList,
+                        includeDilution = TRUE,
+                        includeFragInTotal = FALSE)
+  
+  testthat::expect_identical(object = ncol(temp$plotRootMass),
+                             expected = as.integer(16))
+  
+})
+
+
+
+### Test: Function generates "siteRootMass" data frame with expected dimensions using test data
+##  Tests with includeDilution == TRUE (default) and includeFragInTotal == FALSE (default)
+#   Check expected row number of data frame
+testthat::test_that(desc = "Output 'siteRootMass' row number with defaults", {
+  
+  temp <- scaleRootMass(inputRootList = testList,
+                        includeDilution = TRUE,
+                        includeFragInTotal = FALSE)
+  
+  testthat::expect_identical(object = nrow(temp$siteRootMass),
+                             expected = as.integer(1))
+})
+
+#   Check expected column number of data frame
+testthat::test_that(desc = "Output 'siteRootMass' column number with defaults", {
+  
+  temp <- scaleRootMass(inputRootList = testList,
+                        includeDilution = TRUE,
+                        includeFragInTotal = FALSE)
+  
+  testthat::expect_identical(object = ncol(temp$siteRootMass),
+                             expected = as.integer(12))
+  
 })
 
 
 
 ### Test: Function includeFragInTotal correctly handles fragment mass
 #   Check totalDryMass does not contain fragment mass with function defaults; row 3 has frag mass data
-testthat::test_that(desc = "Output totalDryMass with includeFragInTotal FALSE", {
+testthat::test_that(desc = "Output 'coreRootMass.totalDryMass' with includeFragInTotal FALSE", {
   
-  test <- scaleRootMass(inputRootList = testList,
+  temp <- scaleRootMass(inputRootList = testList,
                         includeDilution = TRUE,
                         includeFragInTotal = FALSE)
   
-  testthat::expect_equal(object = test$totalDryMass[3],
+  testthat::expect_equal(object = temp$coreRootMass$totalDryMass[3],
                          expected = 8.1535)
   
 })
 
 #   Check totalDryMass includes fragment mass where appropriate when includeFragInTotal is TRUE
-testthat::test_that(desc = "Output totalDryMass with includeFragInTotal TRUE", {
+testthat::test_that(desc = "Output 'coreRootMass.totalDryMass' with includeFragInTotal TRUE", {
   
-  test <- scaleRootMass(inputRootList = testList,
+  temp <- scaleRootMass(inputRootList = testList,
                         includeDilution = TRUE,
                         includeFragInTotal = TRUE)
   
-  testthat::expect_equal(object = test$totalDryMass[3],
+  testthat::expect_equal(object = temp$coreRootMass$totalDryMass[3],
                          expected = 9.1953)
   
 })
