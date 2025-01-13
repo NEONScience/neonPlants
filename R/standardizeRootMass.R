@@ -181,8 +181,8 @@ standardizeRootMass <- function(inputRootList,
                      .groups = "drop") 
   
   rootMass <- rootMass %>%
-    dplyr::relocate(.data$sizeCategory,
-                    .after = .data$subsampleID)
+    dplyr::relocate("sizeCategory",
+                    .after = "subsampleID")
   
   
   
