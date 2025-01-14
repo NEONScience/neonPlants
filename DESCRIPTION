@@ -36,6 +36,7 @@ Imports:
     dplyr,
     glue,
     lifecycle,
+    lubridate,
     magrittr,
     methods,
     rlang,
