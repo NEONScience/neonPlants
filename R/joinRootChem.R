@@ -1,4 +1,4 @@
-#' @title Join NEON Plant Below Ground Biomass Root Mass and Root Chemistry Data Into a Single Table
+#' @title Join NEON plant below ground biomass root mass and root chemistry data into a single table
 
 #' @author Courtney Meier \email{cmeier@battelleecology.org} \cr
 

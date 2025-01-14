@@ -1,4 +1,4 @@
-#' @title Scale Root Biomass by Size Category to Mass Per Area and Mass Per Volume
+#' @title Scale root biomass by size category to mass per area and mass per volume
 
 #' @author Courtney Meier \email{cmeier@battelleecology.org} \cr
 
