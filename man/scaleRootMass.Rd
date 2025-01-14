@@ -2,7 +2,7 @@
 % Please edit documentation in R/scaleRootMass.R
 \name{scaleRootMass}
 \alias{scaleRootMass}
-\title{Scale Root Biomass by Size Category to Mass Per Area and Mass Per Volume}
+\title{Scale root biomass by size category to mass per area and mass per volume}
 \usage{
 scaleRootMass(
   inputRootList,
