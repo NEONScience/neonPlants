@@ -1,4 +1,4 @@
-#' @title Standardize Root Dry Mass Data to Current Size and Root Status Categories
+#' @title Standardize root dry mass data to current size and root status categories
 
 #' @author Courtney Meier \email{cmeier@battelleecology.org} \cr
 
@@ -181,8 +181,8 @@ standardizeRootMass <- function(inputRootList,
                      .groups = "drop") 
   
   rootMass <- rootMass %>%
-    dplyr::relocate(.data$sizeCategory,
-                    .after = .data$subsampleID)
+    dplyr::relocate("sizeCategory",
+                    .after = "subsampleID")
   
   
   

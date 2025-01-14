@@ -2,7 +2,7 @@
 % Please edit documentation in R/joinRootChem.R
 \name{joinRootChem}
 \alias{joinRootChem}
-\title{Join NEON Plant Below Ground Biomass Root Mass and Root Chemistry Data Into a Single Table}
+\title{Join NEON plant below ground biomass root mass and root chemistry data into a single table}
 \usage{
 joinRootChem(inputRootList, inputMass = NA, inputPool = NA, inputChem = NA)
 }

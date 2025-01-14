@@ -1,4 +1,4 @@
-#' @title Scale Root Biomass by Size Category to Mass Per Area and Mass Per Volume
+#' @title Scale root biomass by size category to mass per area and mass per volume
 
 #' @author Courtney Meier \email{cmeier@battelleecology.org} \cr
 
@@ -14,7 +14,8 @@
 #'
 #' @details Input data may be provided either as a list generated from the neonUtilities::laodByProduct()
 #' function or as individual tables. However, if both list and table inputs are provided at the same time
-#' the function will error out. 
+#' the function will error out. For all output data, columns with the same name as input data have 
+#' identical units and definitions; where needed, new columns contain new units information.
 #' 
 #' If inputMass data collected prior to 2019 are provided, the 0-0.5mm and 0.5-1mm 
 #' sizeCategories are combined into the current 0-1mm sizeCategory.
@@ -51,10 +52,26 @@
 #' calculate the 'totalDryMass'. Defaults to FALSE. If set to TRUE and 'inputRootList' is missing, 
 #' the 'bbc_dilution' table must be provided to the 'inputDilution' argument. [logical]
 #' 
-#' @return A table containing root mass data per unit area ("g/m2") and per unit volume ("g/m3")
-#' for three sizeCategories (< 1mm, 1-2mm, and 2-10mm) as well as total fine root biomass summed 
-#' across all sizeCategories. The output no longer contains the 'rootStatus' field and QA dryMass
-#' samples are averaged.
+#' @return Three tables are produced containing root mass data at varying spatial scales. The first 
+#' "coreRootMass" table contains root mass data at the scale of the field-collected core, 
+#' reported for three sizeCategories (< 1mm, 1-2mm, and 2-10mm) as per unit area ("g/m2") and per 
+#' unit volume ("g/m3"), as well as total fine root biomass summed across all sizeCategories (separate
+#' columns for "g/m2", "g/m3", and "Mg/ha"). Output no longer contains the 'rootStatus' field, 
+#' and QA dryMass samples are averaged. 
+#' 
+#' The second "plotRootMass" table contains mean root mass data at the scale of the plot for 
+#' each eventID in the data, reported for three sizeCategories (< 1mm, 1-2mm, and 2-10mm) as per 
+#' unit area ("g/m2") and per unit volume ("g/m3"), as well as total fine root biomass summed across all 
+#' sizeCategories (separate columns for "g/m2", "Mg/ha", and "g/m3"). Uncertainty at the plot scale
+#' is not reported because intra-plot replication is frequently insufficient and not required by the
+#' sampling design, but the number of core samples used to calculate the mean is reported. The 
+#' startDate and endDate indicate the start/end dates of core collection for a given plotID within 
+#' a bout.
+#' 
+#' The third "siteRootMass" table provides mean site-level total root mass data for each 
+#' eventID in the data, calculated from plot-level data and reported per unit area ("g/m2", "Mg/ha")
+#' and per unit volume ("g/m3"). The standard deviation across plots is calculated and the number
+#' of plots for each siteID x eventID combination is reported.
 #' 
 #' @examples
 #' \dontrun{
@@ -357,6 +374,12 @@ scaleRootMass <- function(inputRootList,
                                  values_from = "dryMass",
                                  names_prefix = "dryMass")
   
+  #   Rename dryMass columns to remove hyphens (hyphens require special handling in column names)
+  coreMass <- dplyr::rename(.data = coreMass,
+                            dryMass1 = "dryMass0-1",
+                            dryMass2 = "dryMass1-2",
+                            dryMass10 = "dryMass2-10")
+  
   #   Re-join collapsed strings for mycorrhizaeVisible and massRemarks columns
   coreMass <- dplyr::left_join(x = coreMass,
                                y = stringMassCols,
@@ -369,10 +392,10 @@ scaleRootMass <- function(inputRootList,
   
   #   Conditionally rename fragment column if exists
   if (is.data.frame(rootDilution)) {
-  
+    
     coreMass <- dplyr::rename(.data = coreMass,
-                            dryMassFrag = "dryMassfrag")
-  
+                              dryMassFrag = "dryMassfrag")
+    
   }
   
   
@@ -382,7 +405,7 @@ scaleRootMass <- function(inputRootList,
   if (isFALSE(includeFragInTotal)) {
     
     coreMass <- dplyr::rowwise(data = coreMass) %>%
-      dplyr::mutate(totalDryMass = sum(.data$`dryMass0-1`, .data$`dryMass1-2`, .data$`dryMass2-10`, 
+      dplyr::mutate(totalDryMass = sum(.data$dryMass1, .data$dryMass2, .data$dryMass10, 
                                        na.rm = TRUE)) %>%
       dplyr::ungroup()
     
@@ -399,7 +422,7 @@ scaleRootMass <- function(inputRootList,
     
     #   Sum totalDryMass WITH fragment mass
     coreMass <- dplyr::rowwise(data = coreMass) %>%
-      dplyr::mutate(totalDryMass = sum(.data$`dryMass0-1`, .data$`dryMass1-2`, .data$`dryMass2-10`, .data$`dryMassFrag`,
+      dplyr::mutate(totalDryMass = sum(.data$dryMass1, .data$dryMass2, .data$dryMass10, .data$dryMassFrag,
                                        na.rm = TRUE)) %>%
       dplyr::ungroup()
     
@@ -407,29 +430,94 @@ scaleRootMass <- function(inputRootList,
   
   
   
-  ### Scale dryMass values to "g/m2" and "g/cm3"
+  ### Scale core-level dryMass values to "g/m2", "g/cm3", and "Mg/ha"
   coreMass <- dplyr::rowwise(data = coreMass) %>%
-    dplyr::mutate(`dryMass0-1PerArea` = round(.data$`dryMass0-1` / .data$rootSampleArea, 
-                                              digits = 1),
-                  `dryMass1-2PerArea` = round(.data$`dryMass1-2` / .data$rootSampleArea, 
-                                              digits = 1),
-                  `dryMass2-10PerArea` = round(.data$`dryMass2-10` / .data$rootSampleArea, 
-                                               digits = 1),
-                  totalMassPerArea = round(.data$totalDryMass / .data$rootSampleArea, 
-                                           digits = 1)) %>%
-    dplyr::mutate(`dryMass0-1PerVolume` = round(.data$`dryMass0-1` / (.data$rootSampleArea * (.data$rootSampleDepth/100)), 
-                                                digits = 1),
-                  `dryMass1-2PerVolume` = round(.data$`dryMass1-2` / (.data$rootSampleArea * (.data$rootSampleDepth/100)), 
-                                                digits = 1),
-                  `dryMass2-10PerVolume` = round(.data$`dryMass2-10` / (.data$rootSampleArea * (.data$rootSampleDepth/100)), 
-                                                 digits = 1),
-                  totalMassPerVolume = round(.data$totalDryMass / (.data$rootSampleArea * (.data$rootSampleDepth/100)), 
-                                             digits = 1)) %>%
+    dplyr::mutate(dryMass1_gm2 = round(.data$dryMass1 / .data$rootSampleArea, 
+                                       digits = 1),
+                  dryMass2_gm2 = round(.data$dryMass2 / .data$rootSampleArea, 
+                                       digits = 1),
+                  dryMass10_gm2 = round(.data$dryMass10 / .data$rootSampleArea, 
+                                        digits = 1),
+                  totalMass_gm2 = round(.data$totalDryMass / .data$rootSampleArea, 
+                                        digits = 1)) %>%
+    
+    dplyr::mutate(dryMass1_gm3 = round(.data$dryMass1 / (.data$rootSampleArea * (.data$rootSampleDepth/100)), 
+                                       digits = 1),
+                  dryMass2_gm3 = round(.data$dryMass2 / (.data$rootSampleArea * (.data$rootSampleDepth/100)), 
+                                       digits = 1),
+                  dryMass10_gm3 = round(.data$dryMass10 / (.data$rootSampleArea * (.data$rootSampleDepth/100)), 
+                                        digits = 1),
+                  totalMass_gm3 = round(.data$totalDryMass / (.data$rootSampleArea * (.data$rootSampleDepth/100)), 
+                                        digits = 1)) %>%
+    
+    dplyr::mutate(totalMass_Mgha = round(.data$totalMass_gm2 / 100,
+                                         digits = 4)) %>%
+    dplyr::relocate("totalMass_gm2",
+                    .before = "totalMass_gm3") %>%
     dplyr::ungroup()
   
   
   
+  ### Scale dryMass values from core to plot-level ("g/m2", "g/m3", and "Mg/ha")
+  plotMass <- coreMass %>%
+    dplyr::group_by(.data$domainID,
+                    .data$siteID,
+                    .data$plotID,
+                    .data$eventID) %>%
+    dplyr::summarise(startDate = min(.data$collectDate),
+                     endDate = max(.data$collectDate),
+                     dryMass1_gm2 = round(mean(.data$dryMass1_gm2, na.rm = TRUE),
+                                          digits = 1),
+                     dryMass2_gm2 = round(mean(.data$dryMass2_gm2, na.rm = TRUE),
+                                          digits = 1),
+                     dryMass10_gm2 = round(mean(.data$dryMass10_gm2, na.rm = TRUE),
+                                           digits = 1),
+                     dryMass1_gm3 = round(mean(.data$dryMass1_gm3, na.rm = TRUE),
+                                          digits = 1),
+                     dryMass2_gm3 = round(mean(.data$dryMass2_gm3, na.rm = TRUE),
+                                          digits = 1),
+                     dryMass10_gm3 = round(mean(.data$dryMass10_gm3, na.rm = TRUE),
+                                           digits = 1),
+                     totalMass_gm2 = round(mean(.data$totalMass_gm2, na.rm = TRUE),
+                                           digits = 1),
+                     totalMass_gm3 = round(mean(.data$totalMass_gm3, na.rm = TRUE),
+                                           digits = 1),
+                     totalMass_Mgha = round(mean(.data$totalMass_Mgha, na.rm = TRUE),
+                                            digits = 4),
+                     coreNum = dplyr::n(),
+                     .groups = "drop")
+  
+  
+  
+  ### Scale total dryMass values from plot to site-level ("g/m2", "g/m3", "Mg/ha")
+  siteMass <- plotMass %>%
+    dplyr::group_by(.data$domainID,
+                    .data$siteID,
+                    .data$eventID) %>%
+    dplyr::summarise(startDate = min(.data$startDate),
+                     endDate = max(.data$endDate),
+                     rootMassMean_gm2 = round(mean(.data$totalMass_gm2, na.rm = TRUE),
+                                              digits = 1),
+                     rootMassSD_gm2 = round(stats::sd(.data$totalMass_gm2, na.rm = TRUE),
+                                            digits = 0),
+                     rootMassMean_gm3 = round(mean(.data$totalMass_gm3, na.rm = TRUE),
+                                              digits = 1),
+                     rootMassSD_gm3 = round(stats::sd(.data$totalMass_gm3, na.rm = TRUE),
+                                            digits = 0),
+                     rootMassMean_Mgha = round(mean(.data$totalMass_Mgha, na.rm = TRUE),
+                                               digits = 4),
+                     rootMassSD_Mgha = round(stats::sd(.data$totalMass_Mgha, na.rm = TRUE),
+                                             digits = 2),
+                     rootPlotNum = dplyr::n(),
+                     .groups = "drop")
+  
+  
+  
   ### Return output
-  return(coreMass)
+  output <- list(coreRootMass = coreMass,
+                 plotRootMass = plotMass,
+                 siteRootMass = siteMass)
+  
+  return(output)
   
 } # end function
