@@ -26,7 +26,7 @@
 #' exist and any 'remarks' are concatenated. Samples with Sampling Impractical values other than "OK"
 #' are removed prior to generating output data.
 #' 
-#' @param inputRootList A list object comprised of Plant Below Ground Biomass tables (DP1.10067.001) 
+#' @param inputDataList A list object comprised of Plant Below Ground Biomass tables (DP1.10067.001) 
 #' downloaded using the neonUtilities::loadByProduct() function. If list input is provided, the table
 #' input arguments must all be NA; similarly, if list input is missing, table inputs must be
 #' provided for 'inputCore' and 'inputMass' arguments at a minimum. [list]
@@ -36,20 +36,20 @@
 #' 'inputDilution' is NA, the 'bbc_dilution' table will be extracted from the list input. [logical]
 #' 
 #' @param inputCore The 'bbc_percore' table for the site x month combination(s) of interest
-#' (defaults to NA). If table input is provided, the 'inputRootList' argument must be missing.
+#' (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing.
 #' [data.frame]
 #'
 #' @param inputMass The 'bbc_rootmass' table for the site x month combination(s) of interest
-#' (defaults to NA). If table input is provided, the 'inputRootList' argument must be missing.
+#' (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing.
 #' [data.frame]
 #' 
 #' @param inputDilution The 'bbc_dilution' table for the site x month combination(s) of interest
-#' (optional, defaults to NA). If table input is provided, the 'inputRootList' argument must be 
+#' (optional, defaults to NA). If table input is provided, the 'inputDataList' argument must be 
 #' missing. [data.frame]
 #' 
 #' @param includeFragInTotal Indicator for whether mass of root fragments < 1 cm length 
 #' calculated from dilution sampling should be included when summing across sizeCategory to 
-#' calculate the 'totalDryMass'. Defaults to FALSE. If set to TRUE and 'inputRootList' is missing, 
+#' calculate the 'totalDryMass'. Defaults to FALSE. If set to TRUE and 'inputDataList' is missing, 
 #' the 'bbc_dilution' table must be provided to the 'inputDilution' argument. [logical]
 #' 
 #' @return Three tables are produced containing root mass data at varying spatial scales. The first 
@@ -87,7 +87,7 @@
 #' 
 #' #   Calculate root mass per unit area and per unit volume
 #' df <- neonPlants::scaleRootMass(
-#' inputRootList = bbc,
+#' inputDataList = bbc,
 #' includeDilution = TRUE,
 #' inputCore = NA,
 #' inputMass = NA,
@@ -100,7 +100,7 @@
 #' @export scaleRootMass
 
 
-scaleRootMass <- function(inputRootList,
+scaleRootMass <- function(inputDataList,
                           includeDilution = TRUE,
                           inputCore = NA,
                           inputMass = NA,
@@ -122,13 +122,13 @@ scaleRootMass <- function(inputRootList,
   
   
   
-  ### Verify user-supplied 'inputRootList' object contains correct data if not missing
-  if (!missing(inputRootList)) {
+  ### Verify user-supplied 'inputDataList' object contains correct data if not missing
+  if (!missing(inputDataList)) {
     
     #   Check that input is a list
-    if (!inherits(inputRootList, "list")) {
-      stop(glue::glue("Argument 'inputRootList' must be a list object from neonUtilities::loadByProduct();
-                     supplied input object is {class(inputRootList)}"))
+    if (!inherits(inputDataList, "list")) {
+      stop(glue::glue("Argument 'inputDataList' must be a list object from neonUtilities::loadByProduct();
+                     supplied input object is {class(inputDataList)}"))
     }
     
     #   Check that required tables within list match expected names
@@ -138,18 +138,18 @@ scaleRootMass <- function(inputRootList,
     if (isTRUE(includeDilution)) {
       
       #   All expected tables required when includeDilution == TRUE
-      if (length(setdiff(listExpNames, names(inputRootList))) > 0) {
-        stop(glue::glue("Required tables missing from 'inputRootList':",
-                        '{paste(setdiff(listExpNames, names(inputRootList)), collapse = ", ")}',
+      if (length(setdiff(listExpNames, names(inputDataList))) > 0) {
+        stop(glue::glue("Required tables missing from 'inputDataList':",
+                        '{paste(setdiff(listExpNames, names(inputDataList)), collapse = ", ")}',
                         .sep = " "))
       }
       
     } else if (isFALSE(includeDilution)) {
       
       #   Table 'bbc_dilution' not required when includeDilution == FALSE
-      if (length(setdiff(listExpNames[1:2], names(inputRootList))) > 0) {
-        stop(glue::glue("Required tables missing from 'inputRootList':",
-                        '{paste(setdiff(listExpNames, names(inputRootList)), collapse = ", ")}',
+      if (length(setdiff(listExpNames[1:2], names(inputDataList))) > 0) {
+        stop(glue::glue("Required tables missing from 'inputDataList':",
+                        '{paste(setdiff(listExpNames, names(inputDataList)), collapse = ", ")}',
                         .sep = " "))
       }
       
@@ -157,32 +157,32 @@ scaleRootMass <- function(inputRootList,
     
   } else {
     
-    inputRootList <- NULL
+    inputDataList <- NULL
     
   } # end missing conditional
   
   
   
-  ### Verify table inputs are NA if 'inputRootList' is supplied
-  if (inherits(inputRootList, "list") & (!is.logical(inputCore) | !is.logical(inputMass) | !is.logical(inputDilution))) {
-    stop("When 'inputRootList' is supplied all table input arguments must be NA")
+  ### Verify table inputs are NA if 'inputDataList' is supplied
+  if (inherits(inputDataList, "list") & (!is.logical(inputCore) | !is.logical(inputMass) | !is.logical(inputDilution))) {
+    stop("When 'inputDataList' is supplied all table input arguments must be NA")
   }
   
   
   
-  ### Verify 'inputCore' and 'inputMass' are data frames if 'inputRootList' is missing
-  if (is.null(inputRootList) & 
+  ### Verify 'inputCore' and 'inputMass' are data frames if 'inputDataList' is missing
+  if (is.null(inputDataList) & 
       (!inherits(inputCore, "data.frame") | !inherits(inputMass, "data.frame"))) {
     
-    stop("Data frames must be supplied for all table inputs if 'inputRootList' is not provided")
+    stop("Data frames must be supplied for all table inputs if 'inputDataList' is not provided")
   }
   
   
   
-  ### Verify 'inputDilution' is a data frame if 'inputRootList' is missing and 'includeDilution' is TRUE
-  if (is.null(inputRootList) & isTRUE(includeDilution) & !inherits(inputDilution, "data.frame")) {
+  ### Verify 'inputDilution' is a data frame if 'inputDataList' is missing and 'includeDilution' is TRUE
+  if (is.null(inputDataList) & isTRUE(includeDilution) & !inherits(inputDilution, "data.frame")) {
     
-    stop("A data frame must be supplied to 'inputDilution' when 'inputRootList' is not provided and includeDilution is TRUE")
+    stop("A data frame must be supplied to 'inputDilution' when 'inputDataList' is not provided and includeDilution is TRUE")
   }
   
   
@@ -196,18 +196,18 @@ scaleRootMass <- function(inputRootList,
   
   
   ### Conditionally define input tables ####
-  if (inherits(inputRootList, "list")) {
+  if (inherits(inputDataList, "list")) {
     
-    rootCore <- inputRootList$bbc_percore
-    rootMass <- inputRootList$bbc_rootmass
+    rootCore <- inputDataList$bbc_percore
+    rootMass <- inputDataList$bbc_rootmass
     
     if (isTRUE(includeDilution)) {
-      rootDilution <- inputRootList$bbc_dilution
+      rootDilution <- inputDataList$bbc_dilution
     } else {
       rootDilution <- inputDilution
     }
     
-  } else if (is.null(inputRootList)) {
+  } else if (is.null(inputDataList)) {
     
     rootCore <- inputCore
     rootMass <- inputMass
