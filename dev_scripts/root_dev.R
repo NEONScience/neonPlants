@@ -1,7 +1,7 @@
 ### Scratchpad for neonPlants root function development ####
 
 #   Retrieve bbc data from NEON Portal
-library(dplyr)
+library(tidyverse)
 library(neonUtilities)
 
 

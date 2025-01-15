@@ -13,7 +13,7 @@ testChem <- testList$bbc_rootChemistry
 #   Test list input
 testthat::test_that(desc = "Output type list input", {
 
-  testthat::expect_type(object = joinRootChem(inputRootList = testList),
+  testthat::expect_type(object = joinRootChem(inputDataList = testList),
                         type = "list")
 
 })
@@ -33,7 +33,7 @@ testthat::test_that(desc = "Output type table input", {
 #   Test list input
 testthat::test_that(desc = "Output class list input", {
 
-  testthat::expect_s3_class(object = joinRootChem(inputRootList = testList),
+  testthat::expect_s3_class(object = joinRootChem(inputDataList = testList),
                             class = "data.frame")
 })
 
@@ -53,7 +53,7 @@ testthat::test_that(desc = "Output class table input", {
 #   Check expected row number of output
 testthat::test_that(desc = "Output data frame row number list input", {
 
-  testthat::expect_identical(object = nrow(joinRootChem(inputRootList = testList)),
+  testthat::expect_identical(object = nrow(joinRootChem(inputDataList = testList)),
                              expected = as.integer(477))
 })
 
@@ -61,7 +61,7 @@ testthat::test_that(desc = "Output data frame row number list input", {
 #   Check expected column number of output
 testthat::test_that(desc = "Output data frame column number list input", {
 
-  testthat::expect_identical(object = ncol(joinRootChem(inputRootList = testList)),
+  testthat::expect_identical(object = ncol(joinRootChem(inputDataList = testList)),
                              expected = as.integer(35))
 })
 
@@ -87,27 +87,27 @@ testthat::test_that(desc = "Output data frame row number table input", {
 
 
 
-### Tests: Generate expected errors for 'inputRootList' ####
-#   Test 'inputRootList' is a list
-testthat::test_that(desc = "Argument 'inputRootList' is list object", {
+### Tests: Generate expected errors for 'inputDataList' ####
+#   Test 'inputDataList' is a list
+testthat::test_that(desc = "Argument 'inputDataList' is list object", {
   
-  testthat::expect_error(object = joinRootChem(inputRootList = testMass),
-                         regexp = "Argument 'inputRootList' must be a list object")
+  testthat::expect_error(object = joinRootChem(inputDataList = testMass),
+                         regexp = "Argument 'inputDataList' must be a list object")
 })
 
-#   Test 'inputRootList' contains required tables
-testthat::test_that(desc = "Required tables present in 'inputRootList' input", {
+#   Test 'inputDataList' contains required tables
+testthat::test_that(desc = "Required tables present in 'inputDataList' input", {
   
-  testthat::expect_error(object = joinRootChem(inputRootList = testList[1:3]),
-                         regexp = "Required tables missing from 'inputRootList'")
+  testthat::expect_error(object = joinRootChem(inputDataList = testList[1:3]),
+                         regexp = "Required tables missing from 'inputDataList'")
 })
 
-#   Test table inputs are NA if 'inputRootList' supplied
+#   Test table inputs are NA if 'inputDataList' supplied
 testthat::test_that(desc = "Table inputs NA when required", {
   
-  testthat::expect_error(object = joinRootChem(inputRootList = testList,
+  testthat::expect_error(object = joinRootChem(inputDataList = testList,
                                                inputMass = testMass),
-                         regexp = "When 'inputRootList' is supplied all table input arguments must be NA")
+                         regexp = "When 'inputDataList' is supplied all table input arguments must be NA")
 })
 
 
@@ -118,12 +118,12 @@ testthat::test_that(desc = "Table inputs are data frames when required", {
   testthat::expect_error(object = joinRootChem(inputMass = testList,
                                                inputPool = testPool,
                                                inputChem = testChem),
-                         regexp = "Data frames must be supplied for all table inputs if 'inputRootList' is missing")
+                         regexp = "Data frames must be supplied for all table inputs if 'inputDataList' is missing")
 })
 
 
 
-### Test: Generate expected errors for issues with rootMass table (works for inputRootList or inputMass source)
+### Test: Generate expected errors for issues with rootMass table (works for inputDataList or inputMass source)
 # Test when inputMass lacks required column
 testthat::test_that(desc = "Table 'inputMass' missing column", {
 
@@ -146,7 +146,7 @@ testthat::test_that(desc = "Table 'inputMass' missing data", {
 
 
 
-### Test: Generate expected errors for issues with inputPool table (works for inputRootList or inputPool source)
+### Test: Generate expected errors for issues with inputPool table (works for inputDataList or inputPool source)
 #   Test when inputPool lacks required column
 testthat::test_that(desc = "Table 'inputPool' missing column", {
   

@@ -2,18 +2,18 @@
 % Please edit documentation in R/standardizeRootMass.R
 \name{standardizeRootMass}
 \alias{standardizeRootMass}
-\title{Standardize Root Dry Mass Data to Current Size and Root Status Categories}
+\title{Standardize root dry mass data to current size and root status categories}
 \usage{
-standardizeRootMass(inputRootList, inputMass = NA)
+standardizeRootMass(inputDataList, inputMass = NA)
 }
 \arguments{
-\item{inputRootList}{A list object comprised of Plant Below Ground Biomass tables (DP1.10067.001)
+\item{inputDataList}{A list object comprised of Plant Below Ground Biomass tables (DP1.10067.001)
 downloaded using the neonUtilities::loadByProduct function (defaults to required). If list input is
 provided, the table input argument must be NA; similarly, if list input is missing, the 'inputMass'
 table input must be provided. \link{list}}
 
 \item{inputMass}{The 'bbc_rootmass' table for the site x month combination(s) of interest
-(defaults to NA). If table input is provided, the 'inputRootList' argument must be missing.
+(defaults to NA). If table input is provided, the 'inputDataList' argument must be missing.
 \link{data.frame}}
 }
 \value{
@@ -58,7 +58,7 @@ check.size = FALSE
 
 #   Standardize downloaded root data to current sizeCategories and rootStatus
 df <- neonPlants::standardizeRootMass(
-inputRootList = bbc,
+inputDataList = bbc,
 inputMass = NA
 )
 
