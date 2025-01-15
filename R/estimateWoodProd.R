@@ -1,69 +1,65 @@
 ##############################################################################################
-#' @title Estimate NEON plot and site-level ANPP (Aboveground Primary Productivity) contributed by woody and herbaceous vegetation
+#' @title Estimate NEON plot and site-level ANPP (Aboveground Net Primary Productivity) contributed by woody vegetation
 
 #' @author
 #' Samuel M Simkin \email{ssimkin@battelleecology.org} \cr
 
-#' @description Using inputs from companion estimateAGBiomass function calculate VST woody yearly increment 
-#' and mortality, and thereby annual productivity. Optionally, also calculate HBP productivity and add 
-#' to VST for a VST + HBP summary.
+#' @description Using inputs from companion estimateWoodMass function calculate annual woody productivity.
+#' The data input is a list of biomass dataframes created by the companion estimateWoodMass function (e.g. estimateWoodMassOutputs).
 #' 
-
-#' @param input  Specify a loaded R list object (e.g. estimateBiomassOutputs) that was produced by companion estimateBiomass.R function. [character]
+#' @details A list of woody biomass dataframes created by the companion estimateWoodMass function is read in and aboveground net primary 
+#' productivity (ANPP) is calculated for woody vegetation from NEON "Vegetation structure" (DP1.10098.001) data. Both a whole plot level 
+#' approach and an individual-level approach calculation method are used, and output from the desired calculation method is returned. The 
+#' individual-level approach is currently an underestimate since it includes the growth increment component but not the recruitment component. 
+#' The recruitment component is currently very sensitive to stems that were overlooked in previous time periods, but when from true ingrowth 
+#' can be isolated the recruitment component will be added. Plots can be filtered to more frequently sampled plots using plotType and 
+#' plotPriority arguments, and outlier observations can be removed.
+#' 
+#' @param input Specify a loaded R list object (e.g. estimateWoodMassOutputs) that was produced by companion estimateWoodMass function. [character]
 #' @param plotType Optional filter based on NEON plot type. Defaults to "tower" plots, which are sampled annually. Otherwise "distributed" plots are examined also, if included in the input .rds. [character]
 #' @param plotPriority NEON plots have a priority number in the event that not all plots are able to be sampled. The lower the number the higher the priority. The default is 5. [numeric]
 #' @param calcMethod Select plot-level (approach 2) or individual-level (approach 1) productivity calculations. The default is "approach_1" [character]
 #' @param outlier Specify how much (if any) outlier removal should be performed. The default is 1.5. [numeric]
 #' @param outlierType Specify the type of outlier, either SD (standard deviations) or IQR (interquartile range). The default is "IQR". [character]
-#' @param dataProducts Select whether to analyse only woody biomass "Vst" or woody plus herbaceous "VstHbp" [character]
-#' 
-#' @details Biomass data input files (in loaded R list object) created by the companion estimateBiomass.R function are read in and aboveground net primary 
-#' productivity (ANPP) is calculated for woody vegetation (from NEON "Vegetation structure" data product (dpID "DP1.10098.001")). Herbaceous vegetation ANPP 
-#' (from NEON "Herbaceous clip harvest (dpID "DP1.10023.001")) is also included if herbaceous data is present in the input file). Both a whole plot 
-#' level approach and an individual-level approach calculation method are used, and output from the desired calculation method is returned. The individual-level 
-#' approach is currently an underestimate since it includes the growth increment component but not the recruitment component. The recruitment component is 
-#' currently very sensitive to stems that were overlooked in previous time periods, but when from true ingrowth can be isolated the recruitment component will be
-#' added. Plots can be filtered to more frequently sampled plots using plotType and plotPriority arguments, and outlier observations can be removed.
 #' 
 #' @return This function returns a list that includes productivity summary data frames.
-#' 'vst_ANPP_plot_w_taxa' summarises woody ANPP for each year x plot x taxonID combination
-#' 'vst_ANPP_plot's woody ANPP for each year x plot combination (taxonIDs are aggregated)
-#' 'vst_ANPP_site' summarizes woody ANPP for each site (default is to calculate multi-year mean of each plot and then the mean of all plots at site)
-#' 'ANPP_site' adds woody and herbaceous ANPP together (if herbaceous data were in the data input)
-#' 'increment_all' contains the increments for each woody individual (approach 1 only)
-#' 'increment_outlier' contains the woody individual increments that were removed during outlier removal (approach 1 only)
-#'  If calcMethod "approach_2" is selected then only the first four dataframes are returned, and they include an "_2" suffix.
-
+#' 'vst_ANPP_plot_w_taxa' summarises woody ANPP for each plot by year by taxonID combination (units are Megagrams per hectare per year).
+#' 'vst_ANPP_plot' summarises woody ANPP for each plot by year combination (units are Megagrams per hectare per year).
+#' 'vst_ANPP_site' summarizes woody ANPP for each site by year combination (units are Megagrams per hectare per year).
+#' 'increment_all' contains the increments for each woody individual (approach 1 only).
+#' 'increment_outlier' contains the woody individual increments that were removed during outlier removal (approach 1 only).
+#' 
+#'  If calcMethod "approach_2" is selected then only the first three dataframes are returned, and they include an "_2" suffix.
+#' 
 #' @examples
 #' \dontrun{
+#' # If list is not in memory, load woody biomass list of dataframes from local file:
+#' load('estimateWoodMassOutputs.rds') # load list of dataframes created by estimateWoodMass function
+
 #' # example with arguments at default values
-#' estimateProductivityOutputs <- estimateProductivity(input = estimateBiomassOutputs)
+#' estimateWoodProdOutputs <- estimateWoodProd(input = estimateWoodMassOutputs)
 #'                       
 #' # example specifying many non-default arguments
-#' estimateProductivityOutputs <- estimateProductivity(input = estimateBiomassOutputs, 
+#' estimateWoodProdOutputs <- estimateWoodProd(input = estimateWoodMassOutputs, 
 #'                plotType = "all", plotPriority = 50, 
-#'                calcMethod = "approach_2", outlier = 2, outlierType = "SD", 
-#'                dataProducts = "Vst")
+#'                calcMethod = "approach_2", outlier = 2, outlierType = "SD")
 #' 
-#' list2env(estimateProductivityOutputs ,.GlobalEnv) # unlist all data frames for easier viewing
-#' saveRDS(estimateProductivityOutputs, 'estimateProductivityOutputs.rds') # save output locally
+#' list2env(estimateWoodProdOutputs ,.GlobalEnv) # unlist all data frames for easier viewing
+#' saveRDS(estimateWoodProdOutputs, 'estimateWoodProdOutputs.rds') # save output locally
 #' }
 
 # changelog and author contributions / copyrights
 #   Samuel M Simkin (2021-03-30)  original creation
-#   Samuel M Simkin (2022-07-12)  revised
-#   Samuel M Simkin (2023-08-04)  revised
-#   Samuel M Simkin (2024-09-30)  revised
+#   Samuel M Simkin (2025-01-15)  revised
 #################################################################################  
 
-estimateProductivity = function(
+estimateWoodProd = function(
                          input,
                          plotType = "tower",
                          plotPriority = 5,
                          calcMethod = "approach_1",
                          outlier = 1.5,
-                         outlierType = "IQR",
-                         dataProducts = "VstHbp"
+                         outlierType = "IQR"
                          ) {
   
 options(dplyr.summarise.inform = FALSE)
@@ -76,27 +72,14 @@ list2env(input ,.GlobalEnv)
 vst_agb_zeros <- input$vst_agb_zeros
 vst_plot_w_0s <- input$vst_plot_w_0s
 vst_site <- input$vst_site
-hbp_agb_per_ha <- input$hbp_agb_per_ha
-hbp_plot <- input$hbp_plot
-VstHbp_site <- input$VstHbp_site
-
 
 #   Check that required tables within list match expected names
 listExpNames <- c("vst_agb_per_ha", "vst_plot_w_0s", "vst_agb_zeros", "vst_site")
-if (length(setdiff(listExpNames, names(input))) > 0 & dataProducts == "Vst") {
+if (length(setdiff(listExpNames, names(input))) > 0) {
       stop(glue::glue("Required tables missing from input list:",
                       '{paste(setdiff(listExpNames, names(input)), collapse = ", ")}',
                       .sep = " "))
 } 
-
-
-listExpNames_VstHbp <- c("vst_agb_per_ha", "vst_plot_w_0s", "vst_agb_zeros", "vst_site", "hbp_agb_per_ha", "hbp_plot", "VstHbp_site")
-if (length(setdiff(listExpNames_VstHbp, names(input))) > 0 & dataProducts == "VstHbp") {
-      stop(glue::glue("Required tables missing from input list:",
-                      '{paste(setdiff(listExpNames, names(input)), collapse = ", ")}',
-                      .sep = " "))
-} 
-
 
 # Error if invalid plotType option selected
   if(plotType != "tower" & plotType != "all"){
@@ -118,21 +101,11 @@ if (length(setdiff(listExpNames_VstHbp, names(input))) > 0 & dataProducts == "Vs
     stop("The only valid calcMethod options are 'SD' or 'IQR'.")
   }
 
-# Error if invalid dataProducts option selected
-  if(dataProducts != "VstHbp" & dataProducts != "Vst"){
-    stop("Currently the only valid dataProducts options are 'VstHbp' or 'Vst'.")
-  }
-
-if(dataProducts == "VstHbp" & !exists("hbp_agb_per_ha")){
-  print("The dataProducts argument was 'VstHbp' but the input data does not include Hbp data so the dataProducts argument has automatically been changed to 'Vst'.")
-  dataProducts = "Vst"
-  }
-
 ### Verify input tables contain required columns and data ####
 
 ### Verify user-supplied vst_agb_per_ha table contains required data
 #   Check for required columns
-  vst_agb_per_ha_ExpCols <- c("siteID", "plotID", "eventID","year","plot_eventID","nlcdClass","taxonID","individualID","plantStatus2","agb_Mg_per_ha")
+  vst_agb_per_ha_ExpCols <- c("siteID", "plotID", "eventID","year","plot_eventID","nlcdClass","taxonID","individualID","plantStatus2","agb_Mgha")
   
   if (length(setdiff(vst_agb_per_ha_ExpCols, colnames(vst_agb_per_ha))) > 0) {
     stop(glue::glue("Required columns missing from 'vst_agb_per_ha':", '{paste(setdiff(vst_agb_per_ha_ExpCols, colnames(vst_agb_per_ha)), collapse = ", ")}',
@@ -146,7 +119,7 @@ if(dataProducts == "VstHbp" & !exists("hbp_agb_per_ha")){
   
 ### Verify user-supplied vst_agb_zeros table contains required data
 #   Check for required columns
-  vst_agb_zeros_ExpCols <- c("siteID", "plotID", "eventID","year","plot_eventID","plotType")
+  vst_agb_zeros_ExpCols <- c("siteID", "plotID", "eventID", "year", "plot_eventID", "plotType")
   
   if (length(setdiff(vst_agb_zeros_ExpCols, colnames(vst_agb_zeros))) > 0) {
     stop(glue::glue("Required columns missing from 'vst_agb_zeros':", '{paste(setdiff(vst_agb_zeros_ExpCols, colnames(vst_agb_zeros)), collapse = ", ")}',
@@ -160,7 +133,7 @@ if(dataProducts == "VstHbp" & !exists("hbp_agb_per_ha")){
   
 ### Verify user-supplied vst_plot_w_0s table contains required data
 #   Check for required columns
-  vst_plot_w_0s_ExpCols <- c("domainID", "siteID", "plotID", "eventID","year","plot_eventID","nlcdClass","taxonID","agb_Mg_per_ha__Live","agb_Mg_per_ha__Dead_or_Lost",
+  vst_plot_w_0s_ExpCols <- c("domainID", "siteID", "plotID", "eventID", "year", "plot_eventID", "nlcdClass", "taxonID", "agb_Mgha__Live", "agb_Mgha__Dead_or_Lost",
                    "specificModuleSamplingPriority","plotType")
   
   if (length(setdiff(vst_plot_w_0s_ExpCols, colnames(vst_plot_w_0s))) > 0) {
@@ -175,8 +148,7 @@ if(dataProducts == "VstHbp" & !exists("hbp_agb_per_ha")){
   
 ### Verify user-supplied vst_site contains required data
 #   Check for required columns
-  vst_site_ExpCols <- c("siteID","year","vst_live_Mg_per_ha_plot_n","vst_live_Mg_per_ha_ave",
-                   "vst_live_Mg_per_ha_min","vst_live_Mg_per_ha_max","vst_live_Mg_per_ha_sd")
+  vst_site_ExpCols <- c("siteID","year","woodPlotNum","woodLiveMassMean_Mgha","woodLiveMassSD_Mgha")
   
   if (length(setdiff(vst_site_ExpCols, colnames(vst_site))) > 0) {
     stop(glue::glue("Required columns missing from 'vst_site':", '{paste(setdiff(vst_site_ExpCols, colnames(vst_site)), collapse = ", ")}',
@@ -188,48 +160,6 @@ if(dataProducts == "VstHbp" & !exists("hbp_agb_per_ha")){
     stop(glue::glue("Table 'vst_site' has no data."))
 }
 
-### Verify user-supplied hbp_agb_per_ha contains required data
-#   Check for required columns
-  hbp_agb_per_ha_ExpCols <- c("domainID","siteID", "plotID","clipID","eventID","year","nlcdClass","plotType","plotSize","data_prod","bout",
-                  "sampleID","clipArea","exclosure","peak","dryMass","standing_biomass","herb_Mg_per_ha")
-  if (length(setdiff(hbp_agb_per_ha_ExpCols, colnames(hbp_agb_per_ha))) > 0) {
-    stop(glue::glue("Required columns missing from 'hbp_agb_per_ha':", '{paste(setdiff(hbp_agb_per_ha_ExpCols, colnames(hbp_agb_per_ha)), collapse = ", ")}',
-                    .sep = " "))
-  }
-  
-#   Check for data
-  if (nrow(hbp_agb_per_ha) == 0) {
-    stop(glue::glue("Table 'hbp_agb_per_ha' has no data."))
-  }
-  
-### Verify user-supplied hbp_plot contains required data
-#   Check for required columns
-  hbp_plot_ExpCols <- c("siteID","plotID","year","nlcdClass","herb_peak_Mg_per_ha")
-  
-  if (length(setdiff(hbp_plot_ExpCols, colnames(hbp_plot))) > 0) {
-    stop(glue::glue("Required columns missing from 'hbp_plot':", '{paste(setdiff(hbp_plot_ExpCols, colnames(hbp_plot)), collapse = ", ")}',
-                    .sep = " "))
-  }
-  
-#   Check for data
-  if (nrow(hbp_plot) == 0) {
-    stop(glue::glue("Table 'hbp_plot' has no data."))
-  }
-
-### Verify user-supplied VstHbp_site contains required data
-#   Check for required columns
-  VstHbp_site_ExpCols <- c("siteID","year","vst_live_Mg_per_ha_plot_n","vst_live_Mg_per_ha_ave",
-                   "vst_live_Mg_per_ha_min","vst_live_Mg_per_ha_max","vst_live_Mg_per_ha_sd")
-  
-  if (length(setdiff(VstHbp_site_ExpCols, colnames(VstHbp_site))) > 0) {
-    stop(glue::glue("Required columns missing from 'VstHbp_site':", '{paste(setdiff(VstHbp_site_ExpCols, colnames(VstHbp_site)), collapse = ", ")}',
-                    .sep = " "))
-  }
-  
-#   Check for data
-  if (nrow(VstHbp_site) == 0) {
-    stop(glue::glue("Table 'VstHbp_site' has no data."))
-}
 
 start <- min(vst_plot_w_0s$year)
 end  <- max(vst_plot_w_0s$year)
@@ -248,23 +178,23 @@ plotType_df <- unique(vst_plot_w_0s %>% dplyr::select("plotID", "plotType"))
 print("Calculating woody increment component of productivity at the plot-level (approach 2) ..... ")
 
  vst_agb_Live <- vst_plot_w_0s 
-  vst_agb_Live$Mg_per_ha_live <- vst_agb_Live$agb_Mg_per_ha__Live
-  vst_agb_Live$agb_Mg_per_ha__Live <- vst_agb_Live$agb_Mg_per_ha__Dead_or_Lost <- NULL
+  vst_agb_Live$Mgha_live <- vst_agb_Live$agb_Mgha__Live
+  vst_agb_Live$agb_Mgha__Live <- vst_agb_Live$agb_Mgha__Dead_or_Lost <- NULL
   vst_agb_Live <- vst_agb_Live[order(vst_agb_Live$year),]
 
 yearList <- unique(sort(vst_agb_Live$year))# sort list of years
-vst_increment <- tidyr::pivot_wider(vst_agb_Live, id_cols = c("siteID", "plotID", "plotType", "nlcdClass", "taxonID"), names_from = "year", names_prefix = "Mg_per_ha_", values_from = "Mg_per_ha_live") # convert from long to wide format (both years in same row)
+vst_increment <- tidyr::pivot_wider(vst_agb_Live, id_cols = c("siteID", "plotID", "plotType", "nlcdClass", "taxonID"), names_from = "year", names_prefix = "Mgha_", values_from = "Mgha_live") # convert from long to wide format (both years in same row)
 
 # plot-level increment (before incorporating mortality) calculated here
 for(i in 2:length(yearList)){
-  column_name_prev <- paste0("Mg_per_ha_", yearList[i-1])
-  column_name <- paste0("Mg_per_ha_", yearList[i])
-  increment_column_name <- paste0("Mg_per_ha_increment_",yearList[i])
+  column_name_prev <- paste0("Mgha_", yearList[i-1])
+  column_name <- paste0("Mgha_", yearList[i])
+  increment_column_name <- paste0("Mgha_increment_",yearList[i])
   vst_increment <- vst_increment %>% dplyr::mutate(!!increment_column_name := (!!sym(column_name)) - !!sym(column_name_prev) ) 
 }
 
-vst_increment_long <- vst_increment %>% dplyr::select(-dplyr::contains("Mg_per_ha_2"))  %>% 
-  tidyr::pivot_longer( cols = !c("plotID","siteID","taxonID","nlcdClass","plotType"), names_to = "year",  names_prefix = "Mg_per_ha_increment_", values_to = "Mg_per_ha_increment" )
+vst_increment_long <- vst_increment %>% dplyr::select(-dplyr::contains("Mgha_2"))  %>% 
+  tidyr::pivot_longer( cols = !c("plotID","siteID","taxonID","nlcdClass","plotType"), names_to = "year",  names_prefix = "Mgha_increment_", values_to = "Mgha_increment" )
 
 ### PLOT-LEVEL MORTALITY
 print("Calculating woody mortality component of productivity at the plot-level (approach 2) ..... ")
@@ -295,39 +225,39 @@ for(i in 2:length(yearList)){
 }
 
 mortality <- merge(vst_agb_per_ha, transitions, by=c("plotID", "siteID", "individualID", "taxonID"), all.x=TRUE)
-mortality$mortality_Mg_per_ha <- NA
+mortality$mortality_Mgha <- NA
 
 # if transitionType for a given year is "mortality" then assign a mortality value based on the biomass at the PREVIOUS year
 for(i in 2:length(yearList)){
   year_previous <- yearList[i-1]
   column_name <- paste0("transitionType_", yearList[i])
-  mortality <- mortality %>% dplyr::mutate(mortality_Mg_per_ha = dplyr::case_when(
-  (!!sym(column_name)) == 'mortality' & yearList[i] == year_previous ~ .data$agb_Mg_per_ha, TRUE ~ .data$mortality_Mg_per_ha
+  mortality <- mortality %>% dplyr::mutate(mortality_Mgha = dplyr::case_when(
+  (!!sym(column_name)) == 'mortality' & yearList[i] == year_previous ~ .data$agb_Mgha, TRUE ~ .data$mortality_Mgha
     ))
 }
 
 mortality$year <- as.numeric(mortality$year + 1)
 
-plot_mortality <- mortality %>% dplyr::group_by(.data$siteID, .data$plotID, .data$taxonID, .data$year) %>% dplyr::summarise(Mg_per_ha_mortality = sum(.data$mortality_Mg_per_ha, na.rm = TRUE)) 
-#plot_mortality <- plot_mortality %>% dplyr::filter(.data$mortality_Mg_per_ha != 0)
+plot_mortality <- mortality %>% dplyr::group_by(.data$siteID, .data$plotID, .data$taxonID, .data$year) %>% dplyr::summarise(Mgha_mortality = sum(.data$mortality_Mgha, na.rm = TRUE)) 
+#plot_mortality <- plot_mortality %>% dplyr::filter(.data$mortality_Mgha != 0)
 } else {
-  plot_mortality <- data.frame(siteID = character(), plotID = character(), taxonID = character(), year = character(), Mg_per_ha_mortality = numeric()) # create placeholder if vst_agb_per_ha is empty
+  plot_mortality <- data.frame(siteID = character(), plotID = character(), taxonID = character(), year = character(), Mgha_mortality = numeric()) # create placeholder if vst_agb_per_ha is empty
 }
 
 vst_ANPP_plot_w_taxa_2 <- merge (vst_increment_long, plot_mortality, by=c("siteID","plotID","taxonID","year"), all.x=TRUE )
  vst_ANPP_plot_w_taxa_2$year <- as.numeric(vst_ANPP_plot_w_taxa_2$year)
- vst_ANPP_plot_w_taxa_2 <- vst_ANPP_plot_w_taxa_2 %>% dplyr::filter(!is.na(.data$Mg_per_ha_increment) ) # remove records with NA increment; this line is VERY important - without it ~75% of lines have NAs for both increment and mortality, which then turn into false zeros during group_by
- vst_ANPP_plot_w_taxa_2$Mg_per_ha_mortality <- dplyr::if_else(is.na(vst_ANPP_plot_w_taxa_2$Mg_per_ha_mortality) & !is.na(vst_ANPP_plot_w_taxa_2$Mg_per_ha_increment), 0, vst_ANPP_plot_w_taxa_2$Mg_per_ha_mortality, vst_ANPP_plot_w_taxa_2$Mg_per_ha_mortality)
+ vst_ANPP_plot_w_taxa_2 <- vst_ANPP_plot_w_taxa_2 %>% dplyr::filter(!is.na(.data$Mgha_increment) ) # remove records with NA increment; this line is VERY important - without it ~75% of lines have NAs for both increment and mortality, which then turn into false zeros during group_by
+ vst_ANPP_plot_w_taxa_2$Mgha_mortality <- dplyr::if_else(is.na(vst_ANPP_plot_w_taxa_2$Mgha_mortality) & !is.na(vst_ANPP_plot_w_taxa_2$Mgha_increment), 0, vst_ANPP_plot_w_taxa_2$Mgha_mortality, vst_ANPP_plot_w_taxa_2$Mgha_mortality)
  vst_ANPP_plot_w_taxa_2 <- vst_ANPP_plot_w_taxa_2 %>% dplyr::group_by(.data$siteID, .data$plotID, .data$plotType, .data$nlcdClass, .data$taxonID, .data$year) %>%  dplyr::summarise(dplyr::across(dplyr::where(is.numeric), ~ sum(.x, na.rm = TRUE)))
-vst_ANPP_plot_w_taxa_2$wood_ANPP__Mg_ha_yr <- vst_ANPP_plot_w_taxa_2$Mg_per_ha_increment + vst_ANPP_plot_w_taxa_2$Mg_per_ha_mortality
+vst_ANPP_plot_w_taxa_2$woodANPP_Mghayr <- vst_ANPP_plot_w_taxa_2$Mgha_increment + vst_ANPP_plot_w_taxa_2$Mgha_mortality
 
-vst_ANPP_plot_2 <- vst_ANPP_plot_w_taxa_2 %>% dplyr::group_by(.data$siteID, .data$plotID, .data$plotType, .data$nlcdClass, .data$year) %>% dplyr::summarise(wood_ANPP__Mg_ha_yr = round(sum(.data$wood_ANPP__Mg_ha_yr, na.rm = TRUE),3)) %>% dplyr::ungroup()
-vst_ANPP_plot_2 <- vst_ANPP_plot_2 %>% dplyr::filter(!is.na(.data$wood_ANPP__Mg_ha_yr)) %>% dplyr::select("siteID","plotID","plotType","year","wood_ANPP__Mg_ha_yr") # remove records with missing productivity
+vst_ANPP_plot_2 <- vst_ANPP_plot_w_taxa_2 %>% dplyr::group_by(.data$siteID, .data$plotID, .data$plotType, .data$nlcdClass, .data$year) %>% dplyr::summarise(woodANPP_Mghayr = round(sum(.data$woodANPP_Mghayr, na.rm = TRUE),3)) %>% dplyr::ungroup()
+vst_ANPP_plot_2 <- vst_ANPP_plot_2 %>% dplyr::filter(!is.na(.data$woodANPP_Mghayr)) %>% dplyr::select("siteID","plotID","plotType","year","woodANPP_Mghayr") # remove records with missing productivity
 
 if(nrow(vst_agb_zeros) >0){
 vst_agb_zeros_plot <- vst_agb_zeros
     vst_agb_zeros_plot$eventID <- vst_agb_zeros_plot$plot_eventID <- NULL
-  vst_agb_zeros_plot$wood_ANPP__Mg_ha_yr <- 0 
+  vst_agb_zeros_plot$woodANPP_Mghayr <- 0 
 vst_ANPP_plot_2 <- rbind(vst_ANPP_plot_2, vst_agb_zeros_plot)}
 
 priority_plots_add <- vst_plot_w_0s %>% dplyr::select("plotID", "specificModuleSamplingPriority")
@@ -337,84 +267,11 @@ if(plotType == "tower") {vst_ANPP_plot_2 <- vst_ANPP_plot_2 %>% dplyr::filter(.d
 vst_ANPP_plot_2 <- vst_ANPP_plot_2 %>% dplyr::filter(.data$specificModuleSamplingPriority <= plotPriority) # remove lower priority plots that aren't required to be sampled every year (default is 5 (the 5 highest priority plots))
 
 vst_NPP_plot_yearFirst <- vst_ANPP_plot_2 %>% dplyr::group_by(.data$siteID, .data$plotID, .data$plotType) %>% dplyr::summarise(wood_N = dplyr::n(), 
-          wood_ANPP__Mg_ha_yr_min = round(min(.data$wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_max = round(max(.data$wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_sd = round(stats::sd(.data$wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), 
-          wood_ANPP__Mg_ha_yr_se = round((.data$wood_ANPP__Mg_ha_yr_sd / sqrt(.data$wood_N)), 3),  wood_ANPP__Mg_ha_yr = round(mean(.data$wood_ANPP__Mg_ha_yr, na.rm = TRUE),3) ) %>% dplyr::mutate(wood_count_type = "years")
-vst_ANPP_site_2 <- vst_NPP_plot_yearFirst %>% dplyr::group_by(.data$siteID) %>% dplyr::summarise(wood_N = dplyr::n(), 
-          wood_ANPP__Mg_ha_yr_min = round(min(.data$wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_max = round(max(.data$wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_sd = round(stats::sd(.data$wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), 
-          wood_ANPP__Mg_ha_yr_se = round((.data$wood_ANPP__Mg_ha_yr_sd / sqrt(.data$wood_N)), 3),  wood_ANPP__Mg_ha_yr = round(mean(.data$wood_ANPP__Mg_ha_yr, na.rm = TRUE),3) ) %>% dplyr::mutate(wood_count_type = "plots")
-
-if(grepl("Hbp", dataProducts) )    {
-
-print("Summarizing above-ground herbaceous productivity  ..... ")
-
-### productivity by site and year
-hbp_event_means <- hbp_agb_per_ha %>% 
-  dplyr::group_by(.data$domainID, .data$siteID, .data$plotID, .data$plotType, .data$eventID, .data$year, .data$bout, .data$nlcdClass, .data$exclosure, .data$peak) %>% # 
-  dplyr::summarise("mean_herb_Mg_per_ha" = mean(.data$herb_Mg_per_ha, na.rm = TRUE),
-            n_obs = length(stats::na.omit("herb_Mg_per_ha"))) # calc the mean biomass of the individual plots within eventID and identify of plots contributing to that mean
-
-if(nrow(hbp_event_means %>% dplyr::filter(.data$exclosure == "Y")) > 0 ) {
-df_ <- hbp_event_means %>% 
-  dplyr::select(-"n_obs") %>%
-  tidyr::spread("exclosure", "mean_herb_Mg_per_ha") %>% # convert from long format with exclosures and non-exclosures in rows, to wide format with exclosure (Y) and non-exclosure (N) columns
-  dplyr::mutate(`C` = .data$Y - .data$N)    # C is consumption, calculated as biomass in exclosure (Y) minus biomass outside of exclosure (N)
-
-herb_NPP <- df_ %>% dplyr::group_by(.data$domainID, .data$siteID, .data$plotID, .data$plotType, .data$nlcdClass, .data$year) %>%
-  dplyr::summarise(
-    total_C = sum(stats::na.omit(`C`)),
-    n_bouts_used_for_C = length(stats::na.omit(`C`)),
-    last_bout = dplyr::last(.data$bout),
-    "last_bout_mean_herb_Mg_per_ha" = dplyr::last(.data$N),
-    "herb_NPP__Mg_per_ha_per_yr" = .data$total_C + .data$last_bout_mean_herb_Mg_per_ha
-  ) %>% dplyr::ungroup()
-
-
- herb_NPP <- dplyr::rename(herb_NPP, "herb_NPP__Mg_ha_yr" = "herb_NPP__Mg_per_ha_per_yr") 
- herb_NPP$siteID <- substr(herb_NPP$plotID, 1, 4)
- herb_NPP <- herb_NPP %>% dplyr::filter(.data$plotType == "tower") # toggle on to remove distributed plots
- herb_NPP <- herb_NPP %>% dplyr::filter(!is.na(.data$herb_NPP__Mg_ha_yr) ) # remove records that are missing productivity 
- herb_NPP <- herb_NPP %>% dplyr::select("siteID","plotID","plotType","year","herb_NPP__Mg_ha_yr")
-herb_NPP_temporal_ave <- herb_NPP %>% dplyr::group_by(.data$plotID) %>% dplyr::summarise(herb_NPP__Mg_ha_yr_temporal_ave = round(mean(.data$herb_NPP__Mg_ha_yr, na.rm = TRUE),3))
-
-herb_yearFirst <- herb_NPP %>% dplyr::group_by(.data$siteID, .data$plotID, .data$plotType) %>% dplyr::summarise(herb_N = dplyr::n(), 
-          herb_NPP__Mg_ha_yr_min = round(min(.data$herb_NPP__Mg_ha_yr, na.rm = TRUE),3), herb_NPP__Mg_ha_yr_max = round(max(.data$herb_NPP__Mg_ha_yr, na.rm = TRUE),3), herb_NPP__Mg_ha_yr_sd = round(stats::sd(.data$herb_NPP__Mg_ha_yr, na.rm = TRUE),3), 
-          herb_NPP__Mg_ha_yr_se = round((.data$herb_NPP__Mg_ha_yr_sd / sqrt(.data$herb_N)), 3),  herb_NPP__Mg_ha_yr = round(mean(.data$herb_NPP__Mg_ha_yr, na.rm = TRUE),3) ) %>% dplyr::mutate(herb_count_type ="years")
-herb_yearThenSite <- herb_yearFirst %>% dplyr::group_by(.data$siteID) %>% dplyr::summarise(herb_N = dplyr::n(), 
-          herb_NPP__Mg_ha_yr_min = round(min(.data$herb_NPP__Mg_ha_yr, na.rm = TRUE),3), herb_NPP__Mg_ha_yr_max = round(max(.data$herb_NPP__Mg_ha_yr, na.rm = TRUE),3), herb_NPP__Mg_ha_yr_sd = round(stats::sd(.data$herb_NPP__Mg_ha_yr, na.rm = TRUE),3), 
-          herb_NPP__Mg_ha_yr_se = round((.data$herb_NPP__Mg_ha_yr_sd / sqrt(.data$herb_N)), 3),  herb_NPP__Mg_ha_yr = round(mean(.data$herb_NPP__Mg_ha_yr, na.rm = TRUE),3) ) %>% dplyr::mutate(herb_count_type ="plots")
-
-herb_siteFirst <- herb_NPP %>% dplyr::group_by(.data$siteID, .data$year) %>% dplyr::summarise(herb_N = dplyr::n(), 
-          herb_NPP__Mg_ha_yr_min = round(min(.data$herb_NPP__Mg_ha_yr, na.rm = TRUE),3), herb_NPP__Mg_ha_yr_max = round(max(.data$herb_NPP__Mg_ha_yr, na.rm = TRUE),3), herb_NPP__Mg_ha_yr_sd = round(stats::sd(.data$herb_NPP__Mg_ha_yr, na.rm = TRUE),3), 
-          herb_NPP__Mg_ha_yr_se = round((.data$herb_NPP__Mg_ha_yr_sd / sqrt(.data$herb_N)), 3),  herb_NPP__Mg_ha_yr = round(mean(.data$herb_NPP__Mg_ha_yr, na.rm = TRUE),3) ) %>% dplyr::mutate(herb_count_type ="plots")
-herb_siteThenYear <- herb_siteFirst %>% dplyr::group_by(.data$siteID) %>% dplyr::summarise(herb_N = dplyr::n(), 
-          herb_NPP__Mg_ha_yr_min = round(min(.data$herb_NPP__Mg_ha_yr, na.rm = TRUE),3), herb_NPP__Mg_ha_yr_max = round(max(.data$herb_NPP__Mg_ha_yr, na.rm = TRUE),3), herb_NPP__Mg_ha_yr_sd = round(stats::sd(.data$herb_NPP__Mg_ha_yr, na.rm = TRUE),3), 
-          herb_NPP__Mg_ha_yr_se = round((.data$herb_NPP__Mg_ha_yr_sd / sqrt(.data$herb_N)), 3),  herb_NPP__Mg_ha_yr = round(mean(.data$herb_NPP__Mg_ha_yr, na.rm = TRUE),3) ) %>% dplyr::mutate(herb_count_type ="years")
-
-
-print("Combining above-ground woody and herbaceous productivity (approach 2) ..... ")
-ANPP_site_2 <- merge(vst_ANPP_site_2, herb_yearThenSite, by=c("siteID"), all=TRUE); 
-ANPP_site_2$ave_order <- "yearThenSite" 
-
-
-############# At plot level -    Add woody and herb NPP and calculate percent contributed by herbs #############
-ANPP_site_2 <- ANPP_site_2 %>% dplyr::filter(!is.na(.data$wood_ANPP__Mg_ha_yr))  # remove records with missing productivity
-   
-ANPP_site_2$vstHbp_NPP__Mg_ha_yr <- ANPP_site_2$wood_ANPP__Mg_ha_yr + ANPP_site_2$herb_NPP__Mg_ha_yr
-ANPP_site_2$vstHbp_NPP__Mg_ha_yr_yr_se <- ANPP_site_2$wood_ANPP__Mg_ha_yr_se + ANPP_site_2$herb_NPP__Mg_ha_yr_se
-ANPP_site_2$herb_percent_of_NPP <- round((100 * ANPP_site_2$herb_NPP__Mg_ha_yr / ANPP_site_2$vstHbp_NPP__Mg_ha_yr ), 1)
-ANPP_site_2$herb_percent_of_NPP_se <- round((abs(ANPP_site_2$herb_percent_of_NPP) * sqrt((ANPP_site_2$herb_NPP__Mg_ha_yr_se / ANPP_site_2$herb_NPP__Mg_ha_yr)^2 + 
-                                                    (ANPP_site_2$vstHbp_NPP__Mg_ha_yr_yr_se / ANPP_site_2$vstHbp_NPP__Mg_ha_yr)^2) ), 1)
-
-ANPP_site_2 <- ANPP_site_2 %>% dplyr::select("siteID", "wood_N", "wood_count_type", "wood_ANPP__Mg_ha_yr_se", "wood_ANPP__Mg_ha_yr", "herb_N", "herb_NPP__Mg_ha_yr_se", "herb_NPP__Mg_ha_yr", "vstHbp_NPP__Mg_ha_yr", 
-                                          "herb_percent_of_NPP_se", "herb_percent_of_NPP") %>% dplyr::arrange("herb_percent_of_NPP")
-
-} else {
-  dataProducts = "Vst"
-  print("No herbaceous exclosure data available in current data subset for calculation of consumption, so herbaceous productivity not summarized.")
-}
-
-}
-
+          woodANPP_Mghayr_min = round(min(.data$woodANPP_Mghayr, na.rm = TRUE),3), woodANPP_Mghayr_max = round(max(.data$woodANPP_Mghayr, na.rm = TRUE),3), woodANPP_Mghayr_sd = round(stats::sd(.data$woodANPP_Mghayr, na.rm = TRUE),3), 
+          woodANPP_Mghayr_se = round((.data$woodANPP_Mghayr_sd / sqrt(.data$wood_N)), 3),  woodANPP_Mghayr = round(mean(.data$woodANPP_Mghayr, na.rm = TRUE),3) ) %>% dplyr::mutate(wood_count_type = "years")
+vst_ANPP_site_2 <- vst_ANPP_plot_2 %>% dplyr::group_by(.data$siteID, .data$year) %>% dplyr::summarise(woodPlotNum = dplyr::n(), 
+          woodANPPSD_Mghayr = round(stats::sd(.data$woodANPP_Mghayr, na.rm = TRUE),3), 
+          woodANPPMean_Mghayr = round(mean(.data$woodANPP_Mghayr, na.rm = TRUE),3) ) %>% dplyr::ungroup()
 
 
 if(calcMethod == "approach_1")    {
@@ -439,11 +296,11 @@ vst_agb_indID_list <- unique(vst_agb_per_ha$individualID); length(vst_agb_indID_
 startAGB <- min(vst_agb_per_ha$year)
 endAGB  <- max(vst_agb_per_ha$year)
 dummy_rows <- data.frame(plot_eventID = rep(NA, 7), eventID = rep(NA, 7), siteID = rep(NA, 7), plotID = rep(NA, 7), plotType = rep(NA, 7), nlcdClass = rep(NA, 7), individualID = rep(NA, 7),
-  taxonID = rep(NA, 7), plantStatus2 = rep(NA, 7), year = ( (startAGB-7):(startAGB-1) ), agb_Mg_per_ha = rep(NA, 7)) # placeholder for any years prior to start that are missing
+  taxonID = rep(NA, 7), plantStatus2 = rep(NA, 7), year = ( (startAGB-7):(startAGB-1) ), agb_Mgha = rep(NA, 7)) # placeholder for any years prior to start that are missing
 yearLength <- length(startAGB:endAGB)
 dummy_rows_2 <- data.frame(plot_eventID = rep(NA, yearLength), eventID = rep(NA, yearLength), siteID = rep(NA, yearLength), plotID = rep(NA, yearLength), 
                            plotType = rep(NA, yearLength), nlcdClass = rep(NA, yearLength), individualID = rep(NA, yearLength),
-  taxonID = rep(NA, yearLength), plantStatus2 = rep(NA, yearLength), year = ( startAGB:endAGB ), agb_Mg_per_ha = rep(NA, yearLength)) # placeholder for any years within start to end year range that are missing
+  taxonID = rep(NA, yearLength), plantStatus2 = rep(NA, yearLength), year = ( startAGB:endAGB ), agb_Mgha = rep(NA, yearLength)) # placeholder for any years within start to end year range that are missing
 dummy_rows <- rbind(dummy_rows, dummy_rows_2)
 dummy_rows <- dummy_rows[!dummy_rows$year %in% unique(vst_agb_per_ha$year),] # remove the years that ARE in the data
 
@@ -460,73 +317,73 @@ increment <- transitions %>% dplyr::filter(!(.data$year == endYear[i] & .data$pl
  increment <- rbind(increment, dummy_rows) # only year populated, workaround to get blank columns for all years
  increment <- increment[increment$year <= endYear[i],] 
  increment$year <- abs(increment$year - endYear[i])
- increment <- tidyr::pivot_wider(increment, id_cols = c("siteID", "plotID", "individualID", "taxonID"), names_from = "year", names_prefix = "agb_Mg_per_ha_", values_from = "agb_Mg_per_ha")
+ increment <- tidyr::pivot_wider(increment, id_cols = c("siteID", "plotID", "individualID", "taxonID"), names_from = "year", names_prefix = "agb_Mgha_", values_from = "agb_Mgha")
  increment <- increment %>% dplyr::filter(!is.na(.data$plotID) ) # remove artifact row with NAs from dummy row
- increment$increment1 <- increment$agb_Mg_per_ha_0 - increment$agb_Mg_per_ha_1
+ increment$increment1 <- increment$agb_Mgha_0 - increment$agb_Mgha_1
    increment_stats <- increment %>% dplyr::group_by(.data$siteID) %>% dplyr::filter(!is.na(.data$increment1)) %>% 
       dplyr::summarise("increment1_n" = dplyr::n(), "increment1_sd" = round(stats::sd(.data$increment1, na.rm = TRUE),3), increment1_se = round(.data$increment1_sd / sqrt(.data$increment1_n), 3), increment1_mn = round(mean(.data$increment1, na.rm = TRUE),3),
          "increment1_firstQuart" = stats::quantile(.data$increment1, probs = c(0.25), na.rm=TRUE), "increment1_thirdQuart" = stats::quantile(.data$increment1, probs = c(0.75), na.rm=TRUE), increment1_IQR = .data$increment1_thirdQuart - .data$increment1_firstQuart)
    increment <- merge(increment, increment_stats, by="siteID", all.x=TRUE)
     increment$increment1_IQRqf <- dplyr::if_else((increment$increment1 < increment$increment1_firstQuart-(increment$increment1_IQR * outlier)) | (increment$increment1 > increment$increment1_thirdQuart+(increment$increment1_IQR * outlier)  ), "flag","ok","ok")
     increment$increment1_SDqf <- dplyr::if_else(abs(increment$increment1 - increment$increment1_mn) > (increment$increment1_sd * outlier), "flag","ok","ok")
-increment$increment2 <- (increment$agb_Mg_per_ha_0 - increment$agb_Mg_per_ha_2)/2
+increment$increment2 <- (increment$agb_Mgha_0 - increment$agb_Mgha_2)/2
    increment_stats <- increment %>% dplyr::group_by(.data$siteID) %>% dplyr::filter(!is.na(.data$increment2)) %>% 
       dplyr::summarise(increment2_n = dplyr::n(), increment2_sd = round(stats::sd(.data$increment2, na.rm = TRUE),3), increment2_se = round(.data$increment2_sd / sqrt(.data$increment2_n), 3), increment2_mn = round(mean(.data$increment2, na.rm = TRUE),3),
          increment2_firstQuart = stats::quantile(.data$increment2, probs = c(0.25), na.rm=TRUE), increment2_thirdQuart = stats::quantile(.data$increment2, probs = c(0.75), na.rm=TRUE), increment2_IQR = .data$increment2_thirdQuart - .data$increment2_firstQuart)
    increment <- merge(increment, increment_stats, by="siteID", all.x=TRUE)
     increment$increment2_IQRqf <- dplyr::if_else((increment$increment2 < increment$increment2_firstQuart-(increment$increment2_IQR * outlier)) | (increment$increment2 > increment$increment2_thirdQuart+(increment$increment2_IQR * outlier)  ), "flag","ok","ok")
     increment$increment2_SDqf <- dplyr::if_else(abs(increment$increment2 - increment$increment2_mn) > (increment$increment2_sd * outlier), "flag","ok","ok")
- increment$increment3 <- (increment$agb_Mg_per_ha_0 - increment$agb_Mg_per_ha_3)/3
+ increment$increment3 <- (increment$agb_Mgha_0 - increment$agb_Mgha_3)/3
    increment_stats <- increment %>% dplyr::group_by(.data$siteID) %>% dplyr::filter(!is.na(.data$increment3)) %>% 
       dplyr::summarise(increment3_n = dplyr::n(), increment3_sd = round(stats::sd(.data$increment3, na.rm = TRUE),3), increment3_se = round(.data$increment3_sd / sqrt(.data$increment3_n), 3), increment3_mn = round(mean(.data$increment3, na.rm = TRUE),3),
          increment3_firstQuart = stats::quantile(.data$increment3, probs = c(0.25), na.rm=TRUE), increment3_thirdQuart = stats::quantile(.data$increment3, probs = c(0.75), na.rm=TRUE), increment3_IQR = .data$increment3_thirdQuart - .data$increment3_firstQuart)
    increment <- merge(increment, increment_stats, by="siteID", all.x=TRUE)
     increment$increment3_IQRqf <- dplyr::if_else((increment$increment3 < increment$increment3_firstQuart-(increment$increment3_IQR * outlier)) | (increment$increment3 > increment$increment3_thirdQuart+(increment$increment3_IQR * outlier)  ), "flag","ok","ok")
     increment$increment3_SDqf <- dplyr::if_else(abs(increment$increment3 - increment$increment3_mn) > (increment$increment3_sd * outlier), "flag","ok","ok")
- increment$increment4 <- (increment$agb_Mg_per_ha_0 - increment$agb_Mg_per_ha_4)/4
+ increment$increment4 <- (increment$agb_Mgha_0 - increment$agb_Mgha_4)/4
    increment_stats <- increment %>% dplyr::group_by(.data$siteID) %>% dplyr::filter(!is.na(.data$increment4)) %>% 
       dplyr::summarise(increment4_n = dplyr::n(), increment4_sd = round(stats::sd(.data$increment4, na.rm = TRUE),3), increment4_se = round(.data$increment4_sd / sqrt(.data$increment4_n), 3), increment4_mn = round(mean(.data$increment4, na.rm = TRUE),3),
          increment4_firstQuart = stats::quantile(.data$increment4, probs = c(0.25), na.rm=TRUE), increment4_thirdQuart = stats::quantile(.data$increment4, probs = c(0.75), na.rm=TRUE), increment4_IQR = .data$increment4_thirdQuart - .data$increment4_firstQuart)
    increment <- merge(increment, increment_stats, by="siteID", all.x=TRUE)
     increment$increment4_IQRqf <- dplyr::if_else((increment$increment4 < increment$increment4_firstQuart-(increment$increment4_IQR * outlier)) | (increment$increment4 > increment$increment4_thirdQuart+(increment$increment4_IQR * outlier)  ), "flag","ok","ok")
     increment$increment4_SDqf <- dplyr::if_else(abs(increment$increment4 - increment$increment4_mn) > (increment$increment4_sd * outlier), "flag","ok","ok")
- increment$increment5 <- (increment$agb_Mg_per_ha_0 - increment$agb_Mg_per_ha_5)/5
+ increment$increment5 <- (increment$agb_Mgha_0 - increment$agb_Mgha_5)/5
    increment_stats <- increment %>% dplyr::group_by(.data$siteID) %>% dplyr::filter(!is.na(.data$increment5)) %>% 
       dplyr::summarise(increment5_n = dplyr::n(), increment5_sd = round(stats::sd(.data$increment5, na.rm = TRUE),3), increment5_se = round(.data$increment5_sd / sqrt(.data$increment5_n), 3), increment5_mn = round(mean(.data$increment5, na.rm = TRUE),3),
          increment5_firstQuart = stats::quantile(.data$increment5, probs = c(0.25), na.rm=TRUE), increment5_thirdQuart = stats::quantile(.data$increment5, probs = c(0.75), na.rm=TRUE), increment5_IQR = .data$increment5_thirdQuart - .data$increment5_firstQuart)
    increment <- merge(increment, increment_stats, by="siteID", all.x=TRUE)
     increment$increment5_IQRqf <- dplyr::if_else((increment$increment5 < increment$increment5_firstQuart-(increment$increment5_IQR * outlier)) | (increment$increment5 > increment$increment5_thirdQuart+(increment$increment5_IQR * outlier)  ), "flag","ok","ok")
     increment$increment5_SDqf <- dplyr::if_else(abs(increment$increment5 - increment$increment5_mn) > (increment$increment5_sd * outlier), "flag","ok","ok")
- increment$increment6 <- (increment$agb_Mg_per_ha_0 - increment$agb_Mg_per_ha_6)/6
+ increment$increment6 <- (increment$agb_Mgha_0 - increment$agb_Mgha_6)/6
    increment_stats <- increment %>% dplyr::group_by(.data$siteID) %>% dplyr::filter(!is.na(.data$increment6)) %>% 
       dplyr::summarise(increment6_n = dplyr::n(), increment6_sd = round(stats::sd(.data$increment6, na.rm = TRUE),3), increment6_se = round(.data$increment6_sd / sqrt(.data$increment6_n), 3), increment6_mn = round(mean(.data$increment6, na.rm = TRUE),3),
          increment6_firstQuart = stats::quantile(.data$increment6, probs = c(0.25), na.rm=TRUE), increment6_thirdQuart = stats::quantile(.data$increment6, probs = c(0.75), na.rm=TRUE), increment6_IQR = .data$increment6_thirdQuart - .data$increment6_firstQuart)
    increment <- merge(increment, increment_stats, by="siteID", all.x=TRUE)
      increment$increment6_IQRqf <- dplyr::if_else((increment$increment6 < increment$increment6_firstQuart-(increment$increment6_IQR * outlier)) | (increment$increment6 > increment$increment6_thirdQuart+(increment$increment6_IQR * outlier)  ), "flag","ok","ok")
     increment$increment6_SDqf <- dplyr::if_else(abs(increment$increment6 - increment$increment6_mn) > (increment$increment6_sd * outlier), "flag","ok","ok")
- increment$increment7 <- (increment$agb_Mg_per_ha_0 - increment$agb_Mg_per_ha_7)/7
+ increment$increment7 <- (increment$agb_Mgha_0 - increment$agb_Mgha_7)/7
    increment_stats <- increment %>% dplyr::group_by(.data$siteID) %>% dplyr::filter(!is.na(.data$increment7)) %>% 
       dplyr::summarise(increment7_n = dplyr::n(), increment7_sd = round(stats::sd(.data$increment7, na.rm = TRUE),3), increment7_se = round(.data$increment7_sd / sqrt(.data$increment7_n), 3), increment7_mn = round(mean(.data$increment7, na.rm = TRUE),3),
          increment7_firstQuart = stats::quantile(.data$increment7, probs = c(0.25), na.rm=TRUE), increment7_thirdQuart = stats::quantile(.data$increment7, probs = c(0.75), na.rm=TRUE), increment7_IQR = .data$increment7_thirdQuart - .data$increment7_firstQuart)
    increment <- merge(increment, increment_stats, by="siteID", all.x=TRUE)
     increment$increment7_IQRqf <- dplyr::if_else((increment$increment7 < increment$increment7_firstQuart-(increment$increment7_IQR * outlier)) | (increment$increment7 > increment$increment7_thirdQuart+(increment$increment7_IQR * outlier)  ), "flag","ok","ok")
     increment$increment7_SDqf <- dplyr::if_else(abs(increment$increment7 - increment$increment7_mn) > (increment$increment7_sd * outlier), "flag","ok","ok")
- increment$Mg_per_ha_per_yr <- ifelse(!is.na(increment$increment7), increment$increment7, NA)
+ increment$Mgha_per_yr <- ifelse(!is.na(increment$increment7), increment$increment7, NA)
     increment$bestIncrement <- ifelse(!is.na(increment$increment7), 7, NA)
- increment$Mg_per_ha_per_yr <- ifelse(!is.na(increment$increment6), increment$increment6, increment$Mg_per_ha_per_yr)
+ increment$Mgha_per_yr <- ifelse(!is.na(increment$increment6), increment$increment6, increment$Mgha_per_yr)
     increment$bestIncrement <- ifelse(!is.na(increment$increment6), 6, increment$bestIncrement)
- increment$Mg_per_ha_per_yr <- ifelse(!is.na(increment$increment5), increment$increment5, increment$Mg_per_ha_per_yr)
+ increment$Mgha_per_yr <- ifelse(!is.na(increment$increment5), increment$increment5, increment$Mgha_per_yr)
     increment$bestIncrement <- ifelse(!is.na(increment$increment5), 5, increment$bestIncrement)
- increment$Mg_per_ha_per_yr <- ifelse(!is.na(increment$increment4), increment$increment4, increment$Mg_per_ha_per_yr)
+ increment$Mgha_per_yr <- ifelse(!is.na(increment$increment4), increment$increment4, increment$Mgha_per_yr)
     increment$bestIncrement <- ifelse(!is.na(increment$increment4), 4, increment$bestIncrement)
- increment$Mg_per_ha_per_yr <- ifelse(!is.na(increment$increment3), increment$increment3, increment$Mg_per_ha_per_yr)
+ increment$Mgha_per_yr <- ifelse(!is.na(increment$increment3), increment$increment3, increment$Mgha_per_yr)
     increment$bestIncrement <- ifelse(!is.na(increment$increment3), 3, increment$bestIncrement)
- increment$Mg_per_ha_per_yr <- ifelse(!is.na(increment$increment2), increment$increment2, increment$Mg_per_ha_per_yr)
+ increment$Mgha_per_yr <- ifelse(!is.na(increment$increment2), increment$increment2, increment$Mgha_per_yr)
     increment$bestIncrement <- ifelse(!is.na(increment$increment2), 2, increment$bestIncrement)
- increment$Mg_per_ha_per_yr <- ifelse(!is.na(increment$increment1), increment$increment1, increment$Mg_per_ha_per_yr)
+ increment$Mgha_per_yr <- ifelse(!is.na(increment$increment1), increment$increment1, increment$Mgha_per_yr)
     increment$bestIncrement <- ifelse(!is.na(increment$increment1), 1, increment$bestIncrement)
- increment <- increment %>% dplyr::filter(!is.na(.data$Mg_per_ha_per_yr)) %>% dplyr::mutate(endYear = endYear[i])   # remove missing increment values and add endYear column
- increment <- dplyr::rename(increment, "Mg_per_ha_per_yr_inc" = "Mg_per_ha_per_yr", "bestIncrement_inc" = "bestIncrement")
+ increment <- increment %>% dplyr::filter(!is.na(.data$Mgha_per_yr)) %>% dplyr::mutate(endYear = endYear[i])   # remove missing increment values and add endYear column
+ increment <- dplyr::rename(increment, "Mgha_per_yr_inc" = "Mgha_per_yr", "bestIncrement_inc" = "bestIncrement")
 increment_all = dplyr::bind_rows(increment_all, increment) %>% dplyr::mutate(outlier_threshold = paste0(outlier,"_",outlierType))
 }
 
@@ -535,12 +392,12 @@ if(nrow(increment_all) > 0){
 if(outlierType == "SD") {
 increment_ok <- increment_all %>% dplyr::filter("increment1_SDqf" != "flag" & "increment2_SDqf" != "flag"  & "increment3_SDqf" != "flag" & "increment4_SDqf" != "flag" & "increment5_SDqf" != "flag" & "increment6_SDqf" != "flag" & "increment7_SDqf" != "flag") # remove increments that are flagged as being excessive for the specified timeframes
 increment_outlier <- increment_all %>% dplyr::filter("increment1_SDqf" == "flag" | "increment2_SDqf" == "flag"  | "increment3_SDqf" == "flag" | "increment4_SDqf" == "flag" | "increment5_SDqf" == "flag" | "increment6_SDqf" == "flag" | "increment7_SDqf" == "flag") # increments that are flagged as being excessive for the specified timeframes
-increment_outlier <- increment_outlier %>% dplyr::select("outlier_threshold", "siteID", "plotID", "individualID", "taxonID", "Mg_per_ha_per_yr_inc", "bestIncrement_inc", "endYear")
+increment_outlier <- increment_outlier %>% dplyr::select("outlier_threshold", "siteID", "plotID", "individualID", "taxonID", "Mgha_per_yr_inc", "bestIncrement_inc", "endYear")
 } 
 if(outlierType == "IQR") {
 increment_ok <- increment_all %>% dplyr::filter("increment1_IQRqf" != "flag" & "increment2_IQRqf" != "flag"  & "increment3_IQRqf" != "flag" & "increment4_IQRqf" != "flag" & "increment5_IQRqf" != "flag" & "increment6_IQRqf" != "flag" & "increment7_IQRqf" != "flag") # remove increments that are flagged as being excessive for the specified timeframes
 increment_outlier <- increment_all %>% dplyr::filter("increment1_IQRqf" == "flag" | "increment2_IQRqf" == "flag"  | "increment3_IQRqf" == "flag" | "increment4_IQRqf" == "flag" | "increment5_IQRqf" == "flag" | "increment6_IQRqf" == "flag" | "increment7_IQRqf" == "flag") # increments that are flagged as being excessive for the specified timeframes
-increment_outlier <- increment_outlier %>% dplyr::select("outlier_threshold", "siteID", "plotID", "individualID", "taxonID", "Mg_per_ha_per_yr_inc", "bestIncrement_inc", "endYear")
+increment_outlier <- increment_outlier %>% dplyr::select("outlier_threshold", "siteID", "plotID", "individualID", "taxonID", "Mgha_per_yr_inc", "bestIncrement_inc", "endYear")
 }
 
 outlier_count <- length(increment_outlier$individualID)
@@ -549,7 +406,7 @@ percent_outliers <- round(100 * outlier_count / increment_all_count, 1)
 
 print(paste0("Note: The chosen outlier criteria removed ", outlier_count, " records (", percent_outliers, "% of all records)"))
 
-increment_ok <- increment_ok %>% dplyr::select("outlier_threshold", "siteID", "plotID", "individualID", "taxonID", "Mg_per_ha_per_yr_inc", "bestIncrement_inc", "endYear")
+increment_ok <- increment_ok %>% dplyr::select("outlier_threshold", "siteID", "plotID", "individualID", "taxonID", "Mgha_per_yr_inc", "bestIncrement_inc", "endYear")
  increment_ok <- increment_ok %>% dplyr::filter(.data$bestIncrement_inc == 1 | .data$bestIncrement_inc == 2 | .data$bestIncrement_inc == 3)  #(.data$bestIncrement_inc == 5 & (siteID =="JORN" | siteID =="MOAB" | siteID =="ONAQ" | siteID =="SRER") ) )
   # remove increments without the allowed increment timeframe; we only need a single year increment for the 5 priority tower plots, but the 2 year increment means we don't lose 2 years worth of increment from missing just 1 measurement of an individual,
                                          
@@ -559,9 +416,9 @@ increment_eventID_list <- unique(paste0(increment_ok$plotID,"_vst_",substr(incre
 print("Finish calculating woody productivity at the level of individualID (approach 1) ..... ")
 
 #product_all <- merge(increment_all, recruitment_all, by=c("siteID", "plotID", "individualID", "taxonID","endYear"), all=TRUE)  # recruitment not yet incorporated since sensitive to large individ. missed in previous bout
-#product_all <- product_all %>% dplyr::mutate_all(~replace(., is.na(.), 0)) %>% dplyr::mutate(wood_ANPP__Mg_ha_yr = .data$Mg_per_ha_per_yr_inc + .data$Mg_per_ha_per_yr_rec)  
+#product_all <- product_all %>% dplyr::mutate_all(~replace(., is.na(.), 0)) %>% dplyr::mutate(wood_ANPP__Mg_ha_yr = .data$Mgha_per_yr_inc + .data$Mgha_per_yr_rec)  
 product_all <- increment_ok        # placeholder until incorporate recruitment
-product_all <- dplyr::rename(product_all, "wood_ANPP__Mg_ha_yr" = "Mg_per_ha_per_yr_inc")     
+product_all <- dplyr::rename(product_all, "woodANPP_Mghayr" = "Mgha_per_yr_inc")     
 product_all <- dplyr::rename(product_all, "year" = "endYear")
 productivity <- merge(product_all, plotType_df, by = "plotID", all.x = T)
 
@@ -571,7 +428,7 @@ vst_ANPP_plot_w_taxa <- productivity %>% dplyr::select(-"bestIncrement_inc") %>%
 # sum the individualIDs by plot
 vst_ANPP_plot <- vst_ANPP_plot_w_taxa %>% dplyr::group_by(.data$outlier_threshold, .data$siteID, .data$plotID, .data$plotType, .data$year) %>%  dplyr::summarise(dplyr::across(dplyr::where(is.numeric), ~ sum(.x, na.rm = TRUE))) %>% dplyr::ungroup()
 
-vst_ANPP_plot <- vst_ANPP_plot %>% dplyr::filter(!is.na(.data$wood_ANPP__Mg_ha_yr)) %>% dplyr::select("outlier_threshold","siteID","plotID","plotType","year","wood_ANPP__Mg_ha_yr") # remove records with missing productivity
+vst_ANPP_plot <- vst_ANPP_plot %>% dplyr::filter(!is.na(.data$woodANPP_Mghayr)) %>% dplyr::select("outlier_threshold","siteID","plotID","plotType","year","woodANPP_Mghayr") # remove records with missing productivity
 
 # ADD PLOTS WITH 0 BIOMASS AND HERB BIOMASS 
   
@@ -579,72 +436,41 @@ if(nrow(vst_agb_zeros) >0){
   vst_agb_zeros_ind <- vst_agb_zeros
     vst_agb_zeros_ind$eventID <- vst_agb_zeros_ind$plot_eventID <- NULL
     vst_agb_zeros_ind$outlier_threshold <- paste0(outlier,"_",outlierType)
-    vst_agb_zeros_ind$wood_ANPP__Mg_ha_yr <- 0 
+    vst_agb_zeros_ind$woodANPP_Mghayr <- 0 
     vst_ANPP_plot <- rbind(vst_ANPP_plot, vst_agb_zeros_ind)}
 
 vst_ANPP_plot <- vst_ANPP_plot %>% dplyr::filter(.data$year >= start) # make sure that records from before the start year have been removed
 vst_ANPP_plot <- merge(vst_ANPP_plot, priority_plots_add, by = c("plotID"), all.x=TRUE)
-vst_ANPP_plot <- vst_ANPP_plot %>% dplyr::filter(.data$plotType == "tower") # if plotType argument to function is "tower" then remove distributed plots
-vst_ANPP_plot <- vst_ANPP_plot %>% dplyr::filter(.data$specificModuleSamplingPriority <= 5) # as specified in argument to function, remove lower priority plots that aren't required to be sampled every year
+if(plotType == "tower") {vst_ANPP_plot <- vst_ANPP_plot %>% dplyr::filter(.data$plotType == "tower")} # if plotType argument is "tower" then remove distributed plots
+if(!is.na(plotPriority)) {vst_ANPP_plot <- vst_ANPP_plot %>% dplyr::filter(.data$specificModuleSamplingPriority <= 5)} # as specified in argument to function, remove lower priority plots that aren't required to be sampled every year
 
 wood_siteGrandMean <- vst_ANPP_plot %>% dplyr::group_by(.data$outlier_threshold, .data$siteID) %>% dplyr::summarise(wood_N = dplyr::n(), 
-          wood_ANPP__Mg_ha_yr_min = round(min(.data$wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_max = round(max(.data$wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_sd = round(stats::sd(.data$wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), 
-          wood_ANPP__Mg_ha_yr_se = round((.data$wood_ANPP__Mg_ha_yr_sd / sqrt(.data$wood_N)), 3),  wood_ANPP__Mg_ha_yr = round(mean(.data$wood_ANPP__Mg_ha_yr, na.rm = TRUE),3) ) %>% dplyr::mutate(wood_count_type = "plotXYearcombos")
+          woodANPP_Mghayr_min = round(min(.data$woodANPP_Mghayr, na.rm = TRUE),3), woodANPP_Mghayr_max = round(max(.data$woodANPP_Mghayr, na.rm = TRUE),3), woodANPP_Mghayr_sd = round(stats::sd(.data$woodANPP_Mghayr, na.rm = TRUE),3), 
+          woodANPP_Mghayr_se = round((.data$woodANPP_Mghayr_sd / sqrt(.data$wood_N)), 3),  woodANPP_Mghayr = round(mean(.data$woodANPP_Mghayr, na.rm = TRUE),3) ) %>% dplyr::mutate(wood_count_type = "plotXYearcombos") %>% dplyr::ungroup()
 
-wood_siteFirst <- vst_ANPP_plot %>% dplyr::group_by(.data$outlier_threshold, .data$siteID, .data$year) %>% dplyr::summarise(wood_N = dplyr::n(), 
-          wood_ANPP__Mg_ha_yr_min = round(min(.data$wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_max = round(max(.data$wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_sd = round(stats::sd(.data$wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), 
-          wood_ANPP__Mg_ha_yr_se = round((.data$wood_ANPP__Mg_ha_yr_sd / sqrt(.data$wood_N)), 3),  wood_ANPP__Mg_ha_yr = round(mean(.data$wood_ANPP__Mg_ha_yr, na.rm = TRUE),3) ) %>% dplyr::mutate(wood_count_type = "plots")
+wood_siteFirst <- vst_ANPP_plot %>% dplyr::group_by(.data$outlier_threshold, .data$siteID, .data$year) %>% dplyr::summarise(woodPlotNum = dplyr::n(), 
+          woodANPPSD_Mghayr = round(stats::sd(.data$woodANPP_Mghayr, na.rm = TRUE),3), 
+          woodANPPMean_Mghayr = round(mean(.data$woodANPP_Mghayr, na.rm = TRUE),3) ) %>% dplyr::ungroup()
 wood_siteThenYear <- wood_siteFirst %>% dplyr::group_by(.data$outlier_threshold, .data$siteID) %>% dplyr::summarise(wood_N = dplyr::n(), 
-          wood_ANPP__Mg_ha_yr_min = round(min(.data$wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_max = round(max(.data$wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_sd = round(stats::sd(.data$wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), 
-          wood_ANPP__Mg_ha_yr_se = round((.data$wood_ANPP__Mg_ha_yr_sd / sqrt(.data$wood_N)), 3),  wood_ANPP__Mg_ha_yr = round(mean(.data$wood_ANPP__Mg_ha_yr, na.rm = TRUE),3) ) %>% dplyr::mutate(wood_count_type = "years")
+          woodANPP_Mghayr_min = round(min(.data$woodANPPMean_Mghayr, na.rm = TRUE),3), woodANPP_Mghayr_max = round(max(.data$woodANPPMean_Mghayr, na.rm = TRUE),3), woodANPP_Mghayr_sd = round(stats::sd(.data$woodANPPMean_Mghayr, na.rm = TRUE),3), 
+          woodANPP_Mghayr_se = round((.data$woodANPP_Mghayr_sd / sqrt(.data$wood_N)), 3),  woodANPP_MghayrMean = round(mean(.data$woodANPPMean_Mghayr, na.rm = TRUE),3) ) %>% dplyr::mutate(wood_count_type = "years") %>% dplyr::ungroup()
 
 wood_yearFirst <- vst_ANPP_plot %>% dplyr::group_by(.data$outlier_threshold, .data$siteID, .data$plotID, .data$plotType) %>% dplyr::summarise(wood_N = dplyr::n(), 
-          wood_ANPP__Mg_ha_yr_min = round(min(.data$wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_max = round(max(.data$wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_sd = round(stats::sd(.data$wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), 
-          wood_ANPP__Mg_ha_yr_se = round((.data$wood_ANPP__Mg_ha_yr_sd / sqrt(.data$wood_N)), 3),  wood_ANPP__Mg_ha_yr = round(mean(.data$wood_ANPP__Mg_ha_yr, na.rm = TRUE),3) ) %>% dplyr::mutate(wood_count_type = "years")
-vst_ANPP_site <- wood_yearFirst %>% dplyr::group_by(.data$outlier_threshold, .data$siteID) %>% dplyr::summarise(wood_N = dplyr::n(), 
-          wood_ANPP__Mg_ha_yr_min = round(min(.data$wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_max = round(max(.data$wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), wood_ANPP__Mg_ha_yr_sd = round(stats::sd(.data$wood_ANPP__Mg_ha_yr, na.rm = TRUE),3), 
-          wood_ANPP__Mg_ha_yr_se = round((.data$wood_ANPP__Mg_ha_yr_sd / sqrt(.data$wood_N)), 3),  wood_ANPP__Mg_ha_yr = round(mean(.data$wood_ANPP__Mg_ha_yr, na.rm = TRUE),3) ) %>% dplyr::mutate(wood_count_type = "plots")
+          woodANPP_Mghayr_min = round(min(.data$woodANPP_Mghayr, na.rm = TRUE),3), woodANPP_Mghayr_max = round(max(.data$woodANPP_Mghayr, na.rm = TRUE),3), woodANPP_Mghayr_sd = round(stats::sd(.data$woodANPP_Mghayr, na.rm = TRUE),3), 
+          woodANPP_Mghayr_se = round((.data$woodANPP_Mghayr_sd / sqrt(.data$wood_N)), 3),  woodANPP_Mghayr = round(mean(.data$woodANPP_Mghayr, na.rm = TRUE),3) ) %>% dplyr::mutate(wood_count_type = "years") %>% dplyr::ungroup()
+wood_yearThenSite <- wood_yearFirst %>% dplyr::group_by(.data$outlier_threshold, .data$siteID) %>% dplyr::summarise(wood_N = dplyr::n(), 
+          woodANPP_Mghayr_min = round(min(.data$woodANPP_Mghayr, na.rm = TRUE),3), woodANPP_Mghayr_max = round(max(.data$woodANPP_Mghayr, na.rm = TRUE),3), woodANPP_Mghayr_sd = round(stats::sd(.data$woodANPP_Mghayr, na.rm = TRUE),3), 
+          woodANPP_Mghayr_se = round((.data$woodANPP_Mghayr_sd / sqrt(.data$wood_N)), 3),  woodANPP_Mghayr = round(mean(.data$woodANPP_Mghayr, na.rm = TRUE),3) ) %>% dplyr::mutate(wood_count_type = "plots") %>% dplyr::ungroup()
 
 # toggle on one of the three choices above to pick which ANPP_optimize input is used: 1) average across plots and years all in one step, 2)average within years then by site, or 3) average within sites then by year (if all toggled on then the last will be used)
 
-###### If option to also examine herbaceous productivity has been selected then make the necessary calculations and combine with woody productivity  ##############
-
-print("Combining above-ground woody and herbaceous productivity (approach 1) ..... ")
-
-if(grepl("Hbp", dataProducts) )    {
- 
-ANPP_site <- merge(vst_ANPP_site, herb_yearThenSite, by=c("siteID"), all=TRUE); ANPP_site$ave_order <- "yearThenSite" # toggle to average years within site, and only then across plots
-
-
-############# Add woody and herb NPP and calculate percent contributed by herbs #############
-ANPP_site <- ANPP_site %>% dplyr::filter(!is.na(.data$wood_ANPP__Mg_ha_yr))  # remove records with missing productivity
-   
-ANPP_site$vstHbp_NPP__Mg_ha_yr <- ANPP_site$wood_ANPP__Mg_ha_yr + ANPP_site$herb_NPP__Mg_ha_yr
-ANPP_site$vstHbp_NPP__Mg_ha_yr_yr_se <- ANPP_site$wood_ANPP__Mg_ha_yr_se + ANPP_site$herb_NPP__Mg_ha_yr_se
-ANPP_site$herb_percent_of_NPP <- round((100 * ANPP_site$herb_NPP__Mg_ha_yr / ANPP_site$vstHbp_NPP__Mg_ha_yr ), 1)
-ANPP_site$herb_percent_of_NPP_se <- round((abs(ANPP_site$herb_percent_of_NPP) * sqrt((ANPP_site$herb_NPP__Mg_ha_yr_se / ANPP_site$herb_NPP__Mg_ha_yr)^2 + 
-                                                    (ANPP_site$vstHbp_NPP__Mg_ha_yr_yr_se / ANPP_site$vstHbp_NPP__Mg_ha_yr)^2) ), 1)
-
-ANPP_site <- ANPP_site %>% dplyr::select("siteID", "wood_N", "wood_count_type", "wood_ANPP__Mg_ha_yr_se", "wood_ANPP__Mg_ha_yr", "herb_N", "herb_NPP__Mg_ha_yr_se", "herb_NPP__Mg_ha_yr", "vstHbp_NPP__Mg_ha_yr", 
-                                          "herb_percent_of_NPP_se", "herb_percent_of_NPP") %>% dplyr::arrange("herb_percent_of_NPP")
-}
-
+vst_ANPP_site <- wood_siteFirst
+  
 print("Returning productivity summary data frames as a list object, calculated using approach 1  ..... ")
 } else {print("Current data subset has no individualID that has been measured more than once, so woody increment and productivity can not be calculated using approach 1.")}
 
 } else {print("Current data subset has no biomass, so woody increment and productivity can not be calculated using approach 1.")}
 
-if(grepl("Hbp", dataProducts) )    {
-output.list <- list(
-   increment_all = increment_all,
-   increment_outlier = increment_outlier,
-   vst_ANPP_plot_w_taxa = vst_ANPP_plot_w_taxa,
-   vst_ANPP_plot = vst_ANPP_plot,
-   vst_ANPP_site = vst_ANPP_site,
-   ANPP_site = ANPP_site
-   )
- return(output.list)
-  } else {
   output.list <- list(
    increment_all = increment_all,
    increment_outlier = increment_outlier,
@@ -652,38 +478,18 @@ output.list <- list(
    vst_ANPP_plot = vst_ANPP_plot,
    vst_ANPP_site = vst_ANPP_site
 )
- return(output.list)
-  }
 }
 
 if(calcMethod == "approach_2")    {
 
 print("Returning productivity summary data frames as a list object, calculated using approach 2  ..... ")
 
-if(grepl("Hbp", dataProducts) )    {
-output.list <- list(
-   vst_ANPP_plot_w_taxa_2 = vst_ANPP_plot_w_taxa_2,
-   vst_ANPP_plot_2 = vst_ANPP_plot_2,
-   vst_ANPP_site_2 = vst_ANPP_site_2,
-   ANPP_site_2 = ANPP_site_2
-   )
- return(output.list)
-  } 
-  else {
   output.list <- list(
    vst_ANPP_plot_w_taxa_2 = vst_ANPP_plot_w_taxa_2,
    vst_ANPP_plot_2 = vst_ANPP_plot_2,
    vst_ANPP_site_2 = vst_ANPP_site_2
 )
+}
  return(output.list)
-  }
-}
 
 }
-
-#estimateProductivityOutputs <- estimateProductivity(input = "NEONbiomassOutputs.rds", calcMethod = "approach_1", outlier = 1.5, outlierType = "IQR")
-#estimateProductivityOutputs <- estimateProductivity(input = "NEONbiomassOutputs.rds", calcMethod = "approach_1", outlier = 2, outlierType = "SD")
-
-#list2env(estimateProductivityOutputs ,.GlobalEnv) # unlist all data frames for easier viewing or additional analysis
-#saveRDS(estimateProductivityOutputs, 'estimateProductivityOutputs.rds') # save all outputs locally for further examination
-
