@@ -23,13 +23,13 @@
 #' exist and any 'remarks' are concatenated. Samples with Sampling Impractical values other than "OK"
 #' are removed prior to summarizing the input data.
 #' 
-#' @param inputRootList A list object comprised of Plant Below Ground Biomass tables (DP1.10067.001) 
+#' @param inputDataList A list object comprised of Plant Below Ground Biomass tables (DP1.10067.001) 
 #' downloaded using the neonUtilities::loadByProduct function (defaults to required). If list input is 
 #' provided, the table input argument must be NA; similarly, if list input is missing, the 'inputMass'
 #' table input must be provided. [list]
 #'
 #' @param inputMass The 'bbc_rootmass' table for the site x month combination(s) of interest
-#' (defaults to NA). If table input is provided, the 'inputRootList' argument must be missing.
+#' (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing.
 #' [data.frame]
 #' 
 #' @return A table containing root mass data for three sizeCategories (< 1mm, 1-2mm, and 2-10mm)
@@ -50,7 +50,7 @@
 #' 
 #' #   Standardize downloaded root data to current sizeCategories and rootStatus
 #' df <- neonPlants::standardizeRootMass(
-#' inputRootList = bbc,
+#' inputDataList = bbc,
 #' inputMass = NA
 #' )
 #'
@@ -60,55 +60,55 @@
 
 
 
-standardizeRootMass <- function(inputRootList,
+standardizeRootMass <- function(inputDataList,
                                 inputMass = NA) {
   
   ### Test that user has supplied arguments as required by function ####
   
-  ### Verify user-supplied inputRootList object contains correct data if not NA
-  if (!missing(inputRootList)) {
+  ### Verify user-supplied inputDataList object contains correct data if not NA
+  if (!missing(inputDataList)) {
     
     #   Check that input is a list
-    if (!inherits(inputRootList, "list")) {
-      stop(glue::glue("Argument 'inputRootList' must be a list object from neonUtilities::loadByProduct();
-                     supplied input object is {class(inputRootList)}"))
+    if (!inherits(inputDataList, "list")) {
+      stop(glue::glue("Argument 'inputDataList' must be a list object from neonUtilities::loadByProduct();
+                     supplied input object is {class(inputDataList)}"))
     }
     
     #   Check that required tables within list match expected names
     listExpNames <- c("bbc_rootmass")
     
-    if (length(setdiff(listExpNames, names(inputRootList))) > 0) {
-      stop(glue::glue("Required tables missing from 'inputRootList':",
-                      '{paste(setdiff(listExpNames, names(inputRootList)), collapse = ", ")}',
+    if (length(setdiff(listExpNames, names(inputDataList))) > 0) {
+      stop(glue::glue("Required tables missing from 'inputDataList':",
+                      '{paste(setdiff(listExpNames, names(inputDataList)), collapse = ", ")}',
                       .sep = " "))
     }
   } else {
     
-    inputRootList <- NULL
+    inputDataList <- NULL
     
   } # end missing conditional
   
   
   
-  ### Verify inputMass is NA if inputRootList is supplied
-  if (inherits(inputRootList, "list") & !is.logical(inputMass)) {
-    stop("When 'inputRootList' is supplied the 'inputMass' argument must be NA")
+  ### Verify inputMass is NA if inputDataList is supplied
+  if (inherits(inputDataList, "list") & !is.logical(inputMass)) {
+    stop("When 'inputDataList' is supplied the 'inputMass' argument must be NA")
   }
   
   
   
-  ### Verify inputMass is a data frame if inputRootList is NA
-  if (is.null(inputRootList) & !inherits(inputMass, "data.frame")) {
+  ### Verify inputMass is a data frame if inputDataList is NA
+  if (is.null(inputDataList) & !inherits(inputMass, "data.frame")) {
     
-    stop("A data frame must be supplied for 'inputMass' if 'inputRootList' is not provided")
+    stop("A data frame must be supplied for 'inputMass' if 'inputDataList' is not provided")
   }
   
   
   
   ### Conditionally define input table ####
-  if (inherits(inputRootList, "list")) {
+  if (inherits(inputDataList, "list")) {
     
-    rootMass <- inputRootList$bbc_rootmass
+    rootMass <- inputDataList$bbc_rootmass
     
   } else {
     

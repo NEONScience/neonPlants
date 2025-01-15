@@ -23,21 +23,21 @@
 #' field to document the number of analytical replicates associated with each chemistry data 
 #' point.
 #' 
-#' @param inputRootList A list object comprised of Plant Below Ground Biomass tables (DP1.10067.001) 
+#' @param inputDataList A list object comprised of Plant Below Ground Biomass tables (DP1.10067.001) 
 #' downloaded using the neonUtilities::loadByProduct function. If list input is provided, the table
 #' input arguments must all be NA; similarly, if list input is missing, table inputs must be
 #' provided. [list]
 #'
 #' @param inputMass The 'bbc_rootmass' table for the site x month combination(s) of interest.
-#' (defaults to NA). If table input is provided, the 'inputRootList' argument must be missing.
+#' (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing.
 #' [data.frame]
 #' 
 #' @param inputPool The 'bbc_chemistryPooling' table for the site x month combination(s) of
-#' interest (defaults to NA). If table input is provided, the 'inputRootList' argument must be 
+#' interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be 
 #' missing. [data.frame]
 #' 
 #' @param inputChem The 'bbc_rootChemistry' table for the site x month combination(s) of
-#' interest (defaults to NA). If table input is provided, the 'inputRootList' argument must be 
+#' interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be 
 #' missing. [data.frame]
 #' 
 #' @return A table containing both root mass and root chemistry data in the same row for
@@ -59,7 +59,7 @@
 #' 
 #' #   Join downloaded root data
 #' df <- neonPlants::joinRootChem(
-#' inputRootList = bbc,
+#' inputDataList = bbc,
 #' inputMass = NA,
 #' inputPool = NA,
 #' inputChem = NA
@@ -71,61 +71,61 @@
 
 
 
-joinRootChem <- function(inputRootList,
+joinRootChem <- function(inputDataList,
                          inputMass = NA,
                          inputPool = NA,
                          inputChem = NA) {
   
   ### Test that user has supplied arguments as required by function ####
   
-  ### Verify user-supplied inputRootList object contains correct data if not NA
-  if (!missing(inputRootList)) {
+  ### Verify user-supplied inputDataList object contains correct data if not NA
+  if (!missing(inputDataList)) {
     
     #   Check that input is a list
-    if (!inherits(inputRootList, "list")) {
-      stop(glue::glue("Argument 'inputRootList' must be a list object from neonUtilities::loadByProduct();
-                     supplied input object is {class(inputRootList)}"))
+    if (!inherits(inputDataList, "list")) {
+      stop(glue::glue("Argument 'inputDataList' must be a list object from neonUtilities::loadByProduct();
+                     supplied input object is {class(inputDataList)}"))
     }
     
     #   Check that required tables within list match expected names
     listExpNames <- c("bbc_rootmass", "bbc_chemistryPooling", "bbc_rootChemistry")
     
-    if (length(setdiff(listExpNames, names(inputRootList))) > 0) {
-      stop(glue::glue("Required tables missing from 'inputRootList':",
-                      '{paste(setdiff(listExpNames, names(inputRootList)), collapse = ", ")}',
+    if (length(setdiff(listExpNames, names(inputDataList))) > 0) {
+      stop(glue::glue("Required tables missing from 'inputDataList':",
+                      '{paste(setdiff(listExpNames, names(inputDataList)), collapse = ", ")}',
                       .sep = " "))
     }
   } else {
     
-    inputRootList <- NULL
+    inputDataList <- NULL
     
   } # end missing conditional
   
   
   
-  ### Verify table inputs are NA if inputRootList is supplied
-  if (inherits(inputRootList, "list") & (!is.logical(inputMass) | !is.logical(inputPool) | !is.logical(inputChem))) {
-    stop("When 'inputRootList' is supplied all table input arguments must be NA")
+  ### Verify table inputs are NA if inputDataList is supplied
+  if (inherits(inputDataList, "list") & (!is.logical(inputMass) | !is.logical(inputPool) | !is.logical(inputChem))) {
+    stop("When 'inputDataList' is supplied all table input arguments must be NA")
   }
   
   
   
-  ### Verify all table inputs are data frames if inputRootList is NA
-  if (is.null(inputRootList) & 
+  ### Verify all table inputs are data frames if inputDataList is NA
+  if (is.null(inputDataList) & 
       (!inherits(inputMass, "data.frame") | !inherits(inputPool, "data.frame") | !inherits(inputChem, "data.frame"))) {
     
-    stop("Data frames must be supplied for all table inputs if 'inputRootList' is missing")
+    stop("Data frames must be supplied for all table inputs if 'inputDataList' is missing")
     
   }
   
   
   
   ### Conditionally define input tables ####
-  if (inherits(inputRootList, "list")) {
+  if (inherits(inputDataList, "list")) {
     
-    rootMass <- inputRootList$bbc_rootmass
-    rootPool <- inputRootList$bbc_chemistryPooling
-    rootChem <- inputRootList$bbc_rootChemistry
+    rootMass <- inputDataList$bbc_rootmass
+    rootPool <- inputDataList$bbc_chemistryPooling
+    rootChem <- inputDataList$bbc_rootChemistry
     
   } else {
     
