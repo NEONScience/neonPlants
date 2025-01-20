@@ -176,16 +176,7 @@ estimatePheTransByTag <- function(
   # Print data range for input data set
   print(paste("Observation date range:", min(obs$date), "to", max(obs$date)))
 
-  # Define the categorical values
-  intensities <- unique(obs$phenophaseIntensity)
-  
-  # Define the order of the categories 
-  order_int_levels <- c(NA, "< 5%", "< 25%", "5-24%", "25-49%", "50-74%", "75-94%", ">= 95%", 
-                        "<= 3", "3 to 10", "11 to 100", "101 to 1000", "1001 to 10000", "> 10000")
-  
-  # Create an ordered factor 
-  ordered_intensities <- factor(intensities, levels = order_int_levels, ordered = TRUE)
-  
+
   # Format transition output dataframe
   step_one <-obs%>%
     # extract year from date
@@ -204,7 +195,6 @@ estimatePheTransByTag <- function(
     stop("input dataset does not contain any phenophase transitions")
   }
 
-    dplyr::mutate(maxIntensity = .data$phenophaseIntensity[which.max(as.numeric(ordered_intensities))])%>%
     
   step_two <- step_one%>%  # remove first observation with no preceding observation & steps with no transition
     dplyr::filter(!is.na(.data$statusLag), .data$phenophaseStatus != .data$statusLag) %>%
@@ -240,7 +230,7 @@ estimatePheTransByTag <- function(
     dplyr::select("year", "siteID", "individualID", "taxonID", "scientificName", 
                   "phenophaseName", "transitionType", "nthTransition", 
                   "dateIntervalStart", "doyIntervalStart", "dateIntervalEnd"="date",
-                  "doy_intervalEnd" = "dayOfYear", "dateTransition", 
+                  "doyIntervalEnd" = "dayOfYear", "dateTransition", 
                   "doyTransition", "samplingInterval", "precisionDays")
   return(out)
 }
