@@ -74,8 +74,7 @@ estimatePheTransByTag <- function(
   
   # Verify that list is provided if inputDataList is non-null
   if(!is.null(inputDataList) && !class(inputDataList)=='list'){
-    stop(paste("Argument 'inputDataList' must be a list object from neonUtilities::loadByProduct(). 
-               Supplied input object is class", {class(inputDataList)}))
+    stop(paste("Argument 'inputDataList' must be a list object from neonUtilities::loadByProduct(). Supplied input object is class", {class(inputDataList)}))
   }
   
   # Verify that list contains expected data frames
@@ -116,14 +115,14 @@ estimatePheTransByTag <- function(
     if(!is.null(inputDataList) && length(setdiff(obs_fields, 
                                                  names(inputDataList$phe_statusintensity))) > 0){
       stop(paste0("Required columns missing from inputDataList$phe_statusintensity:", 
-                  paste0(setdiff(tag_fields, names(inputTags)), 
+                  paste0(setdiff(obs_fields, names(inputDataList$phe_statusintensity)), 
                          collapse = ", "),
                   sep = " "))
     }
      
     if(!is.null(inputDataList) && length(setdiff(tag_fields, names(inputDataList$phe_perindividual))) > 0){
       stop(paste0("Required columns missing from inputDataList$phe_perindividual:", 
-                  paste0(setdiff(tag_fields, names(inputTags)), 
+                  paste0(setdiff(tag_fields, names(inputDataList$phe_perindividual)), 
                          collapse = ", "),
                   sep = " "))
     }  
@@ -155,7 +154,7 @@ estimatePheTransByTag <- function(
       stop("inputTags data frame does not contain data.")
     }
     if(!is.null(inputStatus) && nrow(inputStatus)< 1){
-      stop("inputTags data frame does not contain data.")
+      stop("inputStatus data frame does not contain data.")
     }
 
   # Assign working data frame
