@@ -6,7 +6,7 @@
 VstDat <- readRDS(testthat::test_path("testdata", "VstDat.rds"))
 VstDat <- VstDat
 
-estimateWoodMassOutputs <- estimateWoodMass(inputDataListVst = VstDat)
+estimateWoodMassOutputs <- estimateWoodMass(inputDataList = VstDat)
 estimateWoodProdOutputs <- estimateWoodProd(input = estimateWoodMassOutputs)
 
 ### Test: Function generates expected output type

@@ -5,23 +5,28 @@
 \title{Estimate NEON aboveground biomass (AGB) contributed by woody vegetation}
 \usage{
 estimateWoodMass(
-  inputDataListVst,
-  site = NA,
-  start = NA,
-  end = NA,
+  inputDataList,
+  vst_apparentindividual = NA,
+  vst_mappingandtagging = NA,
+  vst_perplotperyear = NA,
   growthForm = "single and multi-bole trees",
   plotType = "tower",
   plotPriority = 5
 )
 }
 \arguments{
-\item{inputDataListVst}{A list object comprised of "Vegetation structure" tables (DP1.10098.001) downloaded using the neonUtilities::loadByProduct function, or if left at NA then download initiated. \link{character}}
+\item{inputDataList}{A list object comprised of "Vegetation structure" tables (DP1.10098.001) downloaded using the neonUtilities::loadByProduct function.
+If list input is provided, the table input arguments must all be NA; similarly, if list input is missing, table inputs must be provided for
+'vst_apparentindividual', 'vst_mappingandtagging', and 'vst_perplotperyear' arguments. \link{list}}
 
-\item{site}{Either NA, meaning all available sites from inputDataListVst data, or a character vector of 4-letter NEON site codes, e.g. c('ONAQ','RMNP'). Defaults to all. \link{character}}
+\item{vst_apparentindividual}{The 'vst_apparentindividual' table for the site x month combination(s) of interest
+(defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 
-\item{start}{Either NA, meaning all available years from inputDataListVst data, or a character vector specifying start year in the form YYYY, e.g. 2019. The default and earliest allowable option is 2018. \link{character}}
+\item{vst_mappingandtagging}{The 'vst_mappingandtagging' table for the site x month combination(s) of interest
+(defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 
-\item{end}{Either NA, meaning all available years from inputDataListVst data after the start year, or a character vector specifying start year in the form YYYY, e.g. 2021. Data from the current calendar year are excluded since they would be incomplete. \link{character}}
+\item{vst_perplotperyear}{The 'vst_perplotperyear' table for the site x month combination(s) of interest
+(defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 
 \item{growthForm}{Select which growth forms to analyse \link{character}}
 
@@ -43,7 +48,7 @@ Biomass outputs can, if desired, be used in the follow-up estimateWoodProd produ
 (DP1.10098.001) retrieved using the neonUtilities::loadByProduct() function (preferred), or data downloaded from the NEON Data Portal.
 }
 \details{
-Input data can be filtered by site, date, plot type, and plot priority. Input data are combined with supplemental static tables
+Input data can be filtered by plot type and plot priority. Input data are combined with supplemental static tables
 with allometric equation parameters and taxon specific characteristics, and biomass is estimated by allometric equations for each individual.
 Generalized allometric equations are applied first, and replaced by taxon specific equations if available. Only the set of growth forms selected via the
 growthForm parameter are included in outputs. Biomass is summarized on an areal basis at the hierarchical level of the plot and site.
@@ -52,25 +57,16 @@ growthForm parameter are included in outputs. Biomass is summarized on an areal 
 \dontrun{
 # Obtain NEON Vegetation structure
 VstDat <- neonUtilities::loadByProduct(dpID="DP1.10098.001", 
-     site = "all",
-     startdate = "2018-01",
-     enddate = paste0(as.character(as.integer(format(Sys.Date(), "\%Y"))-1), "-12"),
      package = "basic", check.size = FALSE)
      
 # If list is not in memory, load VST list of dataframes from local file:
 load('VstDat.rds') # load NEON VST portal data from a local file
 
 # example with arguments at default values
-estimateWoodMassOutputs <- estimateWoodMass(inputDataListVst = VstDat)
-
-# example with inputDataListVst = NA that triggers a fresh NEON portal data download
-estimateWoodMassOutputs <- estimateWoodMass(inputDataListVst = NA, site = "STEI")
-
-# example with just a subset of inputDataListVst data being utilized
-estimateWoodMassOutputs <- estimateWoodMass(inputDataListVst = VstDat, start = 2022)
+estimateWoodMassOutputs <- estimateWoodMass(inputDataList = VstDat)
 
 # example specifying several non-default arguments
-estimateWoodMassOutputs <- estimateWoodMass(inputDataListVst = VstDat,
+estimateWoodMassOutputs <- estimateWoodMass(inputDataList = VstDat,
                                              growthForm = "all trees", plotPriority = 4)
 
 list2env(estimateWoodMassOutputs ,.GlobalEnv) # unlist all data frames

@@ -8,15 +8,20 @@
 #' Biomass outputs can, if desired, be used in the follow-up estimateWoodProd productivity function. Data inputs are "Vegetation structure" 
 #' (DP1.10098.001) retrieved using the neonUtilities::loadByProduct() function (preferred), or data downloaded from the NEON Data Portal.
 
-#' @details Input data can be filtered by site, date, plot type, and plot priority. Input data are combined with supplemental static tables 
+#' @details Input data can be filtered by plot type and plot priority. Input data are combined with supplemental static tables 
 #' with allometric equation parameters and taxon specific characteristics, and biomass is estimated by allometric equations for each individual. 
 #' Generalized allometric equations are applied first, and replaced by taxon specific equations if available. Only the set of growth forms selected via the 
 #' growthForm parameter are included in outputs. Biomass is summarized on an areal basis at the hierarchical level of the plot and site.
 
-#' @param inputDataListVst A list object comprised of "Vegetation structure" tables (DP1.10098.001) downloaded using the neonUtilities::loadByProduct function, or if left at NA then download initiated. [character]
-#' @param site Either NA, meaning all available sites from inputDataListVst data, or a character vector of 4-letter NEON site codes, e.g. c('ONAQ','RMNP'). Defaults to all. [character]
-#' @param start Either NA, meaning all available years from inputDataListVst data, or a character vector specifying start year in the form YYYY, e.g. 2019. The default and earliest allowable option is 2018. [character]
-#' @param end Either NA, meaning all available years from inputDataListVst data after the start year, or a character vector specifying start year in the form YYYY, e.g. 2021. Data from the current calendar year are excluded since they would be incomplete. [character]
+#' @param inputDataList A list object comprised of "Vegetation structure" tables (DP1.10098.001) downloaded using the neonUtilities::loadByProduct function. 
+#' If list input is provided, the table input arguments must all be NA; similarly, if list input is missing, table inputs must be provided for 
+#' 'vst_apparentindividual', 'vst_mappingandtagging', and 'vst_perplotperyear' arguments. [list]
+#' @param vst_apparentindividual The 'vst_apparentindividual' table for the site x month combination(s) of interest
+#' (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
+#' @param vst_mappingandtagging The 'vst_mappingandtagging' table for the site x month combination(s) of interest
+#' (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
+#' @param vst_perplotperyear The 'vst_perplotperyear' table for the site x month combination(s) of interest
+#' (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
 #' @param growthForm Select which growth forms to analyse [character]
 #' @param plotType Optional filter based on NEON plot type. Defaults to "tower" plots, which are sampled annually. Otherwise "distributed" plots are examined also. [character]
 #' @param plotPriority NEON plots have a priority number in the event that not all plots are able to be sampled. The lower the number the higher the priority. The default is 5. [numeric]
@@ -32,25 +37,16 @@
 #' \dontrun{
 #' # Obtain NEON Vegetation structure
 #' VstDat <- neonUtilities::loadByProduct(dpID="DP1.10098.001", 
-#'      site = "all",
-#'      startdate = "2018-01",
-#'      enddate = paste0(as.character(as.integer(format(Sys.Date(), "%Y"))-1), "-12"),
 #'      package = "basic", check.size = FALSE)
 #'      
 #' # If list is not in memory, load VST list of dataframes from local file:
 #' load('VstDat.rds') # load NEON VST portal data from a local file
 #' 
 #' # example with arguments at default values
-#' estimateWoodMassOutputs <- estimateWoodMass(inputDataListVst = VstDat)
-#' 
-#' # example with inputDataListVst = NA that triggers a fresh NEON portal data download
-#' estimateWoodMassOutputs <- estimateWoodMass(inputDataListVst = NA, site = "STEI")
-#' 
-#' # example with just a subset of inputDataListVst data being utilized
-#' estimateWoodMassOutputs <- estimateWoodMass(inputDataListVst = VstDat, start = 2022)
+#' estimateWoodMassOutputs <- estimateWoodMass(inputDataList = VstDat)
 #' 
 #' # example specifying several non-default arguments
-#' estimateWoodMassOutputs <- estimateWoodMass(inputDataListVst = VstDat,
+#' estimateWoodMassOutputs <- estimateWoodMass(inputDataList = VstDat,
 #'                                              growthForm = "all trees", plotPriority = 4)
 #' 
 #' list2env(estimateWoodMassOutputs ,.GlobalEnv) # unlist all data frames
@@ -62,56 +58,61 @@
 # Samuel M Simkin (2025-01-15)  revised
 ##############################################################################################
 
-estimateWoodMass = function(inputDataListVst,
-                       site = NA,
-                       start = NA, 
-                       end = NA,
+estimateWoodMass = function(inputDataList, 
+                       vst_apparentindividual = NA, vst_mappingandtagging = NA, vst_perplotperyear = NA, 
                        growthForm = "single and multi-bole trees",
                        plotType = "tower",
                        plotPriority = 5
                          ) {
 
   
-# Check whether inputDataListVst is something other than a list or NA, and if NA then do a fresh portal download
-  
-if(!methods::is(inputDataListVst, class = "list" )){ if(length(inputDataListVst) == 1 ){ if(!is.na(inputDataListVst) ){
-  stop("The inputDataListVst argument is expected to be either a list or NA. A character argument is not allowed.")
-  } else { print("Since the inputDataListVst argument is NA instead of an existing list object, NEON 'Vegetation structure' data (dpID DP1.10098.001) is now being downloaded ..... ") 
-if(is.na(start)){start = 2018}
-if(is.na(end)){end = as.character(as.integer(format(Sys.Date(), "%Y"))-1)}
-site_pull <- site
-if(is.na(site_pull)){site_pull = "all"}
-
-inputDataListVst <- neonUtilities::loadByProduct(dpID="DP1.10098.001", 
-                             site = site_pull,
-                             startdate = paste0(start,"-01"),
-                             enddate = paste0(end, "-12"),
-                             package = "basic", check.size = FALSE, token = Sys.getenv('NEON_PAT'))     
-  }
- }
-}
-  
-if(!methods::is(inputDataListVst, class = "list" )){ if(length(inputDataListVst) > 1 ){ 
-  stop("The inputDataListVst argument is expected to be either a list or NA. Another argument (e.g. a dataframe) is not allowed.")
- }  
-}
- 
-list2env(inputDataListVst ,.GlobalEnv)  
-
-vst_mappingandtagging <- inputDataListVst$vst_mappingandtagging
-vst_perplotperyear <- inputDataListVst$vst_perplotperyear
-vst_apparentindividual <- inputDataListVst$vst_apparentindividual
-'vst_non-woody' <- inputDataListVst$'vst_non-woody'
-
-
-#   Check that required tables within list match expected names
-listExpNames <- c("vst_apparentindividual", "vst_mappingandtagging", "vst_non-woody", "vst_perplotperyear")
+### Verify user-supplied 'inputDataList' object contains correct data if not missing
+  if (!missing(inputDataList)) {
     
-if (length(setdiff(listExpNames, names(inputDataListVst))) > 0) {
-      stop(glue::glue("Required tables missing from 'inputDataListVst':",
-                      '{paste(setdiff(listExpNames, names(inputDataListVst)), collapse = ", ")}',
-                      .sep = " "))
-} 
+    #   Check that input is a list
+    if (!inherits(inputDataList, "list")) {
+      stop(glue::glue("Argument 'inputDataList' must be a list object from neonUtilities::loadByProduct();
+                     supplied input object is {class(inputDataList)}"))
+    }
+    
+    #   Check that required tables within list match expected names
+    listExpNames <- c("vst_apparentindividual", "vst_mappingandtagging", "vst_perplotperyear", "vst_non-woody")
+    
+
+      #   All expected tables required when includeDilution == TRUE
+      if (length(setdiff(listExpNames, names(inputDataList))) > 0) {
+        stop(glue::glue("Required tables missing from 'inputDataList':",
+                        '{paste(setdiff(listExpNames, names(inputDataList)), collapse = ", ")}',
+                        .sep = " "))
+      }
+    
+  } else {
+    
+    inputDataList <- NULL
+    
+  } # end missing conditional
+  
+  
+  ### Verify table inputs are NA if 'inputDataList' is supplied
+  if (inherits(inputDataList, "list") & (!is.logical(vst_apparentindividual) | !is.logical(vst_mappingandtagging) | !is.logical(vst_perplotperyear))) {
+    stop("When 'inputDataList' is supplied all table input arguments must be NA")
+  }
+  
+  ### Verify 'vst_apparentindividual' 'vst_mappingandtagging', and 'vst_perplotperyear' are data frames if 'inputDataList' is missing
+  if (is.null(inputDataList) & 
+      (!inherits(vst_apparentindividual, "data.frame") | !inherits(vst_mappingandtagging, "data.frame")  | !inherits(vst_perplotperyear, "data.frame"))) {
+    
+    stop("Data frames must be supplied for all table inputs if 'inputDataList' is not provided")
+  }
+  
+
+if (inherits(inputDataList, "list")) {
+vst_mappingandtagging <- inputDataList$vst_mappingandtagging
+vst_perplotperyear <- inputDataList$vst_perplotperyear
+vst_apparentindividual <- inputDataList$vst_apparentindividual
+'vst_non-woody' <- inputDataList$'vst_non-woody'
+}
+  
 
  ### Verify input tables contain required columns and data ####
   
@@ -193,48 +194,10 @@ nonwoodyExpCols <- c("domainID", "siteID", "plotID", "individualID", "growthForm
   }  
 
   
-perplot <- inputDataListVst$vst_perplotperyear ## read in plot sample area for each growthForm by eventID combo from vst_perplotperyear table
+perplot <- inputDataList$vst_perplotperyear ## read in plot sample area for each growthForm by eventID combo from vst_perplotperyear table
 perplot$year <- as.numeric(substr(perplot$eventID,10,13) )
 start_from_input <- as.character(min(as.numeric(substr(perplot$year, 1,4)))) # year component of eventID, which on rare occasions may be before the year component of earliest collect date)
 end_from_input <- as.character(max(as.numeric(substr(perplot$date, 1,4))))
-site_from_input <- unique(perplot$siteID)
-
-
-# Warning if start date filter is before input data
-  if (!is.na(start)) {if(as.numeric(start) < as.numeric(start_from_input)){  start = as.numeric(start_from_input)
-    print("The start year is earlier than the input data. The start year in current run of function has automatically been changed to:")
-    print(start_from_input)
-  }} else {start = as.numeric(start_from_input)}
-
-# Warning if start date is too early
-   if (!is.na(start)) {if(as.numeric(start) < 2018){  start = "2018"
-    print("The earliest year that can be used for this function is 2018. The start year has automatically been changed to 2018.")
-  }} else {start = as.numeric(start_from_input)}
-
-# Warning if end date filter is after input data
-   if (!is.na(end)) {if(as.numeric(end) > as.numeric(end_from_input)){  end = as.numeric(end_from_input)
-    print("The end year is later than the input data (re-pull data as late as the preceding calendar year from the portal using separate function). The end year in current run of function has automatically been changed to:")
-    print(end_from_input)
-  }} else {end = as.numeric(end_from_input)}
-
-# Warning if end date is too late
-   if (!is.na(end)) {if(as.numeric(end) > as.integer(format(Sys.Date(), "%Y"))-1){  end = as.character(as.integer(format(Sys.Date(), "%Y"))-1)
-    print("The end year can not be the current calendar year or a future year. The end year has automatically been changed to the year prior to the current calendar year.")
-  }} else {end = as.numeric(end_from_input)}
-
-# Warning if site is not in input data
-if (length(site) >1) {
-     sites_not_in_input <- setdiff(site, site_from_input)
-     if(length(sites_not_in_input) >= 1){ 
-    stop(paste0("One or more sites are not in the input data (re-pull data for desired sites from the portal using separate function). The following site(s) are not in the input data: ", sites_not_in_input) ) 
-     }} else {
-if (!is.na(site)) {
-     sites_not_in_input <- setdiff(site, site_from_input)
-     if(length(sites_not_in_input) >= 1){ 
-    stop(paste0("One or more sites are not in the input data (re-pull data for desired sites from the portal using separate function). The following site(s) are not in the input data: ", sites_not_in_input) ) 
-     }} else site = site_from_input}
-
-#perplot <- perplot %>% dplyr::filter(.data$year >= as.numeric(start) & .data$year <= as.numeric(end) & .data$siteID %in% site)
 
 
 # obtained "UniquePlotIDsSamplingModulesPriorityLists" from GitHub NEON-OS_spatial_data repo and then filtered and selected to relevant records and columns: 
@@ -242,7 +205,7 @@ if (!is.na(site)) {
 #priority_plots <- read.table('../suppl_data/UniquePlotIDsSamplingModulesPriorityLists.NEON-OS_spatial_data.repo.vst.csv', header=TRUE, sep = ",", stringsAsFactors = F) 
   # The specificModuleSamplingPriority field is used in the productivity script to optionally filter only to plots with priority 1-5 (the plots that are most likely to have been sampled the year they were scheduled)
 priority_plots_all = data.frame() 
-endYear <- as.numeric((as.numeric(end)) : (as.numeric(start)) )
+endYear <- as.numeric((as.numeric(end_from_input)) : (as.numeric(start_from_input)) )
 for(i in 1:length(endYear)){ # loop through all possible years
 priority_plots$year <- endYear[i]
 priority_plots_all <- rbind(priority_plots_all, priority_plots)
@@ -253,20 +216,20 @@ perplot <- merge(perplot, priority_plots_all, by=c("plotID","plotType","eventID"
 perplot <- perplot[order(perplot$date),] # intent here is to sort by date before removing duplicates so that if duplicates are from different dates the record from latest date will be retained
     perplot <- perplot[!duplicated(perplot$plot_eventID, fromLast=TRUE), ] # sorting by date and then using fromLast=TRUE should retain the most recent version of duplicates
 
-perplot_not_SI <- perplot %>% dplyr::filter(.data$samplingImpractical == "OK" | .data$samplingImpractical == "" | is.na(.data$samplingImpractical)) %>% dplyr::filter(.data$year >= as.numeric(start) & .data$year <= as.numeric(end) & .data$siteID %in% site)
+perplot_not_SI <- perplot %>% dplyr::filter(.data$samplingImpractical == "OK" | .data$samplingImpractical == "" | is.na(.data$samplingImpractical)) %>% dplyr::filter(.data$year >= as.numeric(start_from_input) & .data$year <= as.numeric(end_from_input) ) # & .data$siteID %in% site)
   # create list of ALL plot by eventID combos from the vst_perplotperyear tables from vst woody, vst non-herb perennial, or both, regardless of whether they have biomass
  plot_eventID_list <- unique(perplot_not_SI$plot_eventID) # list of all unique combos of plotID and eventID where full sampling should have taken place
 perplot <- perplot %>% dplyr::select("plot_eventID", "plotID", "eventID", "year", "nlcdClass", "plotType", "eventType", "dataCollected", "targetTaxaPresent", 
                                      "totalSampledAreaTrees", "totalSampledAreaShrubSapling", "totalSampledAreaLiana", "totalSampledAreaOther")
 
-plotType_df <- inputDataListVst$vst_perplotperyear 
+plotType_df <- inputDataList$vst_perplotperyear 
 
   plotType_df <- plotType_df %>% dplyr::select("plotID","plotType")
   plotType_df <- plotType_df[!duplicated(plotType_df$plotID),]
 
 if(grepl("non-woody", growthForm) )    {
-vst_agb_other <- inputDataListVst$'vst_non-woody'
-#vst_agb_other <- vst_agb_other %>% dplyr::filter(as.numeric(substr(.data$date,1,4)) >= as.numeric(start) & as.numeric(substr(.data$date,1,4)) <= as.numeric(end) & .data$siteID %in% site)
+vst_agb_other <- inputDataList$'vst_non-woody'
+#vst_agb_other <- vst_agb_other %>% dplyr::filter(as.numeric(substr(.data$date,1,4)) >= as.numeric(start_from_input) & as.numeric(substr(.data$date,1,4)) <= as.numeric(end_from_input) ) # & .data$siteID %in% site)
 
 
 print("Calculating biomass from vst_non-woody table ..... ")
@@ -337,15 +300,15 @@ vst_agb_per_ha_other <- vst_agb_final_other %>% dplyr::group_by(.data$plot_event
 }
   
 ## read in taxonID from vst_mappingandtagging table 
-map <- inputDataListVst$vst_mappingandtagging 
+map <- inputDataList$vst_mappingandtagging 
 map <- map[order(map$date),]
 map <- map[!duplicated(map$individualID, fromLast=TRUE), ] # keep the most recent record which should have a more specific or considered taxonID; in QA older dupes are periodically deleted
     taxonID_df <- map %>% dplyr::select("taxonID", "scientificName", "family", "genus", "taxonRank") %>% unique()  
     vst_taxonIDs <- taxonID_df$taxonID
  map <- map %>% dplyr::select("individualID", "taxonID")
 
-appInd <- inputDataListVst$vst_apparentindividual
-appInd <- appInd %>% dplyr::filter(as.numeric(substr(.data$date,1,4)) >= as.numeric(start) & as.numeric(substr(.data$date,1,4)) <= as.numeric(end) & .data$siteID %in% site)
+appInd <- inputDataList$vst_apparentindividual
+appInd <- appInd %>% dplyr::filter(as.numeric(substr(.data$date,1,4)) >= as.numeric(start_from_input) & as.numeric(substr(.data$date,1,4)) <= as.numeric(end_from_input) ) # & .data$siteID %in% site)
 
 
 print("Assembling allometric equation parameters ..... ")
@@ -688,7 +651,7 @@ priority_plots_without_plotType <- priority_plots_all %>% dplyr::select(-"plotTy
 vst_plot_w_0s <- merge(vst_plot_w_0s, priority_plots_without_plotType, by=c("plotID","eventID","year"), all.x=TRUE)
 
 vst_plot_w_0s <- vst_plot_w_0s %>% dplyr::filter(!is.na(.data$agb_Mgha__Live) & !is.na(.data$agb_Mgha__Dead_or_Lost) ) # remove records that are missing any productivity values
-vst_plot_w_0s <- vst_plot_w_0s %>% dplyr::filter(.data$year >= start) # remove records from before the time of interest
+vst_plot_w_0s <- vst_plot_w_0s %>% dplyr::filter(.data$year >= start_from_input) # remove records from before the time of interest
 if(plotType == "tower") {vst_plot_w_0s <- vst_plot_w_0s %>% dplyr::filter(.data$plotType == "tower") } # if arg plotType = "tower" then filter to just tower plots, otherwise keep all plots from input data
 if(!is.na(plotPriority)) {vst_plot_w_0s <- vst_plot_w_0s %>% dplyr::filter(.data$specificModuleSamplingPriority <= plotPriority)} # remove lower priority plots that aren't required to be sampled every year (default is 5 (the 5 highest priority plots))
 

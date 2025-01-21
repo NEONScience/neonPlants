@@ -7,33 +7,81 @@
 estimateMass(
   dataProducts = c("Vst", "Hbp"),
   inputDataListVst = NA,
+  vst_apparentindividual = NA,
+  vst_mappingandtagging = NA,
+  vst_perplotperyear = NA,
   inputDataListHbp = NA,
-  site = NA,
-  start = NA,
-  end = NA,
+  hbp_perbout = NA,
+  hbp_massdata = NA,
+  inputDataListBbc = NA,
+  inputCore = NA,
+  inputMass = NA,
+  inputDilution = NA,
+  includeDilution = NA,
+  includeFragInTotal = NA,
   plotType = "tower",
   plotPriority = 5,
   growthForm = "single and multi-bole trees"
 )
 }
 \arguments{
-\item{dataProducts}{Specify a character vector with the NEON data products to be combined. Defaults to c("Vst","Hbp") for Vegetation structure and Herbaceous clip harvest, respectively. \link{character}}
+\item{dataProducts}{Specify a character vector with the NEON data products to be combined. Defaults to c("Vst","Hbp") for Vegetation structure and Herbaceous
+clip harvest, respectively. The other option currently available is "Bbc" for Root biomass and chemistry, periodic \link{character}}
 
-\item{inputDataListVst}{Specify a loaded R list object (e.g. VstDat) that contains NEON portal VST (Vegetation structure) data. \link{character}}
+\item{inputDataListVst}{A list object comprised of "Vegetation structure" tables (DP1.10098.001) downloaded using the neonUtilities::loadByProduct function.
+If list input is provided, the table input arguments must all be NA; similarly, if list input is missing and "Vst" is included in dataProducts argument, table
+inputs must be provided for 'vst_apparentindividual', 'vst_mappingandtagging', and 'vst_perplotperyear' arguments. \link{list}}
 
-\item{inputDataListHbp}{Specify a loaded R list object (e.g. HbpDat) that contains NEON portal HBP (Herbaceous clip harvest) data. \link{character}}
+\item{vst_apparentindividual}{The 'vst_apparentindividual' table for the site x month combination(s) of interest
+(defaults to NA). If table input is provided, the 'inputDataListVst' argument must be missing. \link{data.frame}}
 
-\item{site}{Either NA, meaning all available sites from inputDataListVst and inputHBP data, or a character vector of 4-letter NEON site codes, e.g. c('ONAQ','RMNP'). Defaults to all. \link{list}}
+\item{vst_mappingandtagging}{The 'vst_mappingandtagging' table for the site x month combination(s) of interest
+(defaults to NA). If table input is provided, the 'inputDataListVst' argument must be missing. \link{data.frame}}
 
-\item{start}{Either NA, meaning all available years from inputDataListVst and inputHBP data, or a character vector specifying start year in the form YYYY, e.g. 2019. The default and earliest allowable option is 2018. \link{numeric}}
+\item{vst_perplotperyear}{The 'vst_perplotperyear' table for the site x month combination(s) of interest
+(defaults to NA). If table input is provided, the 'inputDataListVst' argument must be missing. \link{data.frame}}
 
-\item{end}{Either NA, meaning all available years from inputDataListVst and inputHBP data after the start year, or a character vector specifying start year in the form YYYY, e.g. 2021. Data from the current calendar year are excluded since they would be incomplete. [numeric}
+\item{inputDataListHbp}{A list object comprised of "Herbaceous clip harvest" tables (DP1.10023.001) downloaded using the neonUtilities::loadByProduct function.
+If list input is provided, the table input arguments must all be NA; similarly, if list input is missing, table inputs must be provided for
+'hbp_perbout', and 'hbp_massdata' arguments. \link{list}}
 
-\item{plotType}{Optional filter based on NEON plot type. Defaults to "tower" plots, which are sampled annually. Otherwise "distributed" plots are examined also. \link{character}}
+\item{hbp_perbout}{The 'hbp_perbout' table for the site x month combination(s) of interest
+(defaults to NA). If table input is provided, the 'inputDataListHbp' argument must be missing. \link{data.frame}}
 
-\item{plotPriority}{NEON plots have a priority number in the event that not all plots are able to be sampled. The lower the number the higher the priority. The default is 5. \link{numeric}}
+\item{hbp_massdata}{The 'hbp_massdata' table for the site x month combination(s) of interest
+(defaults to NA). If table input is provided, the 'inputDataListHbp' argument must be missing. \link{data.frame}}
 
-\item{growthForm}{Select which growth forms to analyse within NEON portal data \link{character}}
+\item{inputDataListBbc}{A list object comprised of Plant Below Ground Biomass tables (DP1.10067.001)
+downloaded using the neonUtilities::loadByProduct() function. If list input is provided, the table
+input arguments must all be NA; similarly, if list input is missing, table inputs must be
+provided for 'inputCore' and 'inputMass' arguments at a minimum. \link{list}}
+
+\item{inputCore}{The 'bbc_percore' table for the site x month combination(s) of interest
+(defaults to NA). If table input is provided, the 'inputDataListBbc' argument must be missing.
+\link{data.frame}}
+
+\item{inputMass}{The 'bbc_rootmass' table for the site x month combination(s) of interest
+(defaults to NA). If table input is provided, the 'inputDataListBbc' argument must be missing.
+\link{data.frame}}
+
+\item{inputDilution}{The 'bbc_dilution' table for the site x month combination(s) of interest
+(optional, defaults to NA). If table input is provided, the 'inputDataListBbc' argument must be
+missing. \link{data.frame}}
+
+\item{includeDilution}{Required if dataProducts includes "Bbc". Indicator for whether mass of root fragments < 1 cm length should be
+calculated, as estimated via the Dilution Sampling method (Defaults to TRUE). If TRUE and
+'inputDilution' is NA, the 'bbc_dilution' table will be extracted from the list input. \link{logical}}
+
+\item{includeFragInTotal}{Required if dataProducts includes "Bbc". Indicator for whether mass of root fragments < 1 cm length
+calculated from dilution sampling should be included when summing across sizeCategory to
+calculate the 'totalDryMass'. Defaults to FALSE. If set to TRUE and 'inputDataListBbc' is missing,
+the 'bbc_dilution' table must be provided to the 'inputDilution' argument. \link{logical}}
+
+\item{plotType}{Applicable if dataProducts includes "Vst" or "Hbp". Optional filter based on NEON plot type. Defaults to "tower" plots, which are sampled annually. Otherwise "distributed" plots are examined also. \link{character}}
+
+\item{plotPriority}{Applicable if dataProducts includes "Vst" or "Hbp". NEON plots have a priority number in the event that not all plots are able to be sampled. The lower the number the higher the priority. The default is 5. \link{numeric}}
+
+\item{growthForm}{Required if dataProducts includes "Vst" or "Hbp". Select which growth forms to analyse within NEON portal data \link{character}}
 }
 \value{
 This function returns a site-level summary dataframe "biomass_site" with NEON biomass (units are Megagrams per hectare) from the selected NEON data products.
@@ -60,14 +108,6 @@ load('HbpDat.rds') # load NEON HBP portal data from a local file
 # example with arguments at default values
 estimateMassOutputs <- estimateMass(dataProducts = c("Vst","Hbp"), inputDataListVst = VstDat, 
 inputDataListHbp = HbpDat )
-
-# example with inputDataListVst = NA that triggers a fresh NEON portal data download
-estimateMassOutputs <- estimateMass(inputDataListVst = NA, site = "STEI", 
-                                           inputDataListHbp = NA)
-
-# example with just a subset of inputDataListVst data being utilized
-estimateMassOutputs <- estimateMass(inputDataListVst = VstDat, start = 2022, 
-                                           inputDataListHbp = NA)
 
 # example specifying several non-default arguments
 estimateMassOutputs <- estimateMass(inputDataListVst = VstDat, inputDataListHbp = NA,

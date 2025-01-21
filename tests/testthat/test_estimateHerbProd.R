@@ -6,7 +6,7 @@
 HbpDat <- readRDS(testthat::test_path("testdata", "HbpDat.rds"))
 HbpDat <- HbpDat
 
-scaleHerbMassOutputs <- scaleHerbMass(inputDataListHbp = HbpDat)
+scaleHerbMassOutputs <- scaleHerbMass(inputDataList = HbpDat)
 estimateHerbProdOutputs <- estimateHerbProd(input = scaleHerbMassOutputs)
 
 ### Test: Function generates expected output type

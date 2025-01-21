@@ -9,10 +9,13 @@
 
 #' @details Input data can be filtered by site, date, plot type, and plot priority. Herbaceous biomass are scaled to an area basis at the hierarchical levels of clip cell, plot, and site.
 
-#' @param inputDataListHbp A list object comprised of "Herbaceous clip harvest" tables (DP1.10023.001) downloaded using the neonUtilities::loadByProduct function, or if left at NA then download initiated. [character]
-#' @param site Either NA, meaning all available sites from inputHBP data, or a character vector of 4-letter NEON site codes, e.g. c('ONAQ','RMNP'). Defaults to all. [character]
-#' @param start Either NA, meaning all available years from inputHBP data, or a character vector specifying start year in the form YYYY, e.g. 2019. The default and earliest allowable option is 2018. [character]
-#' @param end Either NA, meaning all available years from inputHBP data after the start year, or a character vector specifying start year in the form YYYY, e.g. 2021. Data from the current calendar year are excluded since they would be incomplete. [character]
+#' @param inputDataList A list object comprised of "Herbaceous clip harvest" tables (DP1.10023.001) downloaded using the neonUtilities::loadByProduct function. 
+#' If list input is provided, the table input arguments must all be NA; similarly, if list input is missing, table inputs must be provided for 
+#' 'hbp_perbout', and 'hbp_massdata' arguments. [list]
+#' @param hbp_perbout The 'hbp_perbout' table for the site x month combination(s) of interest
+#' (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
+#' @param hbp_massdata The 'hbp_massdata' table for the site x month combination(s) of interest
+#' (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
 #' @param plotType Optional filter based on NEON plot type. Options are "all" (both tower and distributed plot types) or "tower". Defaults to "all". [character]
 #' @param plotPriority NEON plots have a priority number in the event that not all plots are able to be sampled. The lower the number the higher the priority. The default is NA. [numeric]
 
@@ -25,22 +28,13 @@
 #' \dontrun{
 #' # Obtain NEON Herbaceous clip harvest data
 #' HbpDat <- neonUtilities::loadByProduct(dpID = "DP1.10023.001",
-#'      site = "all",
-#'      startdate = "2018-01",
-#'      enddate = paste0(as.character(as.integer(format(Sys.Date(), "%Y"))-1), "-12"),
 #'      package = "basic", check.size = FALSE)
 #'      
 #' # If list is not in memory, load HBP list of dataframes from local file:
 #' load('HbpDat.rds') # load NEON HBP portal data from a local file
 #' 
 #' # example with arguments at default values
-#' scaleHerbMassOutputs <- scaleHerbMass(inputDataListHbp = HbpDat)
-#' 
-#' # example with inputDataListHbp = NA that triggers a fresh NEON portal data download
-#' scaleHerbMassOutputs <- scaleHerbMass(inputDataListHbp = NA, site = "STEI")
-#' 
-#' # example with just a subset of inputDataListHbp data being utilized
-#' scaleHerbMassOutputs <- scaleHerbMass(inputDataListHbp = HbpDat, start = 2022)
+#' scaleHerbMassOutputs <- scaleHerbMass(inputDataList = HbpDat, hbp_perbout = NA, hbp_massdata = NA)
 #' 
 #' list2env(scaleHerbMassOutputs ,.GlobalEnv) # unlist all data frames
 #' saveRDS(scaleHerbMassOutputs, 'scaleHerbMassOutputs.rds') # save all outputs locally
@@ -51,61 +45,59 @@
 # Samuel M Simkin (2025-01-15)  revised
 ##############################################################################################
 
-scaleHerbMass = function(inputDataListHbp,
-                       site = NA,
-                       start = NA, 
-                       end = NA,
+scaleHerbMass = function(inputDataList, hbp_perbout = NA, hbp_massdata = NA,
                        plotType = "all",
                        plotPriority = NA
                        ) {
 
 options(dplyr.summarise.inform = FALSE)
   
-# Check whether inputDataListHbp is something other than a list or NA, and if NA then do a fresh portal download
   
-if(!methods::is(inputDataListHbp, class = "list" ))
-  { if(length(inputDataListHbp) == 1 ){ if(!is.na(inputDataListHbp) ){
-  stop("The inputDataListHbp argument is expected to be either a list or NA. A character argument is not allowed.")
-  } else { print("Since the inputDataListHbp argument is NA instead of an existing list object, NEON Herbaceous clip harvest (dpID DP1.10023.001) is now being downloaded ..... ")
-if(is.na(start)){start = 2018}
-if(is.na(end)){end = as.character(as.integer(format(Sys.Date(), "%Y"))-1)}
-site_pull <- site
-if(is.na(site_pull)){site_pull = "all"}
-
-inputDataListHbp <- neonUtilities::loadByProduct(dpID="DP1.10023.001",
-                             site = site_pull,
-                             startdate = paste0(start,"-01"),
-                             enddate = paste0(end, "-12"),
-                             package = "basic", check.size = FALSE, token = Sys.getenv('NEON_PAT'))
-  }
- }
-}
-
-# Check whether inputDataListHbp is something other than a list or NA
-if(!methods::is(inputDataListHbp, class = "list" )){ if(length(inputDataListHbp) == 1 ){ if(!is.na(inputDataListHbp) ){
-  stop("The inputDataListHbp argument is expected to be either a list or NA. A character argument is not allowed.")
-  }
- }
-}
-  
-if(!methods::is(inputDataListHbp, class = "list" )){ if(length(inputDataListHbp) > 1 ){ 
-  stop("The inputDataListHbp argument is expected to be either a list or NA. Another argument (e.g. a dataframe) is not allowed.")
- }  
-}
- 
-list2env(inputDataListHbp ,.GlobalEnv)  
-
-hbp_perbout <- inputDataListHbp$hbp_perbout
-hbp_massdata <- inputDataListHbp$hbp_massdata
-
-#   Check that required tables within list match expected names
-listExpNames <- c("hbp_perbout", "hbp_massdata")
+### Verify user-supplied 'inputDataList' object contains correct data if not missing
+  if (!missing(inputDataList)) {
     
-if (length(setdiff(listExpNames, names(inputDataListHbp))) > 0) {
-      stop(glue::glue("Required tables missing from 'inputDataListHbp':",
-                      '{paste(setdiff(listExpNames, names(inputDataListHbp)), collapse = ", ")}',
-                      .sep = " "))
-} 
+    #   Check that input is a list
+    if (!inherits(inputDataList, "list")) {
+      stop(glue::glue("Argument 'inputDataList' must be a list object from neonUtilities::loadByProduct();
+                     supplied input object is {class(inputDataList)}"))
+    }
+    
+    #   Check that required tables within list match expected names
+    listExpNames <- c("hbp_perbout", "hbp_massdata")
+    
+
+      #   All expected tables required when includeDilution == TRUE
+      if (length(setdiff(listExpNames, names(inputDataList))) > 0) {
+        stop(glue::glue("Required tables missing from 'inputDataList':",
+                        '{paste(setdiff(listExpNames, names(inputDataList)), collapse = ", ")}',
+                        .sep = " "))
+      }
+    
+  } else {
+    
+    inputDataList <- NULL
+    
+  } # end missing conditional
+  
+  
+  ### Verify table inputs are NA if 'inputDataList' is supplied
+  if (inherits(inputDataList, "list") & (!is.logical(hbp_perbout) | !is.logical(hbp_massdata))) {
+    stop("When 'inputDataList' is supplied all table input arguments must be NA")
+  }
+  
+  ### Verify 'hbp_perbout' and 'hbp_massdata' are data frames if 'inputDataList' is missing
+  if (is.null(inputDataList) & 
+      (!inherits(hbp_perbout, "data.frame") | !inherits(hbp_massdata, "data.frame"))) {
+    
+    stop("Data frames must be supplied for all table inputs if 'inputDataList' is not provided")
+  }
+  
+
+if (inherits(inputDataList, "list")) {
+hbp_perbout <- inputDataList$hbp_perbout
+hbp_massdata <- inputDataList$hbp_massdata
+}
+
 
  ### Verify input tables contain required columns and data ####
   
@@ -139,52 +131,11 @@ if (length(setdiff(listExpNames, names(inputDataListHbp))) > 0) {
   }
 
   
-hbp_perbout <- inputDataListHbp$hbp_perbout
 hbp_perbout$year <- as.numeric(substr(hbp_perbout$eventID,5,8) ) # year component of eventID
-start_from_input <- as.character(min(as.numeric(substr(hbp_perbout$year, 1,4)))) 
-end_from_input <- as.character(max(as.numeric(substr(hbp_perbout$collectDate, 1,4))))
-site_from_input <- unique(hbp_perbout$siteID)
-
-
-# Warning if start date filter is before input data
-  if (!is.na(start)) {if(as.numeric(start) < as.numeric(start_from_input)){  start = as.numeric(start_from_input)
-    print("The start year is earlier than the input data. The start year in current run of function has automatically been changed to:")
-    print(start_from_input)
-  }} else {start = as.numeric(start_from_input)}
-
-# Warning if start date is too early
-   if (!is.na(start)) {if(as.numeric(start) < 2018){  start = "2018"
-    print("The earliest year that can be used for this function is 2018. The start year has automatically been changed to 2018.")
-  }} else {start = as.numeric(start_from_input)}
-
-# Warning if end date filter is after input data
-   if (!is.na(end)) {if(as.numeric(end) > as.numeric(end_from_input)){  end = as.numeric(end_from_input)
-    print("The end year is later than the input data (re-pull data as late as the preceding calendar year from the portal using separate function). The end year in current run of function has automatically been changed to:")
-    print(end_from_input)
-  }} else {end = as.numeric(end_from_input)}
-
-# Warning if end date is too late
-   if (!is.na(end)) {if(as.numeric(end) > as.integer(format(Sys.Date(), "%Y"))-1){  end = as.character(as.integer(format(Sys.Date(), "%Y"))-1)
-    print("The end year can not be the current calendar year or a future year. The end year has automatically been changed to the year prior to the current calendar year.")
-  }} else {end = as.numeric(end_from_input)}
-
-# Warning if site is not in input data
-if (length(site) >1) {
-     sites_not_in_input <- setdiff(site, site_from_input)
-     if(length(sites_not_in_input) >= 1){ 
-    stop(paste0("One or more sites are not in the input data (re-pull data for desired sites from the portal using separate function). The following site(s) are not in the input data: ", sites_not_in_input) ) 
-     }} else {
-if (!is.na(site)) {
-     sites_not_in_input <- setdiff(site, site_from_input)
-     if(length(sites_not_in_input) >= 1){ 
-    stop(paste0("One or more sites are not in the input data (re-pull data for desired sites from the portal using separate function). The following site(s) are not in the input data: ", sites_not_in_input) ) 
-     }} else site = site_from_input}
 
 ##### Aggregate the herbaceous data #############################
 # Original hbp scripts by Eric Sokol (esokol@battelleecology) in May 2020. Merged and modified by Sam Simkin (ssimkin@battelleecology.org) in Jul 2023
 
-hbp_perbout <- inputDataListHbp$hbp_perbout
-hbp_massdata <- inputDataListHbp$hbp_massdata
 
 # filter mass data to retain only qaDryMass == N (to avoid duplicates when there is a qa sample too)
 hbp_massdata$herbGroup <- ifelse(is.na(hbp_massdata$herbGroup), "Unknown", hbp_massdata$herbGroup)
@@ -240,7 +191,7 @@ hbp_plot$herbPeakMassTotal_Mgha <- hbp_plot$herbPeakMassTotal_gm2 * 10000 * 0.00
  # convert g/m2 to Mg/ha ;   g/m2 x 10,000 m2/ha x 0.000001 Mg/g = Mg/ha
 
 priority_plots <- priority_plots # load into environment
-hbp_plot <- merge(hbp_plot,priority_plots, by = "plotID", all.x = TRUE)
+hbp_plot <- merge(hbp_plot,priority_plots, by = c("plotID","year"), all.x = TRUE)
 if(plotType == "tower") {hbp_plot <- hbp_plot %>% dplyr::filter(.data$plotType == "tower")} # if plotType argument to function is "tower" then remove distributed plots
 if(!is.na(plotPriority)) {hbp_plot <- hbp_plot %>% dplyr::filter(.data$specificModuleSamplingPriority <= plotPriority)} # remove lower priority plots that aren't required to be sampled every year (default is 5 (the 5 highest priority plots))
 
@@ -259,12 +210,10 @@ hbp_site <- hbp_plot %>% dplyr::group_by(.data$siteID, .data$year) %>% dplyr::su
 
 print("Returning herbaceous biomass output data frames as a list object  ..... ")
 
-if(methods::is(inputDataListHbp, class = "list" ))    {
 output.list <- list(
    hbp_agb = hbp_agb,
    hbp_plot = hbp_plot,
    hbp_site = hbp_site
    )
  return(output.list)
-  }
 }

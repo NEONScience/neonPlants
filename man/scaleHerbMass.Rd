@@ -5,22 +5,23 @@
 \title{Scale NEON aboveground biomass (AGB) contributed by herbaceous vegetation}
 \usage{
 scaleHerbMass(
-  inputDataListHbp,
-  site = NA,
-  start = NA,
-  end = NA,
+  inputDataList,
+  hbp_perbout = NA,
+  hbp_massdata = NA,
   plotType = "all",
   plotPriority = NA
 )
 }
 \arguments{
-\item{inputDataListHbp}{A list object comprised of "Herbaceous clip harvest" tables (DP1.10023.001) downloaded using the neonUtilities::loadByProduct function, or if left at NA then download initiated. \link{character}}
+\item{inputDataList}{A list object comprised of "Herbaceous clip harvest" tables (DP1.10023.001) downloaded using the neonUtilities::loadByProduct function.
+If list input is provided, the table input arguments must all be NA; similarly, if list input is missing, table inputs must be provided for
+'hbp_perbout', and 'hbp_massdata' arguments. \link{list}}
 
-\item{site}{Either NA, meaning all available sites from inputHBP data, or a character vector of 4-letter NEON site codes, e.g. c('ONAQ','RMNP'). Defaults to all. \link{character}}
+\item{hbp_perbout}{The 'hbp_perbout' table for the site x month combination(s) of interest
+(defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 
-\item{start}{Either NA, meaning all available years from inputHBP data, or a character vector specifying start year in the form YYYY, e.g. 2019. The default and earliest allowable option is 2018. \link{character}}
-
-\item{end}{Either NA, meaning all available years from inputHBP data after the start year, or a character vector specifying start year in the form YYYY, e.g. 2021. Data from the current calendar year are excluded since they would be incomplete. \link{character}}
+\item{hbp_massdata}{The 'hbp_massdata' table for the site x month combination(s) of interest
+(defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 
 \item{plotType}{Optional filter based on NEON plot type. Options are "all" (both tower and distributed plot types) or "tower". Defaults to "all". \link{character}}
 
@@ -43,22 +44,13 @@ Input data can be filtered by site, date, plot type, and plot priority. Herbaceo
 \dontrun{
 # Obtain NEON Herbaceous clip harvest data
 HbpDat <- neonUtilities::loadByProduct(dpID = "DP1.10023.001",
-     site = "all",
-     startdate = "2018-01",
-     enddate = paste0(as.character(as.integer(format(Sys.Date(), "\%Y"))-1), "-12"),
      package = "basic", check.size = FALSE)
      
 # If list is not in memory, load HBP list of dataframes from local file:
 load('HbpDat.rds') # load NEON HBP portal data from a local file
 
 # example with arguments at default values
-scaleHerbMassOutputs <- scaleHerbMass(inputDataListHbp = HbpDat)
-
-# example with inputDataListHbp = NA that triggers a fresh NEON portal data download
-scaleHerbMassOutputs <- scaleHerbMass(inputDataListHbp = NA, site = "STEI")
-
-# example with just a subset of inputDataListHbp data being utilized
-scaleHerbMassOutputs <- scaleHerbMass(inputDataListHbp = HbpDat, start = 2022)
+scaleHerbMassOutputs <- scaleHerbMass(inputDataList = HbpDat, hbp_perbout = NA, hbp_massdata = NA)
 
 list2env(scaleHerbMassOutputs ,.GlobalEnv) # unlist all data frames
 saveRDS(scaleHerbMassOutputs, 'scaleHerbMassOutputs.rds') # save all outputs locally
