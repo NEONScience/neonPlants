@@ -56,8 +56,6 @@ estimatePheTransByTag <- function(
     inputStatus = NULL,
     inputTags = NULL
     ){
-  
-  require(dplyr)
 
   # Verify that only one input type is provided
   if(!is.null(inputDataList) && !is.null(inputStatus) |!is.null(inputDataList) && !is.null(inputTags)){
