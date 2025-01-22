@@ -11,7 +11,7 @@ testMass <- testList$bbc_rootmass
 #   Test list input
 testthat::test_that(desc = "Output type list input", {
 
-  testthat::expect_type(object = standardizeRootMass(inputRootList = testList),
+  testthat::expect_type(object = standardizeRootMass(inputDataList = testList),
                         type = "list")
 
 })
@@ -29,7 +29,7 @@ testthat::test_that(desc = "Output type table input", {
 #   Test list input
 testthat::test_that(desc = "Output class list input", {
 
-  testthat::expect_s3_class(object = standardizeRootMass(inputRootList = testList),
+  testthat::expect_s3_class(object = standardizeRootMass(inputDataList = testList),
                             class = "data.frame")
 
 })
@@ -47,50 +47,50 @@ testthat::test_that(desc = "Output class table input", {
 #   Check expected row number of data frame
 testthat::test_that(desc = "Output data frame row number", {
 
-  testthat::expect_identical(object = nrow(standardizeRootMass(inputRootList = testList)),
+  testthat::expect_identical(object = nrow(standardizeRootMass(inputDataList = testList)),
                              expected = as.integer(159))
 })
 
 #   Check expected column number of data frame
 testthat::test_that(desc = "Output data frame column number", {
 
-  testthat::expect_identical(object = ncol(standardizeRootMass(inputRootList = testList)),
+  testthat::expect_identical(object = ncol(standardizeRootMass(inputDataList = testList)),
                              expected = as.integer(10))
 })
 
 
 
-### Test: Generate expected errors for 'inputRootList'
-#   Test 'inputRootList' is a list
-testthat::test_that(desc = "Argument 'inputRootList' is list object", {
+### Test: Generate expected errors for 'inputDataList'
+#   Test 'inputDataList' is a list
+testthat::test_that(desc = "Argument 'inputDataList' is list object", {
   
-  testthat::expect_error(object = standardizeRootMass(inputRootList = testMass),
-                         regexp = "Argument 'inputRootList' must be a list object")
+  testthat::expect_error(object = standardizeRootMass(inputDataList = testMass),
+                         regexp = "Argument 'inputDataList' must be a list object")
 })
 
-#   Test 'inputRootList' contains required tables
-testthat::test_that(desc = "Required tables present in 'inputRootList' input", {
+#   Test 'inputDataList' contains required tables
+testthat::test_that(desc = "Required tables present in 'inputDataList' input", {
   
-  testthat::expect_error(object = standardizeRootMass(inputRootList = testList[3:5]),
-                         regexp = "Required tables missing from 'inputRootList'")
+  testthat::expect_error(object = standardizeRootMass(inputDataList = testList[3:5]),
+                         regexp = "Required tables missing from 'inputDataList'")
 })
 
-#   Test 'inputMass' is NA if 'inputRootList' supplied
+#   Test 'inputMass' is NA if 'inputDataList' supplied
 testthat::test_that(desc = "Table inputs NA when required", {
   
-  testthat::expect_error(object = standardizeRootMass(inputRootList = testList,
+  testthat::expect_error(object = standardizeRootMass(inputDataList = testList,
                                                       inputMass = testMass),
-                         regexp = "When 'inputRootList' is supplied the 'inputMass' argument must be NA")
+                         regexp = "When 'inputDataList' is supplied the 'inputMass' argument must be NA")
 })
 
 
 
 ### Test: Generate expected errors for 'inputMass'
-#   Test 'inputMass' is data frame if 'inputRootList' is missing
+#   Test 'inputMass' is data frame if 'inputDataList' is missing
 testthat::test_that(desc = "Table input is data frame when required", {
   
   testthat::expect_error(object = standardizeRootMass(inputMass = testList),
-                         regexp = "A data frame must be supplied for 'inputMass' if 'inputRootList' is not provided")
+                         regexp = "A data frame must be supplied for 'inputMass' if 'inputDataList' is not provided")
 })
 
 
