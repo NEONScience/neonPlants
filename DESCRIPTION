@@ -19,8 +19,13 @@ Authors@R:
              family = "Meier",
              role = c("aut"),
              email = "cmeier@BattelleEcology.org",
-             comment = c(ORCID = "0000-0003-3576-883X"))
-             )
+             comment = c(ORCID = "0000-0003-3576-883X")),
+      person(given = "Katie",
+             family = "Jones",
+             role = c("aut"),
+             email = "kjones@BattelleEcology.org",
+             comment = c(ORCID = "0000-0003-1175-5049"))
+             )             
 Description: Library of R functions to work with NEON plant data.
 License: GPL (>= 3)
 Suggests: 
@@ -41,4 +46,5 @@ Imports:
     rlang,
     stringr,
     tidyr,
-    data.table
+    data.table,
+    lubridate

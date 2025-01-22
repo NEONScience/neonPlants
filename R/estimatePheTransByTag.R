@@ -6,9 +6,9 @@
 #' @description This function uses observation data from the NEON Plant Phenology Observation data product (DP1.10055.001) to calculate phenophase transition dates for each phenophase transition (status = no->yes or yes->no) for each tagged plant or patch observed along a NEON phenology transect or within a phenocam plot in the input data set.  Additionally, each estimated transition includes additional fields describing number of transitions observed for the given individual x phenophase combination and the sampling interval around the estimate. Required inputs are either a list of data frames (inputDataList) as returned from neonUtilities::loadByProduct() that must include a data frame titled "phe_statusintensity" and one titled "phe_perindividual". Alternatively, the function will accept two individual data frames, inputStatus, corresponding to the phe_statusintensity table and inputTags, corresponding to the phe_perindividual table. However, if both list and table inputs are provided at the same time the function will error out
 #'
 #'
-#' @param inputDataList a list of data frames returned from neonUtilities::loadByProduct()
-#' @param inputStauts a data frame with phenological observation data
-#' @param inputTag a data frame with taxon data for individuals present in inputStatus dataframe
+#' @param inputDataList a list of data frames returned from neonUtilities::loadByProduct() [list]
+#' @param inputStauts a data frame with phenological observation data [data.frame]
+#' @param inputTag a data frame with taxon data for individuals present in inputStatus dataframe [data.frame]
 #
 #' @details
 #'
