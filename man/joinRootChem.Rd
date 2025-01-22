@@ -2,26 +2,26 @@
 % Please edit documentation in R/joinRootChem.R
 \name{joinRootChem}
 \alias{joinRootChem}
-\title{Join NEON Plant Below Ground Biomass Root Mass and Root Chemistry Data Into a Single Table}
+\title{Join NEON plant below ground biomass root mass and root chemistry data into a single table}
 \usage{
-joinRootChem(inputRootList, inputMass = NA, inputPool = NA, inputChem = NA)
+joinRootChem(inputDataList, inputMass = NA, inputPool = NA, inputChem = NA)
 }
 \arguments{
-\item{inputRootList}{A list object comprised of Plant Below Ground Biomass tables (DP1.10067.001)
+\item{inputDataList}{A list object comprised of Plant Below Ground Biomass tables (DP1.10067.001)
 downloaded using the neonUtilities::loadByProduct function. If list input is provided, the table
 input arguments must all be NA; similarly, if list input is missing, table inputs must be
 provided. \link{list}}
 
 \item{inputMass}{The 'bbc_rootmass' table for the site x month combination(s) of interest.
-(defaults to NA). If table input is provided, the 'inputRootList' argument must be missing.
+(defaults to NA). If table input is provided, the 'inputDataList' argument must be missing.
 \link{data.frame}}
 
 \item{inputPool}{The 'bbc_chemistryPooling' table for the site x month combination(s) of
-interest (defaults to NA). If table input is provided, the 'inputRootList' argument must be
+interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be
 missing. \link{data.frame}}
 
 \item{inputChem}{The 'bbc_rootChemistry' table for the site x month combination(s) of
-interest (defaults to NA). If table input is provided, the 'inputRootList' argument must be
+interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be
 missing. \link{data.frame}}
 }
 \value{
@@ -67,7 +67,7 @@ check.size = FALSE
 
 #   Join downloaded root data
 df <- neonPlants::joinRootChem(
-inputRootList = bbc,
+inputDataList = bbc,
 inputMass = NA,
 inputPool = NA,
 inputChem = NA

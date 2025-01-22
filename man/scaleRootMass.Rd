@@ -2,10 +2,10 @@
 % Please edit documentation in R/scaleRootMass.R
 \name{scaleRootMass}
 \alias{scaleRootMass}
-\title{Scale Root Biomass by Size Category to Mass Per Area and Mass Per Volume}
+\title{Scale root biomass by size category to mass per area and mass per volume}
 \usage{
 scaleRootMass(
-  inputRootList,
+  inputDataList,
   includeDilution = TRUE,
   inputCore = NA,
   inputMass = NA,
@@ -14,7 +14,7 @@ scaleRootMass(
 )
 }
 \arguments{
-\item{inputRootList}{A list object comprised of Plant Below Ground Biomass tables (DP1.10067.001)
+\item{inputDataList}{A list object comprised of Plant Below Ground Biomass tables (DP1.10067.001)
 downloaded using the neonUtilities::loadByProduct() function. If list input is provided, the table
 input arguments must all be NA; similarly, if list input is missing, table inputs must be
 provided for 'inputCore' and 'inputMass' arguments at a minimum. \link{list}}
@@ -24,27 +24,43 @@ calculated, as estimated via the Dilution Sampling method (Defaults to TRUE). If
 'inputDilution' is NA, the 'bbc_dilution' table will be extracted from the list input. \link{logical}}
 
 \item{inputCore}{The 'bbc_percore' table for the site x month combination(s) of interest
-(defaults to NA). If table input is provided, the 'inputRootList' argument must be missing.
+(defaults to NA). If table input is provided, the 'inputDataList' argument must be missing.
 \link{data.frame}}
 
 \item{inputMass}{The 'bbc_rootmass' table for the site x month combination(s) of interest
-(defaults to NA). If table input is provided, the 'inputRootList' argument must be missing.
+(defaults to NA). If table input is provided, the 'inputDataList' argument must be missing.
 \link{data.frame}}
 
 \item{inputDilution}{The 'bbc_dilution' table for the site x month combination(s) of interest
-(optional, defaults to NA). If table input is provided, the 'inputRootList' argument must be
+(optional, defaults to NA). If table input is provided, the 'inputDataList' argument must be
 missing. \link{data.frame}}
 
 \item{includeFragInTotal}{Indicator for whether mass of root fragments < 1 cm length
 calculated from dilution sampling should be included when summing across sizeCategory to
-calculate the 'totalDryMass'. Defaults to FALSE. If set to TRUE and 'inputRootList' is missing,
+calculate the 'totalDryMass'. Defaults to FALSE. If set to TRUE and 'inputDataList' is missing,
 the 'bbc_dilution' table must be provided to the 'inputDilution' argument. \link{logical}}
 }
 \value{
-A table containing root mass data per unit area ("g/m2") and per unit volume ("g/m3")
-for three sizeCategories (< 1mm, 1-2mm, and 2-10mm) as well as total fine root biomass summed
-across all sizeCategories. The output no longer contains the 'rootStatus' field and QA dryMass
-samples are averaged.
+Three tables are produced containing root mass data at varying spatial scales. The first
+"coreRootMass" table contains root mass data at the scale of the field-collected core,
+reported for three sizeCategories (< 1mm, 1-2mm, and 2-10mm) as per unit area ("g/m2") and per
+unit volume ("g/m3"), as well as total fine root biomass summed across all sizeCategories (separate
+columns for "g/m2", "g/m3", and "Mg/ha"). Output no longer contains the 'rootStatus' field,
+and QA dryMass samples are averaged.
+
+The second "plotRootMass" table contains mean root mass data at the scale of the plot for
+each eventID in the data, reported for three sizeCategories (< 1mm, 1-2mm, and 2-10mm) as per
+unit area ("g/m2") and per unit volume ("g/m3"), as well as total fine root biomass summed across all
+sizeCategories (separate columns for "g/m2", "Mg/ha", and "g/m3"). Uncertainty at the plot scale
+is not reported because intra-plot replication is frequently insufficient and not required by the
+sampling design, but the number of core samples used to calculate the mean is reported. The
+startDate and endDate indicate the start/end dates of core collection for a given plotID within
+a bout.
+
+The third "siteRootMass" table provides mean site-level total root mass data for each
+eventID in the data, calculated from plot-level data and reported per unit area ("g/m2", "Mg/ha")
+and per unit volume ("g/m3"). The standard deviation across plots is calculated and the number
+of plots for each siteID x eventID combination is reported.
 }
 \description{
 Join NEON Plant Belowground Biomass data tables (DP1.10067.001) to calculate fine
@@ -60,7 +76,8 @@ or input data tables with an equivalent structure and representing the same site
 \details{
 Input data may be provided either as a list generated from the neonUtilities::laodByProduct()
 function or as individual tables. However, if both list and table inputs are provided at the same time
-the function will error out.
+the function will error out. For all output data, columns with the same name as input data have
+identical units and definitions; where needed, new columns contain new units information.
 
 If inputMass data collected prior to 2019 are provided, the 0-0.5mm and 0.5-1mm
 sizeCategories are combined into the current 0-1mm sizeCategory.
@@ -85,7 +102,7 @@ check.size = FALSE
 
 #   Calculate root mass per unit area and per unit volume
 df <- neonPlants::scaleRootMass(
-inputRootList = bbc,
+inputDataList = bbc,
 includeDilution = TRUE,
 inputCore = NA,
 inputMass = NA,
