@@ -3,13 +3,16 @@
 #' @author
 #' Katie Jones \email{kjones@battelleecology.org} \cr
 #'
-#' @description This function uses observation data from the NEON Plant Phenology Observation (DP1.10055.001) to calculate phenophase transition dates and descriptive statistics.
+#' @description This function uses observation data from the NEON Plant Phenology Observation data product (DP1.10055.001) to calculate phenophase transition dates for each phenophase transition (status = no->yes or yes->no) for each tagged plant or patch observed along a NEON phenology transect or within a phenocam plot in the input data set.  Additionally, each estimated transition includes additional fields describing number of transitions observed for the given individual x phenophase combination and the sampling interval around the estimate. Required inputs are either a list of data frames (inputDataList) as returned from neonUtilities::loadByProduct() that must include a data frame titled "phe_statusintensity" and one titled "phe_perindividual". Alternatively, the function will accept two individual data frames, inputStatus, corresponding to the phe_statusintensity table and inputTags, corresponding to the phe_perindividual table. However, if both list and table inputs are provided at the same time the function will error out
 #'
 #'
-#' @param pheData data list from NEON Plant Phenology Observation (DP1.10055.001) as returned from neonUtilities::loadByProduct().
+#' @param inputDataList a list of data frames returned from neonUtilities::loadByProduct()
+#' @param inputStauts a data frame with phenological observation data
+#' @param inputTag a data frame with taxon data for individuals present in inputStatus dataframe
 #
 #' @details
-#' This function creates a time series for each phenophase reported for each individual in the data set and identifies transition dates for beginning and end of a given phenophase as well as explanatory metrics about that estimate for the time frame provided in the input data frame.
+#'
+#' @return This function returns a data frame containing a time series for each phenophase reported for each individual in the data set and identifies transition dates for beginning and end of a given phenophase as well as explanatory metrics about that estimate for the time frame provided in the input data frame.
 #' Calculated values include:
 #'  * transition date - the mid-point between two consecutive dates with different phenophase status values
 #'  * transitionType - indicating the phenophase status values of the transition
@@ -17,8 +20,6 @@
 #'  * uncertainty - sampling interval/2
 #'  * nth transition - a count of onset events per individualID, phenophase name, within a given calendar year
 #'
-#'
-#' @return This function returns a data frame
 #'
 #' @references
 #' License: GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007
@@ -43,7 +44,8 @@
 #'   check.size = FALSE)
 #'
 #'out <- estimatePheTrans(inputDataList = pheDat)
-#'out2 <- estimatePheTrans(inputStatus = pheDat$phe_statusintensity)
+#'out2 <- estimatePheTrans(inputStatus = pheDat$phe_statusintensity,
+#'                         inputTags = pheDat$phe_perindividual)
 #' }
 
 ##############################################################################################
