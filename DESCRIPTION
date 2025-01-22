@@ -20,7 +20,7 @@ Authors@R:
              role = c("aut"),
              email = "cmeier@BattelleEcology.org",
              comment = c(ORCID = "0000-0003-3576-883X")),
-      person(given = "Katie",
+      person(given = "Katherine",
              family = "Jones",
              role = c("aut"),
              email = "kjones@BattelleEcology.org",
