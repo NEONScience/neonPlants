@@ -51,3 +51,4 @@ Imports:
     stringr,
     tidyr,
     data.table
+LazyData: true

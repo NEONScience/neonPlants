@@ -191,7 +191,7 @@ hbp_plot$herbPeakMassTotal_Mgha <- hbp_plot$herbPeakMassTotal_gm2 * 10000 * 0.00
  # convert g/m2 to Mg/ha ;   g/m2 x 10,000 m2/ha x 0.000001 Mg/g = Mg/ha
 
 priority_plots <- priority_plots # load into environment
-hbp_plot <- merge(hbp_plot,priority_plots, by = c("plotID","year"), all.x = TRUE)
+hbp_plot <- merge(hbp_plot,priority_plots, by = c("plotID"), all.x = TRUE)
 if(plotType == "tower") {hbp_plot <- hbp_plot %>% dplyr::filter(.data$plotType == "tower")} # if plotType argument to function is "tower" then remove distributed plots
 if(!is.na(plotPriority)) {hbp_plot <- hbp_plot %>% dplyr::filter(.data$specificModuleSamplingPriority <= plotPriority)} # remove lower priority plots that aren't required to be sampled every year (default is 5 (the 5 highest priority plots))
 

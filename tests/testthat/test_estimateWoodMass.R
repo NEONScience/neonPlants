@@ -66,12 +66,12 @@ testthat::test_that(desc = "Output data frame column number", {
 #   Check expected row number of data frame
 testthat::test_that(desc = "Output data frame row number", {
   testthat::expect_identical(object = nrow(estimateWoodMassOutputs$vst_agb_per_ha),
-                             expected = as.integer(53))
+                             expected = as.integer(65))
 })
 
 testthat::test_that(desc = "Output data frame row number", {
   testthat::expect_identical(object = nrow(estimateWoodMassOutputs$vst_plot_w_0s),
-                             expected = as.integer(10))
+                             expected = as.integer(22))
 })
 
 testthat::test_that(desc = "Output data frame row number", {
@@ -90,7 +90,7 @@ testthat::test_that(desc = "Output data frame row number", {
 #   Test 'inputDataList' is a list
 testthat::test_that(desc = "Argument 'inputDataList' is list object", {
   testthat::expect_error(object = estimateWoodMass(inputDataList = VstDat$vst_apparentindividual), # test whether function stops if supplied with a dataframe instead of list
-                         regexp = "The inputDataList argument is expected to be either a list or NA")
+                         regexp = "Argument 'inputDataList' must be a list object from neonUtilities::loadByProduct()")
 })
 
 #   Test 'inputDataList' contains required tables (expect at least 4: appInd, mapandtag, nonwoody, and perplot)
@@ -174,8 +174,8 @@ testthat::test_that(desc = "Output vst_agb_per_ha value as expected", {
 ### Test: Generate error if output vst_plot_w_0s value not as expected
 testthat::test_that(desc = "Output vst_plot_w_0s value as expected", {
   test <- estimateWoodMass(inputDataList = VstDat)
-  testthat::expect_equal(object = test$vst_plot_w_0s$agb_Mgha__Live[8],
-                         expected = 16.00600)
+  testthat::expect_equal(object = test$vst_plot_w_0s$agb_Mgha__Live[2],
+                         expected = 10.3589)
 })
 
 
@@ -183,5 +183,5 @@ testthat::test_that(desc = "Output vst_plot_w_0s value as expected", {
 testthat::test_that(desc = "Output vst_site value as expected", {
   test <- estimateWoodMass(inputDataList = VstDat)
   testthat::expect_equal(object = test$vst_site$woodLiveMassMean_Mgha[2],
-                         expected = 51.57)
+                         expected = 52.286)
 })

@@ -66,9 +66,9 @@ estimateWoodMass = function(inputDataList,
                        plotType = "tower",
                        plotPriority = 5
                          ) {
+  
+options(dplyr.summarise.inform = FALSE)
 
-#taxon_tmp <- taxon_tmp # remove this and later reference to taxon_tmp once family and genus in RELEASE data
-    
 ### Verify user-supplied 'inputDataList' object contains correct data if not missing
   if (!missing(inputDataList)) {
     
@@ -113,7 +113,7 @@ if (inherits(inputDataList, "list")) {
 vst_mappingandtagging <- inputDataList$vst_mappingandtagging
 vst_perplotperyear <- inputDataList$vst_perplotperyear
 vst_apparentindividual <- inputDataList$vst_apparentindividual
-'vst_non-woody' <- inputDataList$'vst_non-woody'
+vst_nonWoody <- inputDataList$'vst_non-woody'
 }
   
 
@@ -165,14 +165,14 @@ vst_apparentindividual <- inputDataList$vst_apparentindividual
   }
 
 
-### Verify 'vst_non-woody' table contains required data
+### Verify vst_nonWoody table contains required data
 #   Check for required columns
 nonwoodyExpCols <- c("domainID", "siteID", "plotID", "individualID", "growthForm", "plantStatus", "date", "stemDiameter", "basalStemDiameter", "taxonID", 
                        "height", "leafNumber", "meanLeafLength", "meanPetioleLength", "meanBladeLength")
   
-#  if (class('vst_non-woody') == "data.frame"){if(length(setdiff(nonwoodyExpCols, colnames('vst_non-woody'))) > 0) {
-  if(methods::is('vst_non-woody', class = "data.frame" )){if(length(setdiff(nonwoodyExpCols, colnames('vst_non-woody'))) > 0) {
-    stop(glue::glue("Required columns missing from 'vst_non-woody':", '{paste(setdiff(nonwoodyExpCols, colnames(vst_non-woody), collapse = ", ")}',
+#  if (class(vst_nonWoody) == "data.frame"){if(length(setdiff(nonwoodyExpCols, colnames(vst_nonWoody))) > 0) {
+  if(methods::is(vst_nonWoody, class = "data.frame" )){if(length(setdiff(nonwoodyExpCols, colnames(vst_nonWoody))) > 0) {
+    stop(glue::glue("Required columns missing from vst_nonWoody:", '{paste(setdiff(nonwoodyExpCols, colnames(vst_non-woody), collapse = ", ")}',
                     .sep = " "))
   }
 }
@@ -203,6 +203,7 @@ end_from_input <- as.character(max(as.numeric(substr(perplot$date, 1,4))))
 #                   dplyr::filter(str_detect(.data$specificModule, "vst"))  %>% dplyr::select("plotID","specificModuleSamplingPriority", "plotType") 
 #priority_plots <- read.table('../suppl_data/UniquePlotIDsSamplingModulesPriorityLists.NEON-OS_spatial_data.repo.vst.csv', header=TRUE, sep = ",", stringsAsFactors = F) 
   # The specificModuleSamplingPriority field is used in the productivity script to optionally filter only to plots with priority 1-5 (the plots that are most likely to have been sampled the year they were scheduled)
+priority_plots <- priority_plots
 priority_plots_all = data.frame() 
 endYear <- as.numeric((as.numeric(end_from_input)) : (as.numeric(start_from_input)) )
 for(i in 1:length(endYear)){ # loop through all possible years
@@ -228,8 +229,8 @@ plotType_df <- inputDataList$vst_perplotperyear
 
 #################################################################
 #### Calculate biomass from vst_non-woody table
+if(methods::is(vst_nonWoody, class = "data.frame" )){
 vst_agb_other <- inputDataList$'vst_non-woody'
-
 vst_agb_other <- merge(vst_agb_other, perplot, by=c("plotID", "eventID"), all.x=TRUE) # add total sampled areas
 vst_agb_other$agb_source <- "no source"
 
@@ -294,14 +295,14 @@ vst_agb_final_other <- vst_agb_other %>% dplyr::group_by(.data$plot_eventID, .da
 
 vst_agb_per_ha_other <- vst_agb_final_other %>% dplyr::group_by(.data$plot_eventID, .data$eventID, .data$siteID, .data$plotID, .data$plotType, .data$nlcdClass, .data$taxonID, .data$growthForm, .data$individualID, .data$plantStatus2, .data$year) %>% dplyr::summarise(agb_Mgha = sum(.data$agb_Mgha, na.rm = TRUE)) %>% dplyr::ungroup()
     # add up biomass per unit area for each plot x individualID x year x plantStatus2 x nlcdClass x taxonID x growthForm combo
-
+}
+  
 #################################################################
 #### Calculate biomass for vst_apparentindividual table
 ## read in taxonID from vst_mappingandtagging table 
 map <- inputDataList$vst_mappingandtagging 
 map <- map[order(map$date),]
 map <- map[!duplicated(map$individualID, fromLast=TRUE), ] # keep the most recent record which should have a more specific or considered taxonID; in QA older dupes are periodically deleted
-#map <- merge(map, taxon_tmp, by = "taxonID") ### temporary until family and genus are in RELEASE data
     taxonID_df <- map %>% dplyr::select("taxonID", "scientificName", "family", "genus", "taxonRank") %>% unique()  
     vst_taxonIDs <- taxonID_df$taxonID
  map <- map %>% dplyr::select("individualID", "taxonID")
@@ -618,8 +619,10 @@ vst_agb_final <- vst_agb %>% dplyr::group_by(.data$plot_eventID, .data$eventID, 
 #################################################################################################
 #################################################################################################
 # combine vst_non-woody (vst_agb_per_ha_other) and vst_apparentindividual (vst_agb_per_ha_appInd)
-vst_agb_per_ha <- rbind(vst_agb_per_ha_appInd, vst_agb_per_ha_other) # combine woody and non-woody tables
-
+if(methods::is(vst_nonWoody, class = "data.frame" )){ 
+  vst_agb_per_ha <- rbind(vst_agb_per_ha_appInd, vst_agb_per_ha_other) # combine woody and non-woody tables
+} else {vst_agb_per_ha <- vst_agb_per_ha_appInd}
+  
 if(growthForm == "other") {
       vst_agb_per_ha <- vst_agb_per_ha %>% dplyr::filter(.data$growthForm == "tree fern" | .data$growthForm == "small tree fern" | .data$growthForm == "large tree fern"  | 
                            .data$growthForm == "palm" | .data$growthForm == "small palm" | .data$growthForm == "palm tree" | 

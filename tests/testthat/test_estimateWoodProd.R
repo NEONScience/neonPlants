@@ -76,7 +76,7 @@ testthat::test_that(desc = "Output data frame column number", {
 #   Check expected row number of data frame
 testthat::test_that(desc = "Output data frame row number", {
   testthat::expect_identical(object = nrow(estimateWoodProdOutputs$increment_all),
-                             expected = as.integer(25))
+                             expected = as.integer(28))
 })
 
 testthat::test_that(desc = "Output data frame row number", {
@@ -86,7 +86,7 @@ testthat::test_that(desc = "Output data frame row number", {
 
 testthat::test_that(desc = "Output data frame row number", {
   testthat::expect_identical(object = nrow(estimateWoodProdOutputs$vst_ANPP_plot_w_taxa),
-                             expected = as.integer(5))
+                             expected = as.integer(7))
 })
 
 testthat::test_that(desc = "Output data frame row number", {
@@ -215,6 +215,6 @@ testthat::test_that(desc = "Output vst_ANPP_plot value as expected", {
 testthat::test_that(desc = "Output vst_ANPP_site value as expected", {
   test <- estimateWoodProd(input = estimateWoodMassOutputs)
   testthat::expect_equal(object = test$vst_ANPP_site$woodANPPMean_Mghayr[1],
-                         expected = 3.135)
+                         expected = 3.588)
 })
 

@@ -177,7 +177,11 @@ plotType_df <- unique(vst_plot_w_0s %>% dplyr::select("plotID", "plotType"))
 ### PLOT-LEVEL BIOMASS INCREMENT (Clark et al. 2001 approach 2) 
 print("Calculating woody increment component of productivity at the plot-level (approach 2) ..... ")
 
- vst_agb_Live <- vst_plot_w_0s 
+vst_agb_Live <- vst_plot_w_0s %>% dplyr::group_by(.data$domainID, .data$siteID, .data$plotID, .data$plotType, .data$specificModuleSamplingPriority, 
+                    .data$eventID, .data$year, .data$plot_eventID, .data$nlcdClass, .data$taxonID) %>% 
+                    dplyr::summarise(agb_Mgha__Live = sum(.data$agb_Mgha__Live, na.rm = TRUE), agb_Mgha__Dead_or_Lost = sum(.data$agb_Mgha__Dead_or_Lost, na.rm = TRUE)) 
+ # some taxonIDs are represented in multiple growthForms (e.g. sapling and single bole tree): This sums the growthForms
+ 
   vst_agb_Live$Mgha_live <- vst_agb_Live$agb_Mgha__Live
   vst_agb_Live$agb_Mgha__Live <- vst_agb_Live$agb_Mgha__Dead_or_Lost <- NULL
   vst_agb_Live <- vst_agb_Live[order(vst_agb_Live$year),]
@@ -309,7 +313,10 @@ increment_all = data.frame()
 increment_qf_all = data.frame()
 endYear <- as.numeric((startAGB) : endAGB )
 for(i in 2:length(endYear)){
-transitions <- vst_agb_per_ha
+transitions <- vst_agb_per_ha %>% dplyr::group_by(.data$plot_eventID, .data$eventID, .data$siteID, .data$plotID, .data$plotType, .data$nlcdClass, .data$taxonID, 
+            .data$individualID,  .data$plantStatus2, .data$year) %>% dplyr::summarise(agb_Mgha = sum(.data$agb_Mgha, na.rm = TRUE)) 
+ # some individualIDs are represented in multiple growthForms (e.g. sapling and single bole tree): This sums the growthForms
+
  transitions$keep <- dplyr::if_else(transitions$year < endYear[i] & transitions$plantStatus2 == "Live", "keep","discard","discard")
  transitions$keep <- dplyr::if_else(transitions$year == endYear[i] & !is.na(transitions$plantStatus2), "keep",transitions$keep,transitions$keep)
  transitions <- transitions %>% dplyr::filter(.data$keep == "keep") %>% dplyr::select(-"keep") # remove records that aren't live in earlier years 

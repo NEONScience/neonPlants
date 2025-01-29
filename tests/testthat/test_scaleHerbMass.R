@@ -57,7 +57,7 @@ testthat::test_that(desc = "Output data frame row number", {
 #   Test 'inputDataList' is a list
 testthat::test_that(desc = "Argument 'inputDataList' is list object", {
   testthat::expect_error(object = scaleHerbMass(inputDataList = HbpDat$hbp_perbout), # test whether function stops if supplied with a dataframe instead of list
-                         regexp = "The inputDataList argument is expected to be either a list or NA")
+                         regexp = "Argument 'inputDataList' must be a list object from neonUtilities::loadByProduct()")
 })
 
 #   Test 'inputDataList' contains required tables (expect at least 2: perbout, and massdata)
