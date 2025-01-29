@@ -9,7 +9,7 @@ estimateWoodMass(
   vst_apparentindividual = NA,
   vst_mappingandtagging = NA,
   vst_perplotperyear = NA,
-  growthForm = "single and multi-bole trees",
+  growthForm = "all",
   plotType = "tower",
   plotPriority = 5
 )
@@ -28,7 +28,7 @@ If list input is provided, the table input arguments must all be NA; similarly, 
 \item{vst_perplotperyear}{The 'vst_perplotperyear' table for the site x month combination(s) of interest
 (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 
-\item{growthForm}{Select which growth forms to analyse \link{character}}
+\item{growthForm}{Select which growth forms to analyse. Options are "all", "tree", "shrubLiana", or "other". \link{character}}
 
 \item{plotType}{Optional filter based on NEON plot type. Defaults to "tower" plots, which are sampled annually. Otherwise "distributed" plots are examined also. \link{character}}
 
@@ -51,7 +51,8 @@ Biomass outputs can, if desired, be used in the follow-up estimateWoodProd produ
 Input data can be filtered by plot type and plot priority. Input data are combined with supplemental static tables
 with allometric equation parameters and taxon specific characteristics, and biomass is estimated by allometric equations for each individual.
 Generalized allometric equations are applied first, and replaced by taxon specific equations if available. Only the set of growth forms selected via the
-growthForm parameter are included in outputs. Biomass is summarized on an areal basis at the hierarchical level of the plot and site.
+growthForm parameter are included in outputs. The nonWoody "cactus" and "ferns" (non-tree) growthForms are not yet included, pending selection of
+appropriate allometric equations. Biomass is summarized on an areal basis at the hierarchical level of the plot and site.
 }
 \examples{
 \dontrun{
@@ -67,7 +68,7 @@ estimateWoodMassOutputs <- estimateWoodMass(inputDataList = VstDat)
 
 # example specifying several non-default arguments
 estimateWoodMassOutputs <- estimateWoodMass(inputDataList = VstDat,
-                                             growthForm = "all trees", plotPriority = 4)
+                                             growthForm = "tree", plotPriority = 4)
 
 list2env(estimateWoodMassOutputs ,.GlobalEnv) # unlist all data frames
 saveRDS(estimateWoodMassOutputs, 'estimateWoodMassOutputs.rds') # save all outputs locally

@@ -42,12 +42,12 @@ testthat::test_that(desc = "Output class vst_site", {
 #   Check expected column number of data frame
 testthat::test_that(desc = "Output data frame column number", {
   testthat::expect_identical(object = ncol(estimateWoodMassOutputs$vst_agb_per_ha),
-                             expected = as.integer(11))
+                             expected = as.integer(12))
 })
 
 testthat::test_that(desc = "Output data frame column number", {
   testthat::expect_identical(object = ncol(estimateWoodMassOutputs$vst_plot_w_0s),
-                             expected = as.integer(12))
+                             expected = as.integer(13))
 })
 
 testthat::test_that(desc = "Output data frame column number", {
