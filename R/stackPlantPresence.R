@@ -1,38 +1,38 @@
-#' @title Reformat old subplotIDs
-#'
-#' @author
-#' Eric Sokol \email{esokol@battelleecology.org} \cr
-#'
-#' @description Helper function to reformat old subplotIDs
-#'
-#' @param x old subplotID (text string)
-#'
-#' @return This function returns a data frame
-reformatSubplotID <- function(x){
-  x_split <- strsplit(x,split = "\\.") %>% unlist()
-  if((length(x_split)==3) & x_split[3]%in%c(1,10,100,400)){
-    return(
-      paste(x_split[c(1,3,2)], collapse = "_"))
-  }else{return(x)}
-}
 
+#' @title Stack NEON Plant Presence and Percent Cover data (DP1.10058.001)
 
-
-#' @title Stack NEON plant occurrence data
-#'
 #' @author
 #' Dave T Barnett \email{dbarnettl@battelleecology.org} \cr
 #' Eric Sokol \email{esokol@battelleecology.org} \cr
 
-#' @description Use this function to aggregate the occurrence data from the NEON Plant presence and percent cover (DP1.10058.001) data product to list the plant species present at each plot scale.
+#' @description Use this function to aggregate the occurrence data from the NEON Plant Presence and Percent Cover (DP1.10058.001) data product to list the plant species present at each plot scale. As downloaded from the NEON data portal, data at 10m^2 and 100m2 typically include only 
+#' species not encountered within nested, finer grained subplots and a species list for the entire 400^2 scale plot is not provided.
 #'
+#' Data inputs are NEON Plant Presence and Percent Cover (DP1.10058.001) retrieved using the 
+#' neonUtilities::loadByProduct() function (preferred), data downloaded from the NEON Data Portal, 
+#' or input data tables with an equivalent structure and representing the same site x month combinations. 
+#' 
+#' @details Input data may be provided either as a list generated from the neonUtilities::laodByProduct()
+#' function or as individual tables. However, if both list and table inputs are provided at the same time
+#' the function will error. 
 #'
-#' @param divDataList A list of data.frames from the NEON Plant presence and percent cover (DP1.10058.001) data product as returned from neonUtilities::loadByProduct(). This list must include data.frames with the names 'div_1m2Data' and 'div_10m2Data100m2Data'.
-#' @param totalSampledAreaFilter (integer, options are NA, 1, 10, 100, 400) The plot size for which data are returned. Default (NA) will return data for all plot sizes in the dataset. If you select a plot size, the function will filter the data returned to the desired plot size.
+#' @param inputDataList A list object comprised of NEON Plant Presence and Percent Cover (DP1.10058.001) 
+#' downloaded using the neonUtilities::loadByProduct() function. If list input is provided, the table
+#' input arguments must all be NA; similarly, if list input is missing, table inputs must be
+#' provided for 'div_1m2Data' and 'div_10m2Data100m2Data' arguments.[list]
+#' 
+#' @param totalSampledAreaFilter The subplot (10m^2, 100m^2) or plot (400m^2) size for which data are 
+#' returned. Default (NA) will return data for all subplot and plot sizes. If a plot size is selected, the 
+#' function will filter the data returned to the desired subplot or plot size.Input options are NA, 1, 10, 100, 400. [integer] 
 #'
-#' @details
-#' This function properly stacks occurrence records from the NEON Plant presence and percent cover, (DP1.10058.001) data product. Provide a list that includes data.frames named 'div_1m2Data' and 'div_10m2Data100m2Data' and this function will properly stack the occurrence data for each plot scale. If you only want to return a species list for one plot scale, use the totalSampledAreaFilter parameter to select the scale (1, 10, 100, or 400m). If totalSampledAreaFilter is NA (default), then the function will return a data.frame with the occurrence records for all plot scales, and you will need to filter the output to get species lists for each plot scale.
-#'
+#' @param xxxx The 'div_1m2Data' table for the site x month combination(s) of interest
+#' (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing.
+#' [data.frame]
+#' 
+#' @param xxxx The 'div_10m2Data100m2Data' table for the site x month combination(s) of interest
+#' (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing.
+#' [data.frame]
+#' 
 #' @return This function returns a data frame
 #'
 #' @references
@@ -227,20 +227,7 @@ stackPlantPresence <- function(
   div_1m2Data <- div_1m2Data %>%
     dplyr::filter(eventID %in% smallMergeEventID)
 
-  ###############set up data aggregation across scales, will need to update
-  # to new naming convention##############
-
-  ###preparation
-
-  # #make sure subplotID is character (seems like it comes down that way now)
-  # div_10m2Data100m2Data$subplotID <- as.character(div_10m2Data100m2Data$subplotID)
-
-
-
-  #separate the 10m2 data from the 100m2 data:
-
-  # data_100m2 = div_10m2Data100m2Data[which(nchar(div_10m2Data100m2Data$subplotID)<3), ]
-  # data_10m2 = div_10m2Data100m2Data[which(nchar(div_10m2Data100m2Data$subplotID)>2), ]
+  ###############set up data aggregation across scales
 
   data_100m2 <- div_10m2Data100m2Data %>%
     dplyr::filter(grepl("_100$", subplotID))
@@ -252,16 +239,6 @@ stackPlantPresence <- function(
   #rename 1m2 to combine with 10
   data_10m2Build <- div_1m2Data
 
-  #rename 1m2 subplots so associated observations will combine with 10m2 observations
-  # data_10m2Build$subplotID[data_10m2Build$subplotID == "31.1.1"] <- "31.1.10"
-  # data_10m2Build$subplotID[data_10m2Build$subplotID == "31.4.1"] <- "31.4.10"
-  # data_10m2Build$subplotID[data_10m2Build$subplotID == "32.2.1"] <- "32.2.10"
-  # data_10m2Build$subplotID[data_10m2Build$subplotID == "32.4.1"] <- "32.4.10"
-  # data_10m2Build$subplotID[data_10m2Build$subplotID == "40.1.1"] <- "40.1.10"
-  # data_10m2Build$subplotID[data_10m2Build$subplotID == "40.3.1"] <- "40.3.10"
-  # data_10m2Build$subplotID[data_10m2Build$subplotID == "41.1.1"] <- "41.1.10"
-  # data_10m2Build$subplotID[data_10m2Build$subplotID == "41.4.1"] <- "41.4.10"
-
   data_10m2Build <- data_10m2Build %>%
     dplyr::mutate(subplotID = gsub("_1_", "_10_",subplotID))
 
@@ -272,16 +249,6 @@ stackPlantPresence <- function(
   ###aggregate 100m2 data by combining 10m2 observations with 100m2 observations
   #rename 10m2 to combine with 100m2
   data_100m2Build <- data_10m2
-
-  # rename 10m2 subplots so associated observations will combine with 100m2 observations
-  # data_100m2Build$subplotID[data_100m2Build$subplotID == "31.1.10"] <- 31
-  # data_100m2Build$subplotID[data_100m2Build$subplotID == "31.4.10"] <- 31
-  # data_100m2Build$subplotID[data_100m2Build$subplotID == "32.2.10"] <- 32
-  # data_100m2Build$subplotID[data_100m2Build$subplotID == "32.4.10"] <- 32
-  # data_100m2Build$subplotID[data_100m2Build$subplotID == "40.1.10"] <- 40
-  # data_100m2Build$subplotID[data_100m2Build$subplotID == "40.3.10"] <- 40
-  # data_100m2Build$subplotID[data_100m2Build$subplotID == "41.1.10"] <- 41
-  # data_100m2Build$subplotID[data_100m2Build$subplotID == "41.4.10"] <- 41
 
   data_100m2Build <- data_100m2Build %>%
     dplyr::mutate(subplotID = gsub("_10_[0-9]","_100", subplotID))
