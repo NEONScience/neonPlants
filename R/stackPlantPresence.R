@@ -17,7 +17,7 @@
 #' the function will error. 
 #'
 #' @param inputDataList A list object comprised of NEON Plant Presence and Percent Cover (DP1.10058.001) 
-#' downloaded using the neonUtilities::loadByProduct() function. If list input is provided, the table
+#' downloaded with the neonUtilities::loadByProduct() function. If list input is provided, the table
 #' input arguments must all be NA; similarly, if list input is missing, table inputs must be
 #' provided for 'div_1m2Data' and 'div_10m2Data100m2Data' arguments.[list]
 #' 
@@ -110,8 +110,107 @@
 
 stackPlantPresence <- function(
     divDataList = NA,
+    input_1m2Data = NA,
+    input_10m2Data100m2Data = NA,
     totalSampledAreaFilter = NA_integer_){
 
+  ### Test that user has supplied arguments as required by function ####
+  
+  ### Verify user-supplied divDataList object contains correct data if not NA
+  if (!missing(divDataList)) {
+    
+    #   Check that input is a list
+    if (!inherits(divDataList, "list")) {
+      stop(glue::glue("Argument 'divDataList' must be a list object from neonUtilities::loadByProduct();
+                     supplied input object is {class(divDataList)}"))
+    }
+    
+    #   Check that required tables within list match expected names
+    listExpNames <- c("div_1m2Data", "div_10m2Data100m2Data")
+    
+    if (length(setdiff(listExpNames, names(divDataList))) > 0) {
+      stop(glue::glue("Required tables missing from 'divDataList':",
+                      '{paste(setdiff(listExpNames, names(divDataList)), collapse = ", ")}',
+                      .sep = " "))
+    }
+  } else {
+    
+    divDataList <- NULL
+    
+  } # end missing conditional
+  
+  
+  
+  ### Verify table inputs are NA if divDataList is supplied
+  if (inherits(divDataList, "list") & (!is.logical(div_1m2Data) | !is.logical(div_10m2Data100m2Data))) {
+    stop("When 'divDataList' is supplied all table input arguments must be NA")
+  }
+  
+  
+  
+  ### Verify all table inputs are data frames if divDataList is NA
+  if (is.null(divDataList) & 
+      (!inherits(div_1m2Data, "data.frame") | !inherits(div_10m2Data100m2Data, "data.frame"))) {
+    
+    stop("Data frames must be supplied for all table inputs if 'divDataList' is missing")
+    
+  }
+  
+  
+  
+  ### Conditionally define input tables ####
+  if (inherits(divDataList, "list")) {
+    
+    div_1m2Data <- divDataList$div_1m2Data
+    div_10m2Data100m2Data <- divDataList$div_10m2Data100m2Data
+    
+  } else {
+    
+    div_1m2Data <- input_1m2Data
+    div_10m2Data100m2Data <- input_10m2Data100m2Data
+    
+  }
+  
+  
+  
+  ### Verify input tables contain required columns and data ####
+  
+  ### Verify 'div_1m2Data' table contains required data
+  #   Check for required columns
+  massExpCols <- c("domainID", "siteID", "plotID", "sampleID", "subsampleID", "rootStatus", "dryMass") #check and define these
+  
+  if (length(setdiff(massExpCols, colnames(div_1m2Data))) > 0) {
+    stop(glue::glue("Required columns missing from 'input_1m2Data':", '{paste(setdiff(massExpCols, colnames(div_1m2Data)), collapse = ", ")}',
+                    .sep = " "))
+  }
+  
+  #   Check for data
+  if (nrow(div_1m2Data) == 0) {
+    stop(glue::glue("Table 'input_1m2Data' has no data."))
+  }
+  
+  
+  
+  ### Verify 'div_10m2Data100m2Data' table contains required data
+  #   Check for required columns
+  massExpCols <- c("domainID", "siteID", "plotID", "sampleID", "subsampleID", "rootStatus", "dryMass") #check and define these
+  
+  if (length(setdiff(massExpCols, colnames(div_10m2Data100m2Data))) > 0) {
+    stop(glue::glue("Required columns missing from 'input_10m2Data100m2Data':", '{paste(setdiff(massExpCols, colnames(div_10m2Data100m2Data)), collapse = ", ")}',
+                    .sep = " "))
+  }
+  
+  #   Check for data
+  if (nrow(div_10m2Data100m2Data) == 0) {
+    stop(glue::glue("Table 'input_10m2Data100m2Data' has no data."))
+  }
+  
+  
+  
+  
+  
+  
+  
   # error handling
   # check if divDataList is a list
   if(methods::is(divDataList,"list")){
