@@ -245,9 +245,9 @@ estimatePheTransByTag <- function(inputDataList = NULL,
   
   
   # Rename transition type to onset/offset
-  step_two$transitionType <- ifelse(step_two$transitionType == 'no-yes', 
+  step_two$transitionType <- ifelse(step_two$transitionType == 'no-yes',
                                     'onset',
-                                    ifelse(step_two$transitionType == 'yes-no',
+                                    ifelse(step_two$transitionType == 'yes-no', 
                                            'end',
                                            step_two$transitionType))
   
@@ -259,7 +259,7 @@ estimatePheTransByTag <- function(inputDataList = NULL,
                   "growthForm") %>%
     
     # Join with Obs
-    dplyr::right_join(.data, step_two) %>%
+    dplyr::right_join(., step_two, by = "individualID") %>%
     
     # Reorder fields
     dplyr::select("year", 
