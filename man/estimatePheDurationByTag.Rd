@@ -11,26 +11,32 @@ estimatePheDurationByTag(
 )
 }
 \arguments{
-\item{pheData}{data list from NEON Plant Phenology Observation (DP1.10055.001) as returned from neonUtilities::loadByProduct(), or individual dataframes for observations and tags as formatted from NEON Plant Phenology Observation (DP1.10055.001) downloaded from neonUtilities::loadByProduct().}
+\item{inputDataList}{a list of data frames returned from neonUtilities::loadByProduct() \link{list}}
+
+\item{inputStatus}{a data frame with phenological observation data \link{data.frame}}
+
+\item{inputTags}{a data frame with taxon data for individuals present in inputStatus dataframe \link{data.frame}}
 }
 \value{
-This function returns a data frame
-}
-\description{
-This function uses observation data from the NEON Plant Phenology Observation (DP1.10055.001) to calculate phenophase duration and descriptive statistics.
-}
-\details{
-This function uses the time series created by the neonPlants::estimatePheTransByTag function to calculate phenophase durations  for the time frame provided in the input data frame. Calculated values include:
+This function uses the time series created by the neonPlants::estimatePheTransByTag function to calculate phenophase durations for the time frame provided in the input data frame. Calculated values include:
 \itemize{
-\item trans_date_start - calendar date of the estimated transition onset
-\item trans_doy_start - ordinal day of year of the estimated transition onset
-\item trans_date_end - calendar date of the estimated transition end
-\item trans_doy_end - ordinal day of year of the estimated transition end
+\item dateTransitionStart - calendar date of the estimated transition onset
+\item doyTransitionStart - ordinal day of year of the estimated transition onset
+\item dateTransitionEnd - calendar date of the estimated transition end
+\item doyTransitionEnd - ordinal day of year of the estimated transition end
 \item duration - difference in days from the onset day of year to the transition end
-\item transition_type - indicator that output is for phenophase duration
-\item precision_duration - sum of precision_days for estimated oneset and end
+\item transitionType - indicator that output is for phenophase duration
+\item precisionDuration - sum of precisionDays for estimated oneset and end
 \item nth transition - a count of onset events per individualID, phenophase name, within a given calendar year
 }
+}
+\description{
+This function uses observation data from the NEON Plant Phenology Observation (DP1.10055.001) to calculate phenophase duration for each phenophase transition identified by the neonPlants::estimatePheTransByTag function for the time frame provided in the input data frame. Each  duration includes additional fields describing number of transitions reported for the given individual x phenophase combination, the start and end date and day of year, and the precision around the duration estimate. Required inputs are either a list of data frames (inputDataList) as returned from neonUtilities::loadByProduct() that must include a data frame titled "phe_statusintensity" and one titled "phe_perindividual". Alternatively, the function will accept two individual data frames, inputStatus, corresponding to the phe_statusintensity table and inputTags, corresponding to the phe_perindividual table. However, if both list and table inputs are provided at the same time the function will error out
+}
+\details{
+data may be provided either as a list generated from the neonUtilities::laodByProduct() function or as individual tables. However, if both list and table inputs are provided at the same time the function will error out.
+
+For table joining to be successful, inputs must contain data from the same sites for all tables. When individualID duplicates exist in the 'phe_perindividual' table, the function will error out. If this occurs when providing an inputDataList, extract individual data frames from the list, resolve duplicates and re-run with separate inputStatus and inputTags data frame inputs.
 }
 \examples{
 \dontrun{
@@ -54,6 +60,7 @@ out <- estimatePheDurationByTag(inputDataList = pheDat)
 out2 <- estimatePheDurationByTag(inputStatus = pheDat$phe_statusintensity,
                                 inputTags = pheDat$phe_perindividual)
 }
+
 }
 \references{
 License: GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007

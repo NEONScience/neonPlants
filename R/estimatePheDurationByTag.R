@@ -4,13 +4,20 @@
 #' Katie Jones \email{kjones@battelleecology.org} \cr
 #'
 #' @description This function uses observation data from the NEON Plant Phenology Observation (DP1.10055.001) to calculate phenophase duration for each phenophase transition identified by the neonPlants::estimatePheTransByTag function for the time frame provided in the input data frame. Each  duration includes additional fields describing number of transitions reported for the given individual x phenophase combination, the start and end date and day of year, and the precision around the duration estimate. Required inputs are either a list of data frames (inputDataList) as returned from neonUtilities::loadByProduct() that must include a data frame titled "phe_statusintensity" and one titled "phe_perindividual". Alternatively, the function will accept two individual data frames, inputStatus, corresponding to the phe_statusintensity table and inputTags, corresponding to the phe_perindividual table. However, if both list and table inputs are provided at the same time the function will error out
-#'
+#' 
+#' 
+#' @details data may be provided either as a list generated from the neonUtilities::laodByProduct() function or as individual tables. However, if both list and table inputs are provided at the same time the function will error out.
+#' 
+#' For table joining to be successful, inputs must contain data from the same sites for all tables. When individualID duplicates exist in the 'phe_perindividual' table, the function will error out. If this occurs when providing an inputDataList, extract individual data frames from the list, resolve duplicates and re-run with separate inputStatus and inputTags data frame inputs. 
+#' 
+#' 
 #' @param inputDataList a list of data frames returned from neonUtilities::loadByProduct() [list]
-#' @param inputStauts a data frame with phenological observation data [data.frame]
-#' @param inputTag a data frame with taxon data for individuals present in inputStatus dataframe [data.frame]
 #' 
+#' @param inputStatus a data frame with phenological observation data [data.frame]
 #' 
-#' @details
+#' @param inputTags a data frame with taxon data for individuals present in inputStatus dataframe [data.frame]
+#' 
+#'
 #'
 #' @return This function uses the time series created by the neonPlants::estimatePheTransByTag function to calculate phenophase durations for the time frame provided in the input data frame. Calculated values include: 
 #'  * dateTransitionStart - calendar date of the estimated transition onset
@@ -26,7 +33,7 @@
 #' @references
 #' License: GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007
 #'
-#' @export
+
 #'
 #' @examples
 #' \dontrun{
@@ -50,7 +57,8 @@
 #'out2 <- estimatePheDurationByTag(inputStatus = pheDat$phe_statusintensity,
 #'                                 inputTags = pheDat$phe_perindividual)
 #' }
-
+#' 
+#' @export estimatePheDurationByTag
 ##############################################################################################
 
 

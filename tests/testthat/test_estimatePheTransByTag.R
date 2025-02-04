@@ -1,6 +1,6 @@
 
 ### Unit tests for estimatePheTransByTag function ####
-### POC: Courtney Meier, kjones@BattelleEcology.org
+### POC: Katie Jones, kjones@BattelleEcology.org
 
 ### Read in test data
 testList <- readRDS(testthat::test_path("testdata", "phe_testDat_GRSM.rds"))
@@ -66,7 +66,7 @@ testthat::test_that("Input tables from list contain required fields ", {
   testthat::expect_true(length(setdiff(obs_fields, names(testList$phe_statusintensity)))==0)
   testList_2 <- testList
   testList_2[[1]] <- testList_2[[1]]%>%
-    select(-individualID, -phenophaseName)
+    dplyr::select(-individualID, -phenophaseName)
   testthat::expect_error(estimatePheTransByTag(inputDataList = testList_2)#,
                          #regexp = "Required columns missing from inputDataList$phe_statusintensity:individualID, phenophaseName "
                          )  #regexp not working though copy/paste directly form function output...???
@@ -87,7 +87,7 @@ testthat::test_that("Input tag data frame contains required fields ", {
   testthat::expect_true(length(setdiff(tag_fields, names(testTags)))==0)
   testthat::expect_error(estimatePheTransByTag(inputStatus = testStatus,
                                                inputTags = testTags%>%
-                                                 select(-taxonID)),
+                                                 dplyr::select(-taxonID)),
                          regexp = "Required columns missing from inputStatus:taxonID")
 })
     
@@ -111,7 +111,7 @@ testthat::test_that("Data contain transitions",{
   testthat::expect_error(estimatePheTransByTag(inputStatus = testStatus%>%
                                                   dplyr::filter(phenophaseStatus=='no'),
                                                 inputTags = testTags), 
-                         regexp = "input dataset does not contain any phenophase transitions")
+                         regexp = "Input dataset does not contain any phenophase transitions")
 })
 
 
