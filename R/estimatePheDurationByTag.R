@@ -76,7 +76,7 @@ estimatePheDurationByTag <- function(
                    doyTransitionStart = min(.data$doyTransition),
                    dateTransitionEnd = max(.data$dateTransition), 
                    doyTransitionEnd = max(.data$doyTransition),
-                   duration = .data$doyTransition[.data$transitionType=='end']-.data$doyTransition[.data$transitionType=='onset'],
+                   duration = .data$doyTransition[.data$transitionType == 'end'] - .data$doyTransition[.data$transitionType == 'onset'],
                    precisionDuration = sum(.data$precisionDays), ## does sum of precision_days make sense for duration metrics?
                    transitionType = 'duration')
 
