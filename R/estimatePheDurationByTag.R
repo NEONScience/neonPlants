@@ -9,8 +9,7 @@
 #' @param pheData data list from NEON Plant Phenology Observation (DP1.10055.001) as returned from neonUtilities::loadByProduct(), or individual dataframes for observations and tags as formatted from NEON Plant Phenology Observation (DP1.10055.001) downloaded from neonUtilities::loadByProduct().
 #
 #' @details
-#' This function uses the time series created by the neonPlants::estimatePheTransByTag function to calculate phenophase durations  for the time frame provided in the input data frame.
-#' Calculated values inclued:
+#' This function uses the time series created by the neonPlants::estimatePheTransByTag function to calculate phenophase durations  for the time frame provided in the input data frame. Calculated values include:
 #'  * trans_date_start - calendar date of the estimated transition onset
 #'  * trans_doy_start - ordinal day of year of the estimated transition onset
 #'  * trans_date_end - calendar date of the estimated transition end
@@ -47,44 +46,37 @@
 #'
 #'out <- estimatePheDurationByTag(inputDataList = pheDat)
 #'
-#'WORKS
-#'
 #'out2 <- estimatePheDurationByTag(inputStatus = pheDat$phe_statusintensity,
-#'                              inputTags = pheDat$phe_perindividual)
-#'
-#'FLAGGING NON EXISTANT DUPLICATES
-#'
+#'                                 inputTags = pheDat$phe_perindividual)
 #' }
 
 ##############################################################################################
 
 
-estimatePheDurationByTag <- function(
-    inputDataList = NULL,
-    inputStatus = NULL,
-    inputTags = NULL
-){
-  trans <- estimatePheTransByTag(inputDataList=inputDataList,
+estimatePheDurationByTag <- function(inputDataList = NULL,
+                                     inputStatus = NULL,
+                                     inputTags = NULL) {
+  
+  trans <- estimatePheTransByTag(inputDataList = inputDataList,
                                  inputStatus = inputStatus,
                                  inputTags = inputTags)
 
-  out <- trans%>%
+  out <- trans %>%
     dplyr::group_by(.data$year, 
                     .data$siteID, 
                     .data$individualID, 
                     .data$taxonID, 
                     .data$scientificName, 
                     .data$phenophaseName, 
-                    .data$nth_transition)%>%
-    #filter(n()>1)%>%
-    dplyr::reframe(trans_date_start=min(.data$date_transition),
-                   trans_doy_start=min(.data$doy_transition),
-                   trans_date_end=max(.data$date_transition), 
-                   trans_doy_end=max(.data$doy_transition),
-                   duration = .data$doy_transition[.data$transitionType=='end']-.data$doy_transition[.data$transitionType=='onset'],
-              precision_duration=sum(.data$precision_days), ## does sum of precision_days make sense for duration metrics?
-              transitionType = 'duration')
+                    .data$nth_transition) %>%
+    
+    dplyr::reframe(trans_date_start = min(.data$date_transition),
+                   trans_doy_start = min(.data$doy_transition),
+                   trans_date_end = max(.data$date_transition), 
+                   trans_doy_end = max(.data$doy_transition),
+                   duration = .data$doy_transition[.data$transitionType == 'end'] - .data$doy_transition[.data$transitionType == 'onset'],
+                   precision_duration = sum(.data$precision_days), 
+                   transitionType = 'duration')
 
   return(out)
 }
-

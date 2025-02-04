@@ -20,8 +20,7 @@ This function returns a data frame
 This function uses observation data from the NEON Plant Phenology Observation (DP1.10055.001) to calculate phenophase duration and descriptive statistics.
 }
 \details{
-This function uses the time series created by the neonPlants::estimatePheTransByTag function to calculate phenophase durations  for the time frame provided in the input data frame.
-Calculated values inclued:
+This function uses the time series created by the neonPlants::estimatePheTransByTag function to calculate phenophase durations  for the time frame provided in the input data frame. Calculated values include:
 \itemize{
 \item trans_date_start - calendar date of the estimated transition onset
 \item trans_doy_start - ordinal day of year of the estimated transition onset
@@ -52,13 +51,8 @@ pheDat <- loadByProduct(
 
 out <- estimatePheDurationByTag(inputDataList = pheDat)
 
-WORKS
-
 out2 <- estimatePheDurationByTag(inputStatus = pheDat$phe_statusintensity,
-                             inputTags = pheDat$phe_perindividual)
-
-FLAGGING NON EXISTANT DUPLICATES
-
+                                inputTags = pheDat$phe_perindividual)
 }
 }
 \references{
