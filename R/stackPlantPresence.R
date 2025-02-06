@@ -21,15 +21,15 @@
 #' input arguments must all be NA; similarly, if list input is missing, table inputs must be
 #' provided for 'div_1m2Data' and 'div_10m2Data100m2Data' arguments.[list]
 #' 
-#' @param totalSampledAreaFilter The subplot (10m^2, 100m^2) or plot (400m^2) size for which data are 
+#' @param totalSampledAreaFilter The subplot (1m^2, 10m^2, 100m^2) or plot (400m^2) size for which data are 
 #' returned. Default (NA) will return data for all subplot and plot sizes. If a plot size is selected, the 
-#' function will filter the data returned to the desired subplot or plot size.Input options are NA, 1, 10, 100, 400. [integer] 
+#' function will filter the data returned to the desired subplot or plot size. Input options are NA, 1, 10, 100, 400. Note that selecting 1 does not  [integer] 
 #'
-#' @param xxxx The 'div_1m2Data' table for the site x month combination(s) of interest
+#' @param input_1m2Data The 'div_1m2Data' table for the site x month combination(s) of interest
 #' (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing.
 #' [data.frame]
 #' 
-#' @param xxxx The 'div_10m2Data100m2Data' table for the site x month combination(s) of interest
+#' @param input_10m2Data100m2Data The 'div_10m2Data100m2Data' table for the site x month combination(s) of interest
 #' (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing.
 #' [data.frame]
 #' 
