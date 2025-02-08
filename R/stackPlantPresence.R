@@ -119,6 +119,8 @@ stackPlantPresence <- function(
 
   ### Test that user has supplied arguments as required by function ####
   
+  
+  
   ### Verify user-supplied divDataList object contains correct data if not NA
   if (!missing(divDataList)) {
     
@@ -145,7 +147,7 @@ stackPlantPresence <- function(
   
   
   ### Verify table inputs are NA if divDataList is supplied
-  if (inherits(divDataList, "list") & (!is.logical(div_1m2Data) | !is.logical(div_10m2Data100m2Data))) {
+  if (inherits(divDataList, "list") & (!is.logical(input_1m2Data) | !is.logical(input_10m2Data100m2Data))) {
     stop("When 'divDataList' is supplied all table input arguments must be NA")
   }
   
@@ -153,7 +155,7 @@ stackPlantPresence <- function(
   
   ### Verify all table inputs are data frames if divDataList is NA
   if (is.null(divDataList) & 
-      (!inherits(div_1m2Data, "data.frame") | !inherits(div_10m2Data100m2Data, "data.frame"))) {
+      (!inherits(input_1m2Data, "data.frame") | !inherits(input_10m2Data100m2Data, "data.frame"))) {
     
     stop("Data frames must be supplied for all table inputs if 'divDataList' is missing")
     
@@ -181,7 +183,11 @@ stackPlantPresence <- function(
   
   ### Verify 'div_1m2Data' table contains required data
   #   Check for required columns
-  massExpCols <- c("domainID", "siteID", "plotID", "sampleID", "subsampleID", "rootStatus", "dryMass") #check and define these
+  massExpCols <- c("domainID", "siteID", "plotID", "endDate", "divDataType", 
+                   "subplotID", "boutNumber", "eventID", "taxonID", "identificationQualifier", "morphospeciesID", "targetTaxaPresent",
+                   "namedLocation", "decimalLatitude", "decimalLongitude", "geodeticDatum", "coordinateUncertainty", "elevation", "elevationUncertainty", "nlcdClass", 
+                   "plotType", "scientificName", "taxonRank", "family", "nativeStatusCode", "identificationQualifier", "morphospeciesID",
+                   "samplingImpractical", "samplingImpracticalRemarks", "biophysicalCriteria", "publicationDate", "release") #check and define these
   
   if (length(setdiff(massExpCols, colnames(div_1m2Data))) > 0) {
     stop(glue::glue("Required columns missing from 'input_1m2Data':", '{paste(setdiff(massExpCols, colnames(div_1m2Data)), collapse = ", ")}',
@@ -197,7 +203,11 @@ stackPlantPresence <- function(
   
   ### Verify 'div_10m2Data100m2Data' table contains required data
   #   Check for required columns
-  massExpCols <- c("domainID", "siteID", "plotID", "sampleID", "subsampleID", "rootStatus", "dryMass") #check and define these
+  massExpCols <- c("domainID", "siteID", "plotID", "endDate",
+                   "subplotID", "boutNumber", "eventID", "taxonID", "identificationQualifier", "morphospeciesID", "targetTaxaPresent",
+                   "namedLocation", "decimalLatitude", "decimalLongitude", "geodeticDatum", "coordinateUncertainty", "elevation", "elevationUncertainty", "nlcdClass", 
+                   "plotType", "scientificName", "taxonRank", "family", "nativeStatusCode", "identificationQualifier", "morphospeciesID",
+                   "samplingImpractical", "samplingImpracticalRemarks", "biophysicalCriteria", "publicationDate", "release") #check and define these
   
   if (length(setdiff(massExpCols, colnames(div_10m2Data100m2Data))) > 0) {
     stop(glue::glue("Required columns missing from 'input_10m2Data100m2Data':", '{paste(setdiff(massExpCols, colnames(div_10m2Data100m2Data)), collapse = ", ")}',
@@ -214,7 +224,7 @@ stackPlantPresence <- function(
   ### Verify totalSampledAreaFilter input is of expected value
   areaFilterExpVals <- c(1, 10, 100, 400, NA)
   
-  if (!all(totalSampledAreaFilter %in% allowed_values)) {
+  if (!all(totalSampledAreaFilter %in% areaFilterExpVals)) {
     stop("Error: 'totalSampledAreaFilter' must be one of 1, 10, 100, 400, or NA.")
   }
   
