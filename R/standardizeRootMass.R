@@ -2,39 +2,19 @@
 
 #' @author Courtney Meier \email{cmeier@battelleecology.org} \cr
 
-#' @description NEON root mass data collected prior to 2019 were sorted to four sizeCategories and
-#' were parsed into "live" and "dead" rootStatus categories. Beginning in 2019 the two smallest 
-#' sizeCategories (< 0.5mm and 0.5-1mm) were combined into a single < 1mm sizeCategory and roots 
-#' were no longer sorted to "live/dead". This function combines the older smallest two sizeCategories
-#' into the current < 1mm category and pools together roots previously categorized as "live" and
-#' "dead". 
+#' @description NEON root mass data collected prior to 2019 were sorted to four sizeCategories and were parsed into "live" and "dead" rootStatus categories. Beginning in 2019 the two smallest sizeCategories (< 0.5mm and 0.5-1mm) were combined into a single < 1mm sizeCategory and roots were no longer sorted to "live/dead". This function combines the older smallest two sizeCategories into the current < 1mm category and pools together roots previously categorized as "live" and "dead". 
 #' 
-#' Data inputs are NEON Plant Belowground Biomass data (DP1.10067.001) retrieved using the 
-#' neonUtilities::loadByProduct function (preferred), data downloaded from the NEON Data Portal, 
-#' or input data tables with an equivalent structure and representing the same site x month combinations. 
+#' Data inputs are NEON Plant Belowground Biomass data (DP1.10067.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input data tables with an equivalent structure and representing the same site x month combinations. 
 #' 
-#' @details Input data may be provided either as a list generated from the neonUtilities::laodByProduct()
-#' function or as individual tables. However, if both list and table inputs are provided at the same time
-#' the function will error out.
+#' @details Input data may be provided either as a list or as individual tables. However, if both list and table inputs are provided at the same time the function will error out.
 #' 
-#' NEON weighs a minimum of 5% of samples a second time so that data users can estimate
-#' the uncertainty associated with different technicians weighing dried roots; QA samples of this
-#' nature are identified via qaDryMass == "Y". The function calculates the mean when QA masses 
-#' exist and any 'remarks' are concatenated. Samples with Sampling Impractical values other than "OK"
-#' are removed prior to summarizing the input data.
+#' NEON weighs a minimum of 5% of samples a second time so that data users can estimate the uncertainty associated with different technicians weighing dried roots; QA samples of this nature are identified via qaDryMass == "Y". The function calculates the mean when QA masses exist and any 'remarks' are concatenated. Samples with Sampling Impractical values other than "OK" are removed prior to summarizing the input data.
 #' 
-#' @param inputDataList A list object comprised of Plant Below Ground Biomass tables (DP1.10067.001) 
-#' downloaded using the neonUtilities::loadByProduct function (defaults to required). If list input is 
-#' provided, the table input argument must be NA; similarly, if list input is missing, the 'inputMass'
-#' table input must be provided. [list]
+#' @param inputDataList A list object comprised of Plant Below Ground Biomass tables (DP1.10067.001) downloaded using the neonUtilities::loadByProduct() function (defaults to required). If list input is provided, the table input argument must be NA; similarly, if list input is missing, the 'inputMass' table input must be provided. [list]
 #'
-#' @param inputMass The 'bbc_rootmass' table for the site x month combination(s) of interest
-#' (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing.
-#' [data.frame]
+#' @param inputMass The 'bbc_rootmass' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
 #' 
-#' @return A table containing root mass data for three sizeCategories (< 1mm, 1-2mm, and 2-10mm)
-#' and dryMass values pooled across previously utilized "live/dead" rootStatus categories. The 
-#' output no longer contains the 'rootStatus' field, and any QA dryMass samples are averaged. 
+#' @return A table containing root mass data for three sizeCategories (< 1mm, 1-2mm, and 2-10mm) and dryMass values pooled across previously utilized "live/dead" rootStatus categories. The output no longer contains the 'rootStatus' field, and any QA dryMass samples are averaged. 
 #' 
 #' @examples
 #' \dontrun{
