@@ -48,5 +48,4 @@ Imports:
     methods,
     rlang,
     stringr,
-    tidyr,
-    data.table
+    tidyr
