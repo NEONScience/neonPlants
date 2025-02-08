@@ -2,76 +2,33 @@
 
 #' @author Courtney Meier \email{cmeier@battelleecology.org} \cr
 
-#' @description Join NEON Plant Belowground Biomass data tables (DP1.10067.001) to calculate fine 
-#' root biomass by sizeCategory as well as total fine root biomass per unit area and per unit soil
-#' volume. Fine root fragment mass (root fragments < 1 cm length) can optionally be calculated 
-#' for the subset of cores for which it is generated, and fragment mass can optionally be included
-#' in the summed total fine root biomass.
+#' @description Join NEON Plant Belowground Biomass data tables (DP1.10067.001) to calculate fine root biomass by sizeCategory as well as total fine root biomass per unit area and per unit soil volume. Fine root fragment mass (root fragments < 1 cm length) can optionally be calculated for the subset of cores for which it is generated, and fragment mass can optionally be included in the summed total fine root biomass.
 #' 
-#' Data inputs are NEON Plant Belowground Biomass data (DP1.10067.001) retrieved using the 
-#' neonUtilities::loadByProduct() function (preferred), data downloaded from the NEON Data Portal, 
-#' or input data tables with an equivalent structure and representing the same site x month combinations. 
+#' Data inputs are NEON Plant Belowground Biomass data (DP1.10067.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input data tables with an equivalent structure and representing the same site x month combinations. 
 #'
-#' @details Input data may be provided either as a list generated from the neonUtilities::laodByProduct()
-#' function or as individual tables. However, if both list and table inputs are provided at the same time
-#' the function will error out. For all output data, columns with the same name as input data have 
-#' identical units and definitions; where needed, new columns contain new units information.
+#' @details Input data may be provided either as a list or as individual tables. However, if both list and table inputs are provided at the same time the function will error out. For all output data, columns with the same name as input data have identical units and definitions; where needed, new columns contain new units information.
 #' 
-#' If inputMass data collected prior to 2019 are provided, the 0-0.5mm and 0.5-1mm 
-#' sizeCategories are combined into the current 0-1mm sizeCategory.
+#' If inputMass data collected prior to 2019 are provided, the 0-0.5mm and 0.5-1mm sizeCategories are combined into the current 0-1mm sizeCategory.
 #' 
-#' NEON weighs a minimum of 5% of samples a second time so that data users can estimate
-#' the uncertainty associated with different technicians weighing dried roots; QA samples of this
-#' nature are identified via qaDryMass == "Y". The function calculates the mean when QA masses 
-#' exist and any 'remarks' are concatenated. Samples with Sampling Impractical values other than "OK"
-#' are removed prior to generating output data.
+#' NEON weighs a minimum of 5% of samples a second time so that data users can estimate the uncertainty associated with different technicians weighing dried roots; QA samples of this nature are identified via qaDryMass == "Y". The function calculates the mean when QA masses exist and any 'remarks' are concatenated. Samples with Sampling Impractical values other than "OK" are removed prior to generating output data.
 #' 
-#' @param inputDataList A list object comprised of Plant Below Ground Biomass tables (DP1.10067.001) 
-#' downloaded using the neonUtilities::loadByProduct() function. If list input is provided, the table
-#' input arguments must all be NA; similarly, if list input is missing, table inputs must be
-#' provided for 'inputCore' and 'inputMass' arguments at a minimum. [list]
+#' @param inputDataList A list object comprised of Plant Below Ground Biomass tables (DP1.10067.001) downloaded using the neonUtilities::loadByProduct() function. If list input is provided, the table input arguments must all be NA; similarly, if list input is missing, table inputs must be provided for 'inputCore' and 'inputMass' arguments at a minimum. [list]
 #' 
-#' @param includeDilution Indicator for whether mass of root fragments < 1 cm length should be
-#' calculated, as estimated via the Dilution Sampling method (Defaults to TRUE). If TRUE and
-#' 'inputDilution' is NA, the 'bbc_dilution' table will be extracted from the list input. [logical]
+#' @param includeDilution Indicator for whether mass of root fragments < 1 cm length should be calculated, as estimated via the Dilution Sampling method (Defaults to TRUE). If TRUE and 'inputDilution' is NA, the 'bbc_dilution' table will be extracted from the list input. [logical]
 #' 
-#' @param inputCore The 'bbc_percore' table for the site x month combination(s) of interest
-#' (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing.
-#' [data.frame]
+#' @param inputCore The 'bbc_percore' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
 #'
-#' @param inputMass The 'bbc_rootmass' table for the site x month combination(s) of interest
-#' (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing.
-#' [data.frame]
+#' @param inputMass The 'bbc_rootmass' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
 #' 
-#' @param inputDilution The 'bbc_dilution' table for the site x month combination(s) of interest
-#' (optional, defaults to NA). If table input is provided, the 'inputDataList' argument must be 
-#' missing. [data.frame]
+#' @param inputDilution The 'bbc_dilution' table for the site x month combination(s) of interest (optional, defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
 #' 
-#' @param includeFragInTotal Indicator for whether mass of root fragments < 1 cm length 
-#' calculated from dilution sampling should be included when summing across sizeCategory to 
-#' calculate the 'totalDryMass'. Defaults to FALSE. If set to TRUE and 'inputDataList' is missing, 
-#' the 'bbc_dilution' table must be provided to the 'inputDilution' argument. [logical]
+#' @param includeFragInTotal Indicator for whether mass of root fragments < 1 cm length calculated from dilution sampling should be included when summing across sizeCategory to calculate the 'totalDryMass'. Defaults to FALSE. If set to TRUE and 'inputDataList' is missing, the 'bbc_dilution' table must be provided to the 'inputDilution' argument. [logical]
 #' 
-#' @return Three tables are produced containing root mass data at varying spatial scales. The first 
-#' "coreRootMass" table contains root mass data at the scale of the field-collected core, 
-#' reported for three sizeCategories (< 1mm, 1-2mm, and 2-10mm) as per unit area ("g/m2") and per 
-#' unit volume ("g/m3"), as well as total fine root biomass summed across all sizeCategories (separate
-#' columns for "g/m2", "g/m3", and "Mg/ha"). Output no longer contains the 'rootStatus' field, 
-#' and QA dryMass samples are averaged. 
+#' @return Three tables are produced containing root mass data at varying spatial scales. The first "coreRootMass" table contains root mass data at the scale of the field-collected core, reported for three sizeCategories (< 1mm, 1-2mm, and 2-10mm) as per unit area ("g/m2") and per unit volume ("g/m3"), as well as total fine root biomass summed across all sizeCategories (separate columns for "g/m2", "g/m3", and "Mg/ha"). Output no longer contains the 'rootStatus' field, and QA dryMass samples are averaged. 
 #' 
-#' The second "plotRootMass" table contains mean root mass data at the scale of the plot for 
-#' each eventID in the data, reported for three sizeCategories (< 1mm, 1-2mm, and 2-10mm) as per 
-#' unit area ("g/m2") and per unit volume ("g/m3"), as well as total fine root biomass summed across all 
-#' sizeCategories (separate columns for "g/m2", "Mg/ha", and "g/m3"). Uncertainty at the plot scale
-#' is not reported because intra-plot replication is frequently insufficient and not required by the
-#' sampling design, but the number of core samples used to calculate the mean is reported. The 
-#' startDate and endDate indicate the start/end dates of core collection for a given plotID within 
-#' a bout.
+#' The second "plotRootMass" table contains mean root mass data at the scale of the plot for each eventID in the data, reported for three sizeCategories (< 1mm, 1-2mm, and 2-10mm) as per unit area ("g/m2") and per unit volume ("g/m3"), as well as total fine root biomass summed across all sizeCategories (separate columns for "g/m2", "Mg/ha", and "g/m3"). Uncertainty at the plot scale is not reported because intra-plot replication is frequently insufficient and not required by the sampling design, but the number of core samples used to calculate the mean is reported. The startDate and endDate indicate the start/end dates of core collection for a given plotID within a bout.
 #' 
-#' The third "siteRootMass" table provides mean site-level total root mass data for each 
-#' eventID in the data, calculated from plot-level data and reported per unit area ("g/m2", "Mg/ha")
-#' and per unit volume ("g/m3"). The standard deviation across plots is calculated and the number
-#' of plots for each siteID x eventID combination is reported.
+#' The third "siteRootMass" table provides mean site-level total root mass data for each year (i.e., eventID) in the data, calculated from plot-level data and reported per unit area ("g/m2", "Mg/ha") and per unit volume ("g/m3"). The standard deviation across plots is calculated and the number of plots for each siteID x year combination is reported.
 #' 
 #' @examples
 #' \dontrun{
@@ -505,11 +462,16 @@ scaleRootMass <- function(inputDataList,
                      rootMassSD_gm3 = round(stats::sd(.data$totalMass_gm3, na.rm = TRUE),
                                             digits = 0),
                      rootMassMean_Mgha = round(mean(.data$totalMass_Mgha, na.rm = TRUE),
-                                               digits = 4),
+                                               digits = 2),
                      rootMassSD_Mgha = round(stats::sd(.data$totalMass_Mgha, na.rm = TRUE),
                                              digits = 2),
                      rootPlotNum = dplyr::n(),
-                     .groups = "drop")
+                     .groups = "drop") %>%
+    
+    #   Create 'year' column for use with biomass umbrella function
+    dplyr::mutate(year = as.integer(stringr::str_extract(string = .data$eventID,
+                                                         pattern = "20[0-9]{2}$")),
+                  .before = "eventID")
   
   
   
