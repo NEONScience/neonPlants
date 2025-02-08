@@ -3,7 +3,7 @@
 #' @author
 #' Katie Jones \email{kjones@battelleecology.org} \cr
 #'
-#' @description This function uses observation data from the NEON Plant Phenology Observation data product (DP1.10055.001) to calculate phenophase transition dates for each phenophase transition (status = no->yes or yes->no) for each tagged plant or patch observed along a NEON phenology transect or within a phenocam plot in the input data set.  Additionally, each estimated transition includes additional fields describing number of transitions observed for the given individual x phenophase combination and the sampling interval around the estimate. Required inputs are either a list of data frames (inputDataList) as returned from neonUtilities::loadByProduct() that must include a data frame titled "phe_statusintensity" and one titled "phe_perindividual". Alternatively, the function will accept two individual data frames, inputStatus, corresponding to the phe_statusintensity table and inputTags, corresponding to the phe_perindividual table. However, if both list and table inputs are provided at the same time the function will error out.
+#' @description This function uses observation data from the NEON Plant Phenology Observation data product (DP1.10055.001) to calculate phenophase transition dates for each phenophase transition (status = no->yes or yes->no) for each tagged plant or patch observed along a NEON phenology transect or within a phenocam plot in the input data set.  Additionally, each estimated transition includes additional fields describing number of transitions observed for the given individual x phenophase combination and the sampling interval around the estimate. Required inputs are either a list of data frames (inputDataList) as returned from neonUtilities::loadByProduct() that must include a data frame titled "phe_statusintensity" and one titled "phe_perindividual". Alternatively, the function will accept two individual data frames, inputStatus, corresponding to the phe_statusintensity table and inputTags, corresponding to the phe_perindividual table.
 #' 
 #' @details Input data may be provided either as a list generated from the neonUtilities::laodByProduct() function or as individual tables. However, if both list and table inputs are provided at the same time the function will error out.
 #' 
@@ -186,7 +186,7 @@ estimatePheTransByTag <- function(inputDataList = NULL,
 
 
   # Format transition output dataframe
-  step_one <-obs %>%
+  step_one <- obs %>%
     
     # extract year from date
     dplyr::mutate(year = substr(.data$date, 1,4)) %>%
@@ -262,7 +262,8 @@ estimatePheTransByTag <- function(inputDataList = NULL,
                   "growthForm") %>%
     
     # Join with Obs
-    dplyr::right_join(step_two, by = "individualID") %>%
+    dplyr::right_join(step_two, 
+                      by = "individualID") %>%
     
     # Reorder fields
     dplyr::select("year", 

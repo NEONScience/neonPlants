@@ -11,14 +11,14 @@ estimatePheDurationByTag(
 )
 }
 \arguments{
-\item{inputDataList}{a list of data frames returned from neonUtilities::loadByProduct() \link{list}}
+\item{inputDataList}{A list of data frames returned from the neonUtilities::loadByProduct() function. \link{list}}
 
-\item{inputStatus}{a data frame with phenological observation data \link{data.frame}}
+\item{inputStatus}{A data frame with phenological observation data, either the "phe_statusintensity" table or equivalent. \link{data.frame}}
 
-\item{inputTags}{a data frame with taxon data for individuals present in inputStatus dataframe \link{data.frame}}
+\item{inputTags}{A data frame with taxon data for individuals present in the inputStatus dataframe, either the "phe_perindividual" table or equivalent. \link{data.frame}}
 }
 \value{
-This function uses the time series created by the neonPlants::estimatePheTransByTag function to calculate phenophase durations for the time frame provided in the input data frame. Calculated values include:
+This function uses the time series created by the neonPlants::estimatePheTransByTag() function to calculate phenophase durations for the time frame provided in the input data frame. Calculated values include:
 \itemize{
 \item dateTransitionStart - calendar date of the estimated transition onset
 \item doyTransitionStart - ordinal day of year of the estimated transition onset
@@ -31,10 +31,10 @@ This function uses the time series created by the neonPlants::estimatePheTransBy
 }
 }
 \description{
-This function uses observation data from the NEON Plant Phenology Observation (DP1.10055.001) to calculate phenophase duration for each phenophase transition identified by the neonPlants::estimatePheTransByTag function for the time frame provided in the input data frame. Each  duration includes additional fields describing number of transitions reported for the given individual x phenophase combination, the start and end date and day of year, and the precision around the duration estimate. Required inputs are either a list of data frames (inputDataList) as returned from neonUtilities::loadByProduct() that must include a data frame titled "phe_statusintensity" and one titled "phe_perindividual". Alternatively, the function will accept two individual data frames, inputStatus, corresponding to the phe_statusintensity table and inputTags, corresponding to the phe_perindividual table. However, if both list and table inputs are provided at the same time the function will error out
+This function uses observation data from the NEON Plant Phenology Observation (DP1.10055.001) to calculate phenophase duration for each phenophase transition identified by the neonPlants::estimatePheTransByTag function for the time frame provided in the input data frame. Each  duration includes additional fields describing number of transitions reported for the given individual x phenophase combination, the start and end date and day of year, and the precision around the duration estimate. Required inputs are either a list of data frames (inputDataList) as returned from neonUtilities::loadByProduct() that must include a data frame titled "phe_statusintensity" and one titled "phe_perindividual". Alternatively, the function will accept two individual data frames, inputStatus, corresponding to the phe_statusintensity table and inputTags, corresponding to the phe_perindividual table.
 }
 \details{
-data may be provided either as a list generated from the neonUtilities::laodByProduct() function or as individual tables. However, if both list and table inputs are provided at the same time the function will error out.
+Input data may be provided either as a list generated from the neonUtilities::laodByProduct() function or as individual tables. However, if both list and table inputs are provided at the same time the function will error out.
 
 For table joining to be successful, inputs must contain data from the same sites for all tables. When individualID duplicates exist in the 'phe_perindividual' table, the function will error out. If this occurs when providing an inputDataList, extract individual data frames from the list, resolve duplicates and re-run with separate inputStatus and inputTags data frame inputs.
 }
@@ -42,18 +42,17 @@ For table joining to be successful, inputs must contain data from the same sites
 \dontrun{
 
 # load additional packages for these examples
-library(neonUtilities)
-library(dplyr)
-library(data.table)
+library(neonUtilities) 
 
 # get data
-pheDat <- loadByProduct(
+pheDat <- neonUtilities::loadByProduct(
   dpID = "DP1.10055.001",
   site = "UKFS",
   startdate = "2022-01",
   enddate = "2022-12",
   package = "basic",
-  check.size = FALSE)
+  check.size = FALSE
+  )
 
 out <- estimatePheDurationByTag(inputDataList = pheDat)
 
