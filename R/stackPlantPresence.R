@@ -131,13 +131,31 @@ stackPlantPresence <- function(
     }
     
     #   Check that required tables within list match expected names
+    # Check that required tables within list match expected names
     listExpNames <- c("div_1m2Data", "div_10m2Data100m2Data")
     
-    if (length(setdiff(listExpNames, names(divDataList))) > 0) {
-      stop(glue::glue("Required tables missing from 'divDataList':",
-                      '{paste(setdiff(listExpNames, names(divDataList)), collapse = ", ")}',
-                      .sep = " "))
+    # Identify missing tables
+    missing_tables <- setdiff(listExpNames, names(divDataList))
+    
+    # If there are missing tables, construct an informative error message
+    if (length(missing_tables) > 0) {
+      # Base error message listing the missing tables
+      error_msg <- glue::glue(
+        "Required tables missing from 'divDataList': {paste(missing_tables, collapse = ', ')}."
+      )
+      
+      # Add extra explanation if "div_10m2Data100m2Data" is missing
+      if ("div_10m2Data100m2Data" %in% missing_tables) {
+        error_msg <- glue::glue(
+          "{error_msg} If missing table 'div_10m2Data100m2Data', be sure the 10m2 and 100m2 subplots ",
+          "were observed at the site x year combination, as these data are collected every other year."
+        )
+      }
+      
+      # Stop execution with the final message
+      stop(error_msg)
     }
+    
   } else {
     
     divDataList <- NULL
@@ -157,7 +175,8 @@ stackPlantPresence <- function(
   if (is.null(divDataList) & 
       (!inherits(input_1m2Data, "data.frame") | !inherits(input_10m2Data100m2Data, "data.frame"))) {
     
-    stop("Data frames must be supplied for all table inputs if 'divDataList' is missing")
+    stop("Data frames must be supplied for all table inputs if 'divDataList' is missing. . If missing table 
+         'div_10m2Data100m2Data', be sure the 10m2 and 100m2 subplots were sampled the site x year as these data are collected every other year.")
     
   }
   
