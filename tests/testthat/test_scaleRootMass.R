@@ -159,7 +159,7 @@ testthat::test_that(desc = "Output 'siteRootMass' column number with defaults", 
                         includeFragInTotal = FALSE)
   
   testthat::expect_identical(object = ncol(temp$siteRootMass),
-                             expected = as.integer(12))
+                             expected = as.integer(13))
   
 })
 

@@ -11,24 +11,29 @@ estimatePheTransByTag(
 )
 }
 \arguments{
-\item{pheData}{data list from NEON Plant Phenology Observation (DP1.10055.001) as returned from neonUtilities::loadByProduct().}
+\item{inputDataList}{A list of data frames returned from the neonUtilities::loadByProduct() function. \link{list}}
+
+\item{inputStatus}{A data frame with phenological observation data, either the "phe_statusintensity" table or equivalent. \link{data.frame}}
+
+\item{inputTags}{A data frame with taxon data for individuals present in the inputStatus dataframe, either the "phe_perindividual" table or equivalent. \link{data.frame}}
 }
 \value{
-This function returns a data frame
+A data frame containing a time series for each phenophase reported for each individual in the data set, including identified  transition dates for beginning and end of a given phenophase, as well as explanatory metrics about that estimate for the time frame provided in the input data frame. Calculated values include:
+\itemize{
+\item transition date - the mid-point between two consecutive dates with different phenophase status values.
+\item transitionType - the phenophase status values of the transition.
+\item sampling interval - the number of days between observations.
+\item uncertainty - sampling interval/2
+\item nth transition - a count of onset events per individualID, phenophase name, within a given calendar year.
+}
 }
 \description{
-This function uses observation data from the NEON Plant Phenology Observation (DP1.10055.001) to calculate phenophase transition dates and descriptive statistics.
+This function uses observation data from the NEON Plant Phenology Observation data product (DP1.10055.001) to calculate phenophase transition dates for each phenophase transition (status = no->yes or yes->no) for each tagged plant or patch observed along a NEON phenology transect or within a phenocam plot in the input data set.  Additionally, each estimated transition includes additional fields describing number of transitions observed for the given individual x phenophase combination and the sampling interval around the estimate. Required inputs are either a list of data frames (inputDataList) as returned from neonUtilities::loadByProduct() that must include a data frame titled "phe_statusintensity" and one titled "phe_perindividual". Alternatively, the function will accept two individual data frames, inputStatus, corresponding to the phe_statusintensity table and inputTags, corresponding to the phe_perindividual table.
 }
 \details{
-This function creates a time series for each phenophase reported for each individual in the data set and identifies transition dates for beginning and end of a given phenophase as well as explanatory metrics about that estimate for the time frame provided in the input data frame.
-Calculated values include:
-\itemize{
-\item transition date - the mid-point between two consecutive dates with different phenophase status values
-\item transition_type - indicating the phenophase status values of the transition
-\item sampling interval - the number of days between observations
-\item uncertainty - sampling interval/2
-\item nth transition - a count of onset events per individualID, phenophase name, within a given calendar year
-}
+Input data may be provided either as a list generated from the neonUtilities::laodByProduct() function or as individual tables. However, if both list and table inputs are provided at the same time the function will error out.
+
+For table joining to be successful, inputs must contain data from the same sites for all tables. When individualID duplicates exist in the 'phe_perindividual' table, the function will error out. If this occurs when providing an inputDataList, extract individual data frames from the list, resolve duplicates and re-run with separate inputStatus and inputTags inputs.
 }
 \examples{
 \dontrun{
@@ -48,8 +53,11 @@ pheDat <- loadByProduct(
   check.size = FALSE)
 
 out <- estimatePheTrans(inputDataList = pheDat)
-out2 <- estimatePheTrans(inputStatus = pheDat$phe_statusintensity)
+
+out2 <- estimatePheTrans(inputStatus = pheDat$phe_statusintensity,
+                        inputTags = pheDat$phe_perindividual)
 }
+
 }
 \references{
 License: GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007

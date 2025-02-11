@@ -49,6 +49,4 @@ Imports:
     purrr,
     rlang,
     stringr,
-    tidyr,
-    data.table
-LazyData: true
+    tidyr
