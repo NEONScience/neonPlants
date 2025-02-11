@@ -17,11 +17,11 @@ estimateMass(
   inputCore = NA,
   inputMass = NA,
   inputDilution = NA,
-  includeDilution = NA,
-  includeFragInTotal = NA,
+  includeDilution = TRUE,
+  includeFragInTotal = FALSE,
   plotType = "tower",
   plotPriority = 5,
-  growthForm = "single and multi-bole trees"
+  growthForm = "tree"
 )
 }
 \arguments{
@@ -111,7 +111,7 @@ inputDataListHbp = HbpDat )
 
 # example specifying several non-default arguments
 estimateMassOutputs <- estimateMass(inputDataListVst = VstDat, inputDataListHbp = NA,
-                                             growthForm = "all trees", plotPriority = 4)
+                                             growthForm = "tree", plotPriority = 4)
 
 list2env(estimateMassOutputs ,.GlobalEnv) # unlist all data frames
 saveRDS(estimateMassOutputs, 'estimateMassOutputs.rds') # save all outputs locally

@@ -7,51 +7,24 @@
 joinRootChem(inputDataList, inputMass = NA, inputPool = NA, inputChem = NA)
 }
 \arguments{
-\item{inputDataList}{A list object comprised of Plant Below Ground Biomass tables (DP1.10067.001)
-downloaded using the neonUtilities::loadByProduct function. If list input is provided, the table
-input arguments must all be NA; similarly, if list input is missing, table inputs must be
-provided. \link{list}}
+\item{inputDataList}{A list object comprised of Plant Below Ground Biomass tables (DP1.10067.001) downloaded using the neonUtilities::loadByProduct() function. If list input is provided, the table input arguments must all be NA; similarly, if list input is missing, table inputs must be provided. \link{list}}
 
-\item{inputMass}{The 'bbc_rootmass' table for the site x month combination(s) of interest.
-(defaults to NA). If table input is provided, the 'inputDataList' argument must be missing.
-\link{data.frame}}
+\item{inputMass}{The 'bbc_rootmass' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 
-\item{inputPool}{The 'bbc_chemistryPooling' table for the site x month combination(s) of
-interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be
-missing. \link{data.frame}}
+\item{inputPool}{The 'bbc_chemistryPooling' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 
-\item{inputChem}{The 'bbc_rootChemistry' table for the site x month combination(s) of
-interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be
-missing. \link{data.frame}}
+\item{inputChem}{The 'bbc_rootChemistry' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 }
 \value{
-A table containing both root mass and root chemistry data in the same row for
-different root sizeCategories (i.e., subsampleIDs) within a sampleID. The subsampleIDs in
-older data with rootStatus == "dead" do not have root chemistry data, and the function returns
-these rows with no chemistry data.
+A table containing both root mass and root chemistry data in the same row for different root sizeCategories (i.e., subsampleIDs) within a sampleID. The subsampleIDs in older data with rootStatus == "dead" do not have root chemistry data, and the function returns these rows with no chemistry data.
 }
 \description{
-Join the 'bbc_rootmass', 'bbc_chemistryPooling', and 'bbc_rootChemistry' tables to
-generate a single table that contains both mass and chemistry data for each sampleID and
-subsampleID (i.e., sizeCategory). Data inputs are NEON Plant Belowground Biomass data
-(DP1.10067.001) retrieved using the neonUtilities::loadByProduct() function (preferred), data
-downloaded from the NEON Data Portal, or input data tables with an equivalent structure and
-representing the same site x month combinations.
+Join the 'bbc_rootmass', 'bbc_chemistryPooling', and 'bbc_rootChemistry' tables to generate a single table that contains both mass and chemistry data for each sampleID and subsampleID (i.e., sizeCategory). Data inputs are NEON Plant Belowground Biomass data (DP1.10067.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input data tables with an equivalent structure and representing the same site x month combinations.
 }
 \details{
-Input data may be provided either as a list generated from the neonUtilities::laodByProduct()
-function or as individual tables. However, if both list and table inputs are provided at the same time
-the function will error out.
+Input data may be provided either as a list or as individual tables. However, if both list and table inputs are provided at the same time the function will error out. For table joining to be successful, inputs must contain data from the same site x month combination(s) for all tables. When analytical replicates exist in the 'bbc_rootChemistry' table, the function returns the mean and concatenates analyte-specific QF values, dataQF values, and remarks into a single string for all analytical replicates.
 
-For table joining to be successful, inputs must contain data from the same site x month
-combination(s) for all tables. When analytical replicates exist in the 'bbc_rootChemistry'
-table, the function returns the mean and concatenates analyte-specific QF values, dataQF
-values, and remarks into a single string for all analytical replicates.
-
-In the joined output table, 'rootChemistryDataQF' and 'rootChemistryRemarks' are new fields
-that result from the concatenation described above, and there is a new 'analyticalRepCount'
-field to document the number of analytical replicates associated with each chemistry data
-point.
+In the joined output table, 'rootChemistryDataQF' and 'rootChemistryRemarks' are new fields that result from the concatenation described above, and there is a new 'analyticalRepCount' field to document the number of analytical replicates associated with each chemistry data point.
 }
 \examples{
 \dontrun{

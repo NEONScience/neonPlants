@@ -75,7 +75,7 @@
 #' 
 #' # example specifying several non-default arguments
 #' estimateMassOutputs <- estimateMass(inputDataListVst = VstDat, inputDataListHbp = NA,
-#'                                              growthForm = "all trees", plotPriority = 4)
+#'                                              growthForm = "tree", plotPriority = 4)
 #' 
 #' list2env(estimateMassOutputs ,.GlobalEnv) # unlist all data frames
 #' saveRDS(estimateMassOutputs, 'estimateMassOutputs.rds') # save all outputs locally
@@ -98,11 +98,11 @@ estimateMass = function(dataProducts = c("Vst","Hbp"),
                        inputCore = NA,
                        inputMass = NA,
                        inputDilution = NA,
-                       includeDilution = NA,
-                       includeFragInTotal = NA,
+                       includeDilution = TRUE,
+                       includeFragInTotal = FALSE,
                        plotType = "tower",
                        plotPriority = 5,
-                       growthForm = "single and multi-bole trees"
+                       growthForm = "tree"
                          ) {
 
 if("Vst" %in% dataProducts){  
@@ -139,7 +139,7 @@ inputDataList = inputDataListBbc
 print("Scaling below-ground biomass  ..... ")
 scaleRootMassOutputs <- scaleRootMass(inputDataList = inputDataList, includeDilution = includeDilution, includeFragInTotal = includeFragInTotal, 
        inputCore = inputCore, inputMass = inputMass, inputDilution = inputDilution)
-Bbc <- scaleRootMassOutputs$siteRootMass
+Bbc <- scaleRootMassOutputs$siteRootMass %>% dplyr::select(-"eventID","startDate","endDate")
 }
 
 #############################################  
@@ -155,6 +155,13 @@ biomass_site$mass_Mgha <- biomass_site$woodLiveMassMean_Mgha + biomass_site$herb
 
 if("woodLiveMassMean_Mgha" %in% colnames(biomass_site) & "herbPeakMassMean_Mgha" %in% colnames(biomass_site) & "rootMassMean_Mgha" %in% colnames(biomass_site)){
 biomass_site$mass_Mgha <- biomass_site$woodLiveMassMean_Mgha + biomass_site$rootMassMean_Mgha
+}
+
+if("Bbc" %in% dataProducts){
+ output.list <- list(
+    biomass_site = biomass_site,
+     scaleRootMassOutputs = scaleRootMassOutputs
+    )
 }
 
 if("Vst" %in% dataProducts & !("Hbp" %in% dataProducts)){

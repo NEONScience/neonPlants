@@ -98,7 +98,6 @@ hbp_perbout <- inputDataList$hbp_perbout
 hbp_massdata <- inputDataList$hbp_massdata
 }
 
-
  ### Verify input tables contain required columns and data ####
   
   ### Verify 'hbp_perbout' table contains required data
@@ -140,6 +139,8 @@ hbp_perbout$year <- as.numeric(substr(hbp_perbout$eventID,5,8) ) # year componen
 # filter mass data to retain only qaDryMass == N (to avoid duplicates when there is a qa sample too)
 hbp_massdata$herbGroup <- ifelse(is.na(hbp_massdata$herbGroup), "Unknown", hbp_massdata$herbGroup)
 hbp_massdata <- hbp_massdata %>% dplyr::filter(.data$qaDryMass == 'N' & .data$herbGroup != "Bryophyte") %>% dplyr::select("sampleID", "subsampleID", "herbGroup", "dryMass")
+
+hbp_massdata <- hbp_massdata  %>% dplyr::group_by_at(dplyr::vars("sampleID", "subsampleID", "herbGroup")) %>% dplyr::summarise(dryMass = mean(.data$dryMass)) # in case there are duplicates, take the average of them
                                         
 hbp_perbout <- hbp_perbout %>% dplyr::select("namedLocation", "domainID", "siteID", "plotID", "subplotID", "clipID", "nlcdClass", "plotType", "plotSize", 
                                              "plotManagement", "collectDate", "eventID", "sampleID", "clipArea", "exclosure")
