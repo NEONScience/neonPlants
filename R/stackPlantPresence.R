@@ -251,7 +251,7 @@ stackPlantPresence <- function(
   
   ### Handling outdated subplotID format of Plant Presence and Percent Cover data that would appear in 2023 and earlier NEON data releases ###
   
-  #   Function to facilitate the accomodation of old subplotID formats
+  #   Function to facilitate the accommodation of old subplotID formats
   reformatSubplotID <- function(x){
     x_split <- strsplit(x,split = "\\.") %>% unlist()
     if((length(x_split)==3) & x_split[3]%in%c(1,10,100,400)){
@@ -263,7 +263,7 @@ stackPlantPresence <- function(
   #   Reformat subplotID
   div_10m2Data100m2Data <- div_10m2Data100m2Data %>%
     dplyr::mutate(
-      subplotID_old = subplotID,
+      subplotID_old = .data$subplotID,
       subplotID = dplyr::case_when(
         nchar(subplotID) == 2 ~
           paste0(subplotID,"_100"),
@@ -274,7 +274,7 @@ stackPlantPresence <- function(
 
   div_1m2Data <- div_1m2Data %>%
     dplyr::mutate(
-      subplotID_old = subplotID,
+      subplotID_old = .data$subplotID,
       subplotID = dplyr::case_when(
         nchar(subplotID) == 2 ~
           paste0(subplotID,"_100"),
@@ -293,7 +293,7 @@ stackPlantPresence <- function(
     is.na(div_1m2Data$eventID) | stringr::str_length(div_1m2Data$eventID) > 11,
     paste(div_1m2Data$siteID, div_1m2Data$boutNumber, div_1m2Data$year, sep="."),
     div_1m2Data$eventID)
-  div_1m2Data <- div_1m2Data %>% dplyr::select(-year)
+  div_1m2Data <- div_1m2Data %>% dplyr::select(-"year")
 
   ##  deal with eventID and year - larger subplot data table
   #   create year column
@@ -304,10 +304,11 @@ stackPlantPresence <- function(
           div_10m2Data100m2Data$boutNumber,
           div_10m2Data100m2Data$year, sep="."),
     div_10m2Data100m2Data$eventID)
-  div_10m2Data100m2Data <- div_10m2Data100m2Data %>% dplyr::select(-year)
+  div_10m2Data100m2Data <- div_10m2Data100m2Data %>% dplyr::select(-"year")
 
   ##  limit 1m2 data to plant species records
-  div_1m2Data <- dplyr::filter(div_1m2Data, divDataType == "plantSpecies")
+  div_1m2Data <- div_1m2Data %>%
+    dplyr::filter(.data$divDataType == "plantSpecies")
 
   #   columns to keep
   cols2keep <- c("namedLocation", "domainID",	"siteID",
@@ -338,17 +339,17 @@ stackPlantPresence <- function(
   ##  Don't process 1m2 only year with larger subplot data that don't exist
 
   #   1m2 data data frame of eventIDs
-  smallEventID <- dplyr::select(div_1m2Data, eventID) %>% unique()
+  smallEventID <- dplyr::select(.data = div_1m2Data, "eventID") %>% unique()
 
   #   10_100m2 data data frame of eventIDs
-  bigEventID <- dplyr::select(div_10m2Data100m2Data, eventID) %>% unique()
+  bigEventID <- dplyr::select(.data = div_10m2Data100m2Data, "eventID") %>% unique()
 
   #   make df of those eventIDs sampled the 1m2 and not the larger subplots
   smallOut <- dplyr::anti_join(smallEventID, bigEventID)
 
   #   pull out the corresponding data into unique data frame that will not be incorporated in the larger scale data
   div_1m2DataOut <- div_1m2Data %>%
-    dplyr::filter(eventID %in% smallOut$eventID)
+    dplyr::filter(.data$eventID %in% smallOut$eventID)
 
   #   make df of eventID common to both
   smallMerge <- dplyr::inner_join(smallEventID, bigEventID)
@@ -356,23 +357,23 @@ stackPlantPresence <- function(
 
   #   subset to data that corresponds to evenID in both the small and large data
   div_1m2Data <- div_1m2Data %>%
-    dplyr::filter(eventID %in% smallMergeEventID)
+    dplyr::filter(.data$eventID %in% smallMergeEventID)
 
   
   
   ### Set up data aggregation across scales ###
 
   data_100m2 <- div_10m2Data100m2Data %>%
-    dplyr::filter(grepl("_100$", subplotID))
+    dplyr::filter(grepl("_100$", .data$subplotID))
   data_10m2 <- div_10m2Data100m2Data %>%
-    dplyr::filter(grepl("_10_",subplotID))
+    dplyr::filter(grepl("_10_", .data$subplotID))
 
   ##  Build 10m2 data by aggregating observations from 1m2 (years sampled both 1 and 10_100) and 10m2
   #   Rename 1m2 to combine with 10
   data_10m2Build <- div_1m2Data
 
   data_10m2Build <- data_10m2Build %>%
-    dplyr::mutate(subplotID = gsub("_1_", "_10_",subplotID))
+    dplyr::mutate(subplotID = gsub("_1_", "_10_", .data$subplotID))
 
   ##  Combine what was the nested 1m2 subplot data with the 10m2 data to get the
   #   Complete list of species in each 10m2 subplot
@@ -383,7 +384,7 @@ stackPlantPresence <- function(
   data_100m2Build <- data_10m2
 
   data_100m2Build <- data_100m2Build %>%
-    dplyr::mutate(subplotID = gsub("_10_[0-9]","_100", subplotID))
+    dplyr::mutate(subplotID = gsub("_10_[0-9]","_100", .data$subplotID))
 
   ## Combine what was the nested 10m2 subplot data with the 100m2 data to get the complete list of species in each 100m2 subplot
   data_100m2 <- dplyr::bind_rows(data_100m2, data_100m2Build)
@@ -433,16 +434,16 @@ stackPlantPresence <- function(
 
   #   Don't pass target taxa present to larger-scale subplots if not true
   divPlantPresenceData <- divPlantPresenceData %>%
-    dplyr::group_by(eventID, plotID, subplotID) %>%
+    dplyr::group_by(.data$eventID, .data$plotID, .data$subplotID) %>%
     dplyr::filter(
-      !(targetTaxaPresent == "Y" &
-        is.na(scientificName) &
-        is.na(taxonID))) %>%
+      !(.data$targetTaxaPresent == "Y" &
+        is.na(.data$scientificName) &
+        is.na(.data$taxonID))) %>%
     dplyr::mutate(tot = dplyr::n()) %>%
     dplyr::filter(
-      (tot > 1 & targetTaxaPresent != "N")
+      (.data$tot > 1 & .data$targetTaxaPresent != "N")
       | (tot <= 1)) %>%
-    dplyr::select(-tot) %>%
+    dplyr::select(-"tot") %>%
     dplyr::ungroup()
 
 
@@ -451,7 +452,7 @@ stackPlantPresence <- function(
     if(totalSampledAreaFilter %in% c(1,10,100,400)){
       divPlantPresenceData <- divPlantPresenceData %>%
         dplyr::filter(
-          totalSampledArea == totalSampledAreaFilter)
+          .data$totalSampledArea == totalSampledAreaFilter)
     }else{
       message(totalSampledAreaFilter, " is not a valid option for 'totalSampledAreaFilter', returning the full dataset.")
     }
