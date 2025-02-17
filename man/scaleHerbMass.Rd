@@ -2,59 +2,62 @@
 % Please edit documentation in R/scaleHerbMass.R
 \name{scaleHerbMass}
 \alias{scaleHerbMass}
-\title{Scale NEON aboveground biomass (AGB) contributed by herbaceous vegetation}
+\title{Scale herbaceous biomass by functional group data to mass per area}
 \usage{
 scaleHerbMass(
   inputDataList,
-  hbp_perbout = NA,
-  hbp_massdata = NA,
+  inputBout = NA,
+  inputMass = NA,
   plotType = "all",
   plotPriority = NA
 )
 }
 \arguments{
-\item{inputDataList}{A list object comprised of "Herbaceous clip harvest" tables (DP1.10023.001) downloaded using the neonUtilities::loadByProduct function.
-If list input is provided, the table input arguments must all be NA; similarly, if list input is missing, table inputs must be provided for
-'hbp_perbout', and 'hbp_massdata' arguments. \link{list}}
+\item{inputDataList}{A list object comprised of "Herbaceous clip harvest" tables (DP1.10023.001) downloaded using the neonUtilities::loadByProduct() function. If list input is provided, the table input arguments must all be NA; similarly, if list input is missing, table inputs must be provided for 'inputBout', and 'inputMass' arguments. \link{list}}
 
-\item{hbp_perbout}{The 'hbp_perbout' table for the site x month combination(s) of interest
+\item{inputBout}{The 'hbp_perbout' table for the site x month combination(s) of interest
 (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 
-\item{hbp_massdata}{The 'hbp_massdata' table for the site x month combination(s) of interest
+\item{inputMass}{The 'hbp_massdata' table for the site x month combination(s) of interest
 (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 
-\item{plotType}{Optional filter based on NEON plot type. Options are "all" (both tower and distributed plot types) or "tower". Defaults to "all". \link{character}}
+\item{plotType}{Optional filter based on NEON plot type. Options are "all" (both Tower and Distributed plot types) or "tower". Defaults to "all". \link{character}}
 
-\item{plotPriority}{NEON plots have a priority number in the event that not all plots are able to be sampled. The lower the number the higher the priority. The default is NA. \link{numeric}}
+\item{plotPriority}{NEON plots have a priority number in the event that not all plots are able to be sampled. The lower the number the higher the priority. The default is NA. \link{integer}}
 }
 \value{
-This function returns a list that includes biomass summary data frames.
-'hbp_agb' summarizes above-ground herbaceous biomass for each record (units are g per m2).
-'hbp_plot' summarizes above-ground live herbaceous biomass for each plot by year combination (units are both g per m2 and Megagrams per hectare).
-'hbp_site' summarizes above-ground live herbaceous biomass for each site by year combination (units are both g per m2 and Megagrams per hectare).
+A list that includes biomass summary data at multiple scales. Output tables include:
+\itemize{
+\item hbp_agb - Summarizes above-ground herbaceous biomass for each record ("g/m2").
+\item hbp_plot - Summarizes above-ground herbaceous biomass for each plot by year combination (both "g/m2" and "Mg/ha").
+\item hbp_site - Summarizes above-ground herbaceous biomass for each site by year combination (both "g/m2" and "Mg/ha").
+}
 }
 \description{
-Summarise aboveground herbaceous biomass. Biomass outputs can, if desired, be used in the follow-up estimateHerbProd productivity function.
-Data inputs are "Herbaceous clip harvest" (DP1.10023.001) retrieved using the neonUtilities::loadByProduct() function (preferred), or data downloaded from the NEON Data Portal.
+Join NEON Herbaceous Clip Harvest data tables (DP1.10023.001) to calculate herbaceous biomass by functional group per unit area as well as total herbaceous biomass per unit area. Biomass outputs can be used in the neonPlants::estimateHerbProd() productivity function.
+
+Data inputs are "Herbaceous clip harvest" data (DP1.10023.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input tables with an equivalent structure and representing the same site x month combinations.
 }
 \details{
-Input data can be filtered by site, date, plot type, and plot priority. Herbaceous biomass are scaled to an area basis at the hierarchical levels of clip cell, plot, and site.
+Input data can be filtered by site, date, plot type, and plot priority. Herbaceous biomass are scaled to an area basis at the hierarchical levels of sampling cell, plot, and site. Input data may be provided either as a list or as individual tables. However, if both list and table inputs are provided at the same time the function will error out. For all output data, columns with the same name as input data have identical units and definitions; where needed, new columns contain new units information.
+
+NEON weighs a minimum of 5\% of samples a second time so that data users can estimate the uncertainty associated with different technicians weighing dried herbaceous biomass; QA samples of this nature are identified via qaDryMass == "Y". The function calculates the mean when QA masses exist and any 'remarks' are concatenated. Samples with Sampling Impractical values other than "OK" are removed prior to generating output data.
 }
 \examples{
 \dontrun{
 # Obtain NEON Herbaceous clip harvest data
 HbpDat <- neonUtilities::loadByProduct(dpID = "DP1.10023.001",
      package = "basic", check.size = FALSE)
-     
-# If list is not in memory, load HBP list of dataframes from local file:
-load('HbpDat.rds') # load NEON HBP portal data from a local file
 
 # example with arguments at default values
-scaleHerbMassOutputs <- scaleHerbMass(inputDataList = HbpDat, hbp_perbout = NA, hbp_massdata = NA)
+df <- neonPlants::scaleHerbMass(
+inputDataList = HbpDat, 
+inputBout = NA, 
+inputMass = NA
+)
 
-list2env(scaleHerbMassOutputs ,.GlobalEnv) # unlist all data frames
-saveRDS(scaleHerbMassOutputs, 'scaleHerbMassOutputs.rds') # save all outputs locally
 }
+
 }
 \author{
 Samuel M Simkin \email{ssimkin@battelleecology.org} \cr

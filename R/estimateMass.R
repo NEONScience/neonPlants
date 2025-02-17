@@ -102,8 +102,7 @@ estimateMass = function(dataProducts = c("Vst","Hbp"),
                        includeFragInTotal = FALSE,
                        plotType = "tower",
                        plotPriority = 5,
-                       growthForm = "tree"
-                         ) {
+                       growthForm = "tree") {
 
 if("Vst" %in% dataProducts){  
 
@@ -119,16 +118,20 @@ Vst <- estimateWoodMassOutputs$vst_site
 ######################################################  
   
   
-if("Hbp" %in% dataProducts){ 
-  
-inputDataList = inputDataListHbp
-
-print("Calculating above-ground herbaceous biomass  ..... ")
-scaleHerbMassOutputs <- scaleHerbMass(inputDataList = inputDataList, 
-        hbp_perbout = hbp_perbout, hbp_massdata = hbp_massdata,
-        plotType = plotType, plotPriority = plotPriority)
-Hbp <- scaleHerbMassOutputs$hbp_site
-}
+  if ("Hbp" %in% dataProducts) { 
+    
+    inputDataList = inputDataListHbp
+    
+    print("Calculating above-ground herbaceous biomass  ..... ")
+    
+    scaleHerbMassOutputs <- scaleHerbMass(inputDataList = inputDataList, 
+                                          inputBout = hbp_perbout, 
+                                          inputMass = hbp_massdata,
+                                          plotType = plotType, 
+                                          plotPriority = plotPriority)
+    
+    Hbp <- scaleHerbMassOutputs$hbp_site
+  }
 
 #############################################  
 
