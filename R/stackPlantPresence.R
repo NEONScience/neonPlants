@@ -128,7 +128,7 @@ stackPlantPresence <- function(
     if (!inherits(divDataList, "list")) {
       stop(glue::glue("Argument 'divDataList' must be a list object from neonUtilities::loadByProduct();
                      supplied input object is {class(divDataList)}"))
-    }
+    }                                                                                                                                                                    
     
     #   Check that required tables within list match expected names
     # Check that required tables within list match expected names
