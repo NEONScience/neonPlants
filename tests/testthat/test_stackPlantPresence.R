@@ -93,7 +93,7 @@ testthat::test_that(desc = "Argument 'divDataList' is list object", {
 #   Test 'divDataList' contains required tables
 testthat::test_that(desc = "Required tables present in 'divDataList' input", {
   
-  testthat::expect_error(object = stackPlantPresence(divDataList = testList[1:2]),
+  testthat::expect_error(object = stackPlantPresence(divDataList = testList[1]),
                          regexp = "Required tables missing from 'divDataList'")
 })
 
