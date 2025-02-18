@@ -1,10 +1,11 @@
 # estimateWoodMass function tests
 # Samuel M Simkin (2024-12-15)  ssimkin@battelleecology.org
 
+
+
 ### Read in test data
 
 VstDat <- readRDS(testthat::test_path("testdata", "VstDat.rds"))
-VstDat <- VstDat
 
 estimateWoodMassOutputs <- estimateWoodMass(inputDataList = VstDat)
 
