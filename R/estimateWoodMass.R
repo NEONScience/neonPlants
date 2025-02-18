@@ -21,9 +21,9 @@
 #' 
 #' @param growthForm Select which growth forms to analyse. Options are "all", "tree", "shrubLiana", or "other". Consult the Vegetation Structure Quick Start Guide and/or the Data Product User Guide for more growth form information. [character]
 #' 
-#' @param plotType Optional filter for NEON plot type. Options are "tower" (default) or "all". A subset of 5 Tower plots are sampled annually; if "all" is selected, results also include data from Distributed plots that are sampled every 5 years at a given site. [character]
+#' @param plotType Optional filter for NEON plot type. Options are "tower" (default) or "all". A subset of 5 Tower plots are sampled annually (those plots with the highest plot priority), and remaining Tower plots are scheduled every 5 years. If "all" is selected, results include data from Distributed plots that are also sampled every 5 years. [character]
 #' 
-#' @param plotPriority NEON plots have a priority number in the event that not all plots are able to be sampled. The lower the number the higher the priority. The default is the 5 highest priority Tower plots that are sampled annually. [integer]
+#' @param plotPriority NEON plots have a priority number in the event that not all scheduled plots can be sampled. The lower the number the higher the priority. The default is the 5 highest priority Tower plots that are sampled annually. [integer]
 #'
 #' @return A list that includes biomass summary data frames and a helper data frame for needed by companion productivity functions - e.g., the estimateProd() function. Output tables include:
 #'   * vst_agb_per_ha - Summarizes above-ground live woody biomass for each individual ("Mg/ha").
@@ -288,25 +288,42 @@ estimateWoodMass = function(inputDataList,
   
   ### Calculate biomass from vst_non-woody table ####
   
-  #   Conditionally merge non-woody data with per plot if former is present
-  if(methods::is(vst_nonWoody, class = "data.frame" )){
-    vst_agb_other <- inputDataList$'vst_non-woody'
-    vst_agb_other <- merge(vst_agb_other, perplot, by=c("plotID", "eventID"), all.x=TRUE) # add total sampled areas
+  ### Conditionally generaget non-woody biomass estimates from vst_nonWoody table
+  if (methods::is(vst_nonWoody, class = "data.frame" )) {
+    
+    vst_agb_other <- vst_nonWoody
+    
+    #   Merge with perplot data to add total sampled areas
+    vst_agb_other <- merge(vst_agb_other,
+                           perplot,
+                           by = c("plotID", "eventID"),
+                           all.x = TRUE)
+    
     vst_agb_other$agb_source <- "no source"
     
-    vst_agb_other$agb_yucca <- ifelse(vst_agb_other$growthForm == "yucca", round(((0.0022*vst_agb_other$height) + (0.00096*(vst_agb_other$height^2)) + 0.04)/1000, digits=6), NA) 
-    # White, J.D., K.J. Gutzwiller, W.C. Barrow, L.J. Randall, and P. Swint. 2008. Modeling mechanisms of vegetation change due to fire in a semi-arid ecosystem. Ecological Modelling 214:181-200.
-    #  divide by 1000 to convert from g to kg
-    vst_agb_other$agb_source <- ifelse(!is.na(vst_agb_other$agb_yucca), "White_et_al_2008_yucca", vst_agb_other$agb_source)
-    vst_agb_other$agb <- ifelse(vst_agb_other$agb_source == "White_et_al_2008_yucca", vst_agb_other$agb_yucca, NA)
+    #   Estimate yucca biomass: White, J.D., K.J. Gutzwiller, W.C. Barrow, L.J. Randall, and P. Swint. 2008. Modeling mechanisms of vegetation change due to fire in a semi-arid ecosystem. Ecological Modelling 214:181-200; divide by 1000 to convert output from "grams" to "kg"
+    vst_agb_other$agb_yucca <- ifelse(vst_agb_other$growthForm == "yucca", 
+                                      round(((0.0022*vst_agb_other$height) + (0.00096*(vst_agb_other$height^2)) + 0.04)/1000,
+                                            digits = 6), 
+                                      NA)
     
+    #   Provide yucca biomass allometry reference
+    vst_agb_other$agb_source <- ifelse(!is.na(vst_agb_other$agb_yucca), 
+                                       "White_et_al_2008_yucca",
+                                       vst_agb_other$agb_source)
+    
+    vst_agb_other$agb <- ifelse(vst_agb_other$agb_source == "White_et_al_2008_yucca", 
+                                vst_agb_other$agb_yucca, 
+                                NA)
+    
+    #   Estimate ocotillo biomass: Bobich, E.G., and T.E. Huxman. 2009. Dry mass partitioning and gas exhange for young ocotillos (Fouquieria splendends) in the Sonoran Desert. International Journal of Plant Science 170:283-289. Equations: log(height_m) = 0.13 + 0.45 * log(total above and below ground biomass in kg); log(total above and below ground biomass in kg) = (log(height_m) - 0.13)/0.45 = -0.2889 +  (2.2222 * log(height_m)); log(root/shoot) = -0.63 + 0.18 * log(total above and below ground biomass in kg); aboveground biomass in kg = 1(1+exp(log(root/shoot))) * exp(log(total above and below ground biomass in kg)) = fraction aboveground * total biomass
     vst_agb_other$tot_ocotillo <- ifelse(vst_agb_other$growthForm == "ocotillo", exp(-0.2889 + 2.2222*log(vst_agb_other$height) ), NA) 
     vst_agb_other$agb_ocotillo <- ifelse(vst_agb_other$growthForm == "ocotillo", round(1/(exp(-0.63 - 0.18*log(vst_agb_other$tot_ocotillo))+1) * vst_agb_other$tot_ocotillo, digits=6), NA) 
     vst_agb_other$tot_ocotillo <- NULL # don't need total biomass (aboveground + belowground) once we have aboveground biomass
-    # Bobich, E.G., and T.E. Huxman. 2009. Dry mass partitioning and gas exhange for young ocotillos (Fouquieria splendends) in the Sonoran Desert. International Journal of Plant Science 170:283-289.
-    # log(height_m) = 0.13 + 0.45 * log(total above and below ground biomass in kg); log(total above and below ground biomass in kg) = (log(height_m) - 0.13)/0.45 = -0.2889 +  (2.2222 * log(height_m) )
-    # log(root/shoot) = -0.63 + 0.18 * log(total above and below ground biomass in kg)
-    # aboveground biomass in kg = 1(1+exp(log(root/shoot))) * exp(log(total above and below ground biomass in kg)) = fraction aboveground * total biomass
+    # 
+    # 
+    # 
+    # 
     vst_agb_other$agb_source <- ifelse(!is.na(vst_agb_other$agb_ocotillo), "Bobich_and_Huxman_2009", vst_agb_other$agb_source)
     vst_agb_other$agb <- ifelse(vst_agb_other$agb_source == "Bobich_and_Huxman_2009", vst_agb_other$agb_ocotillo, vst_agb_other$agb)
     
@@ -355,7 +372,8 @@ estimateWoodMass = function(inputDataList,
     
     vst_agb_per_ha_other <- vst_agb_final_other %>% dplyr::group_by(.data$plot_eventID, .data$eventID, .data$siteID, .data$plotID, .data$plotType, .data$nlcdClass, .data$taxonID, .data$growthForm, .data$individualID, .data$plantStatus2, .data$year) %>% dplyr::summarise(agb_Mgha = sum(.data$agb_Mgha, na.rm = TRUE)) %>% dplyr::ungroup()
     # add up biomass per unit area for each plot x individualID x year x plantStatus2 x nlcdClass x taxonID x growthForm combo
-  }
+    
+  } #   end non-woody conditional
   
   #################################################################
   #### Calculate biomass for vst_apparentindividual table
