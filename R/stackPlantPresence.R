@@ -148,7 +148,7 @@ stackPlantPresence <- function(
       if ("div_10m2Data100m2Data" %in% missing_tables) {
         error_msg <- glue::glue(
           "{error_msg} If missing table 'div_10m2Data100m2Data', be sure the 10m2 and 100m2 subplots ",
-          "were observed at the site x year combination, as these data are collected every other year a."
+          "were observed at the site x year combination, as these data are collected every other year."
         )
       }
       
@@ -176,7 +176,7 @@ stackPlantPresence <- function(
       (!inherits(input_1m2Data, "data.frame") | !inherits(input_10m2Data100m2Data, "data.frame"))) {
     
     stop("Data frames must be supplied for all table inputs if 'divDataList' is missing. If missing table 
-         'div_10m2Data100m2Data', be sure the 10m2 and 100m2 subplots were sampled the site x year as these data are collected every other year b.")
+         'div_10m2Data100m2Data', be sure the 10m2 and 100m2 subplots were sampled the site x year as these data are collected every other year.")
     
   }
   

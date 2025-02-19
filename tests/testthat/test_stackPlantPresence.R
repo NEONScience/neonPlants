@@ -120,7 +120,7 @@ testthat::test_that(desc = "Table inputs are data frames when required", {
   
   testthat::expect_error(object = stackPlantPresence(input_1m2Data = testList,
                                                      input_10m2Data100m2Data = test_div_10m2Data100m2Data),
-                         regexp = "Data frames must be supplied for all table inputs if 'divtDataList' is missing")
+                         regexp = "Data frames must be supplied for all table inputs if 'divDataList' is missing")
 })
 
 
@@ -139,9 +139,9 @@ testthat::test_that(desc = "Table 'input_1m2Data' missing column", {
 testthat::test_that(desc = "Table 'div_1m2Data' missing data", {
   
   testthat::expect_error(object = stackPlantPresence(input_1m2Data = test_div_1m2Data %>%
-                                                      dplyr::filter(uid == "coconut"),
+                                                       dplyr::filter(uid == "coconut"),
                                                      input_10m2Data100m2Data = test_div_10m2Data100m2Data),
-                         regexp = "Table 'div_1m2Data' has no data.")
+                         regexp = "Table 'input_1m2Data' has no data.")
 })
 
 
@@ -162,5 +162,5 @@ testthat::test_that(desc = "Table 'div_10m2Data100m2Data' missing data", {
   testthat::expect_error(object = stackPlantPresence(input_1m2Data = test_div_1m2Data,
                                                      input_10m2Data100m2Data = test_div_10m2Data100m2Data %>%
                                                        dplyr::filter(uid == "doppelganger")),
-                         regexp = "Table 'div_1m2Data' has no data.")
+                         regexp = "Table 'input_10m2Data100m2Data' has no data.")
 })
