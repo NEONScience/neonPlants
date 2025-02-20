@@ -210,7 +210,8 @@ estimateWoodMass = function(inputDataList,
   
   
   ##  Read in plot sample area for each growthForm by eventID combo from vst_perplotperyear table
-  perplot <- inputDataList$vst_perplotperyear 
+  #   Create working table from vst_perplotperyear input
+  perplot <- vst_perplotperyear
   
   #   Extract year from eventID
   perplot$year <- as.numeric(substr(perplot$eventID, 10, 13))
@@ -480,6 +481,7 @@ estimateWoodMass = function(inputDataList,
   #### Calculate biomass for vst_apparentindividual table ####
   
   ##  Read in taxonID from vst_mappingandtagging table 
+  #   Create working data frame from vst_mappingandtagging table
   map <- vst_mappingandtagging 
   
   #   Retain most recent record from vst_mappingandtagging
@@ -509,134 +511,380 @@ estimateWoodMass = function(inputDataList,
     dplyr::filter(as.numeric(substr(.data$date,1,4)) >= as.numeric(start_from_input) & 
                     as.numeric(substr(.data$date,1,4)) <= as.numeric(end_from_input))
   
-  print("Assembling allometric equation parameters ..... ")
+  message("Assembling allometric equation parameters ..... ")
   
-  # temporary fix of some eventIDs until fixes are made to portal data
+  #   Temporary fix of some eventIDs until fixes are made to portal data
   appInd$month <- as.numeric(substr(appInd$date, 6, 7))
-  appInd$eventID <- ifelse(as.numeric(substr(appInd$date, 1, 4)) == 2019 & as.numeric(substr(appInd$eventID, 10, 13)) == 2017 & appInd$siteID == "WREF", "vst_WREF_2019", appInd$eventID) # fixes 182 records
-  appInd$eventID <- ifelse(as.numeric(substr(appInd$date, 1, 4)) == 2018 & as.numeric(substr(appInd$eventID, 10, 13)) == 2016 & appInd$siteID == "UKFS", "vst_UKFS_2018", appInd$eventID) # fixes 73 records
-  appInd$eventID <- ifelse(as.numeric(substr(appInd$date, 1, 4)) == 2018 & appInd$month >= 7 & as.numeric(substr(appInd$eventID, 10, 13)) == 2017 & appInd$siteID == "RMNP" , "vst_RMNP_2018", appInd$eventID) # fixes 398 records
-  appInd$eventID <- ifelse(as.numeric(substr(appInd$date, 1, 4)) == 2018 & appInd$month >= 7 & as.numeric(substr(appInd$eventID, 10, 13)) == 2017 & appInd$siteID == "UNDE" , "vst_UNDE_2018", appInd$eventID) # fixes 300 records
-  appInd$eventID <- ifelse(as.numeric(substr(appInd$date, 1, 4)) == 2017 & appInd$month == 12 & as.numeric(substr(appInd$eventID, 10, 13)) == 2018 & appInd$siteID == "GUAN" , "vst_GUAN_2017", appInd$eventID) # fixes 115 records
+  
+  appInd$eventID <- ifelse(as.numeric(substr(appInd$date, 1, 4)) == 2019 & as.numeric(substr(appInd$eventID, 10, 13)) == 2017 & 
+                             appInd$siteID == "WREF", 
+                           "vst_WREF_2019", 
+                           appInd$eventID) # fixes 182 records
+  
+  appInd$eventID <- ifelse(as.numeric(substr(appInd$date, 1, 4)) == 2018 & as.numeric(substr(appInd$eventID, 10, 13)) == 2016 &
+                             appInd$siteID == "UKFS", 
+                           "vst_UKFS_2018", 
+                           appInd$eventID) # fixes 73 records
+  
+  appInd$eventID <- ifelse(as.numeric(substr(appInd$date, 1, 4)) == 2018 & appInd$month >= 7 & 
+                             as.numeric(substr(appInd$eventID, 10, 13)) == 2017 & appInd$siteID == "RMNP" , 
+                           "vst_RMNP_2018", 
+                           appInd$eventID) # fixes 398 records
+  
+  appInd$eventID <- ifelse(as.numeric(substr(appInd$date, 1, 4)) == 2018 & appInd$month >= 7 & 
+                             as.numeric(substr(appInd$eventID, 10, 13)) == 2017 & appInd$siteID == "UNDE" , 
+                           "vst_UNDE_2018", 
+                           appInd$eventID) # fixes 300 records
+  
+  appInd$eventID <- ifelse(as.numeric(substr(appInd$date, 1, 4)) == 2017 & appInd$month == 12 & 
+                             as.numeric(substr(appInd$eventID, 10, 13)) == 2018 & appInd$siteID == "GUAN" , 
+                           "vst_GUAN_2017", 
+                           appInd$eventID) # fixes 115 records
   appInd$month <- NULL
   
-  ## Merge vst_apparentindividual table with map and perplot to obtain taxonID field and area fields
-  appInd <- merge(appInd, map, by="individualID", all.x=TRUE) # add taxonID to appInd table
-  appInd <- merge(appInd, perplot, by=c("plotID", "eventID"), all.x=TRUE) # add total sampled areas
+  
+  ##  Merge vst_apparentindividual table with map and perplot to obtain taxonID field and area fields
+  #   Add taxonID to appInd table
+  appInd <- merge(appInd, 
+                  map, 
+                  by = "individualID",
+                  all.x = TRUE) 
+  
+  #   Add total sampled area fields
+  appInd <- merge(appInd, 
+                  perplot, 
+                  by = c("plotID", "eventID"),
+                  all.x = TRUE)
+  
+  #   Create additional identifiers by eventID
   appInd$plotEvent <- paste(appInd$plotID, appInd$eventID, sep="_")
   appInd$indEvent <- paste(appInd$individualID, appInd$eventID, sep="_")
-  appInd_miss_taxonID <- appInd %>% dplyr::filter(is.na(.data$taxonID)) # create list of records that are missing taxonID
-  appInd$taxonID <- ifelse(is.na(appInd$taxonID), "2PLANT", appInd$taxonID) # if taxonID missing then assign the unknown "2PLANT" code
-  appInd$taxonID <- ifelse(appInd$taxonID == "BEGL/BENA", "BEGL", appInd$taxonID) # Betula glandulosa - B. nana complex, assign to B. glandulosa
   
-  ## read in the Chojnacky et al 2014 parameters for each of their 35 defined allometric groups
-  #parameters <- read.csv('../suppl_data/chojnacky_parameters.csv', stringsAsFactors = F)
-  parameters<- parameters %>% dplyr::select("allometry_ID", "b0", "b1", "minDiameter", "maxDiameter")
+  #   Create list of records that are missing taxonID
+  appInd_miss_taxonID <- appInd %>% 
+    dplyr::filter(is.na(.data$taxonID))
   
-  ## load wood density, veg type, and other data needed to assign species to Chojnacky allometry groups
+  #   Resolve missing taxonIDs and Betula slash species issue
+  appInd$taxonID <- ifelse(is.na(appInd$taxonID), 
+                           "2PLANT", 
+                           appInd$taxonID)
+  
+  appInd$taxonID <- ifelse(appInd$taxonID == "BEGL/BENA", 
+                           "BEGL",
+                           appInd$taxonID)
+  
+  
+  ##  Read in the Chojnacky et al 2014 parameters for each of their 35 defined allometric groups
+  parameters <- parameters %>% 
+    dplyr::select("allometry_ID", 
+                  "b0", 
+                  "b1", 
+                  "minDiameter", 
+                  "maxDiameter")
+  
+  
+  ##  Load wood density, veg type, and other data needed to assign species to Chojnacky allometry groups
   taxon_fields <- taxon_fields
   taxon_fields_list <- unique(taxon_fields$taxonID)
   
-  ## load USDA Plants characteristics to get PLANTS.Floristic.Area and Native.Status  - filtered to records that have PLANTS.Floristic.Area, Native.Status, or both
-  plantIntTrop <- plantIntTrop # load from data folder
-  plant_char <- merge(taxonID_df, plantIntTrop, by="taxonID", all.x=TRUE) # add tropical floristic area and/or introduced status
   
-  ## programatically assign a Chojnacky allometry_ID based on genus, family, specific gravity, deciduous vs. evergreen, and/or woodland vs. forest habit
-  Choj <- merge(taxon_fields,plant_char, by="taxonID", all=TRUE)
-  Choj <- Choj[Choj$taxonID %in% vst_taxonIDs,] # retain only taxonIDs found in the vst mapping and tagging data 
-  Choj$nativeStatus <- dplyr::if_else(Choj$nativeStatus=="int", "introduced", "native", "native")
-  Choj$tropical <- dplyr::if_else(Choj$tropical == "trop", "tropical", "temperate", "temperate")
+  ##  Load USDA Plants characteristics to get PLANTS.Floristic.Area and Native.Status: Filtered to records that have PLANTS.Floristic.Area, Native.Status, or both
+  plantIntTrop <- plantIntTrop
+  
+  #   Add tropical floristic area and/or introduced status to taxa in vst_mappingandtagging data
+  plant_char <- merge(taxonID_df, 
+                      plantIntTrop, 
+                      by = "taxonID", 
+                      all.x = TRUE)
+  
+  
+  ##  Programatically assign a Chojnacky allometry_ID based on genus, family, specific gravity, deciduous vs. evergreen, and/or woodland vs. forest habit
+  Choj <- merge(taxon_fields,
+                plant_char,
+                by = "taxonID",
+                all = TRUE)
+  
+  #   Retain only taxonIDs found in the vst_mappingandtagging data 
+  Choj <- Choj[Choj$taxonID %in% vst_taxonIDs, ]
+  
+  #   Stanardize 'nativeStatus' and 'tropical' LOV elements
+  Choj$nativeStatus <- dplyr::if_else(Choj$nativeStatus == "int",
+                                      "introduced",
+                                      "native",
+                                      "native")
+  
+  Choj$tropical <- dplyr::if_else(Choj$tropical == "trop",
+                                  "tropical",
+                                  "temperate",
+                                  "temperate")
+  
+  
+  ##  Assign Chojnacky allometric IDs
   Choj$allometry_ID <- NA
-  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest=="forest" & Choj$genus=="Abies" & Choj$spg_gcm3<0.35, "C1", Choj$allometry_ID) 
-  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest=="forest" & Choj$genus=="Abies" & Choj$spg_gcm3>=0.35, "C2", Choj$allometry_ID) 
-  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest=="forest" & Choj$family=="Cupressaceae" & Choj$spg_gcm3<0.30, "C3", Choj$allometry_ID) 
-  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest=="forest" & Choj$family=="Cupressaceae" & Choj$spg_gcm3>=0.30 & Choj$spg_gcm3<0.40, 
-                              "C4", Choj$allometry_ID) 
-  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest=="forest" & Choj$family=="Cupressaceae" & Choj$spg_gcm3>=0.40, "C5", Choj$allometry_ID) 
-  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest=="forest" & Choj$genus=="Larix", "C6", Choj$allometry_ID) 
-  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest=="forest" & Choj$genus=="Picea" & Choj$spg_gcm3<0.35, "C7", Choj$allometry_ID) 
-  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest=="forest" & Choj$genus=="Picea" & Choj$spg_gcm3>=0.35, "C8", Choj$allometry_ID) 
-  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest=="forest" & Choj$genus=="Pinus" & Choj$spg_gcm3<0.45, "C9", Choj$allometry_ID) 
-  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest=="forest" & Choj$genus=="Pinus" & Choj$spg_gcm3>=0.45, "C10", Choj$allometry_ID) 
-  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest=="forest" & (Choj$genus=="Pseudotsuga" | Choj$genus=="Taxus" | 
-                                                                     Choj$genus=="Pseudotsuga"), "C11", Choj$allometry_ID) 
-  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest=="forest" & Choj$genus=="Tsuga" & Choj$spg_gcm3<0.40, "C12", Choj$allometry_ID) 
-  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest=="forest" & Choj$genus=="Tsuga" & Choj$spg_gcm3>=0.40, "C13", Choj$allometry_ID) 
-  Choj$allometry_ID <- ifelse(Choj$family=="Aceraceae" & Choj$spg_gcm3<0.50, "H1", Choj$allometry_ID) 
-  Choj$allometry_ID <- ifelse(Choj$family=="Aceraceae" & Choj$spg_gcm3>=0.50, "H2", Choj$allometry_ID) 
-  Choj$allometry_ID <- ifelse((is.na(Choj$allometry_ID) | Choj$allometry_ID=="") & Choj$family=="Betulaceae" & Choj$spg_gcm3<0.40, "H3", 
+  
+  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "forest" & Choj$genus == "Abies" & Choj$spg_gcm3 < 0.35, 
+                              "C1", 
                               Choj$allometry_ID) 
-  Choj$allometry_ID <- ifelse((is.na(Choj$allometry_ID) | Choj$allometry_ID=="") & Choj$family=="Betulaceae" & Choj$spg_gcm3>=0.40 & 
-                                Choj$spg_gcm3<0.50, "H4", Choj$allometry_ID) 
-  Choj$allometry_ID <- ifelse((is.na(Choj$allometry_ID) | Choj$allometry_ID=="") & Choj$family=="Betulaceae" & Choj$spg_gcm3>=0.50 & 
-                                Choj$spg_gcm3<0.60, "H5", Choj$allometry_ID) 
-  Choj$allometry_ID <- ifelse((is.na(Choj$allometry_ID) | Choj$allometry_ID=="") & Choj$family=="Betulaceae" & Choj$spg_gcm3>=0.60, 
-                              "H6", Choj$allometry_ID) 
-  Choj$allometry_ID <- ifelse((Choj$family=="Cornaceae" | Choj$family=="Ericaceae" | Choj$family=="Lauraceae" | 
-                                 Choj$family=="Platanaceae" | Choj$family=="Rosaceae" | Choj$family=="Ulmaceae"), "H7", Choj$allometry_ID) 
-  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest=="forest" & Choj$genus=="Carya", "H8", Choj$allometry_ID) 
-  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest=="forest" & (Choj$family=="Fabaceae" | Choj$family=="Juglandaceae") & 
-                                Choj$genus!="Carya", "H9", Choj$allometry_ID) 
-  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest=="forest" & Choj$family=="Fagaceae" & Choj$decid_vs_ever=="decid", 
-                              "H10", Choj$allometry_ID) 
-  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest=="forest" & Choj$family=="Fagaceae" & Choj$decid_vs_ever=="ever", 
-                              "H11", Choj$allometry_ID) 
-  Choj$allometry_ID <- ifelse(Choj$family=="Hamamelidaceae", "H12", Choj$allometry_ID) 
-  Choj$allometry_ID <- ifelse((Choj$family=="Hippocastanaceae" | Choj$family=="Tiliaceae"), "H13", Choj$allometry_ID) 
-  Choj$allometry_ID <- ifelse(Choj$family=="Magnoliaceae", "H14", Choj$allometry_ID) 
-  Choj$allometry_ID <- ifelse((is.na(Choj$allometry_ID) | Choj$allometry_ID=="") & Choj$family=="Oleaceae" & Choj$spg_gcm3<0.55, "H15", Choj$allometry_ID) 
-  Choj$allometry_ID <- ifelse((is.na(Choj$allometry_ID) | Choj$allometry_ID=="") & Choj$family=="Oleaceae" & Choj$spg_gcm3>=0.55, "H16", Choj$allometry_ID) 
-  Choj$allometry_ID <- ifelse((is.na(Choj$allometry_ID) | Choj$allometry_ID=="") & Choj$family=="Salicaceae" & Choj$spg_gcm3<0.35, "H17", Choj$allometry_ID) 
-  Choj$allometry_ID <- ifelse((is.na(Choj$allometry_ID) | Choj$allometry_ID=="") & Choj$family=="Salicaceae" & Choj$spg_gcm3>=0.35, "H18", Choj$allometry_ID) 
-  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest=="woodland" & Choj$family=="Cupressaceae", "W1", Choj$allometry_ID) 
-  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest=="woodland" & (Choj$family=="Fabaceae" | Choj$family=="Rosaceae"), 
-                              "W2", Choj$allometry_ID) 
-  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest=="woodland" & Choj$family=="Fagaceae", "W3", Choj$allometry_ID) 
-  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest=="woodland" & Choj$family=="Pinaceae", "W4", Choj$allometry_ID) 
-  Choj$allometry_ID <- ifelse(Choj$taxonID=="PINACE", "C9", Choj$allometry_ID) 
-  # arbitrarily picked C9 (forest) over C10 (forest spg_gcm3>=0.45) or W4 (woodland)
-  Choj$allometry_ID <- ifelse(Choj$taxonID=="FABACE", "H9", Choj$allometry_ID) 
-  # arbitrarily picked H9 (forest) over W2 (woodland)
-  Choj$source <- ifelse(!is.na(Choj$allometry_ID), "yes_ref_in_Choj", "not_ref_in_Choj")
-  Choj$allometry_ID <- ifelse(Choj$source=="not_ref_in_Choj", "H7", Choj$allometry_ID) 
-  no_Choj_allometry <- Choj %>% dplyr::filter(.data$source=="not_ref_in_Choj") %>% dplyr::select("allometry_ID", "taxonID", "family", "genus", "spg_gcm3", 
-                                                                                                 "woodland_vs_forest", "decid_vs_ever", "tropical", "nativeStatus") # create list records where Choj allometry can't be calculated
-  Choj <- Choj %>% dplyr::select("taxonID","scientificName","allometry_ID","source","spg_gcm3","nativeStatus","tropical","family")
-  Choj <- merge(parameters, Choj, by="allometry_ID", all.y=TRUE)
   
-  ## calculate biomass from various allometric equations after making some data corrections
-  vst_agb <- merge(appInd, Choj, by="taxonID", all.x=TRUE)
+  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "forest" & Choj$genus == "Abies" & Choj$spg_gcm3 >= 0.35,
+                              "C2",
+                              Choj$allometry_ID) 
   
-  print("Calculating biomass from vst_apparentindividual table ..... ")
+  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "forest" & Choj$family == "Cupressaceae" & Choj$spg_gcm3 <0.30, 
+                              "C3",
+                              Choj$allometry_ID) 
   
-  # code below includes a variety of assumptions (including estimating dbh from basal stem diameter or height) that provide estimates that should be better than the missing (usually)
-  # values that they replace. Reasoning here is that a biomass value with some positive value and percent error due to assumptions made is an improvement over a value of 0 whenever data needed for allometric 
-  # equation is missing.
+  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "forest" & Choj$family == "Cupressaceae" & 
+                                Choj$spg_gcm3 >= 0.30 & Choj$spg_gcm3 < 0.40, 
+                              "C4",
+                              Choj$allometry_ID) 
   
-  # create stemDiameterFlag to flag which stemDiameters are estimates based on other fields such basalStemDiameter
-  vst_agb$stemDiameterFlag <- ifelse(is.na(vst_agb$stemDiameter), "estimate", "raw")
+  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "forest" & Choj$family == "Cupressaceae" & Choj$spg_gcm3 >=0.40, 
+                              "C5",
+                              Choj$allometry_ID) 
   
-  vst_agb$tropical <- ifelse( (vst_agb$taxonID == "2PLANT" | vst_agb$taxonID == "2PLANT-H" | vst_agb$taxonID == "ANAL12" | vst_agb$taxonID == "BOURR" | vst_agb$taxonID == "BUMI6" | vst_agb$taxonID == "CONVOL" | 
-                                 vst_agb$taxonID == "CROSS" | vst_agb$taxonID == "FABACE" | vst_agb$taxonID == "JACQU" | vst_agb$taxonID == "JACQU2" | vst_agb$taxonID == "COPRO" | vst_agb$taxonID == "HYDRAN") &  
-                                (vst_agb$siteID == "GUAN" | vst_agb$siteID == "PUUM" | vst_agb$siteID == "LAJA"), 
-                              "tropical", vst_agb$tropical) # manually assign tropical for a handful of taxonIDs
-  vst_agb$tropical <- ifelse( (vst_agb$taxonID == "AMAR5" | vst_agb$taxonID == "CELTI" | vst_agb$taxonID == "DAWR2" | vst_agb$taxonID == "LIJA" | vst_agb$taxonID == "MEAZ" | vst_agb$taxonID == "OPUNT" | 
-                                 vst_agb$taxonID == "RHUS" | vst_agb$taxonID == "SAMBU" | vst_agb$taxonID == "SMSM" | vst_agb$taxonID == "SYMPL2" | vst_agb$taxonID == "VITIS") &  
-                                (vst_agb$siteID != "GUAN" & vst_agb$siteID != "PUUM" & vst_agb$siteID != "LAJA"), 
-                              "temperate", vst_agb$tropical) # manually assign temperate for a handful of taxonIDs
+  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "forest" & Choj$genus == "Larix", 
+                              "C6",
+                              Choj$allometry_ID) 
+  
+  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "forest" & Choj$genus == "Picea" & Choj$spg_gcm3 < 0.35, 
+                              "C7", 
+                              Choj$allometry_ID) 
+  
+  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "forest" & Choj$genus == "Picea" & Choj$spg_gcm3 >= 0.35,
+                              "C8",
+                              Choj$allometry_ID) 
+  
+  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "forest" & Choj$genus == "Pinus" & Choj$spg_gcm3 < 0.45,
+                              "C9",
+                              Choj$allometry_ID)
+  
+  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "forest" & Choj$genus == "Pinus" & Choj$spg_gcm3 >= 0.45,
+                              "C10",
+                              Choj$allometry_ID) 
+  
+  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "forest" & 
+                                (Choj$genus == "Pseudotsuga" | Choj$genus == "Taxus" | Choj$genus == "Pseudotsuga"), 
+                              "C11",
+                              Choj$allometry_ID) 
+  
+  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "forest" & Choj$genus == "Tsuga" & Choj$spg_gcm3 < 0.40, 
+                              "C12",
+                              Choj$allometry_ID) 
+  
+  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "forest" & Choj$genus == "Tsuga" & Choj$spg_gcm3 >= 0.40,
+                              "C13",
+                              Choj$allometry_ID) 
+  
+  Choj$allometry_ID <- ifelse(Choj$family == "Aceraceae" & Choj$spg_gcm3 < 0.50,
+                              "H1",
+                              Choj$allometry_ID) 
+  
+  Choj$allometry_ID <- ifelse(Choj$family == "Aceraceae" & Choj$spg_gcm3 >= 0.50,
+                              "H2",
+                              Choj$allometry_ID) 
+  
+  Choj$allometry_ID <- ifelse((is.na(Choj$allometry_ID) | Choj$allometry_ID == "") & Choj$family == "Betulaceae" & Choj$spg_gcm3 < 0.40,
+                              "H3", 
+                              Choj$allometry_ID) 
+  
+  Choj$allometry_ID <- ifelse((is.na(Choj$allometry_ID) | Choj$allometry_ID == "") & Choj$family == "Betulaceae" & 
+                                Choj$spg_gcm3 >= 0.40 & Choj$spg_gcm3 < 0.50,
+                              "H4",
+                              Choj$allometry_ID) 
+  
+  Choj$allometry_ID <- ifelse((is.na(Choj$allometry_ID) | Choj$allometry_ID == "") & Choj$family == "Betulaceae" & 
+                                Choj$spg_gcm3 >= 0.50 & Choj$spg_gcm3 < 0.60,
+                              "H5",
+                              Choj$allometry_ID) 
+  
+  Choj$allometry_ID <- ifelse((is.na(Choj$allometry_ID) | Choj$allometry_ID == "") & Choj$family == "Betulaceae" & Choj$spg_gcm3 >= 0.60, 
+                              "H6",
+                              Choj$allometry_ID) 
+  
+  Choj$allometry_ID <- ifelse((Choj$family == "Cornaceae" | Choj$family == "Ericaceae" | Choj$family == "Lauraceae" | 
+                                 Choj$family == "Platanaceae" | Choj$family == "Rosaceae" | Choj$family == "Ulmaceae"),
+                              "H7",
+                              Choj$allometry_ID)
+  
+  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "forest" & Choj$genus == "Carya",
+                              "H8",
+                              Choj$allometry_ID)
+  
+  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "forest" & (Choj$family == "Fabaceae" | Choj$family == "Juglandaceae") & 
+                                Choj$genus != "Carya",
+                              "H9",
+                              Choj$allometry_ID)
+  
+  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "forest" & Choj$family == "Fagaceae" & Choj$decid_vs_ever == "decid",
+                              "H10",
+                              Choj$allometry_ID) 
+  
+  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "forest" & Choj$family == "Fagaceae" & Choj$decid_vs_ever == "ever",
+                              "H11",
+                              Choj$allometry_ID)
+  
+  Choj$allometry_ID <- ifelse(Choj$family == "Hamamelidaceae",
+                              "H12",
+                              Choj$allometry_ID) 
+  
+  Choj$allometry_ID <- ifelse((Choj$family == "Hippocastanaceae" | Choj$family == "Tiliaceae"),
+                              "H13",
+                              Choj$allometry_ID) 
+  
+  Choj$allometry_ID <- ifelse(Choj$family == "Magnoliaceae",
+                              "H14",
+                              Choj$allometry_ID) 
+  
+  Choj$allometry_ID <- ifelse((is.na(Choj$allometry_ID) | Choj$allometry_ID == "") & Choj$family == "Oleaceae" & Choj$spg_gcm3 < 0.55,
+                              "H15",
+                              Choj$allometry_ID)
+  
+  Choj$allometry_ID <- ifelse((is.na(Choj$allometry_ID) | Choj$allometry_ID == "") & Choj$family == "Oleaceae" & Choj$spg_gcm3 >= 0.55,
+                              "H16",
+                              Choj$allometry_ID)
+  
+  Choj$allometry_ID <- ifelse((is.na(Choj$allometry_ID) | Choj$allometry_ID == "") & Choj$family == "Salicaceae" & Choj$spg_gcm3 < 0.35,
+                              "H17",
+                              Choj$allometry_ID)
+  
+  Choj$allometry_ID <- ifelse((is.na(Choj$allometry_ID) | Choj$allometry_ID == "") & Choj$family == "Salicaceae" & Choj$spg_gcm3 >= 0.35,
+                              "H18",
+                              Choj$allometry_ID)
+  
+  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "woodland" & Choj$family == "Cupressaceae",
+                              "W1",
+                              Choj$allometry_ID) 
+  
+  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "woodland" & (Choj$family == "Fabaceae" | Choj$family == "Rosaceae"),
+                              "W2",
+                              Choj$allometry_ID)
+  
+  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "woodland" & Choj$family == "Fagaceae",
+                              "W3",
+                              Choj$allometry_ID)
+  
+  Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "woodland" & Choj$family == "Pinaceae",
+                              "W4",
+                              Choj$allometry_ID)
+  
+  #   Arbitrarily picked C9 (forest) over C10 (forest spg_gcm3>=0.45) or W4 (woodland)
+  Choj$allometry_ID <- ifelse(Choj$taxonID == "PINACE",
+                              "C9",
+                              Choj$allometry_ID) 
+  
+  #   Arbitrarily picked H9 (forest) over W2 (woodland)
+  Choj$allometry_ID <- ifelse(Choj$taxonID == "FABACE",
+                              "H9",
+                              Choj$allometry_ID)
+  
+  #   Identify taxa not in Chojnacky
+  Choj$source <- ifelse(!is.na(Choj$allometry_ID), 
+                        "yes_ref_in_Choj",
+                        "not_ref_in_Choj")
+  
+  #   Assign default allometryID when taxon is not in Chojnacky and cache those records in new data frame
+  Choj$allometry_ID <- ifelse(Choj$source == "not_ref_in_Choj",
+                              "H7",
+                              Choj$allometry_ID)
+  
+  no_Choj_allometry <- Choj %>% 
+    dplyr::filter(.data$source == "not_ref_in_Choj") %>%
+    dplyr::select("allometry_ID",
+                  "taxonID",
+                  "family",
+                  "genus",
+                  "spg_gcm3", 
+                  "woodland_vs_forest",
+                  "decid_vs_ever",
+                  "tropical",
+                  "nativeStatus")
+  
+  #   Reduce 'Choj' to desired columns and merge to associate taxonIDs in data with needed allometric parameters
+  Choj <- Choj %>% 
+    dplyr::select("taxonID",
+                  "scientificName",
+                  "allometry_ID",
+                  "source",
+                  "spg_gcm3",
+                  "nativeStatus",
+                  "tropical",
+                  "family")
+  
+  Choj <- merge(parameters, 
+                Choj, 
+                by = "allometry_ID", 
+                all.y = TRUE)
+  
+  
+  
+  ### Calculate biomass using Chojnacky allometric equations
+  vst_agb <- merge(appInd, 
+                   Choj, 
+                   by = "taxonID",
+                   all.x = TRUE)
+  
+  message("Calculating biomass from vst_apparentindividual table ..... ")
+  
+  #   Note: Code below includes a variety of assumptions (including estimating dbh from basal stem diameter or height) that provide estimates that should be better than missing data values that they replace (usually). Reasoning here is that a biomass value with some positive value and percent error due to assumptions made is an improvement over a value of 0 whenever data needed for allometric equation is missing.
+  
+  #   Create stemDiameterFlag to flag which stemDiameters are estimates based on other fields such basalStemDiameter
+  vst_agb$stemDiameterFlag <- ifelse(is.na(vst_agb$stemDiameter),
+                                     "estimate",
+                                     "raw")
+  
+  #   Manually assign 'tropical' status for a subset of taxonIDs
+  vst_agb$tropical <- ifelse((vst_agb$taxonID == "2PLANT" | vst_agb$taxonID == "2PLANT-H" | vst_agb$taxonID == "ANAL12" | 
+                                vst_agb$taxonID == "BOURR" | vst_agb$taxonID == "BUMI6" | vst_agb$taxonID == "CONVOL" | 
+                                vst_agb$taxonID == "CROSS" | vst_agb$taxonID == "FABACE" | vst_agb$taxonID == "JACQU" | 
+                                vst_agb$taxonID == "JACQU2" | vst_agb$taxonID == "COPRO" | vst_agb$taxonID == "HYDRAN") &
+                               (vst_agb$siteID == "GUAN" | vst_agb$siteID == "PUUM" | vst_agb$siteID == "LAJA"),
+                             "tropical",
+                             vst_agb$tropical)
+  
+  #   Manually assign 'temperate' status for a subset of taxonIDs
+  vst_agb$tropical <- ifelse((vst_agb$taxonID == "AMAR5" | vst_agb$taxonID == "CELTI" | vst_agb$taxonID == "DAWR2" | 
+                                vst_agb$taxonID == "LIJA" | vst_agb$taxonID == "MEAZ" | vst_agb$taxonID == "OPUNT" | 
+                                vst_agb$taxonID == "RHUS" | vst_agb$taxonID == "SAMBU" | vst_agb$taxonID == "SMSM" | 
+                                vst_agb$taxonID == "SYMPL2" | vst_agb$taxonID == "VITIS") &  
+                               (vst_agb$siteID != "GUAN" & vst_agb$siteID != "PUUM" & vst_agb$siteID != "LAJA"),
+                             "temperate",
+                             vst_agb$tropical)
+  
+  #   Assign specific gravity data type
   vst_agb$spg_gcm3 <- as.numeric(vst_agb$spg_gcm3)
   
-  # assumption: for tropical species, if specific gravity is not known then assume it is 0.5 g/cm3 to permit usage of Chave et al 2014, following precedent of Asner et al 2011
-  vst_agb$spg_gcm3 <- dplyr::if_else(is.na(vst_agb$spg_gcm3) & vst_agb$tropical =="tropical", 0.5, vst_agb$spg_gcm3, vst_agb$spg_gcm3) # default specific gravity used by Asner et al 2011 in the tropics
-  vst_agb$growthForm <- dplyr::if_else(is.na(vst_agb$growthForm), "unknown", vst_agb$growthForm, vst_agb$growthForm)
+  #   Assumption: For tropical species, if specific gravity is not known then assume it is 0.5 g/cm3 to permit usage of Chave et al 2014, following precedent of Asner et al 2011
+  vst_agb$spg_gcm3 <- dplyr::if_else(is.na(vst_agb$spg_gcm3) & vst_agb$tropical == "tropical",
+                                     0.5, 
+                                     vst_agb$spg_gcm3, 
+                                     vst_agb$spg_gcm3)
   
-  # assumption: missing stemDiameter values can be inferred from basalStemDiameter values and this is desirable since the allometric equations assume diameter at breast height rather than diameter at base
-  vst_agb$stemDiameter <- dplyr::if_else(is.na(vst_agb$stemDiameter), exp(-0.35031 + 1.03991*log(vst_agb$basalStemDiameter)), vst_agb$stemDiameter, vst_agb$stemDiameter) # from Chojnacky et al 2014?
+  #   Assign growthForm == "unknown" when value is NA
+  vst_agb$growthForm <- dplyr::if_else(is.na(vst_agb$growthForm), 
+                                       "unknown", 
+                                       vst_agb$growthForm, 
+                                       vst_agb$growthForm)
   
-  # assumption: if actual or estimated stemDiameter values are smaller than the minimum for their growthForm then replace with the minimum for that growthForm because record below the minimum wouldn't have been measured
-  vst_agb$stemDiameter <- dplyr::if_else((vst_agb$growthForm == "sapling" | vst_agb$growthForm == "small shrub") & vst_agb$stemDiameter < 0.1, 0.1, vst_agb$stemDiameter, vst_agb$stemDiameter) 
-  vst_agb$stemDiameter <- dplyr::if_else(!(vst_agb$growthForm == "sapling" | vst_agb$growthForm == "small shrub" | vst_agb$growthForm == "liana") & vst_agb$stemDiameter < 1 & is.na(vst_agb$basalStemDiameter), 1, 
-                                         vst_agb$stemDiameter, vst_agb$stemDiameter) 
+  #   Assumption: Missing stemDiameter values can be inferred from basalStemDiameter values and this is desirable since the allometric equations assume diameter at breast height rather than basal diameter
+  vst_agb$stemDiameter <- dplyr::if_else(is.na(vst_agb$stemDiameter), 
+                                         exp(-0.35031 + 1.03991*log(vst_agb$basalStemDiameter)), 
+                                         vst_agb$stemDiameter, 
+                                         vst_agb$stemDiameter)
+  
+  #   Assumption: If actual or estimated stemDiameter values are smaller than the minimum for their growthForm then replace with the minimum for that growthForm because record below the minimum wouldn't have been measured
+  vst_agb$stemDiameter <- dplyr::if_else((vst_agb$growthForm == "sapling" | vst_agb$growthForm == "small shrub") & 
+                                           vst_agb$stemDiameter < 0.1, 
+                                         0.1, 
+                                         vst_agb$stemDiameter, 
+                                         vst_agb$stemDiameter) 
+  
+  #   Assign stemDiameter == 1 for "single shrub", "small tree" and "tree" growthForms when reported DBH < 1 cm
+  vst_agb$stemDiameter <- dplyr::if_else(!(vst_agb$growthForm == "sapling" | vst_agb$growthForm == "small shrub" |
+                                             vst_agb$growthForm == "liana") & vst_agb$stemDiameter < 1 & is.na(vst_agb$basalStemDiameter),
+                                         1,
+                                         vst_agb$stemDiameter, 
+                                         vst_agb$stemDiameter) 
   
   vst_agb$stemDiameter <- dplyr::if_else( (vst_agb$stemDiameter > vst_agb$basalStemDiameter) & (vst_agb$growthForm == "single shrub" | vst_agb$growthForm == "small shrub"), vst_agb$basalStemDiameter, vst_agb$stemDiameter, vst_agb$stemDiameter)
   
