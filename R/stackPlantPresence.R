@@ -345,14 +345,14 @@ stackPlantPresence <- function(
   bigEventID <- dplyr::select(.data = div_10m2Data100m2Data, "eventID") %>% unique()
 
   #   make df of those eventIDs sampled the 1m2 and not the larger subplots
-  smallOut <- dplyr::anti_join(smallEventID, bigEventID)
+  smallOut <- dplyr::anti_join(smallEventID, bigEventID, by = 'eventID')
 
   #   pull out the corresponding data into unique data frame that will not be incorporated in the larger scale data
   div_1m2DataOut <- div_1m2Data %>%
     dplyr::filter(.data$eventID %in% smallOut$eventID)
 
   #   make df of eventID common to both
-  smallMerge <- dplyr::inner_join(smallEventID, bigEventID)
+  smallMerge <- dplyr::inner_join(smallEventID, bigEventID, by = 'eventID')
   smallMergeEventID <- smallMerge$eventID
 
   #   subset to data that corresponds to evenID in both the small and large data
