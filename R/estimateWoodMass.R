@@ -879,55 +879,130 @@ estimateWoodMass = function(inputDataList,
                                          vst_agb$stemDiameter, 
                                          vst_agb$stemDiameter) 
   
-  #   Assign stemDiameter == 1 for "single shrub", "small tree" and "tree" growthForms when reported DBH < 1 cm
+  #   Assumption: Assign stemDiameter == 1 for "single shrub", "small tree" and "tree" growthForms when reported DBH < 1 cm
   vst_agb$stemDiameter <- dplyr::if_else(!(vst_agb$growthForm == "sapling" | vst_agb$growthForm == "small shrub" |
                                              vst_agb$growthForm == "liana") & vst_agb$stemDiameter < 1 & is.na(vst_agb$basalStemDiameter),
                                          1,
                                          vst_agb$stemDiameter, 
                                          vst_agb$stemDiameter) 
   
-  vst_agb$stemDiameter <- dplyr::if_else( (vst_agb$stemDiameter > vst_agb$basalStemDiameter) & (vst_agb$growthForm == "single shrub" | vst_agb$growthForm == "small shrub"), vst_agb$basalStemDiameter, vst_agb$stemDiameter, vst_agb$stemDiameter)
+  #   Assumption: If stemDiameter > basalStemDiameter, the order was likely flipped during data entry
+  vst_agb$stemDiameter <- dplyr::if_else((vst_agb$stemDiameter > vst_agb$basalStemDiameter) & 
+                                           (vst_agb$growthForm == "single shrub" | vst_agb$growthForm == "small shrub"),
+                                         vst_agb$basalStemDiameter,
+                                         vst_agb$stemDiameter,
+                                         vst_agb$stemDiameter)
   
-  vst_agb_no_dia <- vst_agb %>% dplyr::filter(is.na(.data$stemDiameter) & is.na(.data$basalStemDiameter)) # create list of records with missing diameters
+  #   Generate list of records with missing stemDiameter and missing basalStemDiameter
+  vst_agb_no_dia <- vst_agb %>% 
+    dplyr::filter(is.na(.data$stemDiameter) & is.na(.data$basalStemDiameter))
   
-  # assumption: it's better to replace extreme outlier stemDiameter values of lianas with a low-end estimate of 1 cm than to leave in place extremely large values or to assign a value of 0 or NA
-  vst_agb$stemDiameter <- dplyr::if_else(vst_agb$growthForm =="liana" & vst_agb$stemDiameter > 20, 1, vst_agb$stemDiameter, vst_agb$stemDiameter) # instead of removing arbitrarily give them new diameter of 1 cm
-  # there are 4 liana records with stemDiameter = 130 (looks like Field Science recorded measurementHeight in stemDiameter field here) and 2 other Vitis and Parthenocissus liana records greater than 20 cm assumed to be errors
-  # should sometime assess in depth what diameter of liana is implausibly large and either add back in the 2 between 25 and 41 cm, or exclude additional stems less than 20 cm
+  #   Assumption: For lianas, replace extreme outlier stemDiameter values with a low-end estimate of 1 cm
+  vst_agb$stemDiameter <- dplyr::if_else(vst_agb$growthForm =="liana" & vst_agb$stemDiameter > 20, 
+                                         1, 
+                                         vst_agb$stemDiameter, 
+                                         vst_agb$stemDiameter)
   
-  vst_agb <- vst_agb %>% dplyr::select("taxonID", "scientificName", "individualID", "indEvent", "eventID", "date", "siteID","plotID", "growthForm", "nlcdClass", 
-                                       "totalSampledAreaTrees", "totalSampledAreaShrubSapling", "totalSampledAreaLiana","plantStatus", "stemDiameter", "stemDiameterFlag", "height", 
-                                       "measurementHeight", "basalStemDiameter", "basalStemDiameterMsrmntHeight","maxCrownDiameter","ninetyCrownDiameter","allometry_ID", "b0", "b1", 
-                                       "minDiameter", "maxDiameter", "spg_gcm3","nativeStatus","tropical","family")
-  vst_agb$plantStatus2 <- ifelse(vst_agb$plantStatus %in% c("Live", "Live, disease damaged", "Live, insect damaged", "Live,  other damage", "Live, physically damaged","Live, broken bole"), "Live", "Dead_or_Lost")
+  #   Select columns to remove unneeded data, and simplify values of 'plantStatus2'
+  vst_agb <- vst_agb %>% 
+    dplyr::select("taxonID", 
+                  "scientificName", 
+                  "individualID", 
+                  "indEvent", 
+                  "eventID", 
+                  "date", 
+                  "siteID",
+                  "plotID", 
+                  "growthForm", 
+                  "nlcdClass",
+                  "totalSampledAreaTrees", 
+                  "totalSampledAreaShrubSapling", 
+                  "totalSampledAreaLiana",
+                  "plantStatus", 
+                  "stemDiameter", 
+                  "stemDiameterFlag", 
+                  "height", 
+                  "measurementHeight", 
+                  "basalStemDiameter", 
+                  "basalStemDiameterMsrmntHeight",
+                  "maxCrownDiameter",
+                  "ninetyCrownDiameter",
+                  "allometry_ID", 
+                  "b0", 
+                  "b1", 
+                  "minDiameter", 
+                  "maxDiameter", 
+                  "spg_gcm3",
+                  "nativeStatus",
+                  "tropical",
+                  "family")
   
-  ## calculate AGB for each VST appInd record using Choj allometry_ID and Choj parameters  
-  # assumption: Chojnacky et al 2014 allometric equations are the best first estimate of biomass
-  vst_agb$agb<- round(exp(vst_agb$b0 + vst_agb$b1*log(vst_agb$stemDiameter)), digits=3) 
-  # calculate aboveground biomass based on Chojnacky et al 2014, using paramaters b0 and b1 assigned based on the allometry group that each species assigned to in Choj df
+  vst_agb$plantStatus2 <- ifelse(vst_agb$plantStatus %in% c("Live", "Live, disease damaged", "Live, insect damaged", "Live,  other damage", "Live, physically damaged","Live, broken bole"), 
+                                 "Live",
+                                 "Dead_or_Lost")
+  
+  
+  
+  ### Calculate AGB for each VST appInd record using Choj allometry_ID and Choj parameters
+  
+  # Assumption: Chojnacky et al 2014 allometric equations are the best first estimate of biomass
+  vst_agb$agb<- round(exp(vst_agb$b0 + vst_agb$b1 * log(vst_agb$stemDiameter)), 
+                      digits = 3) 
+  
+  #   Define AGB allometry source
   vst_agb$agb_source <- "Chojnacky_et_al_2014"
-  vst_agb$agb_Chojnacky  <- vst_agb$agb # Possible to calculate a Chojnakcy et al 2014 agb value for every record, but it was not intended for tropical or introduced species so subsequent steps update where appropriate
   
-  # assumption: when the necessary ancillary variables are available for tropical species, replace the Chojnacky et al 2014 biomass estimates with the Chave et al 2014 biomass estimates
-  # update tropical species records based on Chave et al 2014 if wood specific gravity (or an approximation based on congeners) was available
-  # instructions on extracting environmental stress value E at http://chave.ups-tlse.fr/pantropical_allometry.htm
-  # Chave et al 2014 has pantropical allometric equations for tree biomass that require tree height. If tree height not available estimate it using their value E
+  #   Assign Chojnacky AGB estimates to specific column; needed to preserve Chojnacky estimates when alternate is used for tropical or introduced species.
+  vst_agb$agb_Chojnacky  <- vst_agb$agb
+  
+  #   Assumption: When the necessary ancillary variables are available for tropical species, replace the Chojnacky et al 2014 biomass estimates with the Chave et al 2014 biomass estimates. Update tropical species records based on Chave et al 2014 if wood specific gravity is available (or an approximation based on congeners). Instructions on extracting environmental stress value E at http://chave.ups-tlse.fr/pantropical_allometry.html; Chave et al 2014 has pantropical allometric equations for tree biomass that require tree height. If tree height is not available, estimate it using their value E.
+  #   Chave et al 2014. Improved allometric models to estimate the aboveground biomass of tropical trees. Global Change Biology 20:3177-3190
   # install.packages("raster"); install.packages("ncdf4"); library("raster"); library("ncdf4")
   # source("http://chave.ups-tlse.fr/pantropical_allometry/readlayers.r")
   # coord <- data.frame(siteID = c("GUAN", "LAJA", "PUUM"), longitude = c(-66.8687, -67.07689, -155.31731), latitude = c(17.96955, 18.02126, 19.55309) );  rownames(coord) <- coord$siteID; coord$siteID <- NULL
   # Chave_et_al_2014_E <- retrieve_raster("E",coord,plot=TRUE,format="nc") returns an E of 0.5074847 for GUAN, 0.4440793 for LAJA, and NA for PUUM
-  vst_agb$Chave_E <- ifelse(vst_agb$siteID == "GUAN", 0.5074847, NA)                # see code chunk on what Chave environmental stress E value is and how it was acquired
-  vst_agb$Chave_E <- ifelse(vst_agb$siteID == "LAJA", 0.4440793, vst_agb$Chave_E)   # see code chunk on what Chave environmental stress E value is and how it was acquired
-  vst_agb$height_eval <- ifelse(is.na(vst_agb$height), 0, 1 )
-  vst_agb$agb_trop <- ifelse(vst_agb$tropical == "tropical" & vst_agb$spg_gcm3 >= 0 & vst_agb$stemDiameter >= 0, 
-                             round(exp(-1.803 - (0.976*vst_agb$Chave_E) + (0.976*log(vst_agb$spg_gcm3)) + (2.673*log(vst_agb$stemDiameter)) - (0.0299*(log(vst_agb$stemDiameter))^2)  ), digits=3), NA)  
-  vst_agb$agb_trop <- dplyr::if_else(vst_agb$tropical == "tropical" & vst_agb$height_eval == 1 & vst_agb$spg_gcm3 >= 0 & vst_agb$stemDiameter >= 0, 
-                                     round(0.0673 * (vst_agb$spg_gcm3*(vst_agb$stemDiameter^2) * vst_agb$height)^0.976, digits=3), vst_agb$agb_trop, vst_agb$agb_trop) #  & vst_agb$siteID != "GUAN" & vst_agb$siteID != "LAJA" # heights often inaccurate in D04 (GUAN and LAJA)
-  vst_agb$height_eval <- NULL # just needed this variable temporarily to allow ifelse statement to work on all records
-  # Chojnacky is not intended for tropical species, so where possible use Chave et al 2014 which does have specific equations for tropical species
-  # citation: Chave et al 2014. Improved allometric models to estimate the aboveground biomass of tropical trees. Global Change Biology 20:3177-3190
-  vst_agb$agb_source <- ifelse(!is.na(vst_agb$agb_trop), "Chave_et_al_2014", vst_agb$agb_source)
-  vst_agb$agb <- ifelse(vst_agb$agb_source == "Chave_et_al_2014", vst_agb$agb_trop, vst_agb$agb)
+  
+  #   Assign Chave et al 2014 "E" values needed for site-specific height estimation when height is missing
+  vst_agb$Chave_E <- ifelse(vst_agb$siteID == "GUAN", 
+                            0.5074847, 
+                            NA)
+  
+  vst_agb$Chave_E <- ifelse(vst_agb$siteID == "LAJA", 
+                            0.4440793, 
+                            vst_agb$Chave_E)
+  
+  vst_agb$height_eval <- ifelse(is.na(vst_agb$height), 
+                                0, 
+                                1)
+  
+  #   Estimate AGB for tropical species
+  vst_agb$agb_trop <- ifelse(vst_agb$tropical == "tropical" & vst_agb$spg_gcm3 >= 0 & vst_agb$stemDiameter >= 0,
+                             round(exp(-1.803 - (0.976 * vst_agb$Chave_E) + (0.976 * log(vst_agb$spg_gcm3)) + 
+                                         (2.673 * log(vst_agb$stemDiameter)) - (0.0299 * (log(vst_agb$stemDiameter))^2)),
+                                   digits = 3),
+                             NA)  
+  
+  #   Overwrite AGB for tropical species when "height" is present
+  vst_agb$agb_trop <- dplyr::if_else(vst_agb$tropical == "tropical" & vst_agb$height_eval == 1 & vst_agb$spg_gcm3 >= 0 &
+                                       vst_agb$stemDiameter >= 0, 
+                                     round(0.0673 * (vst_agb$spg_gcm3 * (vst_agb$stemDiameter^2) * vst_agb$height)^0.976, 
+                                           digits = 3),
+                                     vst_agb$agb_trop,
+                                     vst_agb$agb_trop)
+  
+  #   Remove temporary "height_eval" variable
+  vst_agb$height_eval <- NULL
+  
+  #   Assign AGB allometry source for tropical species
+  vst_agb$agb_source <- ifelse(!is.na(vst_agb$agb_trop),
+                               "Chave_et_al_2014",
+                               vst_agb$agb_source)
+  
+  #   Populate "agb" biomass column with Chave estimates for tropical species, otherwise use Chojnacky
+  vst_agb$agb <- ifelse(vst_agb$agb_source == "Chave_et_al_2014", 
+                        vst_agb$agb_trop, 
+                        vst_agb$agb)
+  
   
   ## Several shrub-specific equations from Conti et al. 2019 applied below
   # if shrub basal diameter is NOT available but crown diameter and height are available
