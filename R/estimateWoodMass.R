@@ -1004,41 +1004,95 @@ estimateWoodMass = function(inputDataList,
                         vst_agb$agb)
   
   
-  ## Several shrub-specific equations from Conti et al. 2019 applied below
-  # if shrub basal diameter is NOT available but crown diameter and height are available
-  suppressWarnings(  vst_agb$agb_shrub <- ifelse((vst_agb$growthForm == "single shrub" | vst_agb$growthForm == "small shrub") & (!is.na(vst_agb$maxCrownDiameter) & !is.na(vst_agb$ninetyCrownDiameter) & !is.na(vst_agb$height)),
-                                                 round(exp(-0.370 + 1.903 * log((vst_agb$maxCrownDiameter+vst_agb$ninetyCrownDiameter)/2) + 0.652 * log(vst_agb$height)) * 1.403, digits=3), NA)  )
-  vst_agb$agb_source <- ifelse(!is.na(vst_agb$agb_shrub), "Conti_et_al_2019", vst_agb$agb_source)
-  vst_agb$agb <- dplyr::if_else(vst_agb$agb_source == "Conti_et_al_2019", vst_agb$agb_shrub, vst_agb$agb, vst_agb$agb)
-  # citation: Conti, G., L.D. Gorne, S.R. Zeballos, M.L. Lipoma, G. Gatica, E. Kowaljow, J.I. Whitworth-Hulse, A. Cuchietti, M. Poca, S. Pestoni, and P.M. Fernandes. 2019. Developing allometric models to 
-  #   predict the individual aboveground biomass of shrubs worldwide. Global Ecology and Biogeography 28(7):961-975.
   
-  # if only shrub basal diameter is available (improvement over crown diameter + height model)
-  suppressWarnings(  vst_agb$agb_shrub <- ifelse((vst_agb$growthForm == "single shrub" | vst_agb$growthForm == "small shrub") & !is.na(vst_agb$basalStemDiameter),
-                                                 round(exp(-2.869 + 2.584 * log(vst_agb$basalStemDiameter)), digits=3), vst_agb$agb_shrub)  )
-  vst_agb$agb_source <- ifelse(!is.na(vst_agb$agb_shrub), "Conti_et_al_2019", vst_agb$agb_source)
-  vst_agb$agb <- dplyr::if_else(vst_agb$agb_source == "Conti_et_al_2019", vst_agb$agb_shrub, vst_agb$agb, vst_agb$agb)
-  # citation: Conti, G., L.D. Gorne, S.R. Zeballos, M.L. Lipoma, G. Gatica, E. Kowaljow, J.I. Whitworth-Hulse, A. Cuchietti, M. Poca, S. Pestoni, and P.M. Fernandes. 2019. Developing allometric models to 
-  #   predict the individual aboveground biomass of shrubs worldwide. Global Ecology and Biogeography 28(7):961-975.
+  ### Apply shrub-specific biomass equations from Conti et al. 2019 to shrub growth forms
   
-  # if shrub basal diameter AND crown diameter are available (improvement over just basal diameter)
-  suppressWarnings(  vst_agb$agb_shrub <- ifelse((vst_agb$growthForm == "single shrub" | vst_agb$growthForm == "small shrub") & (!is.na(vst_agb$maxCrownDiameter) & !is.na(vst_agb$ninetyCrownDiameter) & !is.na(vst_agb$basalStemDiameter)),
-                                                 round(exp(-2.057 + 1.741 * log(vst_agb$basalStemDiameter) + 0.945 * log((vst_agb$maxCrownDiameter+vst_agb$ninetyCrownDiameter)/2)), digits=3), vst_agb$agb_shrub)  )
-  vst_agb$agb_source <- ifelse(!is.na(vst_agb$agb_shrub), "Conti_et_al_2019", vst_agb$agb_source)
-  vst_agb$agb <- dplyr::if_else(vst_agb$agb_source == "Conti_et_al_2019", vst_agb$agb_shrub, vst_agb$agb, vst_agb$agb)
-  # citation: Conti, G., L.D. Gorne, S.R. Zeballos, M.L. Lipoma, G. Gatica, E. Kowaljow, J.I. Whitworth-Hulse, A. Cuchietti, M. Poca, S. Pestoni, and P.M. Fernandes. 2019. Developing allometric models to 
-  #   predict the individual aboveground biomass of shrubs worldwide. Global Ecology and Biogeography 28(7):961-975.
+  #   Estimate shrub biomass: Case when basalStemDiameter is missing and crown diameter and height are available (biomass estimate with most uncertainty)
+  suppressWarnings(vst_agb$agb_shrub <- ifelse((vst_agb$growthForm == "single shrub" | vst_agb$growthForm == "small shrub") &
+                                                 (!is.na(vst_agb$maxCrownDiameter) & !is.na(vst_agb$ninetyCrownDiameter) &
+                                                    !is.na(vst_agb$height)),
+                                               round(exp(-0.370 + 1.903 * log((vst_agb$maxCrownDiameter+vst_agb$ninetyCrownDiameter)/2) +
+                                                           0.652 * log(vst_agb$height)) * 1.403, 
+                                                     digits = 3),
+                                               NA)
+                   ) # end suppressWarnings
   
-  # if shrub basal diameter, crown diameter, AND height are all available (best Conti et al 2019 model)
-  suppressWarnings(  vst_agb$agb_shrub <- ifelse((vst_agb$growthForm == "single shrub" | vst_agb$growthForm == "small shrub") & (!is.na(vst_agb$maxCrownDiameter) & !is.na(vst_agb$ninetyCrownDiameter) & 
-                                                                                                                                   !is.na(vst_agb$basalStemDiameter) & !is.na(vst_agb$height)),
-                                                 round(exp(-2.281 + 1.525 * log(vst_agb$basalStemDiameter) + 0.831 * log((vst_agb$maxCrownDiameter+vst_agb$ninetyCrownDiameter)/2) + 0.523 * log(vst_agb$height)), digits=3), vst_agb$agb_shrub)  )
-  vst_agb$agb_source <- ifelse(!is.na(vst_agb$agb_shrub), "Conti_et_al_2019", vst_agb$agb_source)
-  vst_agb$agb <- dplyr::if_else(vst_agb$agb_source == "Conti_et_al_2019", vst_agb$agb_shrub, vst_agb$agb, vst_agb$agb)
-  # citation: Conti, G., L.D. Gorne, S.R. Zeballos, M.L. Lipoma, G. Gatica, E. Kowaljow, J.I. Whitworth-Hulse, A. Cuchietti, M. Poca, S. Pestoni, and P.M. Fernandes. 2019. Developing allometric models to 
-  #   predict the individual aboveground biomass of shrubs worldwide. Global Ecology and Biogeography 28(7):961-975.
+  #   Assign AGB allometry source for shrubs. Citation: Conti, G., L.D. Gorne, S.R. Zeballos, M.L. Lipoma, G. Gatica, E. Kowaljow, J.I. Whitworth-Hulse, A. Cuchietti, M. Poca, S. Pestoni, and P.M. Fernandes. 2019. Developing allometric models to predict the individual aboveground biomass of shrubs worldwide. Global Ecology and Biogeography 28(7):961-975.
+  vst_agb$agb_source <- ifelse(!is.na(vst_agb$agb_shrub),
+                               "Conti_et_al_2019",
+                               vst_agb$agb_source)
   
-  ## assumption: where available, species-specific allometric equations are preferable to more generic ones, so update aboveground biomass where species - specific allometric equations exist (see multiple taxa below)
+  #   Update AGB column with shrub biomass from Conti
+  vst_agb$agb <- dplyr::if_else(vst_agb$agb_source == "Conti_et_al_2019",
+                                vst_agb$agb_shrub,
+                                vst_agb$agb,
+                                vst_agb$agb)
+  
+  #   Estimate shrub biomass: Improved output when basalStemDiameter is available --> less uncertainty
+  suppressWarnings(vst_agb$agb_shrub <- ifelse((vst_agb$growthForm == "single shrub" | vst_agb$growthForm == "small shrub") &
+                                                 !is.na(vst_agb$basalStemDiameter),
+                                               round(exp(-2.869 + 2.584 * log(vst_agb$basalStemDiameter)), 
+                                                     digits = 3),
+                                               vst_agb$agb_shrub)
+                   ) # end suppressWarnings
+  
+  #   Update AGB allometry for shrubs that now have an "agb_shrub" value
+  vst_agb$agb_source <- ifelse(!is.na(vst_agb$agb_shrub),
+                               "Conti_et_al_2019",
+                               vst_agb$agb_source)
+  
+  #   Update AGB column with Conti estimates based on basalStemDiameter
+  vst_agb$agb <- dplyr::if_else(vst_agb$agb_source == "Conti_et_al_2019",
+                                vst_agb$agb_shrub,
+                                vst_agb$agb, 
+                                vst_agb$agb)
+  
+  #   Estimate shrub biomass: Even better output when basalStemDiameter AND crownDiameter available (compared to basalStemDiameter alone)
+  suppressWarnings(vst_agb$agb_shrub <- ifelse((vst_agb$growthForm == "single shrub" | vst_agb$growthForm == "small shrub") &
+                                                 (!is.na(vst_agb$maxCrownDiameter) & !is.na(vst_agb$ninetyCrownDiameter) &
+                                                    !is.na(vst_agb$basalStemDiameter)),
+                                               round(exp(-2.057 + 1.741 * log(vst_agb$basalStemDiameter) + 0.945 * 
+                                                           log((vst_agb$maxCrownDiameter + vst_agb$ninetyCrownDiameter)/2)), 
+                                                     digits = 3),
+                                               vst_agb$agb_shrub)
+                     ) # end suppressWarnings
+  
+  #   Update AGB allometry for shrubs that now have an "agb_shrub" value
+  vst_agb$agb_source <- ifelse(!is.na(vst_agb$agb_shrub),
+                               "Conti_et_al_2019",
+                               vst_agb$agb_source)
+  
+  #   Update AGB column with Conti estimates based on basalStemDiameter and crownDiameter
+  vst_agb$agb <- dplyr::if_else(vst_agb$agb_source == "Conti_et_al_2019", 
+                                vst_agb$agb_shrub, 
+                                vst_agb$agb,
+                                vst_agb$agb)
+  
+  #   Estimate shrub biomass: Best output when basalStemDiameter, crownDiameter, AND height are all available
+  suppressWarnings(vst_agb$agb_shrub <- ifelse((vst_agb$growthForm == "single shrub" | vst_agb$growthForm == "small shrub") &
+                                                 (!is.na(vst_agb$maxCrownDiameter) & !is.na(vst_agb$ninetyCrownDiameter) &
+                                                    !is.na(vst_agb$basalStemDiameter) & !is.na(vst_agb$height)),
+                                               round(exp(-2.281 + 1.525 * log(vst_agb$basalStemDiameter) + 0.831 * 
+                                                           log((vst_agb$maxCrownDiameter + vst_agb$ninetyCrownDiameter)/2) + 0.523 * 
+                                                           log(vst_agb$height)),
+                                                     digits = 3),
+                                               vst_agb$agb_shrub)
+                   ) # end suppressWarnings
+  
+  #   Update AGB allometry for shrubs that now have an "agb_shrub" value
+  vst_agb$agb_source <- ifelse(!is.na(vst_agb$agb_shrub), 
+                               "Conti_et_al_2019", 
+                               vst_agb$agb_source)
+  
+  #   Update AGB column with Conti estimates based on basalStemDiameter, crownDiameter, and height
+  vst_agb$agb <- dplyr::if_else(vst_agb$agb_source == "Conti_et_al_2019", 
+                                vst_agb$agb_shrub, 
+                                vst_agb$agb, 
+                                vst_agb$agb)
+  
+  
+  
+  ### Assumption: where available, species-specific allometric equations are preferable to more generic ones, so update aboveground biomass where species - specific allometric equations exist (see multiple taxa below)
   vst_agb$agb_MEPO5_Litton <- ifelse(vst_agb$taxonID == "MEPO5", round(0.88*(vst_agb$stemDiameter^1.86), digits=3), NA) # for MEPO5 with stemDiameter > 33 and no height value
   vst_agb$agb_source <- ifelse(!is.na(vst_agb$agb_MEPO5_Litton), "Litton_and_Kauffman_2008", vst_agb$agb_source)
   vst_agb$agb <- ifelse(vst_agb$agb_source == "Litton_and_Kauffman_2008", vst_agb$agb_MEPO5, vst_agb$agb)
