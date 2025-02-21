@@ -22,9 +22,10 @@
 #' input arguments must all be NA; similarly, if list input is missing, table inputs must be
 #' provided for 'div_1m2Data' and 'div_10m2Data100m2Data' arguments.[list]
 #' 
-#' @param totalSampledAreaFilter The subplot (1m^2, 10m^2, 100m^2) or plot (400m^2) size for which data are 
+#' @param totalSampledAreaFilter The subplot (1m2, 10m2, 100m2) or plot (400m2) size for which data are 
 #' returned. Default (NA) will return data for all subplot and plot sizes. If a plot size is selected, the 
-#' function will filter the data returned to the desired subplot or plot size. Input options are NA, 1, 10, 100, 400. Note that selecting 1 does not  [integer] 
+#' function will filter the data returned to the desired subplot or plot size. Input options are NA, 1, 10, 100, 400. 
+#' Note that selecting 1 does not  [integer] 
 #'
 #' @param input_1m2Data The 'div_1m2Data' table for the site x month combination(s) of interest
 #' (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing.
@@ -34,7 +35,10 @@
 #' (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing.
 #' [data.frame]
 #' 
-#' @return This function returns a data frame
+#' @return This function returns a data frame that aggregates plant species lists for all subplots (or as defined in
+#' argument 'totalSampledAreaFilter') and for the entire plot where subplotID is '400' (see Data Product documentation for subplot
+#' description). The column 'totalSampledArea' is also created to reflect the size of the subplot or plot in square meters.
+#' Description of other columns can be found in the Data Product User Guide.     
 #'
 #' @references
 #' License: GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007
