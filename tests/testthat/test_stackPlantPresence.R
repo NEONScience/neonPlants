@@ -12,7 +12,7 @@ test_div_10m2Data100m2Data <- testList$div_10m2Data100m2Data
 #   Test list input
 testthat::test_that(desc = "Output type list input", {
   
-  testthat::expect_type(object = stackPlantPresence(divDataList = testList),
+  testthat::expect_type(object = stackPlantPresence(inputDataList = testList),
                         type = "list")
   
 })
@@ -31,7 +31,7 @@ testthat::test_that(desc = "Output type table input", {
 #   Test list input
 testthat::test_that(desc = "Output class list input", {
   
-  testthat::expect_s3_class(object = stackPlantPresence(divDataList = testList),
+  testthat::expect_s3_class(object = stackPlantPresence(inputDataList = testList),
                             class = "data.frame")
 })
 
@@ -50,7 +50,7 @@ testthat::test_that(desc = "Output class table input", {
 #   Check expected row number of output
 testthat::test_that(desc = "Output data frame row number list input", {
   
-  testthat::expect_identical(object = nrow(stackPlantPresence(divDataList = testList)),
+  testthat::expect_identical(object = nrow(stackPlantPresence(inputDataList = testList)),
                              expected = as.integer(320))
 })
 
@@ -58,7 +58,7 @@ testthat::test_that(desc = "Output data frame row number list input", {
 #   Check expected column number of output
 testthat::test_that(desc = "Output data frame column number list input", {
   
-  testthat::expect_identical(object = ncol(stackPlantPresence(divDataList = testList)),
+  testthat::expect_identical(object = ncol(stackPlantPresence(inputDataList = testList)),
                              expected = as.integer(29))
 })
 
@@ -82,35 +82,35 @@ testthat::test_that(desc = "Output data frame row number table input", {
 
 
 
-### Tests: Generate expected errors for 'divDataList' ####
-#   Test 'divDataList' is a list
-testthat::test_that(desc = "Argument 'divDataList' is list object", {
+### Tests: Generate expected errors for 'inputDataList' ####
+#   Test 'inputDataList' is a list
+testthat::test_that(desc = "Argument 'inputDataList' is list object", {
   
-  testthat::expect_error(object = stackPlantPresence(divDataList = test_div_1m2Data),
-                         regexp = "Argument 'divDataList' must be a list object")
+  testthat::expect_error(object = stackPlantPresence(inputDataList = test_div_1m2Data),
+                         regexp = "Argument 'inputDataList' must be a list object")
 })
 
-#   Test 'divDataList' contains required tables
-testthat::test_that(desc = "Required tables present in 'divDataList' input", {
+#   Test 'inputDataList' contains required tables
+testthat::test_that(desc = "Required tables present in 'inputDataList' input", {
   
-  testthat::expect_error(object = stackPlantPresence(divDataList = testList[1]),
-                         regexp = "Required tables missing from 'divDataList'")
+  testthat::expect_error(object = stackPlantPresence(inputDataList = testList[1]),
+                         regexp = "Required tables missing from 'inputDataList'")
 })
 
-#   Test table inputs are NA if 'divDataList' supplied
+#   Test table inputs are NA if 'inputDataList' supplied
 testthat::test_that(desc = "Table inputs NA when required", {
   
-  testthat::expect_error(object = stackPlantPresence(divDataList = testList,
+  testthat::expect_error(object = stackPlantPresence(inputDataList = testList,
                                                      input_1m2Data = test_div_1m2Data),
-                         regexp = "When 'divDataList' is supplied all table input arguments must be NA")
+                         regexp = "When 'inputDataList' is supplied all table input arguments must be NA")
 })
 
-#   Test table inputs are NA if 'divDataList' supplied
+#   Test table inputs are NA if 'inputDataList' supplied
 testthat::test_that(desc = "Table inputs NA when required", {
   
-  testthat::expect_error(object = stackPlantPresence(divDataList = testList,
+  testthat::expect_error(object = stackPlantPresence(inputDataList = testList,
                                                      input_10m2Data100m2Data = test_div_10m2Data100m2Data),
-                         regexp = "When 'divDataList' is supplied all table input arguments must be NA")
+                         regexp = "When 'inputDataList' is supplied all table input arguments must be NA")
 })
 
 
@@ -120,12 +120,12 @@ testthat::test_that(desc = "Table inputs are data frames when required", {
   
   testthat::expect_error(object = stackPlantPresence(input_1m2Data = testList,
                                                      input_10m2Data100m2Data = test_div_10m2Data100m2Data),
-                         regexp = "Data frames must be supplied for all table inputs if 'divDataList' is missing")
+                         regexp = "Data frames must be supplied for all table inputs if 'inputDataList' is missing")
 })
 
 
 
-### Test: Generate expected errors for issues with div_1m2Data table (works for divDataList or input_1m2Data source)
+### Test: Generate expected errors for issues with div_1m2Data table (works for inputDataList or input_1m2Data source)
 # Test when div_1m2Data lacks required column
 testthat::test_that(desc = "Table 'input_1m2Data' missing column", {
   
@@ -146,7 +146,7 @@ testthat::test_that(desc = "Table 'div_1m2Data' missing data", {
 
 
 
-### Test: Generate expected errors for issues with div_10m2Data100m2Data table (works for divDataList or div_10m2Data100m2Data source)
+### Test: Generate expected errors for issues with div_10m2Data100m2Data table (works for inputDataList or div_10m2Data100m2Data source)
 # Test when div_10m2Data100m2Data lacks required column
 testthat::test_that(desc = "Table 'input_10m2Data100m2Datainput_10m2Data100m2Data' missing column", {
   
@@ -164,3 +164,4 @@ testthat::test_that(desc = "Table 'div_10m2Data100m2Data' missing data", {
                                                        dplyr::filter(uid == "doppelganger")),
                          regexp = "Table 'input_10m2Data100m2Data' has no data.")
 })
+

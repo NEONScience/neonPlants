@@ -5,12 +5,13 @@
 #' Dave T Barnett \email{dbarnettl@battelleecology.org} \cr
 #' Eric Sokol \email{esokol@battelleecology.org} \cr
 
-#' @description Use this function to aggregate the occurrence data from the NEON Plant Presence and Percent Cover (DP1.10058.001) data product to list the plant species present at each plot scale. As downloaded from the NEON data portal, data at 10m^2 and 100m2 typically include only 
-#' species not encountered within nested, finer grained subplots and a species list for the entire 400^2 scale plot is not provided.
-#'
-#' Data inputs are NEON Plant Presence and Percent Cover (DP1.10058.001) retrieved using the 
-#' neonUtilities::loadByProduct() function (preferred), data downloaded from the NEON Data Portal, 
-#' or input data tables with an equivalent structure and representing the same site x month combinations. 
+#' @description Data inputs are NEON Plant Presence and Percent Cover data (DP1.10058.001) retrieved with 
+#' neonUtilities::loadByProduct() function (preferred), data downloaded from the NEON Data Portal, or 
+#' input data tables with an equivalent structure and representing the same site x month combinations. The 
+#' stackPlantPresence function aggregates the occurrence data from the Plant Presence and Percent Cover 
+#' data product to return the plant species present at each subpot (1m2, 10m2, and 100m2) and the plot scale (400m2). 
+#' As downloaded from the NEON data portal, data at 10m2 and 100m2 typically include only species not encountered 
+#' within nested, finer grained subplots, and a list of present species for the entire 400m2 scale plot is not provided.
 #' 
 #' @details Input data may be provided either as a list generated from the neonUtilities::laodByProduct()
 #' function or as individual tables. However, if both list and table inputs are provided at the same time
@@ -58,7 +59,7 @@
 #'
 #' # stack the data by sending the list returned by neonUtilities::loadByProduct
 #' data_stacked <- stackPlantPresence(
-#'   divDataList = allDiv)
+#'   inputDataList = allDiv)
 #'
 #'
 #' # send list of data using pipe
@@ -82,7 +83,7 @@
 #' my_10_100m_data <- allDiv$div_10m2Data100m2Data
 #'
 #' data_stacked <- stackPlantPresence(
-#'   divDataList = list(
+#'   inputDataList = list(
 #'     div_1m2Data = my_1m_data,
 #'     div_10m2Data100m2Data = my_10_100m_data))
 #'
@@ -95,7 +96,7 @@
 #'   filter(namedLocation == "SRER_043.basePlot.div")
 #'
 #' data_stacked_SRER_43 <- stackPlantPresence(
-#'   divDataList = list(
+#'   inputDataList = list(
 #'     div_1m2Data = my_1m_data_SRER_43,
 #'     div_10m2Data100m2Data = my_10_100m_data_SRER_43))
 #' }
@@ -112,7 +113,7 @@
 
 
 stackPlantPresence <- function(
-    divDataList = NA,
+    inputDataList = NA,
     input_1m2Data = NA,
     input_10m2Data100m2Data = NA,
     totalSampledAreaFilter = NA_integer_){
@@ -121,13 +122,13 @@ stackPlantPresence <- function(
   
   
   
-  ### Verify user-supplied divDataList object contains correct data if not NA
-  if (!missing(divDataList)) {
+  ### Verify user-supplied inputDataList object contains correct data if not NA
+  if (!missing(inputDataList)) {
     
     #   Check that input is a list
-    if (!inherits(divDataList, "list")) {
-      stop(glue::glue("Argument 'divDataList' must be a list object from neonUtilities::loadByProduct();
-                     supplied input object is {class(divDataList)}"))
+    if (!inherits(inputDataList, "list")) {
+      stop(glue::glue("Argument 'inputDataList' must be a list object from neonUtilities::loadByProduct();
+                     supplied input object is {class(inputDataList)}"))
     }                                                                                                                                                                    
     
     #   Check that required tables within list match expected names
@@ -135,13 +136,13 @@ stackPlantPresence <- function(
     listExpNames <- c("div_1m2Data", "div_10m2Data100m2Data")
     
     # Identify missing tables
-    missing_tables <- setdiff(listExpNames, names(divDataList))
+    missing_tables <- setdiff(listExpNames, names(inputDataList))
     
     # If there are missing tables, construct an informative error message
     if (length(missing_tables) > 0) {
       # Base error message listing the missing tables
       error_msg <- glue::glue(
-        "Required tables missing from 'divDataList': {paste(missing_tables, collapse = ', ')}."
+        "Required tables missing from 'inputDataList': {paste(missing_tables, collapse = ', ')}."
       )
       
       # Add extra explanation if "div_10m2Data100m2Data" is missing
@@ -158,24 +159,24 @@ stackPlantPresence <- function(
     
   } else {
     
-    divDataList <- NULL
+    inputDataList <- NULL
     
   } # end missing conditional
   
   
   
-  ### Verify table inputs are NA if divDataList is supplied
-  if (inherits(divDataList, "list") & (!is.logical(input_1m2Data) | !is.logical(input_10m2Data100m2Data))) {
-    stop("When 'divDataList' is supplied all table input arguments must be NA")
+  ### Verify table inputs are NA if inputDataList is supplied
+  if (inherits(inputDataList, "list") & (!is.logical(input_1m2Data) | !is.logical(input_10m2Data100m2Data))) {
+    stop("When 'inputDataList' is supplied all table input arguments must be NA")
   }
   
   
   
-  ### Verify all table inputs are data frames if divDataList is NA
-  if (is.null(divDataList) & 
+  ### Verify all table inputs are data frames if inputDataList is NA
+  if (is.null(inputDataList) & 
       (!inherits(input_1m2Data, "data.frame") | !inherits(input_10m2Data100m2Data, "data.frame"))) {
     
-    stop("Data frames must be supplied for all table inputs if 'divDataList' is missing. If missing table 
+    stop("Data frames must be supplied for all table inputs if 'inputDataList' is missing. If missing table 
          'div_10m2Data100m2Data', be sure the 10m2 and 100m2 subplots were sampled the site x year as these data are collected every other year.")
     
   }
@@ -184,10 +185,10 @@ stackPlantPresence <- function(
   
   
   ### Conditionally define input tables ####
-  if (inherits(divDataList, "list")) {
+  if (inherits(inputDataList, "list")) {
     
-    div_1m2Data <- divDataList$div_1m2Data
-    div_10m2Data100m2Data <- divDataList$div_10m2Data100m2Data
+    div_1m2Data <- inputDataList$div_1m2Data
+    div_10m2Data100m2Data <- inputDataList$div_10m2Data100m2Data
     
   } else {
     
