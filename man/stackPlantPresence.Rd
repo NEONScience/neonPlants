@@ -25,25 +25,25 @@ provided for 'div_1m2Data' and 'div_10m2Data100m2Data' arguments.\link{list}}
 (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing.
 \link{data.frame}}
 
-\item{totalSampledAreaFilter}{The subplot (1m^2, 10m^2, 100m^2) or plot (400m^2) size for which data are
+\item{totalSampledAreaFilter}{The subplot (1m2, 10m2, 100m2) or plot (400m2) size for which data are
 returned. Default (NA) will return data for all subplot and plot sizes. If a plot size is selected, the
-function will filter the data returned to the desired subplot or plot size. Input options are NA, 1, 10, 100, 400. Note that selecting 1 does not  \link{integer}}
+function will filter the data returned to the desired subplot or plot size. Input options are NA, 1, 10, 100, 400.
+Note that selecting 1 does not  \link{integer}}
 }
 \value{
-This function returns a data frame
+This function returns a data frame that aggregates plant species lists for all subplots (or as defined in
+argument 'totalSampledAreaFilter') and for the entire plot where subplotID is '400' (see Data Product documentation for subplot
+description). The column 'totalSampledArea' is also created to reflect the size of the subplot or plot in square meters.
+Description of other columns can be found in the Data Product User Guide.
 }
 \description{
-Data inputs are NEON Plant Presence and Percent Cover data (DP1.10058.001) retrieved using
-the neonUtilities::loadByProduct() function (preferred), data downloaded from the NEON Data Portal, or
-input data tables with an equivalent structure and representing the same site x month combinations.Use
-this function to aggregate the occurrence data from the NEON Plant Presence and Percent Cover (DP1.10058.001)
-data product to list the plant species present at each plot scale. As downloaded from the NEON data portal,
-data at 10m^2 and 100m2 typically include only species not encountered within nested, finer grained subplots
-and a species list for the entire 400^2 scale plot is not provided.
-
-Data inputs are NEON Plant Presence and Percent Cover (DP1.10058.001) retrieved using the
-neonUtilities::loadByProduct() function (preferred), data downloaded from the NEON Data Portal,
-or input data tables with an equivalent structure and representing the same site x month combinations.
+Data inputs are NEON Plant Presence and Percent Cover data (DP1.10058.001) retrieved with
+neonUtilities::loadByProduct() function (preferred), data downloaded from the NEON Data Portal, or
+input data tables with an equivalent structure and representing the same site x month combinations. The
+stackPlantPresence function aggregates the occurrence data from the Plant Presence and Percent Cover
+data product to return the plant species present at each subpot (1m2, 10m2, and 100m2) and the plot scale (400m2).
+As downloaded from the NEON data portal, data at 10m2 and 100m2 typically include only species not encountered
+within nested, finer grained subplots, and a list of present species for the entire 400m2 scale plot is not provided.
 }
 \details{
 Input data may be provided either as a list generated from the neonUtilities::laodByProduct()
