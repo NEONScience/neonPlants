@@ -1092,202 +1092,493 @@ estimateWoodMass = function(inputDataList,
   
   
   
-  ### Assumption: where available, species-specific allometric equations are preferable to more generic ones, so update aboveground biomass where species - specific allometric equations exist (see multiple taxa below)
-  vst_agb$agb_MEPO5_Litton <- ifelse(vst_agb$taxonID == "MEPO5", round(0.88*(vst_agb$stemDiameter^1.86), digits=3), NA) # for MEPO5 with stemDiameter > 33 and no height value
-  vst_agb$agb_source <- ifelse(!is.na(vst_agb$agb_MEPO5_Litton), "Litton_and_Kauffman_2008", vst_agb$agb_source)
-  vst_agb$agb <- ifelse(vst_agb$agb_source == "Litton_and_Kauffman_2008", vst_agb$agb_MEPO5, vst_agb$agb)
-  # taxonID MEPO5 is Metrosideros polymorpha, the most frequent tropical species in NEON VST dataset, and Litton and Kauffman 2008 have specific equation for MEPO5
-  # citation: Litton and Kauffman 2008. Allometric Models for Predicting Aboveground Biomass in Two Widespread WoodyPlants in Hawaii. BIOTROPICA 40(3): 313-320.
+  ### Assumption: Where available, species-specific allometric equations are preferable to more generic ones; update AGB estimates for taxa for which species-specific allometric equations exist
   
-  vst_agb$agb_MEPO5 <- ifelse(vst_agb$taxonID == "MEPO5" & vst_agb$stemDiameter <=33, round(0.2085*(vst_agb$stemDiameter^2.318), digits=3), NA)
-  vst_agb$agb_MEPO5 <- ifelse(vst_agb$taxonID == "MEPO5" & vst_agb$stemDiameter >33, round(0.0776*((vst_agb$spg_gcm3*(vst_agb$stemDiameter^2)*vst_agb$height)^0.94), digits=3), vst_agb$agb_MEPO5)
-  vst_agb$agb_source <- ifelse(!is.na(vst_agb$agb_MEPO5), "Selmants_et_al_2014", vst_agb$agb_source)
-  vst_agb$agb <- ifelse(vst_agb$agb_source == "Selmants_et_al_2014", vst_agb$agb_MEPO5, vst_agb$agb)
-  # taxonID MEPO5 is Metrosideros polymorpha, the most frequent tropical species in NEON VST dataset, and Selmants et al 2014 (in suppl material) have specific equation for MEPO5
-  # citation: Selmants, PC, CM Litton, CP Giardina, and GP Asner. 2014. Global Change Biology 20:2927-2937.
+  ##  Species: Metrosideros polymorpha (MEPO5) - first estimate AGB for all MEPO5 with a stemDiameter (Litton and Kauffman 2008), then in subsequent steps update the AGB estimate with Selmants et al 2014; approach retains Litton and Kauffman 2008 estimate for those MEPO5 with DBH >= 33 cm and that do not have 'height' recorded. All other individuals have an AGB estimate via Selmants et al 2014.
   
-  vst_agb$agb_RHDA <- ifelse(vst_agb$taxonID == "RHDA", round(0.001*exp(((5.237 + 1.996*log(vst_agb$stemDiameter))+(5.016 + 2.306*log(vst_agb$stemDiameter)))/2), digits=3), NA)
-  vst_agb$agb_source <- ifelse(!is.na(vst_agb$agb_RHDA), "Zhang_et_al_2012", vst_agb$agb_source)
-  vst_agb$agb <- ifelse(vst_agb$agb_source == "Zhang_et_al_2012", vst_agb$agb_RHDA, vst_agb$agb)
-  # taxonID RHDA is Rhamnus davurica, the most frequent introduced species in NEON VST dataset, and Zhang et al 2012 have specific equation for RHDA
-  # first equation is for males, second equation is for females. Took the average since sex was not recorded. Divided by 1000 to convert from g to kg used for Chojnacky et al 2014
-  # citation: Zhang et al 2012. Sexual dimorphism in reproductive and vegetative allometry for two dioecious Rhamnus plants in north-eastern China. Eur J Forest Res (2012) 131:1287-1296
+  #   Allometry for all MEPO5 individuals; citation: Litton and Kauffman 2008. Allometric Models for Predicting Aboveground Biomass in Two Widespread WoodyPlants in Hawaii. BIOTROPICA 40(3): 313-320.
+  vst_agb$agb_MEPO5_Litton <- ifelse(vst_agb$taxonID == "MEPO5", 
+                                     round(0.88 * (vst_agb$stemDiameter^1.86), 
+                                           digits = 3),
+                                     NA)
   
-  suppressWarnings(  vst_agb$agb_ARTR2 <- ifelse(vst_agb$taxonID == "ARTR2", round(exp(7.889 + 0.8539*log(4/3*pi*(vst_agb$maxCrownDiameter/2)*(vst_agb$ninetyCrownDiameter/2)))/1000, digits=3), NA)  )
-  vst_agb$agb_source <- ifelse(!is.na(vst_agb$agb_ARTR2), "Cleary_et_al_2008_ARTR2", vst_agb$agb_source)
-  vst_agb$agb <- dplyr::if_else(vst_agb$agb_source == "Cleary_et_al_2008_ARTR2", vst_agb$agb_ARTR2, vst_agb$agb, vst_agb$agb)
-  # taxonID ARTR2 is Artemisia tridentata, the most frequent shrub in NEON VST dataset - divide final result by 1,000 to convert from g to kg
-  # citation: Cleary, M.B., E. Pendall, and B.E. Ewers. 2008. Testing sagebrush allometric relationships across three fire chronosequences in Wyoming, USA. Journal of Arid Environments 72:285-301
+  vst_agb$agb_source <- ifelse(!is.na(vst_agb$agb_MEPO5_Litton),
+                               "Litton_and_Kauffman_2008",
+                               vst_agb$agb_source)
   
-  vst_agb$agb_LATR2 <- ifelse(vst_agb$taxonID == "LATR2", round((24.76 + 0.0014*(4/3*pi*(vst_agb$maxCrownDiameter*100)*(vst_agb$ninetyCrownDiameter*100)))/1000, digits=3), NA)
-  vst_agb$agb_source <- ifelse(!is.na(vst_agb$agb_LATR2), "Huenneke_et_al_2001_LATR2", vst_agb$agb_source)
-  vst_agb$agb <- dplyr::if_else(vst_agb$agb_source == "Huenneke_et_al_2001_LATR2", vst_agb$agb_LATR2, vst_agb$agb, vst_agb$agb)
-  # taxonID LATR2 is Larrea tridentata, the third most frequent shrub in NEON VST dataset - multiple diameters by 100 to convert from m to cm and divide final result by 1,000 to convert from g to kg
-  # citation: Huenneke, L.F., D. Clason, and E. Muldavin. 2001. Spatial heterogeneity in Chihuahan Desert vegetation: implications for sampling methods in semi-arid ecosystems. Journal of Arid Environments 47:257-270
-  # equation estimated from regression line in Figure 3a
+  vst_agb$agb <- ifelse(vst_agb$agb_source == "Litton_and_Kauffman_2008", 
+                        vst_agb$agb_MEPO5,
+                        vst_agb$agb)
   
-  vst_agb$agb_Cornus <- ifelse((vst_agb$growthForm == "single shrub" | vst_agb$growthForm == "small shrub") & substr(vst_agb$scientificName,1,6) == "Cornus", round(exp(3.315 + 2.647*log(vst_agb$basalStemDiameter))/1000, digits=3), NA)
-  vst_agb$agb_Cornus <- dplyr::if_else((vst_agb$growthForm == "single shrub" | vst_agb$growthForm == "small shrub") & substr(vst_agb$scientificName,1,6) == "Cornus" & is.na(vst_agb$basalStemDiameter), round(exp(5.089 + 1.883*log(vst_agb$stemDiameter))/1000, digits=3),
-                                       vst_agb$agb_Cornus, vst_agb$agb_Cornus)
-  vst_agb$agb_source <- ifelse(!is.na(vst_agb$agb_Cornus), "Lutz_et_al_2014", vst_agb$agb_source)
-  vst_agb$agb <- dplyr::if_else(vst_agb$agb_source == "Lutz_et_al_2014", vst_agb$agb_Cornus, vst_agb$agb, vst_agb$agb)
-  # apply Cornus sericea equation to other Cornus shrubs
-  # citation: Lutz, J.A., K.A. Schwindt, T.J. Furniss, J.A. Freund, M.E Swanson, K.J. Hogan, G.E. Kenagy, and A.J. Larson. 2014. Community composition and allometry of Leucothoe davisiae, Cornus sericea, and Chrysolepis sempervirens. Canadian
-  #   Jornal of Forest Research 44:677-683
+  #   Update MEPO5 AGB estimate for individuals with DBH <= 33 cm or > 33 cm AND with 'height' data; citation: Selmants, PC, CM Litton, CP Giardina, and GP Asner. 2014. Global Change Biology 20:2927-2937.
+  vst_agb$agb_MEPO5 <- ifelse(vst_agb$taxonID == "MEPO5" & vst_agb$stemDiameter <= 33,
+                              round(0.2085 * (vst_agb$stemDiameter^2.318),
+                                    digits = 3),
+                              NA)
   
-  # assumption: allometric equations developed specifically for lianas are better than generic allometric equations used above for trees and shrubs
-  # update aboveground biomass for lianas from Schnitzer_et_al_2006 (Chojnacky is not intended for lianas, or for introduced or tropical species, and there are numerous introduced and tropical liana species, see below)
-  vst_agb$agb_liana <- ifelse(vst_agb$growthForm=="liana", round(exp(-1.484 + 2.657*log(vst_agb$stemDiameter)), digits=3), NA)
-  vst_agb$agb_source <- ifelse(!is.na(vst_agb$agb_liana), "Schnitzer_et_al_2006", vst_agb$agb_source)
-  vst_agb$agb <- ifelse(vst_agb$agb_source == "Schnitzer_et_al_2006", vst_agb$agb_liana, vst_agb$agb)
-  # taxonID CEOR7 (Celastrus orbiculatus) & LOJA (Lonicera japonica) are 2nd & 3rd most frequent introduced species in NEON VST dataset, and they are lianas
-  # taxonID DILA10 (Distictis lactiflora) is the most frequent tropical species, and is a liana
-  # Citation: Schnitzer, SA, SJ DeWalt, and J Chave. 2006. Censusing and measuring lianas: A quantitative comparison of the common methods. Biotropica 38:581-591
-  # Schnitzer_et_al_2006 develop allometric equation for lianas in several tropical regions, and I'm applying to temperate lianas as well
+  vst_agb$agb_MEPO5 <- ifelse(vst_agb$taxonID == "MEPO5" & vst_agb$stemDiameter > 33,
+                              round(0.0776 * ((vst_agb$spg_gcm3 * (vst_agb$stemDiameter^2) * vst_agb$height)^0.94),
+                                    digits = 3),
+                              vst_agb$agb_MEPO5)
   
-  vst_agb$agb_Cibotium <- ifelse(substring(vst_agb$scientificName,1,8) == "Cibotium", round(0.2085*(pi*(vst_agb$stemDiameter/2)^2*vst_agb$height*100*vst_agb$spg_gcm3/1000), digits=3), NA)
-  vst_agb$agb_source <- ifelse(!is.na(vst_agb$agb_Cibotium), "Ostertag_et_al_2014", vst_agb$agb_source)
-  vst_agb$agb <- ifelse(vst_agb$agb_source == "Ostertag_et_al_2014", vst_agb$agb_Cibotium, vst_agb$agb)
-  # Cibotium genus (taxonIDs CIBOT, CIGL, and CIME8) has allometric equation in Ostertag et al 2014 (in suppl material)
-  # citation: Ostertag, R, F Inman-Narahari, S Cordell, CP Giardina, and L Sack. 2014. Forest Structure in low-diversity tropical forests: A study of Hawaiian wet and dry forests. PLOS One. 9:e103268
+  #   Update AGB allometry for MEPO5 that have a new value in "agb_MEPO5" column
+  vst_agb$agb_source <- ifelse(!is.na(vst_agb$agb_MEPO5), 
+                               "Selmants_et_al_2014",
+                               vst_agb$agb_source)
   
-  # additional quality flag(s)
-  vst_agb$agb_in_dia_range <- dplyr::if_else(vst_agb$stemDiameter >= vst_agb$minDiameter & vst_agb$stemDiameter <= vst_agb$maxDiameter & vst_agb$agb_source == "Chojnacky_et_al_2014", "yes", "no", "")
-  vst_agb$agb_in_dia_range <- ifelse(vst_agb$agb_source != "Chojnacky_et_al_2014", "NA", vst_agb$agb_in_dia_range)
+  #   Update "agb" column with Selmants et al 2014 estimates
+  vst_agb$agb <- ifelse(vst_agb$agb_source == "Selmants_et_al_2014",
+                        vst_agb$agb_MEPO5,
+                        vst_agb$agb)
   
-  # assumption: it's better to make assumptions about growthForm based on stemDiameter than to leave out records when scaling to area basis (which requires knowing what the the growthForm is)
-  vst_agb$growthForm <- dplyr::if_else(vst_agb$growthForm == "unknown" & vst_agb$stemDiameter >= 10, "single bole tree", vst_agb$growthForm, vst_agb$growthForm )
-  vst_agb$growthForm <- dplyr::if_else(vst_agb$growthForm == "unknown" & vst_agb$stemDiameter < 10, "small tree", vst_agb$growthForm, vst_agb$growthForm )
   
+  ##  Species: Rhamnus davurica (RHDA); citation: Zhang et al 2012. Sexual dimorphism in reproductive and vegetative allometry for two dioecious Rhamnus plants in north-eastern China. Eur J Forest Res (2012) 131:1287-1296. The taxonID RHDA is the most frequent introduced species in NEON VST dataset, and Zhang et al 2012 have a specific equation for RHDA. There is one equation for males and another for females; here, we take the average because NEON does not record sex of RHDA. Output is divided by 1000 to convert to "kg".
+  vst_agb$agb_RHDA <- ifelse(vst_agb$taxonID == "RHDA", 
+                             round(0.001 * exp(((5.237 + 1.996 * log(vst_agb$stemDiameter)) + 
+                                                  (5.016 + 2.306 * log(vst_agb$stemDiameter)))/2),
+                                   digits = 3),
+                             NA)
+  
+  #   Update AGB allometry for RHDA individuals
+  vst_agb$agb_source <- ifelse(!is.na(vst_agb$agb_RHDA),
+                               "Zhang_et_al_2012",
+                               vst_agb$agb_source)
+  
+  #   Update "agb" column with Zhang et al 2012 estimates
+  vst_agb$agb <- ifelse(vst_agb$agb_source == "Zhang_et_al_2012",
+                        vst_agb$agb_RHDA,
+                        vst_agb$agb)
+  
+  
+  ##  Species: Artemisia tridentata (ARTR2); citation: Cleary, M.B., E. Pendall, and B.E. Ewers. 2008. Testing sagebrush allometric relationships across three fire chronosequences in Wyoming, USA. Journal of Arid Environments 72:285-301. Output is divided by 1000 to convert to "kg".
+  suppressWarnings(vst_agb$agb_ARTR2 <- ifelse(vst_agb$taxonID == "ARTR2", 
+                                               round(exp(7.889 + 0.8539 * log(4/3 * pi * (vst_agb$maxCrownDiameter/2) *
+                                                                                (vst_agb$ninetyCrownDiameter/2)))/1000, 
+                                                     digits = 3),
+                                               NA)
+                   ) # end suppressWarnings
+  
+  #   Update AGB allometry for ARTR2 individuals
+  vst_agb$agb_source <- ifelse(!is.na(vst_agb$agb_ARTR2),
+                               "Cleary_et_al_2008_ARTR2",
+                               vst_agb$agb_source)
+  
+  #   Update AGB column with Cleary et al 2008 estimates
+  vst_agb$agb <- dplyr::if_else(vst_agb$agb_source == "Cleary_et_al_2008_ARTR2",
+                                vst_agb$agb_ARTR2,
+                                vst_agb$agb,
+                                vst_agb$agb)
+  
+   
+  ##  Species: Larrea tridentata (LATR2); citation: Huenneke, L.F., D. Clason, and E. Muldavin. 2001. Spatial heterogeneity in Chihuahan Desert vegetation: implications for sampling methods in semi-arid ecosystems. Journal of Arid Environments 47:257-270. Diameters multiplied by 100 to convert from "m" to "cm"; final result divided 1000 to convert output from "g" to "kg". Equation estimated from regression line in Figure 3a.
+  vst_agb$agb_LATR2 <- ifelse(vst_agb$taxonID == "LATR2", 
+                              round((24.76 + 0.0014 * (4/3 * pi * (vst_agb$maxCrownDiameter * 100) * 
+                                                         (vst_agb$ninetyCrownDiameter * 100)))/1000, 
+                                    digits = 3),
+                              NA)
+  
+  #   Update AGB allometry for LATR2 individuals
+  vst_agb$agb_source <- ifelse(!is.na(vst_agb$agb_LATR2), 
+                               "Huenneke_et_al_2001_LATR2",
+                               vst_agb$agb_source)
+  
+  #   Update AGB column with Huenneke et al 2001 estimates
+  vst_agb$agb <- dplyr::if_else(vst_agb$agb_source == "Huenneke_et_al_2001_LATR2",
+                                vst_agb$agb_LATR2,
+                                vst_agb$agb,
+                                vst_agb$agb)
+  
+  
+  ##  Species: Cornus spp; citation: Lutz, J.A., K.A. Schwindt, T.J. Furniss, J.A. Freund, M.E Swanson, K.J. Hogan, G.E. Kenagy, and A.J. Larson. 2014. Community composition and allometry of Leucothoe davisiae, Cornus sericea, and Chrysolepis sempervirens. Canadian Journal of Forest Research 44:677-683
+  #   Estimate AGB for individuals with a basalStemDiameter; most emergent shrub stems have basalStemDiameter but a small number are occluded from measurement.
+  vst_agb$agb_Cornus <- ifelse((vst_agb$growthForm == "single shrub" | vst_agb$growthForm == "small shrub") & 
+                                 substr(vst_agb$scientificName, 1, 6) == "Cornus",
+                               round(exp(3.315 + 2.647 * log(vst_agb$basalStemDiameter))/1000, 
+                                     digits = 3),
+                               NA)
+  
+  #   Estimate AGB using stemDiameter for individuals lacking a basalStemDiameter
+  vst_agb$agb_Cornus <- dplyr::if_else((vst_agb$growthForm == "single shrub" | vst_agb$growthForm == "small shrub") & 
+                                         substr(vst_agb$scientificName, 1, 6) == "Cornus" & is.na(vst_agb$basalStemDiameter),
+                                       round(exp(5.089 + 1.883 * log(vst_agb$stemDiameter))/1000, 
+                                             digits = 3),
+                                       vst_agb$agb_Cornus, 
+                                       vst_agb$agb_Cornus)
+  
+  #   Update AGB allometry for Cornus spp individuals
+  vst_agb$agb_source <- ifelse(!is.na(vst_agb$agb_Cornus),
+                               "Lutz_et_al_2014",
+                               vst_agb$agb_source)
+  
+  #   Update AGB column with Lutz et al 2014 estimates
+  vst_agb$agb <- dplyr::if_else(vst_agb$agb_source == "Lutz_et_al_2014",
+                                vst_agb$agb_Cornus,
+                                vst_agb$agb,
+                                vst_agb$agb)
+  
+  
+  ##  Assumption: Allometric equations developed specifically for lianas are better than generic allometric equations used above for trees and shrubs. Citation: Schnitzer, SA, SJ DeWalt, and J Chave. 2006. Censusing and measuring lianas: A quantitative comparison of the common methods. Biotropica 38:581-591. Update AGB for lianas with equations from Schnitzer_et_al_2006 (Chojnacky is not intended for lianas, or for introduced or tropical species, and there are numerous introduced and tropical liana species, see below). Equation for tropical lianas is used for temperate liana species. 
+  vst_agb$agb_liana <- ifelse(vst_agb$growthForm == "liana",
+                              round(exp(-1.484 + 2.657 * log(vst_agb$stemDiameter)), 
+                                    digits = 3),
+                              NA)
+  
+  #   Update AGB allometry for lianas
+  vst_agb$agb_source <- ifelse(!is.na(vst_agb$agb_liana), 
+                               "Schnitzer_et_al_2006",
+                               vst_agb$agb_source)
+  
+  #   Update AGB column with Schnitzer et al 2006 estimates
+  vst_agb$agb <- ifelse(vst_agb$agb_source == "Schnitzer_et_al_2006",
+                        vst_agb$agb_liana,
+                        vst_agb$agb)
+  
+  
+  ##  Species: Cibotium spp. (taxonIDs CIBOT, CIGL, and CIME8); citation: Ostertag, R, F Inman-Narahari, S Cordell, CP Giardina, and L Sack. 2014. Forest Structure in low-diversity tropical forests: A study of Hawaiian wet and dry forests. PLOS One. 9:e103268
+  vst_agb$agb_Cibotium <- ifelse(substring(vst_agb$scientificName, 1, 8) == "Cibotium",
+                                 round(0.2085 * (pi * (vst_agb$stemDiameter/2)^2 * vst_agb$height * 100 * vst_agb$spg_gcm3/1000),
+                                       digits = 3),
+                                 NA)
+  
+  #   Update AGB allometry for Cibotium
+  vst_agb$agb_source <- ifelse(!is.na(vst_agb$agb_Cibotium), 
+                               "Ostertag_et_al_2014", 
+                               vst_agb$agb_source)
+  
+  #   Update AGB column with Ostertag et al 2014 estimates
+  vst_agb$agb <- ifelse(vst_agb$agb_source == "Ostertag_et_al_2014",
+                        vst_agb$agb_Cibotium, 
+                        vst_agb$agb)
+  
+  
+  ##  Assign quality flag: stemDiameter in Chojnacky range
+  vst_agb$agb_in_dia_range <- dplyr::if_else(vst_agb$stemDiameter >= vst_agb$minDiameter & vst_agb$stemDiameter <= vst_agb$maxDiameter &
+                                               vst_agb$agb_source == "Chojnacky_et_al_2014", 
+                                             "yes", 
+                                             "no",
+                                             "")
+  
+  vst_agb$agb_in_dia_range <- ifelse(vst_agb$agb_source != "Chojnacky_et_al_2014", 
+                                     NA,
+                                     vst_agb$agb_in_dia_range)
+  
+  
+  ##  Assumption: it's better to make assumptions about growthForm based on stemDiameter than to leave out records when scaling to area basis (which requires knowing what the the growthForm is)
+  #   Assume growthForm == "single bole tree" if stemDiameter >= 10 cm
+  vst_agb$growthForm <- dplyr::if_else(vst_agb$growthForm == "unknown" & vst_agb$stemDiameter >= 10, 
+                                       "single bole tree", 
+                                       vst_agb$growthForm,
+                                       vst_agb$growthForm)
+  
+  #   Assume growthForm == "small tree" if stemDiameter < 10 cm
+  vst_agb$growthForm <- dplyr::if_else(vst_agb$growthForm == "unknown" & vst_agb$stemDiameter < 10,
+                                       "small tree",
+                                       vst_agb$growthForm,
+                                       vst_agb$growthForm)
+  
+  
+  ##  Create unique plot x eventID identifier and year variables
   vst_agb$plot_eventID <- paste0(vst_agb$plotID, "_", vst_agb$eventID)
-  vst_agb$year <- as.numeric(substr(vst_agb$eventID,10,13) )
   
-  vst_agb <- vst_agb %>% dplyr::filter(!is.na(.data$plantStatus) & .data$plantStatus != "No longer qualifies" & .data$plantStatus != "Removed" & .data$plantStatus != "Lost, fate unknown" & .data$plantStatus != "Lost, tag damaged" & .data$plantStatus != "Lost, herbivory" & 
-                                         .data$plantStatus != "Lost, burned" & .data$plantStatus != "Lost, presumed dead" & .data$plantStatus != "Downed") # remove records with status that doesn't include unambiguous live or dead individuals
-  vst_agb <- vst_agb %>% dplyr::filter(!is.na(.data$agb) ) # remove records that have NA for biomass, before they become misleading zeros as a result of group_by function
+  vst_agb$year <- as.numeric(substr(vst_agb$eventID, 10, 13))
   
-  # Aggregate vst woody biomass data (assume that multiple instances of same individualID are true multiple boles and not accidental duplicates)
-  vst_agb_final <- vst_agb %>% dplyr::group_by(.data$plot_eventID, .data$eventID, .data$siteID, .data$plotID, .data$taxonID, .data$individualID, .data$plantStatus2, .data$growthForm,.data$year) %>% dplyr::summarise(agb = sum(.data$agb, na.rm = TRUE)) %>% dplyr::ungroup()
-  # This is the final biomass value for each individualID by year by plantStatus2 combo, which is subsequently used for both annual biomass summaries and NPP calculations for specified consecutive years
   
-  vst_agb_final  <- merge(vst_agb_final, perplot, by=c("plot_eventID", "eventID", "plotID", "year"), all.x=TRUE) # add total sampled areas
-  vst_agb_final$sampledAreaM2 <- ifelse(vst_agb_final$growthForm == "single bole tree" | vst_agb_final$growthForm == "multi-bole tree", vst_agb_final$totalSampledAreaTrees, NA )
-  vst_agb_final$sampledAreaM2 <- ifelse(vst_agb_final$growthForm == "single shrub" | vst_agb_final$growthForm == "small shrub" | vst_agb_final$growthForm == "sapling"  | vst_agb_final$growthForm == "small tree", 
-                                        vst_agb_final$totalSampledAreaShrubSapling, vst_agb_final$sampledAreaM2 )
-  vst_agb_final$sampledAreaM2 <- ifelse(vst_agb_final$growthForm == "liana", vst_agb_final$totalSampledAreaLiana, vst_agb_final$sampledAreaM2 )
-  vst_agb_final <- vst_agb_final %>% dplyr::filter(!is.na(.data$sampledAreaM2) ) # remove records that can't be scaled to area basis
-  vst_agb_final$agb_Mgha <- round(vst_agb_final$agb * 0.001 * (10000/vst_agb_final$sampledAreaM2), 6)   # multiply by 0.001 to convert from kg to Mg and then convert to ha (10,000m2) based on plot area
+  ##  Retain only those records with unambiguous live or dead plantStatus values
+  vst_agb <- vst_agb %>% 
+    dplyr::filter(!is.na(.data$plantStatus) & .data$plantStatus != "No longer qualifies" & .data$plantStatus != "Removed" &
+                    .data$plantStatus != "Lost, fate unknown" & .data$plantStatus != "Lost, tag damaged" &
+                    .data$plantStatus != "Lost, herbivory" & .data$plantStatus != "Lost, burned" &
+                    .data$plantStatus != "Lost, presumed dead" & .data$plantStatus != "Downed") 
   
+  
+  ##  Aggregate woody biomass data by individualID within 'year'
+  #   Remove records with NA biomass estimate to avoid assigning to zero due to group_by() output
+  vst_agb <- vst_agb %>% 
+    dplyr::filter(!is.na(.data$agb)) 
+  
+  #   Aggregate woody biomass data by 'individualID', 'plantStatus', and 'year': Assumes that multiple instances of same individualID are true multiple boles and not accidental duplicates. Output is used for both annual biomass summaries and NPP calculations for specified consecutive years.
+  vst_agb_final <- vst_agb %>% 
+    dplyr::group_by(.data$plot_eventID, 
+                    .data$eventID, 
+                    .data$siteID, 
+                    .data$plotID, 
+                    .data$taxonID, 
+                    .data$individualID, 
+                    .data$plantStatus2, 
+                    .data$growthForm,
+                    .data$year) %>% 
+    dplyr::summarise(agb = sum(.data$agb, na.rm = TRUE),
+                     .groups = "drop")
+  
+  
+  ##  Join AGB data with sampled areas from per plot input: Prep step for plot- and site-level biomass calculations
+  vst_agb_final  <- merge(vst_agb_final, 
+                          perplot, 
+                          by = c("plot_eventID", "eventID", "plotID", "year"), 
+                          all.x = TRUE)
+  
+  #   Assign total sampled area for trees
+  vst_agb_final$sampledAreaM2 <- ifelse(vst_agb_final$growthForm == "single bole tree" | vst_agb_final$growthForm == "multi-bole tree",
+                                        vst_agb_final$totalSampledAreaTrees,
+                                        NA)
+  
+  #   Assign total sampled area for saplings, small trees, shrubs, and small shrubs
+  vst_agb_final$sampledAreaM2 <- ifelse(vst_agb_final$growthForm == "single shrub" | vst_agb_final$growthForm == "small shrub" |
+                                          vst_agb_final$growthForm == "sapling"  | vst_agb_final$growthForm == "small tree",
+                                        vst_agb_final$totalSampledAreaShrubSapling,
+                                        vst_agb_final$sampledAreaM2)
+  
+  #   Assign total sampled area for lianas
+  vst_agb_final$sampledAreaM2 <- ifelse(vst_agb_final$growthForm == "liana", 
+                                        vst_agb_final$totalSampledAreaLiana,
+                                        vst_agb_final$sampledAreaM2)
+  
+  #   Remove records that cannot be scaled to a per area basis
+  vst_agb_final <- vst_agb_final %>% 
+    dplyr::filter(!is.na(.data$sampledAreaM2))
+  
+  #   Create "Mg/ha" biomass estimate for each record; used in downstream plot- and site-level biomass estimation
+  vst_agb_final$agb_Mgha <- round(vst_agb_final$agb * 0.001 * (10000/vst_agb_final$sampledAreaM2), 
+                                  digits = 6)
+  
+  
+  ##  Filter output based on user-supplied 'growthForm' argument
   if(growthForm == "shrubLiana") {
-    vst_agb_final <- vst_agb_final %>% dplyr::filter(.data$growthForm == "single shrub" | .data$growthForm == "small shrub" | .data$growthForm == "liana") }
-  
-  
-  if(growthForm == "tree") {
-    vst_agb_final <- vst_agb_final %>% dplyr::filter(.data$growthForm == "single bole tree" | .data$growthForm == "multi-bole tree"  | .data$growthForm == "sapling" | .data$growthForm == "small tree") }
-  
-  # vst_agb_per_ha <- vst_agb_final %>% dplyr::group_by(.data$plot_eventID, .data$eventID, .data$siteID, .data$plotID, .data$plotType, .data$nlcdClass, .data$taxonID, .data$individualID, .data$plantStatus2, .data$year) %>% dplyr::summarise(agb_Mgha = sum(.data$agb_Mgha, na.rm = TRUE)) %>% dplyr::ungroup()
-  #   # add up biomass per unit area for each plot x individualID x year x plantStatus2 x nlcdClass x taxonID combo (growthForm no longer needed since area has been calculated in previous steps)
-  
-  vst_agb_per_ha_appInd <- vst_agb_final %>% dplyr::group_by(.data$plot_eventID, .data$eventID, .data$siteID, .data$plotID, .data$plotType, .data$nlcdClass, .data$taxonID, .data$growthForm, .data$individualID, .data$plantStatus2, .data$year) %>% dplyr::summarise(agb_Mgha = sum(.data$agb_Mgha, na.rm = TRUE)) %>% dplyr::ungroup()
-  # add up biomass per unit area for each plot x individualID x year x plantStatus2 x nlcdClass x taxonID x growthForm combo  
-  
-  #################################################################################################
-  #################################################################################################
-  # combine vst_non-woody (vst_agb_per_ha_other) and vst_apparentindividual (vst_agb_per_ha_appInd)
-  if(methods::is(vst_nonWoody, class = "data.frame" )){ 
-    vst_agb_per_ha <- rbind(vst_agb_per_ha_appInd, vst_agb_per_ha_other) # combine woody and non-woody tables
-  } else {vst_agb_per_ha <- vst_agb_per_ha_appInd}
-  
-  if(growthForm == "other") {
-    vst_agb_per_ha <- vst_agb_per_ha %>% dplyr::filter(.data$growthForm == "tree fern" | .data$growthForm == "small tree fern" | .data$growthForm == "large tree fern"  | 
-                                                         .data$growthForm == "palm" | .data$growthForm == "small palm" | .data$growthForm == "palm tree" | 
-                                                         .data$growthForm == "ocotillo" | .data$growthForm == "xerophyllum"  | .data$growthForm == "yucca") }
-  
-  if(growthForm == "shrubLiana") {
-    vst_agb_per_ha <- vst_agb_per_ha %>% dplyr::filter(.data$growthForm == "single shrub" | .data$growthForm == "small shrub" | .data$growthForm == "liana") }
-  
-  
-  if(growthForm == "tree") {
-    vst_agb_per_ha <- vst_agb_per_ha %>% dplyr::filter(.data$growthForm == "single bole tree" | .data$growthForm == "multi-bole tree"  | .data$growthForm == "sapling" | .data$growthForm == "small tree") }
-  
-  # if growthForm is "all" then do no filtering by growthForm
-  
-  agb_ind_eventID_list <- unique(vst_agb_per_ha$plot_eventID) # build list of plot_eventIDs that had qualifying veg (e.g. large trees) sampled in perplot - later diff against perplot
-  
-  #################################################################################################
-  #################################################################################################
-  # identify plot by eventID combos that don't have biomass values, so that we can assign them values of 0
-  # create list of plot by eventID combos that have biomass values from vst woody, vst non-herb perennial, or both. 
-  
-  vst_agb_zeros <- base::setdiff(plot_eventID_list, agb_ind_eventID_list) # events in perplot plot_eventID list that aren't in agb_per_ha list (before filtering the increment)
-  vst_agb_zeros <- as.data.frame(vst_agb_zeros)
-  vst_agb_zeros <- dplyr::rename(vst_agb_zeros, plot_eventID = vst_agb_zeros)
-  vst_agb_zeros$plotID <- substr(vst_agb_zeros$plot_eventID,1,8)
-  vst_agb_zeros$siteID <- substr(vst_agb_zeros$plot_eventID,1,4)
-  vst_agb_zeros$year <- as.numeric(substr(vst_agb_zeros$plot_eventID,19,22) )
-  vst_agb_zeros$eventID <- substr(vst_agb_zeros$plot_eventID,10,22)
-  vst_agb_zeros <- merge(vst_agb_zeros, plotType_df, by = "plotID", all.x=TRUE)
-  
-  #################################################################################################  
-  #################################################################################################  
-  
-  
-  
-  ####### PLOT AND SITE-LEVEL BIOMASS SUMMARIES - not concerned here with year to year continuity or transitions from live to dead, etc.
-  vst_plot_summary <- vst_agb_per_ha %>% dplyr::group_by(.data$plot_eventID, .data$eventID, .data$siteID, .data$plotID, .data$plotType, .data$nlcdClass, .data$taxonID, .data$growthForm, .data$plantStatus2, .data$year) %>% dplyr::summarise(agb_Mgha = sum(.data$agb_Mgha, na.rm = TRUE)) 
-  # add up biomass per unit area for each plot x year x plantStatus2 x nlcdClass combo (aggegate individualIDs
-  vst_plot_wide <- tidyr::pivot_wider(vst_plot_summary, id_cols = c("plot_eventID", "eventID", "siteID", "plotID", "plotType", "nlcdClass", "taxonID", "growthForm", "year"), names_from = "plantStatus2", names_prefix = "agb_Mgha__", values_from = "agb_Mgha")  # transpose live and dead rows into separate columns
-  
-  vst_plot_wide[is.na(vst_plot_wide)] <- 0 # NAs created during transpose. Assumption that if Live individuals sampled then Dead were too, and vice versa
-  
-  # ## Aggregate data such that species IDs are retained but tree vs. woody distinction is lost
-  # if(nrow(vst_plot_wide > 0)) {vst_plot_wide <- vst_plot_wide %>% dplyr::group_by(.data$plot_eventID, .data$eventID, .data$siteID, .data$plotID, .data$plotType, .data$nlcdClass, .data$taxonID, .data$growthForm, .data$year) %>% dplyr::summarise(agb_Mgha__Live = sum(.data$agb_Mgha__Live, na.rm = TRUE),
-  #              agb_Mgha__Dead_or_Lost = sum(.data$agb_Mgha__Dead_or_Lost, na.rm = TRUE) ) # if same taxonID present in tree df and other df, sum them - loses the treSapShrLia vs nonHerbPer DP source distinction
-  # } else {
-  #   vst_plot_wide$agb_Mgha__Live = 0
-  #   vst_plot_wide$agb_Mgha__Dead_or_Lost= 0
-  # }
-  
-  # ADD PLOTS WITH 0 BIOMASS AND HERB BIOMASS - FORK FROM NPP CALCULATIONS   
-  vst_agb_zeros_plot <- vst_agb_zeros
-  if(nrow(vst_agb_zeros_plot) > 0) {vst_agb_zeros_plot$agb_Mgha__Dead_or_Lost <- vst_agb_zeros_plot$agb_Mgha__Live <- 0 }
-  
-  # add on plots with biomass of zero, and calculate site averages
-  vst_plot_w_0s <- rbind(vst_plot_wide, vst_agb_zeros_plot) # toggle on to add zeros for plots that were sampled but focal individuals not found (woody + nonHerbPer, just large trees, etc, depending on upstream filters)
-  
-  priority_plots_without_plotType <- priority_plots_all %>% dplyr::select(-"plotType")
-  vst_plot_w_0s <- merge(vst_plot_w_0s, priority_plots_without_plotType, by=c("plotID","eventID","year"), all.x=TRUE)
-  
-  vst_plot_w_0s <- vst_plot_w_0s %>% dplyr::filter(!is.na(.data$agb_Mgha__Live) & !is.na(.data$agb_Mgha__Dead_or_Lost) ) # remove records that are missing any productivity values
-  vst_plot_w_0s <- vst_plot_w_0s %>% dplyr::filter(.data$year >= start_from_input) # remove records from before the time of interest
-  if(plotType == "tower") {vst_plot_w_0s <- vst_plot_w_0s %>% dplyr::filter(.data$plotType == "tower") } # if arg plotType = "tower" then filter to just tower plots, otherwise keep all plots from input data
-  if(!is.na(plotPriority)) {vst_plot_w_0s <- vst_plot_w_0s %>% dplyr::filter(.data$specificModuleSamplingPriority <= plotPriority)} # remove lower priority plots that aren't required to be sampled every year (default is 5 (the 5 highest priority plots))
-  
-  vst_plot_w_0s_sum_taxa <- vst_plot_w_0s
-  if(nrow(vst_plot_w_0s_sum_taxa) > 0) {vst_plot_w_0s_sum_taxa <- vst_plot_w_0s %>% dplyr::group_by(.data$plot_eventID, .data$eventID, .data$siteID, .data$plotID, .data$plotType, .data$nlcdClass, .data$year) %>% dplyr::summarise(agb_Mgha__Live = sum(.data$agb_Mgha__Live, na.rm = TRUE),
-                                                                                                                                                                                                                                     agb_Mgha__Dead_or_Lost = sum(.data$agb_Mgha__Dead_or_Lost, na.rm = TRUE) ) # sum the taxonIDs within each plot in preparation for creating site level averages and other metrics
-  } else {
-    vst_plot_w_0s_sum_taxa$agb_Mgha__Live = 0
-    vst_plot_w_0s_sum_taxa$agb_Mgha__Dead_or_Lost= 0
+    
+    vst_agb_final <- vst_agb_final %>% 
+      dplyr::filter(.data$growthForm == "single shrub" | .data$growthForm == "small shrub" | .data$growthForm == "liana")
+    
   }
   
-  vst_site <- vst_plot_w_0s_sum_taxa %>% dplyr::group_by(.data$siteID, .data$year) %>% dplyr::summarise(woodPlotNum = dplyr::n(), woodLiveMassMean_Mgha = round(mean(.data$agb_Mgha__Live, na.rm = TRUE),3), 
-                                                                                                        woodLiveMassSD_Mgha = round(stats::sd(.data$agb_Mgha__Live, na.rm = TRUE),3))   
-  # calculate site - level averages of plots (including plots with 0 biomass), along with plot min, max, standard deviation and plot count
+  if(growthForm == "tree") {
+    
+    vst_agb_final <- vst_agb_final %>% 
+      dplyr::filter(.data$growthForm == "single bole tree" | .data$growthForm == "multi-bole tree"  | 
+                      .data$growthForm == "sapling" | .data$growthForm == "small tree") 
+    
+    }
   
+  
+  ##  Summarize estimated biomass per unit area for unique combinations of individualID x plantStatus x year
+  vst_agb_per_ha_appInd <- vst_agb_final %>% 
+    dplyr::group_by(.data$plot_eventID, 
+                    .data$eventID, 
+                    .data$siteID, 
+                    .data$plotID, 
+                    .data$plotType, 
+                    .data$nlcdClass, 
+                    .data$taxonID, 
+                    .data$growthForm, 
+                    .data$individualID, 
+                    .data$plantStatus2, 
+                    .data$year) %>% 
+    dplyr::summarise(agb_Mgha = sum(.data$agb_Mgha, na.rm = TRUE),
+                     .groups = "drop")
+  
+  
+  
+  ### Combine AGB for vst_apparentindividual (vst_agb_per_ha_appInd) and vst_nonWoody (vst_agb_per_ha_other)
+  
+  if (methods::is(vst_nonWoody, class = "data.frame" )) { 
+    vst_agb_per_ha <- rbind(vst_agb_per_ha_appInd, vst_agb_per_ha_other)
+  } else {
+    vst_agb_per_ha <- vst_agb_per_ha_appInd
+  }
+  
+  #   Filter combined output by user-supplied 'growthForm' argument
+  if (growthForm == "other") {
+    
+    vst_agb_per_ha <- vst_agb_per_ha %>% 
+      dplyr::filter(.data$growthForm == "tree fern" | .data$growthForm == "small tree fern" | .data$growthForm == "large tree fern"  |
+                      .data$growthForm == "palm" | .data$growthForm == "small palm" | .data$growthForm == "palm tree" | 
+                      .data$growthForm == "ocotillo" | .data$growthForm == "xerophyllum"  | .data$growthForm == "yucca")
+    
+  }
+  
+  if (growthForm == "shrubLiana") {
+    
+    vst_agb_per_ha <- vst_agb_per_ha %>% 
+      dplyr::filter(.data$growthForm == "single shrub" | .data$growthForm == "small shrub" | .data$growthForm == "liana") 
+    
+  }
+  
+  if (growthForm == "tree") {
+    
+    vst_agb_per_ha <- vst_agb_per_ha %>% 
+      dplyr::filter(.data$growthForm == "single bole tree" | .data$growthForm == "multi-bole tree"  | .data$growthForm == "sapling" |
+                      .data$growthForm == "small tree")
+    
+  }
+  
+  
+  ##  Create list of plot x eventIDs from vst_apparentindividaul data; later diff against what is reported in perplot data
+  agb_ind_eventID_list <- unique(vst_agb_per_ha$plot_eventID)
+  
+  
+  ##  Identify plot by eventID combos that don't have biomass values
+  vst_agb_zeros <- base::setdiff(plot_eventID_list, agb_ind_eventID_list)
+  
+  vst_agb_zeros <- as.data.frame(vst_agb_zeros)
+  
+  vst_agb_zeros <- dplyr::rename(vst_agb_zeros, 
+                                 plot_eventID = vst_agb_zeros)
+  
+  vst_agb_zeros$plotID <- substr(vst_agb_zeros$plot_eventID, 1, 8)
+  
+  vst_agb_zeros$siteID <- substr(vst_agb_zeros$plot_eventID, 1, 4)
+  
+  vst_agb_zeros$year <- as.numeric(substr(vst_agb_zeros$plot_eventID, 19, 22))
+  
+  vst_agb_zeros$eventID <- substr(vst_agb_zeros$plot_eventID, 10, 22)
+  
+  vst_agb_zeros <- merge(vst_agb_zeros,
+                         plotType_df, 
+                         by = "plotID",
+                         all.x = TRUE)
+  
+  
+  
+  ### Generate plot-level biomass summary ####
+  
+  #   Sum biomass per unit area for each plot x year x plantStatus2 x nlcdClass combo (aggegate across individualIDs)
+  vst_plot_summary <- vst_agb_per_ha %>% 
+    dplyr::group_by(.data$plot_eventID, 
+                    .data$eventID, 
+                    .data$siteID, 
+                    .data$plotID, 
+                    .data$plotType, 
+                    .data$nlcdClass, 
+                    .data$taxonID, 
+                    .data$growthForm, 
+                    .data$plantStatus2, 
+                    .data$year) %>% 
+    dplyr::summarise(agb_Mgha = sum(.data$agb_Mgha, na.rm = TRUE),
+                     .groups = "drop") 
+  
+  #   Within a given year, transpose live and dead AGB into separate columns
+  vst_plot_wide <- tidyr::pivot_wider(vst_plot_summary, 
+                                      id_cols = c("plot_eventID", "eventID", "siteID", "plotID",
+                                                  "plotType", "nlcdClass", "taxonID", "growthForm", "year"),
+                                      names_from = "plantStatus2", 
+                                      names_prefix = "agb_Mgha__", 
+                                      values_from = "agb_Mgha")
+  
+  #   Assumption: Replace NAs created during transpose with zeroes; assume both live and dead were sampled in a plot
+  vst_plot_wide[is.na(vst_plot_wide)] <- 0
+  
+  
+  #   Assign zero AGB values to plots with zero biomass
+  vst_agb_zeros_plot <- vst_agb_zeros
+  
+  if (nrow(vst_agb_zeros_plot) > 0) {
+    vst_agb_zeros_plot$agb_Mgha__Dead_or_Lost <- vst_agb_zeros_plot$agb_Mgha__Live <- 0 
+  }
+  
+  #   Add rows for plots with zero biomass to plots with AGB
+  vst_plot_w_0s <- rbind(vst_plot_wide, 
+                         vst_agb_zeros_plot)
+  
+  #   Add 'specificModuleSamplingPriority' column to output
+  priority_plots_without_plotType <- priority_plots_all %>% 
+    dplyr::select(-"plotType")
+  
+  vst_plot_w_0s <- merge(vst_plot_w_0s, 
+                         priority_plots_without_plotType, 
+                         by = c("plotID", "eventID", "year"), 
+                         all.x = TRUE)
+  
+  #   Retain AGB estimates for records with values for both live and dead biomass
+  vst_plot_w_0s <- vst_plot_w_0s %>% 
+    dplyr::filter(!is.na(.data$agb_Mgha__Live) & !is.na(.data$agb_Mgha__Dead_or_Lost))
+  
+  #   Retain records within data-prescribed 'year' range
+  vst_plot_w_0s <- vst_plot_w_0s %>% 
+    dplyr::filter(.data$year >= start_from_input)
+  
+  
+  #   Remove records based on user-supplied 'plotType' and 'plotPriority' arguments
+  if (plotType == "tower") {
+    
+    vst_plot_w_0s <- vst_plot_w_0s %>% 
+      dplyr::filter(.data$plotType == "tower") 
+    
+  }
+  
+  if (!is.na(plotPriority)) {
+    
+    vst_plot_w_0s <- vst_plot_w_0s %>% 
+      dplyr::filter(.data$specificModuleSamplingPriority <= plotPriority)
+    
+  }
+  
+  
+  
+  ### Generate site-level biomass summary ####
+  
+  #   First sum AGB at the plot level - i.e., remove intra-plot granularity from growthForm, taxonID, etc.
+  vst_plot_w_0s_sum_taxa <- vst_plot_w_0s
+  
+  if(nrow(vst_plot_w_0s_sum_taxa) > 0) {
+    
+    vst_plot_w_0s_sum_taxa <- vst_plot_w_0s %>% 
+      dplyr::group_by(.data$plot_eventID, 
+                      .data$eventID, 
+                      .data$siteID, 
+                      .data$plotID, 
+                      .data$plotType, 
+                      .data$nlcdClass, 
+                      .data$year) %>% 
+      dplyr::summarise(agb_Mgha__Live = sum(.data$agb_Mgha__Live, na.rm = TRUE),
+                       agb_Mgha__Dead_or_Lost = sum(.data$agb_Mgha__Dead_or_Lost, na.rm = TRUE),
+                       .groups = "drop")
+    
+  } else {
+    
+    vst_plot_w_0s_sum_taxa$agb_Mgha__Live = 0
+    vst_plot_w_0s_sum_taxa$agb_Mgha__Dead_or_Lost = 0
+    
+  }
+  
+  #   Create site-level summary table: mean, sd, n()
+  vst_site <- vst_plot_w_0s_sum_taxa %>% 
+    dplyr::group_by(.data$siteID, 
+                    .data$year) %>% 
+    dplyr::summarise(woodPlotNum = dplyr::n(), 
+                     woodLiveMassMean_Mgha = round(mean(.data$agb_Mgha__Live, na.rm = TRUE), 
+                                                   digits = 3), 
+                     woodLiveMassSD_Mgha = round(stats::sd(.data$agb_Mgha__Live, na.rm = TRUE), 
+                                                 digits = 3),
+                     .groups = "drop")
+  
+  
+  ##  Clean-up: Remove unneeded columns and add back complete plotType and domainID fields
+  #   Remove 'year' column from 'priority_plots' data frame
   priority_plots$year <- NULL
-  vst_plot_w_0s$plotType <- NULL #  plotType field only partially populated so remove
-  vst_plot_w_0s <- merge(vst_plot_w_0s, plotType_df, by="plotID", all.x = TRUE) # add fully populated plotType field
-  domainID_df <- unique(appInd %>% dplyr::select("siteID", "domainID") )
-  vst_plot_w_0s <- merge(vst_plot_w_0s, domainID_df, by="siteID", all.x=TRUE)
   
-  print("Returning woody biomass output data frames as a list object  ..... ")
+  #  Remove 'plotType' field since only partially populated, then add back complete 'plotType' and 'domainID'
+  vst_plot_w_0s$plotType <- NULL 
   
-  output.list <- list(
-    vst_agb_per_ha = vst_agb_per_ha,
-    vst_plot_w_0s = vst_plot_w_0s,
-    vst_agb_zeros = vst_agb_zeros,
-    vst_site = vst_site
-  )
+  vst_plot_w_0s <- merge(vst_plot_w_0s, 
+                         plotType_df, 
+                         by = "plotID",
+                         all.x = TRUE)
+  
+  domainID_df <- unique(appInd %>% dplyr::select("siteID", "domainID"))
+  
+  vst_plot_w_0s <- merge(vst_plot_w_0s, 
+                         domainID_df, 
+                         by = "siteID",
+                         all.x = TRUE)
+  
+  
+  
+  ### Bundle and return output
+  message("Returning woody biomass output data frames as a list object  ..... ")
+  
+  output.list <- list(vst_agb_per_ha = vst_agb_per_ha,
+                      vst_plot_w_0s = vst_plot_w_0s,
+                      vst_agb_zeros = vst_agb_zeros,
+                      vst_site = vst_site)
+  
   return(output.list)
 }
