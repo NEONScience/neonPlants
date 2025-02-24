@@ -155,19 +155,12 @@ scaleHerbMass = function(inputDataList,
                                 "Unknown",
                                 inputMass$herbGroup)
   
-  #   Filter mass data to retain only qaDryMass == N (to avoid duplicates when there is a qa sample too)
-  inputMass <- inputMass %>% 
-    dplyr::filter(.data$qaDryMass == 'N' & .data$herbGroup != "Bryophyte") %>% 
-    dplyr::select("sampleID", 
-                  "subsampleID",
-                  "herbGroup",
-                  "dryMass")
-  
-  #   Calculate the average of any duplicates within 'herbGroup'
+  #   Calculate the average of any 'qaDryMass' replicates or duplicates within 'herbGroup'
   inputMass <- inputMass  %>% 
-    dplyr::group_by_at(dplyr::vars("sampleID", 
-                                   "subsampleID", 
-                                   "herbGroup")) %>% 
+    dplyr::filter((.data$samplingImpractical == "OK" | is.na(.data$samplingImpractical)) & .data$herbGroup != "Bryophyte") %>%
+    dplyr::group_by(.data$sampleID, 
+                       .data$subsampleID, 
+                       .data$herbGroup) %>% 
     dplyr::summarise(dryMass = mean(.data$dryMass),
                      .groups = "drop")
   
@@ -244,8 +237,7 @@ scaleHerbMass = function(inputDataList,
                                              "exclosure",
                                              "peak"), 
                                  names_from = "herbGroup",
-                                 names_prefix = "dryMass_gm2_", 
-                                 #names_glue = "{herbGroup}_gm2",
+                                 names_glue = "{herbGroup}_gm2",
                                  values_from = "dryMass_gm2")
   
   #   Aggregate dryMass among herbGroups in peak biomass bouts
@@ -254,7 +246,7 @@ scaleHerbMass = function(inputDataList,
     dplyr::mutate(peak = "atPeak")
   
   hbp_peak_biomass_sum_groups <- hbp_peak_biomass_herb_groups %>% 
-    dplyr::group_by_at(dplyr::vars("sampleID")) %>% 
+    dplyr::group_by(.data$sampleID) %>% 
     dplyr::summarise(dryMassSum = sum(.data$dryMass_gm2)) 
   
   #   Populate "All herbaceous plants" column for peak biomass bouts
@@ -263,9 +255,9 @@ scaleHerbMass = function(inputDataList,
                 by = "sampleID", 
                 all.x = TRUE)
   
-  hbp2$dryMass_gm2_AllHerbaceousPlants <- ifelse(is.na(hbp2$dryMass_gm2_AllHerbaceousPlants),
+  hbp2$AllHerbaceousPlants_gm2 <- ifelse(is.na(hbp2$AllHerbaceousPlants_gm2),
                                                  hbp2$dryMassSum,
-                                                 hbp2$dryMass_gm2_AllHerbaceousPlants)
+                                                 hbp2$AllHerbaceousPlants_gm2)
   
   
   
@@ -284,8 +276,6 @@ scaleHerbMass = function(inputDataList,
   #   Group by eventID and average across sampling cells (across plots) within a treatment group (exclosure Y/N)
   #   Possible for consumption to be negative. To get total NPP = last bout Standing biomass + consumption estimated for each time step. 
   
-  hbp_agb <- hbp_standing_biomass_in_clip_cells # %>% dplyr::filter(.data$peak == "atPeak")
-  
   hbp_plot <- hbp_standing_biomass_in_clip_cells %>% 
     dplyr::filter(.data$peak == 'atPeak' & .data$exclosure == 'N') %>% 
     dplyr::group_by(.data$siteID, 
@@ -295,26 +285,26 @@ scaleHerbMass = function(inputDataList,
     
     #   Calculate average per plot if there are multiple subplots
     dplyr::summarise(
-      herbPeakMassTotal_gm2 = round(mean(.data$dryMass_gm2_AllHerbaceousPlants, na.rm = TRUE),
-                                    digits = 3),
-      herbPeakMassCoolSeasonGraminoids_gm2 = round(mean(.data$dryMass_gm2_CoolSeasonGraminoids, na.rm = TRUE),
-                                                   digits = 3),
-      herbPeakMassWoodyStemmedPlants_gm2 = round(mean(.data$dryMass_gm2_WoodyStemmedPlants, na.rm = TRUE),
-                                                 digits = 3),
-      herbPeakMassCoolSeasonGraminoids_gm2 = round(mean(.data$dryMass_gm2_CoolSeasonGraminoids, na.rm = TRUE),
-                                                   digits = 3),
-      herbPeakMassWarmSeasonGraminoids = round(mean(.data$dryMass_gm2_WarmSeasonGraminoids, na.rm = TRUE),
-                                               digits = 3),
-      herbPeakMassNFixingPlants_gm2 = round(mean(.data$dryMass_gm2_NFixingPlants, na.rm = TRUE),
-                                            digits = 3),
-      herbPeakMassCoolSeasonGraminoids_gm2 = round(mean(.data$dryMass_gm2_CoolSeasonGraminoids, na.rm = TRUE),
-                                                   digits = 3),
-      herbPeakMassAnnualAndPerennialForbs_gm2 = round(mean(.data$dryMass_gm2_AnnualAndPerennialForbs, na.rm = TRUE),
-                                                      digits = 3),
+      herbPeakMassTotal_gm2 = round(mean(.data$AllHerbaceousPlants_gm2, na.rm = TRUE),
+                                    digits = 2),
+      herbPeakMassCoolSeasonGraminoids_gm2 = round(mean(.data$CoolSeasonGraminoids_gm2, na.rm = TRUE),
+                                                   digits = 2),
+      herbPeakMassWoodyStemmedPlants_gm2 = round(mean(.data$WoodyStemmedPlants_gm2, na.rm = TRUE),
+                                                 digits = 2),
+      herbPeakMassCoolSeasonGraminoids_gm2 = round(mean(.data$CoolSeasonGraminoids_gm2, na.rm = TRUE),
+                                                   digits = 2),
+      herbPeakMassWarmSeasonGraminoids = round(mean(.data$WarmSeasonGraminoids_gm2, na.rm = TRUE),
+                                               digits = 2),
+      herbPeakMassNFixingPlants_gm2 = round(mean(.data$NFixingPlants_gm2, na.rm = TRUE),
+                                            digits = 2),
+      herbPeakMassCoolSeasonGraminoids_gm2 = round(mean(.data$CoolSeasonGraminoids_gm2, na.rm = TRUE),
+                                                   digits = 2),
+      herbPeakMassAnnualAndPerennialForbs_gm2 = round(mean(.data$AnnualAndPerennialForbs_gm2, na.rm = TRUE),
+                                                      digits = 2),
       .groups = "drop")
   
   #   Calculate "Mg/ha" for total herbaceous peak biomass; g/m2 x 10,000 m2/ha x 0.000001 Mg/g = Mg/ha
-  hbp_plot$herbPeakMassTotal_Mgha <- hbp_plot$herbPeakMassTotal_gm2 * 10000 * 0.000001
+  hbp_plot$herbPeakMassTotal_Mgha <-  round(hbp_plot$herbPeakMassTotal_gm2 * 10000 * 0.000001, digits = 2)
   
   
   ##  Filter output according to user-supplied arguments
@@ -333,7 +323,7 @@ scaleHerbMass = function(inputDataList,
       dplyr::filter(.data$plotType == "tower")
   }
   
-  #   Remove plots that do not meet 'priority' thresholds if 'plotPriority' supplied (default is 5 highest priority plots)
+  #   Remove plots that do not meet 'priority' thresholds if 'plotPriority' supplied
   if(!is.na(plotPriority)) {
     
     hbp_plot <- hbp_plot %>% 
@@ -372,7 +362,7 @@ scaleHerbMass = function(inputDataList,
   
   
   ### Bundle output as list and return
-  output.list <- list(hbp_agb = hbp_agb,
+  output.list <- list(hbp_agb = hbp_standing_biomass_in_clip_cells,
                       hbp_plot = hbp_plot,
                       hbp_site = hbp_site)
   
