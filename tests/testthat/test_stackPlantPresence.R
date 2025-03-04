@@ -45,6 +45,35 @@ testthat::test_that(desc = "Output class table input", {
 
 
 
+### Test: Function converts old subplotID types correctly
+testthat::test_that(desc = "subplotID contains only the expected values", {
+  
+  # Filter and mutate the first dataframe
+  filtered_1m2Data <- test_div_1m2Data %>%
+    dplyr::filter(uid == "b2313e67-aa8d-48e2-8689-5b2781f9ee68") %>%
+    dplyr::mutate(subplotID = replace(subplotID, subplotID == "31_1_1", "31.1.1"))
+  
+  # Filter and mutate the second dataframe
+  filtered_10m2Data <- test_div_10m2Data100m2Data %>%
+    dplyr::filter(uid %in% c("bbcbcee8-e8c2-48b0-a1ff-8b65e4fa08f4", "c8876aed-69d9-40d9-9cfe-1927a9340f2a")) %>%
+    dplyr::mutate(subplotID = dplyr::case_when(
+      subplotID == "31_10_1" ~ "31.1.10",
+      subplotID == "31_100" ~ "31",
+      TRUE ~ subplotID
+    ))
+  
+  # Call stackPlantPresence with the filtered dataframes
+  result <- stackPlantPresence(input_1m2Data = filtered_1m2Data, input_10m2Data100m2Data = filtered_10m2Data)
+  
+  # Test that all subplotID values in the result are in the allowed set
+  testthat::expect_true(
+    all(result$subplotID %in% c("31_1_1", "31_10_1", "31_100", "400")),
+    info = "Not all values in subplotID are from the allowed set"
+  )
+})
+
+
+
 ### Test: Function generates data frame with expected dimensions using test data
 ##  Test list input
 #   Check expected row number of output

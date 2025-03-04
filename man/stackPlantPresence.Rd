@@ -18,7 +18,7 @@ stackPlantPresence(
 
 \item{input_10m2Data100m2Data}{The 'div_10m2Data100m2Data' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 
-\item{totalSampledAreaFilter}{The subplot (1m2, 10m2, 100m2) or plot (400m2) size for which data are returned. Default (NA) will return data for all subplot and plot sizes. If a plot size is selected, the function will filter the data returned to the desired subplot or plot size. Input options are NA, 1, 10, 100, 400. Note that selecting 1 does not  \link{integer}}
+\item{totalSampledAreaFilter}{The subplot (1m2, 10m2, 100m2) or plot (400m2) size for which data are returned. Default (NA) will return data for all subplot and plot sizes. If a plot size is selected, the function will filter the data returned to the desired subplot or plot size. Input options are NA, 1, 10, 100, 400.  \link{integer}}
 }
 \value{
 This function returns a data frame that aggregates plant species lists for all subplots (or as defined in argument 'totalSampledAreaFilter') and for the entire plot where subplotID is '400' (see Data Product documentation for subplot description). The column 'totalSampledArea' is also created to reflect the size of the subplot or plot in square meters in which a given taxon was detected. Description of other columns can be found in the Data Product User Guide.
