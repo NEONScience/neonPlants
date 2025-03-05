@@ -3,6 +3,7 @@
 export("%>%")
 export(estimatePheDurationByTag)
 export(estimatePheTransByTag)
+export(estimateWoodMass)
 export(joinRootChem)
 export(scaleHerbMass)
 export(scaleRootMass)

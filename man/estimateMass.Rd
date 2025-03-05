@@ -7,12 +7,13 @@
 estimateMass(
   dataProducts = c("Vst", "Hbp"),
   inputDataListVst = NA,
-  vst_apparentindividual = NA,
-  vst_mappingandtagging = NA,
-  vst_perplotperyear = NA,
+  wood_apparentindividual = NA,
+  wood_mappingandtagging = NA,
+  wood_nonWoody = NA,
+  wood_perplotperyear = NA,
   inputDataListHbp = NA,
-  hbp_perbout = NA,
-  hbp_massdata = NA,
+  herb_perbout = NA,
+  herb_massdata = NA,
   inputDataListBbc = NA,
   inputCore = NA,
   inputMass = NA,
@@ -30,25 +31,28 @@ clip harvest, respectively. The other option currently available is "Bbc" for Ro
 
 \item{inputDataListVst}{A list object comprised of "Vegetation structure" tables (DP1.10098.001) downloaded using the neonUtilities::loadByProduct function.
 If list input is provided, the table input arguments must all be NA; similarly, if list input is missing and "Vst" is included in dataProducts argument, table
-inputs must be provided for 'vst_apparentindividual', 'vst_mappingandtagging', and 'vst_perplotperyear' arguments. \link{list}}
+inputs must be provided for 'wood_apparentindividual', 'wood_mappingandtagging', 'wood_nonWoody', and 'wood_perplotperyear' arguments. \link{list}}
 
-\item{vst_apparentindividual}{The 'vst_apparentindividual' table for the site x month combination(s) of interest
+\item{wood_apparentindividual}{The 'vst_apparentindividual' table for the site x month combination(s) of interest
 (defaults to NA). If table input is provided, the 'inputDataListVst' argument must be missing. \link{data.frame}}
 
-\item{vst_mappingandtagging}{The 'vst_mappingandtagging' table for the site x month combination(s) of interest
+\item{wood_mappingandtagging}{The 'vst_mappingandtagging' table for the site x month combination(s) of interest
 (defaults to NA). If table input is provided, the 'inputDataListVst' argument must be missing. \link{data.frame}}
 
-\item{vst_perplotperyear}{The 'vst_perplotperyear' table for the site x month combination(s) of interest
+\item{wood_nonWoody}{The 'vst_non-woody' table for the site x month combination(s) of interest
+(defaults to NA). If table input is provided, the 'inputDataListVst' argument must be missing. \link{data.frame}}
+
+\item{wood_perplotperyear}{The 'vst_perplotperyear' table for the site x month combination(s) of interest
 (defaults to NA). If table input is provided, the 'inputDataListVst' argument must be missing. \link{data.frame}}
 
 \item{inputDataListHbp}{A list object comprised of "Herbaceous clip harvest" tables (DP1.10023.001) downloaded using the neonUtilities::loadByProduct function.
 If list input is provided, the table input arguments must all be NA; similarly, if list input is missing, table inputs must be provided for
-'hbp_perbout', and 'hbp_massdata' arguments. \link{list}}
+'herb_perbout', and 'herb_massdata' arguments. \link{list}}
 
-\item{hbp_perbout}{The 'hbp_perbout' table for the site x month combination(s) of interest
+\item{herb_perbout}{The 'hbp_perbout' table for the site x month combination(s) of interest
 (defaults to NA). If table input is provided, the 'inputDataListHbp' argument must be missing. \link{data.frame}}
 
-\item{hbp_massdata}{The 'hbp_massdata' table for the site x month combination(s) of interest
+\item{herb_massdata}{The 'hbp_massdata' table for the site x month combination(s) of interest
 (defaults to NA). If table input is provided, the 'inputDataListHbp' argument must be missing. \link{data.frame}}
 
 \item{inputDataListBbc}{A list object comprised of Plant Below Ground Biomass tables (DP1.10067.001)

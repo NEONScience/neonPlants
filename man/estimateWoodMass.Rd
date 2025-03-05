@@ -2,77 +2,78 @@
 % Please edit documentation in R/estimateWoodMass.R
 \name{estimateWoodMass}
 \alias{estimateWoodMass}
-\title{Estimate NEON aboveground biomass (AGB) contributed by woody vegetation}
+\title{Estimate above-ground biomass of woody vegetation}
 \usage{
 estimateWoodMass(
   inputDataList,
-  vst_apparentindividual = NA,
-  vst_mappingandtagging = NA,
-  vst_perplotperyear = NA,
+  inputIndividual = NA,
+  inputMapTag = NA,
+  inputNonWoody = NA,
+  inputPerPlot = NA,
   growthForm = "all",
   plotType = "tower",
   plotPriority = 5
 )
 }
 \arguments{
-\item{inputDataList}{A list object comprised of "Vegetation structure" tables (DP1.10098.001) downloaded using the neonUtilities::loadByProduct function.
-If list input is provided, the table input arguments must all be NA; similarly, if list input is missing, table inputs must be provided for
-'vst_apparentindividual', 'vst_mappingandtagging', and 'vst_perplotperyear' arguments. \link{list}}
+\item{inputDataList}{A list object comprised of "Vegetation structure" tables (DP1.10098.001) downloaded using the neonUtilities::loadByProduct() function. If list input is provided, the table input arguments must all be NA; similarly, if list input is missing, table inputs must be provided for 'inputIndividual', 'inputMapTag', and 'inputPerPlot' arguments. \link{list}}
 
-\item{vst_apparentindividual}{The 'vst_apparentindividual' table for the site x month combination(s) of interest
+\item{inputIndividual}{The 'vst_apparentindividual' table for the site x month combination(s) of interest
 (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 
-\item{vst_mappingandtagging}{The 'vst_mappingandtagging' table for the site x month combination(s) of interest
+\item{inputMapTag}{The 'vst_mappingandtagging' table for the site x month combination(s) of interest
 (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 
-\item{vst_perplotperyear}{The 'vst_perplotperyear' table for the site x month combination(s) of interest
+\item{inputNonWoody}{The 'vst_non-woody' table for the site x month combination(s) of interest
 (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 
-\item{growthForm}{Select which growth forms to analyse. Options are "all", "tree", "shrubLiana", or "other". \link{character}}
+\item{inputPerPlot}{The 'vst_perplotperyear' table for the site x month combination(s) of interest
+(defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 
-\item{plotType}{Optional filter based on NEON plot type. Defaults to "tower" plots, which are sampled annually. Otherwise "distributed" plots are examined also. \link{character}}
+\item{growthForm}{Select which growth forms to analyse. Options are "all", "tree", "shrubLiana", or "other". Consult the Vegetation Structure Quick Start Guide and/or the Data Product User Guide for more growth form information. \link{character}}
 
-\item{plotPriority}{NEON plots have a priority number in the event that not all plots are able to be sampled. The lower the number the higher the priority. The default is 5. \link{numeric}}
+\item{plotType}{Optional filter for NEON plot type. Options are "tower" (default) or "all". A subset of 5 Tower plots are sampled annually (those plots with the highest plot priority), and remaining Tower plots are scheduled every 5 years. If "all" is selected, results include data from Distributed plots that are also sampled every 5 years. \link{character}}
+
+\item{plotPriority}{NEON plots have a priority number in the event that not all scheduled plots can be sampled. The lower the number the higher the priority. The default is the 5 highest priority Tower plots that are sampled annually. \link{integer}}
 }
 \value{
-This function returns a list that includes biomass summary data frames and a helper data frame
-for companion productivity script.
-'vst_agb_per_ha' summarizes above-ground live woody biomass for each individual (units are Megagrams per hectare).
-'vst_plot_w_0s' summarizes above-ground live and dead woody biomass for each plot (units are Megagrams per hectare).
-'vst_agb_zeros' is a helper for productivity that contains plot by year combos with biomass of 0.
-'vst_site' summarizes above-ground live and dead woody biomass for each site (units are Megagrams per hectare).
+A list that includes biomass summary data frames and a helper data frame for needed by companion productivity functions - e.g., the estimateProd() function. Output tables include:
+\itemize{
+\item vst_agb_kg - Summarizes above-ground live and dead woody biomass for each individual ("kg").
+\item vst_plot_w_0s - Summarizes above-ground live and dead woody biomass for each plot ("Mg/ha").
+\item vst_agb_zeros - Helper output for productivity estimation that contains plot x year combinations with biomass of zero.
+\item vst_site - Summarizes above-ground live and dead woody biomass for each site x year combination in the data. ("Mg/ha").
+}
 }
 \description{
-Use allometric equations to calculate biomass for each VST woody record and summarise biomass by siteID, plotID, and taxonID.
-Biomass outputs can, if desired, be used in the follow-up estimateWoodProd productivity function. Data inputs are "Vegetation structure"
-(DP1.10098.001) retrieved using the neonUtilities::loadByProduct() function (preferred), or data downloaded from the NEON Data Portal.
+Use allometric equations to estimate above-ground biomass for woody individuals and summarise results as mass per unit area for siteID, plotID, and taxonID. Biomass outputs can be used in the neonPlants estimateMass() function, and the estimateWoodProd() and estimateProd() productivity functions.
+
+Data inputs are "Vegetation structure" data (DP1.10098.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input tables with an equivalent structure and representing the same site x month combinations.
 }
 \details{
-Input data can be filtered by plot type and plot priority. Input data are combined with supplemental static tables
-with allometric equation parameters and taxon specific characteristics, and biomass is estimated by allometric equations for each individual.
-Generalized allometric equations are applied first, and replaced by taxon specific equations if available. Only the set of growth forms selected via the
-growthForm parameter are included in outputs. The nonWoody "cactus" and "ferns" (non-tree) growthForms are not yet included, pending selection of
-appropriate allometric equations. Biomass is summarized on an areal basis at the hierarchical level of the plot and site.
+Input data can be filtered by plot type and plot priority. Input data are combined with allometric equation parameters and taxon specific characteristics, and biomass is estimated for each individual using allometric equations. Generalized allometric equations are applied first and are replaced by taxon-specific equations if available. Only the set of growth forms selected via the growthForm parameter are included in outputs. The non-woody "cactus" and "ferns" growthForms are not currently included. Biomass is summarized on an areal basis at the hierarchical level of the plot and site.
 }
 \examples{
 \dontrun{
 # Obtain NEON Vegetation structure
-VstDat <- neonUtilities::loadByProduct(dpID="DP1.10098.001", 
-     package = "basic", check.size = FALSE)
-     
-# If list is not in memory, load VST list of dataframes from local file:
-load('VstDat.rds') # load NEON VST portal data from a local file
+VstDat <- neonUtilities::loadByProduct(
+dpID="DP1.10098.001", 
+package = "basic", 
+check.size = FALSE
+)
 
 # example with arguments at default values
 estimateWoodMassOutputs <- estimateWoodMass(inputDataList = VstDat)
 
 # example specifying several non-default arguments
-estimateWoodMassOutputs <- estimateWoodMass(inputDataList = VstDat,
-                                             growthForm = "tree", plotPriority = 4)
+estimateWoodMassOutputs <- estimateWoodMass(
+inputDataList = VstDat,
+growthForm = "tree",
+plotPriority = 5
+)
 
-list2env(estimateWoodMassOutputs ,.GlobalEnv) # unlist all data frames
-saveRDS(estimateWoodMassOutputs, 'estimateWoodMassOutputs.rds') # save all outputs locally
 }
+
 }
 \author{
 Samuel M Simkin \email{ssimkin@battelleecology.org} \cr

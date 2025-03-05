@@ -18,20 +18,22 @@
 
 #' @param inputDataListVst A list object comprised of "Vegetation structure" tables (DP1.10098.001) downloaded using the neonUtilities::loadByProduct function. 
 #' If list input is provided, the table input arguments must all be NA; similarly, if list input is missing and "Vst" is included in dataProducts argument, table 
-#' inputs must be provided for 'vst_apparentindividual', 'vst_mappingandtagging', and 'vst_perplotperyear' arguments. [list]
-#' @param vst_apparentindividual The 'vst_apparentindividual' table for the site x month combination(s) of interest
+#' inputs must be provided for 'wood_apparentindividual', 'wood_mappingandtagging', 'wood_nonWoody', and 'wood_perplotperyear' arguments. [list]
+#' @param wood_apparentindividual The 'vst_apparentindividual' table for the site x month combination(s) of interest
 #' (defaults to NA). If table input is provided, the 'inputDataListVst' argument must be missing. [data.frame]
-#' @param vst_mappingandtagging The 'vst_mappingandtagging' table for the site x month combination(s) of interest
+#' @param wood_mappingandtagging The 'vst_mappingandtagging' table for the site x month combination(s) of interest
 #' (defaults to NA). If table input is provided, the 'inputDataListVst' argument must be missing. [data.frame]
-#' @param vst_perplotperyear The 'vst_perplotperyear' table for the site x month combination(s) of interest
+#' @param wood_nonWoody The 'vst_non-woody' table for the site x month combination(s) of interest
+#' (defaults to NA). If table input is provided, the 'inputDataListVst' argument must be missing. [data.frame]
+#' @param wood_perplotperyear The 'vst_perplotperyear' table for the site x month combination(s) of interest
 #' (defaults to NA). If table input is provided, the 'inputDataListVst' argument must be missing. [data.frame]
 
 #' @param inputDataListHbp A list object comprised of "Herbaceous clip harvest" tables (DP1.10023.001) downloaded using the neonUtilities::loadByProduct function. 
 #' If list input is provided, the table input arguments must all be NA; similarly, if list input is missing, table inputs must be provided for 
-#' 'hbp_perbout', and 'hbp_massdata' arguments. [list]
-#' @param hbp_perbout The 'hbp_perbout' table for the site x month combination(s) of interest
+#' 'herb_perbout', and 'herb_massdata' arguments. [list]
+#' @param herb_perbout The 'hbp_perbout' table for the site x month combination(s) of interest
 #' (defaults to NA). If table input is provided, the 'inputDataListHbp' argument must be missing. [data.frame]
-#' @param hbp_massdata The 'hbp_massdata' table for the site x month combination(s) of interest
+#' @param herb_massdata The 'hbp_massdata' table for the site x month combination(s) of interest
 #' (defaults to NA). If table input is provided, the 'inputDataListHbp' argument must be missing. [data.frame]
 
 #' @param inputDataListBbc A list object comprised of Plant Below Ground Biomass tables (DP1.10067.001) 
@@ -88,12 +90,13 @@
 
 estimateMass = function(dataProducts = c("Vst","Hbp"),
                        inputDataListVst = NA,
-                       vst_apparentindividual = NA,
-                       vst_mappingandtagging = NA,
-                       vst_perplotperyear = NA,
+                       wood_apparentindividual = NA,
+                       wood_mappingandtagging = NA,
+                       wood_nonWoody = NA,
+                       wood_perplotperyear = NA,
                        inputDataListHbp = NA,
-                       hbp_perbout = NA,
-                       hbp_massdata = NA,
+                       herb_perbout = NA,
+                       herb_massdata = NA,
                        inputDataListBbc = NA,
                        inputCore = NA,
                        inputMass = NA,
@@ -109,8 +112,8 @@ if("Vst" %in% dataProducts){
 inputDataList = inputDataListVst
   
 print("Calculating above-ground woody biomass  ..... ")
-estimateWoodMassOutputs <- estimateWoodMass(inputDataList = inputDataList, 
-        vst_apparentindividual = vst_apparentindividual, vst_mappingandtagging = vst_mappingandtagging, vst_perplotperyear = vst_perplotperyear, 
+estimateWoodMassOutputs <- estimateWoodMass(inputDataList = inputDataListVst, 
+        inputIndividual = wood_apparentindividual, inputMapTag = wood_mappingandtagging, inputNonWoody = wood_nonWoody, inputPerPlot = wood_perplotperyear, 
         growthForm = growthForm, plotType = plotType, plotPriority = plotPriority)
 Vst <- estimateWoodMassOutputs$vst_site
 }
@@ -124,9 +127,9 @@ Vst <- estimateWoodMassOutputs$vst_site
     
     print("Calculating above-ground herbaceous biomass  ..... ")
     
-    scaleHerbMassOutputs <- scaleHerbMass(inputDataList = inputDataList, 
-                                          inputBout = hbp_perbout, 
-                                          inputMass = hbp_massdata,
+    scaleHerbMassOutputs <- scaleHerbMass(inputDataList = inputDataListHbp, 
+                                          inputBout = herb_perbout, 
+                                          inputMass = herb_massdata,
                                           plotType = plotType, 
                                           plotPriority = plotPriority)
     
@@ -140,7 +143,7 @@ if("Bbc" %in% dataProducts){
 inputDataList = inputDataListBbc
 
 print("Scaling below-ground biomass  ..... ")
-scaleRootMassOutputs <- scaleRootMass(inputDataList = inputDataList, includeDilution = includeDilution, includeFragInTotal = includeFragInTotal, 
+scaleRootMassOutputs <- scaleRootMass(inputDataList = inputDataListBbc, includeDilution = includeDilution, includeFragInTotal = includeFragInTotal, 
        inputCore = inputCore, inputMass = inputMass, inputDilution = inputDilution)
 Bbc <- scaleRootMassOutputs$siteRootMass %>% dplyr::select(-"eventID","startDate","endDate")
 }
