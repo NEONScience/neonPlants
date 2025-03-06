@@ -352,11 +352,11 @@ scaleHerbMass = function(inputDataList,
                      herbPeakMassMean_gm2 = round(mean(.data$herbPeakMassTotal_gm2, na.rm = TRUE),
                                                   digits = 3),
                      herbPeakMassSD_gm2 = round(stats::sd(.data$herbPeakMassTotal_gm2, na.rm = TRUE),
-                                                digits = 3),
+                                                digits = 2),
                      herbPeakMassMean_Mgha = round(mean(.data$herbPeakMassTotal_Mgha, na.rm = TRUE),
                                                    digits = 3),
                      herbPeakMassSD_Mgha = round(stats::sd(.data$herbPeakMassTotal_Mgha, na.rm = TRUE),
-                                                 digits = 3),
+                                                 digits = 2),
                      .groups = "drop")
   
   

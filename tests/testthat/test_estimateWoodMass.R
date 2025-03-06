@@ -17,8 +17,8 @@ testthat::test_that(desc = "Output type", {
 
 
 ### Test: Function generates expected output class
-testthat::test_that(desc = "Output class vst_agb_per_ha", {
-  testthat::expect_s3_class(object = estimateWoodMassOutputs$vst_agb_per_ha,
+testthat::test_that(desc = "Output class vst_agb_kg", {
+  testthat::expect_s3_class(object = estimateWoodMassOutputs$vst_agb_kg,
                             class = "data.frame")
 })  
 
@@ -42,8 +42,8 @@ testthat::test_that(desc = "Output class vst_site", {
 ### Test: Function generates data frame with expected dimensions using test data
 #   Check expected column number of data frame
 testthat::test_that(desc = "Output data frame column number", {
-  testthat::expect_identical(object = ncol(estimateWoodMassOutputs$vst_agb_per_ha),
-                             expected = as.integer(12))
+  testthat::expect_identical(object = ncol(estimateWoodMassOutputs$vst_agb_kg),
+                             expected = as.integer(16))
 })
 
 testthat::test_that(desc = "Output data frame column number", {
@@ -58,7 +58,7 @@ testthat::test_that(desc = "Output data frame column number", {
 
 testthat::test_that(desc = "Output data frame column number", {
   testthat::expect_identical(object = ncol(estimateWoodMassOutputs$vst_site),
-                             expected = as.integer(5))
+                             expected = as.integer(7))
 })
 
 
@@ -66,7 +66,7 @@ testthat::test_that(desc = "Output data frame column number", {
 
 #   Check expected row number of data frame
 testthat::test_that(desc = "Output data frame row number", {
-  testthat::expect_identical(object = nrow(estimateWoodMassOutputs$vst_agb_per_ha),
+  testthat::expect_identical(object = nrow(estimateWoodMassOutputs$vst_agb_kg),
                              expected = as.integer(65))
 })
 
@@ -164,10 +164,10 @@ testthat::test_that(desc = "Table 'vst_perplotperyear' missing data", {
 })
 
 
-### Test: Generate error if output vst_agb_per_ha value not as expected
-testthat::test_that(desc = "Output vst_agb_per_ha value as expected", {
+### Test: Generate error if output vst_agb_kg value not as expected
+testthat::test_that(desc = "Output vst_agb_kg value as expected", {
   test <- estimateWoodMass(inputDataList = VstDat)
-  testthat::expect_equal(object = test$vst_agb_per_ha$agb_Mgha[2],
+  testthat::expect_equal(object = test$vst_agb_kg$agb_kg[2],
                          expected = 15.931413)
 })
 
@@ -175,7 +175,7 @@ testthat::test_that(desc = "Output vst_agb_per_ha value as expected", {
 ### Test: Generate error if output vst_plot_w_0s value not as expected
 testthat::test_that(desc = "Output vst_plot_w_0s value as expected", {
   test <- estimateWoodMass(inputDataList = VstDat)
-  testthat::expect_equal(object = test$vst_plot_w_0s$agb_Mgha__Live[2],
+  testthat::expect_equal(object = test$vst_plot_w_0s$Live_Mgha[2],
                          expected = 10.3589)
 })
 

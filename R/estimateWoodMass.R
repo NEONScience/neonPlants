@@ -2,7 +2,7 @@
 #'
 #' @author Samuel M Simkin \email{ssimkin@battelleecology.org} \cr
 #'
-#' @description Use allometric equations to estimate above-ground biomass for woody individuals and summarise results as mass per unit area for siteID, plotID, and taxonID. Biomass outputs can be used in the neonPlants estimateMass() function, and the estimateWoodProd() and estimateProd() productivity functions. 
+#' @description Use allometric equations to estimate above-ground biomass for woody (and "non-woody perennial", if selected) individuals and summarise results as mass per unit area for siteID, plotID, and taxonID. Biomass outputs can be used in the neonPlants estimateMass() function, and the estimateWoodProd() and estimateProd() productivity functions. 
 #' 
 #' Data inputs are "Vegetation structure" data (DP1.10098.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input tables with an equivalent structure and representing the same site x month combinations.
 #' 
@@ -26,7 +26,7 @@
 #' 
 #' @param plotType Optional filter for NEON plot type. Options are "tower" (default) or "all". A subset of 5 Tower plots are sampled annually (those plots with the highest plot priority), and remaining Tower plots are scheduled every 5 years. If "all" is selected, results include data from Distributed plots that are also sampled every 5 years. [character]
 #' 
-#' @param plotPriority NEON plots have a priority number in the event that not all scheduled plots can be sampled. The lower the number the higher the priority. The default is the 5 highest priority Tower plots that are sampled annually. [integer]
+#' @param plotPriority NEON plots have a priority number to spatially balance plots by NLCD class, etc. in the event that not all scheduled plots can be sampled. The lower the number the higher the priority. Options are "all" or "5". The default is "all" but if planning to use productivity functions then "5" retains just the 5 highest priority Tower plots that are sampled annually. [character]
 #'
 #' @return A list that includes biomass summary data frames and a helper data frame for needed by companion productivity functions - e.g., the estimateProd() function. Output tables include:
 #'   * vst_agb_kg - Summarizes above-ground live and dead woody biomass for each individual ("kg").
@@ -50,7 +50,7 @@
 #' estimateWoodMassOutputs <- estimateWoodMass(
 #' inputDataList = VstDat,
 #' growthForm = "tree",
-#' plotPriority = 5
+#' plotPriority = "5"
 #' )
 #' 
 #' }
@@ -65,7 +65,7 @@ estimateWoodMass = function(inputDataList,
                             inputPerPlot = NA,
                             growthForm = "all",
                             plotType = "tower",
-                            plotPriority = 5) {
+                            plotPriority = "all") {
   
   options(dplyr.summarise.inform = FALSE)
   
@@ -208,10 +208,10 @@ estimateWoodMass = function(inputDataList,
   }  
   
   # Error if invalid plotPriority option selected
-  if ((plotPriority - as.integer(plotPriority) != 0) | plotPriority < 1 | plotPriority >30 ) {
-    stop("The plotPriority argument should be an integer, the minimum plotPriority value is 1, the maximum plotPriority value is 30, and plotPriority = 5 is the default that corresponds to the annual Tower subset.")
+  if (!(as.character(plotPriority)) %in% c("all", "5")) {
+    stop("The plotPriority argument should be either 'all' (all plots) or '5' (the 5 highest priority plots).")
   }  
-  
+  plotPriority <- ifelse(plotPriority == "5", 5, 30) # convert to numeric (30 is highest plotPriority)
   
   ##  Read in plot sample area for each growthForm by eventID combo from vst_perplotperyear table
   #   Create working table from vst_perplotperyear input
@@ -219,10 +219,6 @@ estimateWoodMass = function(inputDataList,
   
   #   Extract year from eventID
   perplot$year <- as.numeric(substr(perplot$eventID, 10, 13))
-  
-  #   Define start and end dates from input year component of eventID; on rare occasions may be before the year component of earliest collect date)
-  start_from_input <- as.character(min(as.numeric(substr(perplot$year, 1, 4)))) 
-  end_from_input <- as.character(max(as.numeric(substr(perplot$date, 1, 4))))
   
   #   The specificModuleSamplingPriority field is used to optionally filter only to plots with priority 1-5 (the plots that are most likely to have been sampled the year they were scheduled)
   priority_plots <- priority_plots %>% dplyr::select("plotID", "specificModuleSamplingPriority")
@@ -242,8 +238,7 @@ estimateWoodMass = function(inputDataList,
   
   #   Discard Sampling Impractical other than "OK"
   perplot_not_SI <- perplot %>% 
-    dplyr::filter(.data$samplingImpractical == "OK" | .data$samplingImpractical == "" | is.na(.data$samplingImpractical)) %>%
-    dplyr::filter(.data$year >= as.numeric(start_from_input) & .data$year <= as.numeric(end_from_input)) 
+    dplyr::filter(.data$samplingImpractical == "OK" | .data$samplingImpractical == "" | is.na(.data$samplingImpractical))
   
   #   Create list of ALL plot by eventID combos from the vst_perplotperyear tables from vst woody, vst non-herb perennial, or both, regardless of whether they have biomass. Generates a list of all unique combos of plotID and eventID where full sampling should have taken place
   plot_eventID_list <- unique(perplot_not_SI$plot_eventID)
@@ -277,7 +272,7 @@ estimateWoodMass = function(inputDataList,
   
   ### Calculate biomass from vst_non-woody table ####
   
-  ### Conditionally generaget non-woody biomass estimates from vst_nonWoody table
+  ### Conditionally generate non-woody biomass estimates from vst_nonWoody table
   if (methods::is(vst_nonWoody, class = "data.frame" )) {
     
     vst_agb_other <- vst_nonWoody
@@ -474,10 +469,11 @@ estimateWoodMass = function(inputDataList,
   #   Create working data frame from vst_apparentindividual table
   appInd <- vst_apparentindividual
   
-  #   Filter to individuals measured in defined timeframe
-  appInd <- appInd %>% 
-    dplyr::filter(as.numeric(substr(.data$date,1,4)) >= as.numeric(start_from_input) & 
-                    as.numeric(substr(.data$date,1,4)) <= as.numeric(end_from_input))
+  #   remove apparentIndividual records without necessary perplot data
+    appInd$plot_eventID <- paste0(appInd$plotID, "_", appInd$eventID)
+    appInd <- appInd %>% 
+      dplyr::filter(appInd$plot_eventID %in% plot_eventID_list)
+
   
   message("Assembling allometric equation parameters ..... ")
   
@@ -1271,6 +1267,8 @@ vst_agb$agb_shrub <- ifelse((vst_agb$growthForm == "single shrub" | vst_agb$grow
   vst_agb_kg <- vst_agb_kg %>% 
     dplyr::select(-"totalSampledAreaTrees", -"totalSampledAreaShrubSapling", -"totalSampledAreaLiana", -"totalSampledAreaOther")
   
+    vst_agb_kg$agb_kg <- vst_agb_kg$agb ; vst_agb_kg$agb <- NULL # add units to field name (rename created devtools binding error)
+  
   #   Filter combined output by user-supplied 'growthForm' argument
   if (growthForm == "other") {
     
@@ -1303,7 +1301,7 @@ vst_agb$agb_shrub <- ifelse((vst_agb$growthForm == "single shrub" | vst_agb$grow
     dplyr::filter(!is.na(.data$sampledAreaM2) & .data$sampledAreaM2 > 0 )
   
   #   Create "Mg/ha" biomass estimate for each record; used in downstream plot- and site-level biomass estimation
-  vst_agb_Mgha$agb_Mgha <- round(vst_agb_Mgha$agb * 0.001 * (10000/vst_agb_Mgha$sampledAreaM2), 
+  vst_agb_Mgha$agb_Mgha <- round(vst_agb_Mgha$agb_kg * 0.001 * (10000/vst_agb_Mgha$sampledAreaM2), 
                                   digits = 4)
   
 
@@ -1386,10 +1384,6 @@ vst_agb$agb_shrub <- ifelse((vst_agb$growthForm == "single shrub" | vst_agb$grow
   vst_plot_w_0s <- vst_plot_w_0s %>% 
     dplyr::filter(!is.na(.data$Live_Mgha) & !is.na(.data$Dead_or_Lost_Mgha))
   
-  #   Retain records within data-prescribed 'year' range
-  vst_plot_w_0s <- vst_plot_w_0s %>% 
-    dplyr::filter(.data$year >= start_from_input)
-  
   
   #   Remove records based on user-supplied 'plotType' and 'plotPriority' arguments
   if (plotType == "tower") {
@@ -1442,11 +1436,11 @@ vst_agb$agb_shrub <- ifelse((vst_agb$growthForm == "single shrub" | vst_agb$grow
                      woodLiveMassMean_Mgha = round(mean(.data$Live_Mgha, na.rm = TRUE), 
                                                    digits = 1), 
                      woodLiveMassSD_Mgha = round(stats::sd(.data$Live_Mgha, na.rm = TRUE), 
-                                                 digits = 1),
+                                                 digits = 2),
                      woodDeadMassMean_Mgha = round(mean(.data$Dead_or_Lost_Mgha, na.rm = TRUE), 
                                                    digits = 1), 
                      woodDeadMassSD_Mgha = round(stats::sd(.data$Dead_or_Lost_Mgha, na.rm = TRUE), 
-                                                 digits = 1),
+                                                 digits = 2),
                      .groups = "drop")
   
   

@@ -104,11 +104,11 @@ testthat::test_that(desc = "Output data frame row number", {
 ### Tests: Generate expected errors for input object ####
 #   Test that input argument is a list
 testthat::test_that(desc = "Argument 'input' is list object", {
-  testthat::expect_error(object = estimateWoodProd(input = estimateWoodMassOutputs$vst_agb_per_ha), # test whether function stops if supplied with a dataframe instead of list
+  testthat::expect_error(object = estimateWoodProd(input = estimateWoodMassOutputs$vst_agb_kg), # test whether function stops if supplied with a dataframe instead of list
                          regexp = "The input argument is expected to be a list")
 })
 
-#   Test that input object contains required tables (expect 4 tables: vst_agb_per_ha", "vst_plot_w_0s", "vst_agb_zeros", "vst_site")
+#   Test that input object contains required tables (expect 4 tables: vst_agb_kg", "vst_plot_w_0s", "vst_agb_zeros", "vst_site")
 testthat::test_that(desc = "Required tables present in input object", {
   testthat::expect_error(object = estimateWoodProd(input = estimateWoodMassOutputs[1:3]),
                          regexp = "Required tables missing from input list")
@@ -116,21 +116,21 @@ testthat::test_that(desc = "Required tables present in input object", {
 
 
 
-### Test: Generate expected errors for issues with vst_agb_per_ha table
-# Test when input vst_agb_per_ha lacks required column
+### Test: Generate expected errors for issues with vst_agb_kg table
+# Test when input vst_agb_ka lacks required column
 estimateWoodMassOutputs_mod <- estimateWoodMassOutputs
-estimateWoodMassOutputs_mod$vst_agb_per_ha <- estimateWoodMassOutputs_mod$vst_agb_per_ha %>% dplyr::select(-agb_Mgha)
-testthat::test_that(desc = "Table 'vst_agb_per_ha' missing column", {
+estimateWoodMassOutputs_mod$vst_agb_kg <- estimateWoodMassOutputs_mod$vst_agb_kg %>% dplyr::select(-agb_kg)
+testthat::test_that(desc = "Table 'vst_agb_kg' missing column", {
   testthat::expect_error(object = estimateWoodProd(input = estimateWoodMassOutputs_mod),
-                         regexp = "Required columns missing from 'vst_agb_per_ha': agb_Mgha")
+                         regexp = "Required columns missing from 'vst_agb_kg': agb_kg")
 })
 
-#   Test when vst_agb_per_ha has no data
+#   Test when vst_agb_kg has no data
 estimateWoodMassOutputs_mod <- estimateWoodMassOutputs
-estimateWoodMassOutputs_mod$vst_agb_per_ha <- estimateWoodMassOutputs_mod$vst_agb_per_ha %>% dplyr::filter(year == "notRealyear")
-testthat::test_that(desc = "Table 'vst_agb_per_ha' missing data", {
+estimateWoodMassOutputs_mod$vst_agb_kg <- estimateWoodMassOutputs_mod$vst_agb_kg %>% dplyr::filter(year == "notRealyear")
+testthat::test_that(desc = "Table 'vst_agb_kg' missing data", {
   testthat::expect_error(object = estimateWoodProd(input = estimateWoodMassOutputs_mod),
-                         regexp = "Table 'vst_agb_per_ha' has no data.")
+                         regexp = "Table 'vst_agb_kg' has no data.")
 })
 
 
@@ -154,10 +154,10 @@ testthat::test_that(desc = "Table 'vst_agb_zeros' missing column", {
 ### Test: Generate expected errors for issues with vst_plot_w_0s table
 # Test when input vst_plot_w_0s lacks required column
 estimateWoodMassOutputs_mod <- estimateWoodMassOutputs
-estimateWoodMassOutputs_mod$vst_plot_w_0s <- estimateWoodMassOutputs_mod$vst_plot_w_0s %>% dplyr::select(-agb_Mgha__Live)
+estimateWoodMassOutputs_mod$vst_plot_w_0s <- estimateWoodMassOutputs_mod$vst_plot_w_0s %>% dplyr::select(-Live_Mgha)
 testthat::test_that(desc = "Table 'vst_plot_w_0s' missing column", {
   testthat::expect_error(object = estimateWoodProd(input = estimateWoodMassOutputs_mod),
-                         regexp = "Required columns missing from 'vst_plot_w_0s': agb_Mgha__Live")
+                         regexp = "Required columns missing from 'vst_plot_w_0s': Live_Mgha")
 })
 
 #   Test when vst_plot_w_0s has no data

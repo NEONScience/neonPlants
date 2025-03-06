@@ -12,7 +12,7 @@ estimateWoodMass(
   inputPerPlot = NA,
   growthForm = "all",
   plotType = "tower",
-  plotPriority = 5
+  plotPriority = "all"
 )
 }
 \arguments{
@@ -34,7 +34,7 @@ estimateWoodMass(
 
 \item{plotType}{Optional filter for NEON plot type. Options are "tower" (default) or "all". A subset of 5 Tower plots are sampled annually (those plots with the highest plot priority), and remaining Tower plots are scheduled every 5 years. If "all" is selected, results include data from Distributed plots that are also sampled every 5 years. \link{character}}
 
-\item{plotPriority}{NEON plots have a priority number in the event that not all scheduled plots can be sampled. The lower the number the higher the priority. The default is the 5 highest priority Tower plots that are sampled annually. \link{integer}}
+\item{plotPriority}{NEON plots have a priority number to spatially balance plots by NLCD class, etc. in the event that not all scheduled plots can be sampled. The lower the number the higher the priority. Options are "all" or "5". The default is "all" but if planning to use productivity functions then "5" retains just the 5 highest priority Tower plots that are sampled annually. \link{character}}
 }
 \value{
 A list that includes biomass summary data frames and a helper data frame for needed by companion productivity functions - e.g., the estimateProd() function. Output tables include:
@@ -46,7 +46,7 @@ A list that includes biomass summary data frames and a helper data frame for nee
 }
 }
 \description{
-Use allometric equations to estimate above-ground biomass for woody individuals and summarise results as mass per unit area for siteID, plotID, and taxonID. Biomass outputs can be used in the neonPlants estimateMass() function, and the estimateWoodProd() and estimateProd() productivity functions.
+Use allometric equations to estimate above-ground biomass for woody (and "non-woody perennial", if selected) individuals and summarise results as mass per unit area for siteID, plotID, and taxonID. Biomass outputs can be used in the neonPlants estimateMass() function, and the estimateWoodProd() and estimateProd() productivity functions.
 
 Data inputs are "Vegetation structure" data (DP1.10098.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input tables with an equivalent structure and representing the same site x month combinations.
 }
@@ -69,7 +69,7 @@ estimateWoodMassOutputs <- estimateWoodMass(inputDataList = VstDat)
 estimateWoodMassOutputs <- estimateWoodMass(
 inputDataList = VstDat,
 growthForm = "tree",
-plotPriority = 5
+plotPriority = "5"
 )
 
 }

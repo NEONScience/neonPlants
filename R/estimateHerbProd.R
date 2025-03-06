@@ -85,7 +85,7 @@ if (length(setdiff(listExpNames_Hbp, names(input))) > 0) {
 ### Verify user-supplied hbp_agb contains required data
 #   Check for required columns
   hbp_agb_ExpCols <- c("domainID","siteID", "plotID","clipID","eventID","year","nlcdClass","plotType","plotSize","data_prod","bout",
-                  "sampleID","clipArea","exclosure","peak","dryMass_gm2_AllHerbaceousPlants")
+                  "sampleID","clipArea","exclosure","peak","AllHerbaceousPlants_gm2")
   if (length(setdiff(hbp_agb_ExpCols, colnames(hbp_agb))) > 0) {
     stop(glue::glue("Required columns missing from 'hbp_agb':", '{paste(setdiff(hbp_agb_ExpCols, colnames(hbp_agb)), collapse = ", ")}',
                     .sep = " "))
@@ -127,12 +127,12 @@ print("Summarizing above-ground herbaceous productivity  ..... ")
 ### productivity by site and year
 # hbp_event_means <- hbp_agb %>% 
 #   dplyr::group_by(.data$domainID, .data$siteID, .data$plotID, .data$plotType, .data$eventID, .data$year, .data$bout, .data$nlcdClass, .data$exclosure, .data$peak) %>% 
-#   dplyr::summarise(mean_herb_gm2 = mean(.data$dryMass_gm2_AllHerbaceousPlants, na.rm = TRUE)) # calc the mean biomass of the individual plots within eventID
+#   dplyr::summarise(mean_herb_gm2 = mean(.data$AllHerbaceousPlants_gm2, na.rm = TRUE)) # calc the mean biomass of the individual plots within eventID
 # hbp_event_means$exclosure <- ifelse(is.na(hbp_event_means$exclosure), "N", hbp_event_means$exclosure)
 
 if(nrow(hbp_agb %>% dplyr::filter(.data$exclosure == "Y")) > 0 ) {
-hbp_agb_long <- hbp_agb %>% tidyr::pivot_longer(cols=c("dryMass_gm2_AllHerbaceousPlants", "dryMass_gm2_CoolSeasonGraminoids", "dryMass_gm2_WoodyStemmedPlants", "dryMass_gm2_WarmSeasonGraminoids",
-        "dryMass_gm2_NFixingPlants","dryMass_gm2_AnnualAndPerennialForbs"), names_to="herbGroup", names_prefix = "dryMass_gm2_", values_to="gm2")
+hbp_agb_long <- hbp_agb %>% tidyr::pivot_longer(cols=c("AllHerbaceousPlants_gm2", "CoolSeasonGraminoids_gm2", "WoodyStemmedPlants_gm2", "WarmSeasonGraminoids_gm2",
+        "NFixingPlants_gm2","AnnualAndPerennialForbs_gm2"), names_to="herbGroup", names_prefix = "dryMass_gm2_", values_to="gm2")
   
 consumption <- hbp_agb_long %>% 
   tidyr::pivot_wider(id_cols = c("domainID", "siteID", "plotID", "plotType", "nlcdClass", "subplotID", "year", "peak", "herbGroup", "eventID", "bout"), names_from = "exclosure",

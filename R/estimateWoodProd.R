@@ -74,7 +74,7 @@ vst_plot_w_0s <- input$vst_plot_w_0s
 vst_site <- input$vst_site
 
 #   Check that required tables within list match expected names
-listExpNames <- c("vst_agb_per_ha", "vst_plot_w_0s", "vst_agb_zeros", "vst_site")
+listExpNames <- c("vst_agb_kg", "vst_plot_w_0s", "vst_agb_zeros", "vst_site")
 if (length(setdiff(listExpNames, names(input))) > 0) {
       stop(glue::glue("Required tables missing from input list:",
                       '{paste(setdiff(listExpNames, names(input)), collapse = ", ")}',
@@ -103,18 +103,18 @@ if (length(setdiff(listExpNames, names(input))) > 0) {
 
 ### Verify input tables contain required columns and data ####
 
-### Verify user-supplied vst_agb_per_ha table contains required data
+### Verify user-supplied vst_agb_kg table contains required data
 #   Check for required columns
-  vst_agb_per_ha_ExpCols <- c("siteID", "plotID", "eventID","year","plot_eventID","nlcdClass","taxonID","individualID","plantStatus2","agb_Mgha")
+  vst_agb_kg_ExpCols <- c("siteID", "plotID", "eventID","year","plot_eventID","nlcdClass","taxonID","individualID","plantStatus2","agb_kg")
   
-  if (length(setdiff(vst_agb_per_ha_ExpCols, colnames(vst_agb_per_ha))) > 0) {
-    stop(glue::glue("Required columns missing from 'vst_agb_per_ha':", '{paste(setdiff(vst_agb_per_ha_ExpCols, colnames(vst_agb_per_ha)), collapse = ", ")}',
+  if (length(setdiff(vst_agb_kg_ExpCols, colnames(vst_agb_kg))) > 0) {
+    stop(glue::glue("Required columns missing from 'vst_agb_kg':", '{paste(setdiff(vst_agb_kg_ExpCols, colnames(vst_agb_kg)), collapse = ", ")}',
                     .sep = " "))
   }
   
 #   Check for data
-  if (nrow(vst_agb_per_ha) == 0) {
-    stop(glue::glue("Table 'vst_agb_per_ha' has no data."))
+  if (nrow(vst_agb_kg) == 0) {
+    stop(glue::glue("Table 'vst_agb_kg' has no data."))
 }
   
 ### Verify user-supplied vst_agb_zeros table contains required data
@@ -133,7 +133,7 @@ if (length(setdiff(listExpNames, names(input))) > 0) {
   
 ### Verify user-supplied vst_plot_w_0s table contains required data
 #   Check for required columns
-  vst_plot_w_0s_ExpCols <- c("domainID", "siteID", "plotID", "eventID", "year", "plot_eventID", "nlcdClass", "taxonID", "agb_Mgha__Live", "agb_Mgha__Dead_or_Lost",
+  vst_plot_w_0s_ExpCols <- c("domainID", "siteID", "plotID", "eventID", "year", "plot_eventID", "nlcdClass", "taxonID", "Live_Mgha", "Dead_or_Lost_Mgha",
                    "specificModuleSamplingPriority","plotType")
   
   if (length(setdiff(vst_plot_w_0s_ExpCols, colnames(vst_plot_w_0s))) > 0) {
@@ -168,7 +168,7 @@ end  <- max(vst_plot_w_0s$year)
 ###### Error if not at least 2 years of data
   if(as.numeric(end) - as.numeric(start) < 1){
     print("At least 2 years of data are needed to calculate productivity (more for plots sampled less frequently than annually). Current dataset only has woody biomass data from: ")
-    print(unique(vst_agb_per_ha$year))
+    print(unique(vst_agb_kg$year))
     stop( )
   }
 
@@ -179,11 +179,11 @@ print("Calculating woody increment component of productivity at the plot-level (
 
 vst_agb_Live <- vst_plot_w_0s %>% dplyr::group_by(.data$domainID, .data$siteID, .data$plotID, .data$plotType, .data$specificModuleSamplingPriority, 
                     .data$eventID, .data$year, .data$plot_eventID, .data$nlcdClass, .data$taxonID) %>% 
-                    dplyr::summarise(agb_Mgha__Live = sum(.data$agb_Mgha__Live, na.rm = TRUE), agb_Mgha__Dead_or_Lost = sum(.data$agb_Mgha__Dead_or_Lost, na.rm = TRUE)) 
+                    dplyr::summarise(Live_Mgha = sum(.data$Live_Mgha, na.rm = TRUE), Dead_or_Lost_Mgha = sum(.data$Dead_or_Lost_Mgha, na.rm = TRUE)) 
  # some taxonIDs are represented in multiple growthForms (e.g. sapling and single bole tree): This sums the growthForms
  
-  vst_agb_Live$Mgha_live <- vst_agb_Live$agb_Mgha__Live
-  vst_agb_Live$agb_Mgha__Live <- vst_agb_Live$agb_Mgha__Dead_or_Lost <- NULL
+  vst_agb_Live$Mgha_live <- vst_agb_Live$Live_Mgha
+  vst_agb_Live$Live_Mgha <- vst_agb_Live$Dead_or_Lost_Mgha <- NULL
   vst_agb_Live <- vst_agb_Live[order(vst_agb_Live$year),]
 
 yearList <- unique(sort(vst_agb_Live$year))# sort list of years
@@ -203,13 +203,22 @@ vst_increment_long <- vst_increment %>% dplyr::select(-dplyr::contains("Mgha_2")
 ### PLOT-LEVEL MORTALITY
 print("Calculating woody mortality component of productivity at the plot-level (approach 2) ..... ")
 
-if(nrow(vst_agb_per_ha) >0) {
+if(nrow(vst_agb_kg) >0) {
+ #   Remove records that cannot be scaled to a per area basis
+   vst_agb_kg <- vst_agb_kg %>% 
+    dplyr::filter(!is.na(.data$sampledAreaM2) & .data$sampledAreaM2 > 0 )
+  
+  #   convert kg to  Mg
+  vst_agb_kg$agb_Mgha <- round(vst_agb_kg$agb_kg * 0.001 * (10000/vst_agb_kg$sampledAreaM2), 
+                                  digits = 4)
+  
+  
 # Categorize individual IDs based on their changes (or not) in plantStatus2
-input_to_transitions <- vst_agb_per_ha %>% dplyr::select("plot_eventID","siteID","plotID","individualID","taxonID","plantStatus2","year")
+input_to_transitions <- vst_agb_kg %>% dplyr::select("plot_eventID","siteID","plotID","individualID","taxonID","plantStatus2","year")
 input_to_transitions <- input_to_transitions %>% dplyr::distinct(.data$individualID, .data$taxonID, .data$year, .data$plantStatus2, .keep_all = TRUE) 
 input_to_transitions <- input_to_transitions[order(input_to_transitions$year),]
 
-yearList <- unique(sort(vst_agb_per_ha$year)) # sort list of years
+yearList <- unique(sort(vst_agb_kg$year)) # sort list of years
 suppressWarnings( transitions <- tidyr::pivot_wider(input_to_transitions, id_cols = c("siteID", "plotID", "individualID", "taxonID"), names_from = "year", names_prefix = "status_", values_from = "plantStatus2")  )
 
 transitions[transitions == '", "'] <- '""' # Remove the comma. Otherwise one or more of the following lines may give error about converting list to character.
@@ -228,7 +237,7 @@ for(i in 2:length(yearList)){
     ))
 }
 
-mortality <- merge(vst_agb_per_ha, transitions, by=c("plotID", "siteID", "individualID", "taxonID"), all.x=TRUE)
+mortality <- merge(vst_agb_kg, transitions, by=c("plotID", "siteID", "individualID", "taxonID"), all.x=TRUE)
 mortality$mortality_Mgha <- NA
 
 # if transitionType for a given year is "mortality" then assign a mortality value based on the biomass at the PREVIOUS year
@@ -245,7 +254,7 @@ mortality$year <- as.numeric(mortality$year + 1)
 plot_mortality <- mortality %>% dplyr::group_by(.data$siteID, .data$plotID, .data$taxonID, .data$year) %>% dplyr::summarise(Mgha_mortality = sum(.data$mortality_Mgha, na.rm = TRUE)) 
 #plot_mortality <- plot_mortality %>% dplyr::filter(.data$mortality_Mgha != 0)
 } else {
-  plot_mortality <- data.frame(siteID = character(), plotID = character(), taxonID = character(), year = character(), Mgha_mortality = numeric()) # create placeholder if vst_agb_per_ha is empty
+  plot_mortality <- data.frame(siteID = character(), plotID = character(), taxonID = character(), year = character(), Mgha_mortality = numeric()) # create placeholder if vst_agb_kg is empty
 }
 
 vst_ANPP_plot_w_taxa_2 <- merge (vst_increment_long, plot_mortality, by=c("siteID","plotID","taxonID","year"), all.x=TRUE )
@@ -290,15 +299,15 @@ print("Calculating woody increment productivity at the level of individualID (ap
 # Calculating in this way accommodated individualIDs that had more than one status for the same year (e.g., if one bole grew and another died)
 # assumption: if data are not from consecutive years then assume equal rate of growth and divide increment and mortality by the number of elapsed years      
 
-if(nrow(vst_agb_per_ha) > 0){
+if(nrow(vst_agb_kg) > 0){
 
-vst_agb_per_ha <- vst_agb_per_ha[order(vst_agb_per_ha$year),]
+vst_agb_kg <- vst_agb_kg[order(vst_agb_kg$year),]
 
-vst_agb_plot_list <- unique(vst_agb_per_ha$plotID); length(vst_agb_plot_list)
-vst_agb_indID_list <- unique(vst_agb_per_ha$individualID); length(vst_agb_indID_list)
+vst_agb_plot_list <- unique(vst_agb_kg$plotID); length(vst_agb_plot_list)
+vst_agb_indID_list <- unique(vst_agb_kg$individualID); length(vst_agb_indID_list)
 
-startAGB <- min(vst_agb_per_ha$year)
-endAGB  <- max(vst_agb_per_ha$year)
+startAGB <- min(vst_agb_kg$year)
+endAGB  <- max(vst_agb_kg$year)
 dummy_rows <- data.frame(plot_eventID = rep(NA, 7), eventID = rep(NA, 7), siteID = rep(NA, 7), plotID = rep(NA, 7), plotType = rep(NA, 7), nlcdClass = rep(NA, 7), individualID = rep(NA, 7),
   taxonID = rep(NA, 7), plantStatus2 = rep(NA, 7), year = ( (startAGB-7):(startAGB-1) ), agb_Mgha = rep(NA, 7)) # placeholder for any years prior to start that are missing
 yearLength <- length(startAGB:endAGB)
@@ -306,14 +315,14 @@ dummy_rows_2 <- data.frame(plot_eventID = rep(NA, yearLength), eventID = rep(NA,
                            plotType = rep(NA, yearLength), nlcdClass = rep(NA, yearLength), individualID = rep(NA, yearLength),
   taxonID = rep(NA, yearLength), plantStatus2 = rep(NA, yearLength), year = ( startAGB:endAGB ), agb_Mgha = rep(NA, yearLength)) # placeholder for any years within start to end year range that are missing
 dummy_rows <- rbind(dummy_rows, dummy_rows_2)
-dummy_rows <- dummy_rows[!dummy_rows$year %in% unique(vst_agb_per_ha$year),] # remove the years that ARE in the data
+dummy_rows <- dummy_rows[!dummy_rows$year %in% unique(vst_agb_kg$year),] # remove the years that ARE in the data
 
 
 increment_all = data.frame()
 increment_qf_all = data.frame()
 endYear <- as.numeric((startAGB) : endAGB )
 for(i in 2:length(endYear)){
-transitions <- vst_agb_per_ha %>% dplyr::group_by(.data$plot_eventID, .data$eventID, .data$siteID, .data$plotID, .data$plotType, .data$nlcdClass, .data$taxonID, 
+transitions <- vst_agb_kg %>% dplyr::group_by(.data$plot_eventID, .data$eventID, .data$siteID, .data$plotID, .data$plotType, .data$nlcdClass, .data$taxonID, 
             .data$individualID,  .data$plantStatus2, .data$year) %>% dplyr::summarise(agb_Mgha = sum(.data$agb_Mgha, na.rm = TRUE)) 
  # some individualIDs are represented in multiple growthForms (e.g. sapling and single bole tree): This sums the growthForms
 

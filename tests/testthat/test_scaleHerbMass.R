@@ -136,7 +136,7 @@ testthat::test_that(desc = "Output hbp_agb value as expected", {
   
   test <- scaleHerbMass(inputDataList = HbpDat)
   
-  testthat::expect_equal(object = test$hbp_agb$dryMass_gm2_AllHerbaceousPlants[2], 
+  testthat::expect_equal(object = test$hbp_agb$AllHerbaceousPlants_gm2[2], 
                          expected = 47.70)
 })
 

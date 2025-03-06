@@ -61,10 +61,10 @@ testthat::test_that(desc = "Required tables present in input object", {
 ### Test: Generate expected errors for issues with hbp_agb table
 # Test when input hbp_agb lacks required column
 scaleHerbMassOutputs_mod <- scaleHerbMassOutputs
-scaleHerbMassOutputs_mod$hbp_agb <- scaleHerbMassOutputs_mod$hbp_agb %>% dplyr::select(-dryMass_gm2_AllHerbaceousPlants)
+scaleHerbMassOutputs_mod$hbp_agb <- scaleHerbMassOutputs_mod$hbp_agb %>% dplyr::select(-AllHerbaceousPlants_gm2)
 testthat::test_that(desc = "Table 'hbp_agb' missing column", {
   testthat::expect_error(object = estimateHerbProd(input = scaleHerbMassOutputs_mod),
-                         regexp = "Required columns missing from 'hbp_agb': dryMass_gm2_AllHerbaceousPlants")
+                         regexp = "Required columns missing from 'hbp_agb': AllHerbaceousPlants_gm2")
 })
 
 #   Test when hbp_agb has no data
