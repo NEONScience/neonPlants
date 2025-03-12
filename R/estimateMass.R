@@ -1,17 +1,18 @@
-##############################################################################################
-#' @title Combine biomass from multiple NEON data products
+#' @title Combine multiple NEON data products to generate plot- and site-level biomass estimates
 
-#' @author
-#' Samuel M Simkin \email{ssimkin@battelleecology.org} \cr
+#' @author Samuel M Simkin \email{ssimkin@battelleecology.org} \cr
 
-#' @description Wrapper function to combine biomass summaries of NEON data products. Currently supported data products are "Vegetation structure" (DP1.10098.001),
-#' estimated with the estimateWoodMass function, and "Herbaceous clip harvest (DP1.10023.001), estimated with the scaleHerbMass function. Biomass outputs can, if 
+#' @description Combine biomass summaries from multiple NEON data products and generate plot- and site-level biomass estimates. Currently supported data products are "Vegetation structure" (DP1.10098.001), "Herbaceous clip harvest" (DP1.10023.001), estimated with the scaleHerbMass function. Biomass outputs can, if 
 #' desired, be used in the follow-up estimateProd productivity function. Data inputs are list objects retrieved using the neonUtilities::loadByProduct() function 
 #' for each selected data product (preferred), or data downloaded from the NEON Data Portal.
 #' 
 #' @details A site-level summary of NEON biomass from the selected NEON data products is provided as a dataframe, in addition to list objects with more detailed 
 #' outputs for each of the selected NEON data products. For more documentation details see the documentation for the companion functions (e.g. estimateWoodMass 
 #' and scaleHerbMass).
+#' 
+#' 
+#' #' estimated with the estimateWoodMass function
+#' 
 #' 
 #' @param dataProducts Specify a character vector with the NEON data products to be combined. Defaults to c("Vst","Hbp") for Vegetation structure and Herbaceous 
 #' clip harvest, respectively. The other option currently available is "Bbc" for Root biomass and chemistry, periodic [character]
