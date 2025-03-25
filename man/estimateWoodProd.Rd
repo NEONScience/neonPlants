@@ -2,46 +2,49 @@
 % Please edit documentation in R/estimateWoodProd.R
 \name{estimateWoodProd}
 \alias{estimateWoodProd}
-\title{Estimate NEON plot and site-level ANPP (Aboveground Net Primary Productivity) contributed by woody vegetation}
+\title{Estimate ANPP (Aboveground Net Primary Productivity) contributed by woody vegetation}
 \usage{
 estimateWoodProd(
-  input,
+  inputDataList,
   plotType = "tower",
-  plotPriority = 5,
+  plotPriority = "5",
   calcMethod = "approach_1",
   outlier = 1.5,
   outlierType = "IQR"
 )
 }
 \arguments{
-\item{input}{Specify a loaded R list object (e.g. estimateWoodMassOutputs) that was produced by companion estimateWoodMass function. \link{character}}
+\item{inputDataList}{Specify a loaded R list object (e.g. estimateWoodMassOutputs) that was produced by companion estimateWoodMass function. \link{character}}
 
-\item{plotType}{Optional filter based on NEON plot type. Defaults to "tower" plots, which are sampled annually. Otherwise "distributed" plots are examined also, if included in the input .rds. \link{character}}
+\item{plotType}{Optional filter for NEON plot type. Options are "tower" (default) or "all". A subset of 5 Tower plots are sampled annually (those plots with the highest plot priority), and remaining Tower plots are scheduled every 5 years. If "all" is selected, results include data from Distributed plots that are also sampled every 5 years. \link{character}}
 
-\item{plotPriority}{NEON plots have a priority number in the event that not all plots are able to be sampled. The lower the number the higher the priority. The default is 5. \link{numeric}}
+\item{plotPriority}{NEON plots have a priority number to spatially balance plots by NLCD class, etc. in the event that not all scheduled plots can be sampled. The lower the number the higher the priority. Options are "all" or "5". The default is "5" which retains just the 5 highest priority Tower plots that are sampled annually. \link{character}}
 
-\item{calcMethod}{Select plot-level (approach 2) or individual-level (approach 1) productivity calculations. The default is "approach_1" \link{character}}
+\item{calcMethod}{Select plot-level (approach 2) or individual-level (approach 1) productivity calculations, as explained in Clark et al. 2001 The default is "approach_1" \link{character}
+ClarK DA, S Brown, DW Kicklighter, JQ Chambers, JR Thomlinson, and J Ni. 2001. Measuring Net Primary Production in Forests: Concepts and Field Methods. Ecological Applications 11:356-370.}
 
 \item{outlier}{Specify how much (if any) outlier removal should be performed. The default is 1.5. \link{numeric}}
 
 \item{outlierType}{Specify the type of outlier, either SD (standard deviations) or IQR (interquartile range). The default is "IQR". \link{character}}
 }
 \value{
-This function returns a list that includes productivity summary data frames.
-'vst_ANPP_plot_w_taxa' summarises woody ANPP for each plot by year by taxonID combination (units are Megagrams per hectare per year).
-'vst_ANPP_plot' summarises woody ANPP for each plot by year combination (units are Megagrams per hectare per year).
-'vst_ANPP_site' summarizes woody ANPP for each site by year combination (units are Megagrams per hectare per year).
-'increment_all' contains the increments for each woody individual (approach 1 only).
-'increment_outlier' contains the woody individual increments that were removed during outlier removal (approach 1 only).
+A list that includes productivity summary data frames. Output tables include:
+\itemize{
+\item vst_ANPP_plot_w_taxa - Summarises woody ANPP for each plot x year x taxonID combination ("Mg/ha/yr").
+\item vst_ANPP_plot - Summarizes woody ANPP for each plot x year combination ("Mg/ha/yr").
+\item vst_ANPP_site - Summarizes woody ANPP for each site x year combination ("Mg/ha/yr").
+\item increment_all - Contains the increments for each woody individual (approach 1 only).
+\item increment_outlier - Contains the woody individual increments that were removed during outlier removal (approach 1 only).
+}
 
 If calcMethod "approach_2" is selected then only the first three dataframes are returned, and they include an "_2" suffix.
 }
 \description{
-Using inputs from companion estimateWoodMass function calculate annual woody productivity.
+Calculate annual productivity of woody vegetation (and "non-woody perennial" vegetation, if included in inputDataList) using inputs from companion estimateWoodMass function .
 The data input is a list of biomass dataframes created by the companion estimateWoodMass function (e.g. estimateWoodMassOutputs).
 }
 \details{
-A list of woody biomass dataframes created by the companion estimateWoodMass function is read in and aboveground net primary
+Input data can be filtered by plot type and plot priority. An input data list of woody biomass dataframes created by the companion estimateWoodMass function is read in and aboveground net primary
 productivity (ANPP) is calculated for woody vegetation from NEON "Vegetation structure" (DP1.10098.001) data. Both a whole plot level
 approach and an individual-level approach calculation method are used, and output from the desired calculation method is returned. The
 individual-level approach is currently an underestimate since it includes the growth increment component but not the recruitment component.
@@ -58,12 +61,11 @@ estimateWoodProdOutputs <- estimateWoodProd(input = estimateWoodMassOutputs)
                       
 # example specifying many non-default arguments
 estimateWoodProdOutputs <- estimateWoodProd(input = estimateWoodMassOutputs, 
-               plotType = "all", plotPriority = 50, 
-               calcMethod = "approach_2", outlier = 2, outlierType = "SD")
+plotType = "all", plotPriority = 50, 
+calcMethod = "approach_2", outlier = 2, outlierType = "SD")
 
-list2env(estimateWoodProdOutputs ,.GlobalEnv) # unlist all data frames for easier viewing
-saveRDS(estimateWoodProdOutputs, 'estimateWoodProdOutputs.rds') # save output locally
 }
+
 }
 \author{
 Samuel M Simkin \email{ssimkin@battelleecology.org} \cr

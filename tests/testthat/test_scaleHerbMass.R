@@ -58,7 +58,7 @@ testthat::test_that(desc = "Output data frame column number", {
 testthat::test_that(desc = "Output data frame row number", {
   
   testthat::expect_identical(object = nrow(scaleHerbMassOutputs$hbp_agb),
-                             expected = as.integer(72))
+                             expected = as.integer(88))
 })
 
 
@@ -136,7 +136,7 @@ testthat::test_that(desc = "Output hbp_agb value as expected", {
   
   test <- scaleHerbMass(inputDataList = HbpDat)
   
-  testthat::expect_equal(object = test$hbp_agb$AllHerbaceousPlants_gm2[2], 
+  testthat::expect_equal(object = test$hbp_agb$AllHerbaceousPlants_gm2[12], 
                          expected = 47.70)
 })
 
@@ -146,7 +146,7 @@ testthat::test_that(desc = "Output hbp_plot value as expected", {
   
   test <- scaleHerbMass(inputDataList = HbpDat)
   
-  testthat::expect_equal(object = test$hbp_plot$herbPeakMassTotal_Mgha[2],
-                         expected = 0.218)
+  testthat::expect_equal(object = test$hbp_plot$herbPeakMassTotal_Mgha[7],
+                         expected = 0.220)
 })
 

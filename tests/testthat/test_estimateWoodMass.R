@@ -67,12 +67,12 @@ testthat::test_that(desc = "Output data frame column number", {
 #   Check expected row number of data frame
 testthat::test_that(desc = "Output data frame row number", {
   testthat::expect_identical(object = nrow(estimateWoodMassOutputs$vst_agb_kg),
-                             expected = as.integer(65))
+                             expected = as.integer(805))
 })
 
 testthat::test_that(desc = "Output data frame row number", {
   testthat::expect_identical(object = nrow(estimateWoodMassOutputs$vst_plot_w_0s),
-                             expected = as.integer(22))
+                             expected = as.integer(69))
 })
 
 testthat::test_that(desc = "Output data frame row number", {
@@ -82,7 +82,7 @@ testthat::test_that(desc = "Output data frame row number", {
 
 testthat::test_that(desc = "Output data frame row number", {
   testthat::expect_identical(object = nrow(estimateWoodMassOutputs$vst_site),
-                             expected = as.integer(2))
+                             expected = as.integer(6))
 })
 
 
@@ -167,22 +167,22 @@ testthat::test_that(desc = "Table 'vst_perplotperyear' missing data", {
 ### Test: Generate error if output vst_agb_kg value not as expected
 testthat::test_that(desc = "Output vst_agb_kg value as expected", {
   test <- estimateWoodMass(inputDataList = VstDat)
-  testthat::expect_equal(object = test$vst_agb_kg$agb_kg[2],
-                         expected = 15.931413)
+  testthat::expect_equal(object = test$vst_agb_kg$agb_kg[616],
+                         expected = 1274.513)
 })
 
 
 ### Test: Generate error if output vst_plot_w_0s value not as expected
 testthat::test_that(desc = "Output vst_plot_w_0s value as expected", {
   test <- estimateWoodMass(inputDataList = VstDat)
-  testthat::expect_equal(object = test$vst_plot_w_0s$Live_Mgha[2],
-                         expected = 10.3589)
+  testthat::expect_equal(object = test$vst_plot_w_0s$Live_Mgha[47],
+                         expected = 10.3588)
 })
 
 
 ### Test: Generate error if output vst_site value not as expected
 testthat::test_that(desc = "Output vst_site value as expected", {
   test <- estimateWoodMass(inputDataList = VstDat)
-  testthat::expect_equal(object = test$vst_site$woodLiveMassMean_Mgha[2],
-                         expected = 52.286)
+  testthat::expect_equal(object = test$vst_site$woodLiveMassMean_Mgha[5],
+                         expected = 51.90)
 })

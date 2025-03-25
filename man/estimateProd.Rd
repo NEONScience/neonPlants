@@ -2,14 +2,14 @@
 % Please edit documentation in R/estimateProd.R
 \name{estimateProd}
 \alias{estimateProd}
-\title{Combine productivity from multiple NEON data products}
+\title{Generate summed site-level productivity estimates from NEON data products}
 \usage{
 estimateProd(
   dataProducts = c("Vst", "Hbp"),
-  inputWoodMass,
-  inputHerbMass = NA,
+  inputDataListVstMass = NA,
+  inputDataListHbpMass = NA,
   plotType = "tower",
-  plotPriority = 5,
+  plotPriority = "5",
   calcMethod = "approach_1",
   outlier = 1.5,
   outlierType = "IQR"
@@ -18,13 +18,13 @@ estimateProd(
 \arguments{
 \item{dataProducts}{Specify a character vector with the NEON data products to be combined. Defaults to c("Vst","Hbp") for Vegetation structure and Herbaceous clip harvest, respectively. \link{character}}
 
-\item{inputWoodMass}{Specify a loaded R list object (e.g. estimateWoodMassOutputs) that was produced by companion estimateWoodMass.R function. \link{character}}
+\item{inputDataListVstMass}{Specify a loaded R list object (e.g. estimateWoodMassOutputs) that was produced by companion estimateWoodMass or estimateMass function. \link{character}}
 
-\item{inputHerbMass}{Specify a loaded R list object (e.g. scaleHerbMassOutputs) that was produced by companion scaleHerbMass.R function. \link{character}}
+\item{inputDataListHbpMass}{Specify a loaded R list object (e.g. scaleHerbMassOutputs) that was produced by companion scaleHerbMass or estimateMass function. \link{character}}
 
-\item{plotType}{Optional filter based on NEON plot type. Defaults to "tower" plots, which are sampled annually. Otherwise "distributed" plots are examined also, if included in the input .rds. \link{character}}
+\item{plotType}{Optional filter for NEON plot type. Options are "tower" (default) or "all". A subset of 5 Tower plots are sampled annually (those plots with the highest plot priority), and remaining Tower plots are scheduled every 5 years. If "all" is selected, results include data from Distributed plots that are also sampled every 5 years. \link{character}}
 
-\item{plotPriority}{NEON plots have a priority number in the event that not all plots are able to be sampled. The lower the number the higher the priority. The default is 5. \link{numeric}}
+\item{plotPriority}{NEON plots have a priority number to spatially balance plots by NLCD class, etc. in the event that not all scheduled plots can be sampled. The lower the number the higher the priority. Options are "all" or "5". The default is "5" which retains just the 5 highest priority Tower plots that are sampled annually. \link{character}}
 
 \item{calcMethod}{Select plot-level (approach 2) or individual-level (approach 1) productivity calculations (for woody data). The default is "approach_1" \link{character}}
 
@@ -33,35 +33,32 @@ estimateProd(
 \item{outlierType}{Specify the type of outlier (for woody data), either SD (standard deviations) or IQR (interquartile range). The default is "IQR". \link{character}}
 }
 \value{
-This function returns a site-level summary dataframe "productivity_site" with NEON productivity (units are Megagrams per hectare per year) from the selected NEON data products.
-In addition, list objects (e.g. estimateWoodProdOutputs and estimateHerbProdOutputs) with more granular data summaries are returned for each of the selected NEON data products.
-More detailed documentation is provided in the documentation of contributing functions (e.g. estimateWoodProd and estimateHerbProd).
+A site-level summary dataframe named "productivity_site" with summed productivity ("Mg/ha/yr") from the selected NEON data products. In addition, more granular data summaries are returned for each of the selected input data products.
 }
 \description{
-Wrapper function to combine productivity summaries of NEON data products. Currently supported data products are "Vegetation structure"
-(DP1.10098.001), estimated with the estimateWoodProd function, and "Herbaceous clip harvest (DP1.10023.001), estimated with the estimateHerbProd function.
-The data input is a list of biomass dataframes created by each of the contributing functions. For example, estimateWoodMassOutputs from the estimateWoodMass
-function and scaleHerbMassOutputs from the scaleHerbMass function.
+Combine above-ground productivity summaries from multiple NEON data products and generate summed site-level productivity estimates. Currently supported data products are "Herbaceous clip harvest" (DP1.10023.001) and "Vegetation structure" (DP1.10098.001).
+Data inputs are list objects created by the estimateMass(), scaleHerbMass(), or estimateWoodMass() neonPlants functions.
 }
 \details{
-A site-level summary of NEON productivity from the selected NEON data products is provided as a dataframe, in addition to list objects with more detailed
-outputs for each of the selected NEON data products. For more documentation details see the documentation for the companion functions (e.g. estimateWoodProd
-and estimateHerbProd).
+A site-level summary of NEON productivity from the selected NEON data products is provided as a dataframe, in addition to more detailed outputs for each of the selected NEON data products used to generate the site-level summary. For more documentation details see the documentation for the companion functions - i.e., estimateWoodProd() and estimateeHerbProd().
 }
 \examples{
 \dontrun{
-# example with arguments at default values
-estimateProdOutputs <- estimateProd(inputWoodMass = estimateWoodMassOutputs, 
-                                    inputHerbMass = scaleHerbMassOutputs)
-                      
-# example specifying many non-default arguments
-estimateWoodProdOutputs <- estimateWoodProd(input = estimateWoodMassOutputs, 
-               plotType = "all", plotPriority = 50, 
-               calcMethod = "approach_2", outlier = 2, outlierType = "SD")
 
-list2env(estimateWoodProdOutputs ,.GlobalEnv) # unlist all data frames for easier viewing
-saveRDS(estimateWoodProdOutputs, 'estimateWoodProdOutputs.rds') # save output locally
+#  Example with arguments at default values
+estimateProdOutputs <- estimateProd(inputDataListVstMass = estimateWoodMassOutputs, 
+inputDataListHbpMass = scaleHerbMassOutputs)
+                      
+#  Example specifying many non-default arguments
+estimateWoodProdOutputs <- estimateWoodProd(inputDataListVstMass = estimateWoodMassOutputs, 
+plotType = "all", 
+plotPriority = "all", 
+calcMethod = "approach_2", 
+outlier = 2, 
+outlierType = "SD")
+
 }
+
 }
 \author{
 Samuel M Simkin \email{ssimkin@battelleecology.org} \cr
