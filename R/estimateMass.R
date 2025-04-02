@@ -84,25 +84,35 @@ estimateMass = function(dataProducts = c("Hbp", "Vst"),
                         plotPriority = 5,
                         growthForm = "tree") {
   
+  
+  
+  ### VST data: Conditionally obtain site-level data with estimateWoodMass() function
   if("Vst" %in% dataProducts){  
     
     inputDataList = inputDataListVst
     
-    print("Calculating above-ground woody biomass  ..... ")
+    message("Calculating above-ground woody biomass  ..... ")
+    
     estimateWoodMassOutputs <- estimateWoodMass(inputDataList = inputDataListVst, 
-                                                inputIndividual = wood_apparentindividual, inputMapTag = wood_mappingandtagging, inputNonWoody = wood_nonWoody, inputPerPlot = wood_perplotperyear, 
-                                                growthForm = growthForm, plotType = plotType, plotPriority = plotPriority)
+                                                inputIndividual = wood_apparentindividual, 
+                                                inputMapTag = wood_mappingandtagging, 
+                                                inputNonWoody = wood_nonWoody, 
+                                                inputPerPlot = wood_perplotperyear, 
+                                                growthForm = growthForm, 
+                                                plotType = plotType, 
+                                                plotPriority = plotPriority)
+    
     Vst <- estimateWoodMassOutputs$vst_site
   }
   
-  ######################################################  
   
   
+  ### HBP data: Conditionally obtain site-level data with scaleHerbMass() function
   if ("Hbp" %in% dataProducts) { 
     
     inputDataList = inputDataListHbp
     
-    print("Calculating above-ground herbaceous biomass  ..... ")
+    message("Calculating above-ground herbaceous biomass  ..... ")
     
     scaleHerbMassOutputs <- scaleHerbMass(inputDataList = inputDataListHbp, 
                                           inputBout = herb_perbout, 
@@ -113,26 +123,41 @@ estimateMass = function(dataProducts = c("Hbp", "Vst"),
     Hbp <- scaleHerbMassOutputs$hbp_site
   }
   
-  #############################################  
   
-  if("Bbc" %in% dataProducts){ 
+  
+  ### BBC data: Conditionally obtain site-level data with scaleRootMass() function
+  if ("Bbc" %in% dataProducts) { 
     
     inputDataList = inputDataListBbc
     
-    print("Scaling below-ground biomass  ..... ")
-    scaleRootMassOutputs <- scaleRootMass(inputDataList = inputDataListBbc, includeDilution = includeDilution, includeFragInTotal = includeFragInTotal, 
-                                          inputCore = inputCore, inputMass = inputMass, inputDilution = inputDilution)
-    Bbc <- scaleRootMassOutputs$siteRootMass %>% dplyr::select(-"eventID","startDate","endDate")
+    message("Scaling below-ground biomass  ..... ")
+    
+    scaleRootMassOutputs <- scaleRootMass(inputDataList = inputDataListBbc, 
+                                          includeDilution = includeDilution, 
+                                          includeFragInTotal = includeFragInTotal, 
+                                          inputCore = inputCore, 
+                                          inputMass = inputMass, 
+                                          inputDilution = inputDilution)
+    
+    Bbc <- scaleRootMassOutputs$siteRootMass %>% 
+      dplyr::select(-"eventID","startDate","endDate")
   }
   
-  #############################################  
   
-  print("Combining biomass from selected data products and returning biomass output objects as a list object ..... ")
   
-  biomass_list <- mget(dataProducts) # this works because the final summary dataframes to be joined have the exact names as the values in the dataProducts argument
-  biomass_site <- biomass_list %>% purrr::reduce(dplyr::full_join, by=c("siteID", "year") )
+  ### Combine biomass estimates from BBC, HBP, and VST data products
+  message("Combining biomass from selected data products and returning biomass output objects as a list object ..... ")
   
-  if("woodLiveMassMean_Mgha" %in% colnames(biomass_site) & "herbPeakMassMean_Mgha" %in% colnames(biomass_site)){
+  #   Create list of output data frames for user-selected products; works because final summary dataframes to be joined have the exact names as the values in the dataProducts argument.
+  biomass_list <- mget(dataProducts)
+  
+  #   Create single data frame from elements in 'biomass_list'
+  biomass_site <- biomass_list %>% 
+    purrr::reduce(dplyr::full_join, 
+                  by = c("siteID", "year"))
+  
+  #   Conditionally sum mean above- and below-ground biomass
+  if ("woodLiveMassMean_Mgha" %in% colnames(biomass_site) & "herbPeakMassMean_Mgha" %in% colnames(biomass_site)) {
     biomass_site$mass_Mgha <- biomass_site$woodLiveMassMean_Mgha + biomass_site$herbPeakMassMean_Mgha
   }
   
@@ -140,44 +165,69 @@ estimateMass = function(dataProducts = c("Hbp", "Vst"),
     biomass_site$mass_Mgha <- biomass_site$woodLiveMassMean_Mgha + biomass_site$rootMassMean_Mgha
   }
   
-  if("Bbc" %in% dataProducts){
-    output.list <- list(
-      biomass_site = biomass_site,
-      scaleRootMassOutputs = scaleRootMassOutputs
-    )
+  #   Create output.list object
+  output.list <- list(biomass_site = biomass_site)
+  
+  #   Conditionally append BBC output
+  if ("Bbc" %in% dataProducts) {
+    output.list <- append(output.list, 
+                          list(scaleRootMassOutputs = scaleRootMassOutputs), 
+                          after = length(output.list))
   }
   
-  if("Vst" %in% dataProducts & !("Hbp" %in% dataProducts)){
-    output.list <- list(
-      biomass_site = biomass_site,
-      estimateWoodMassOutputs = estimateWoodMassOutputs
-    )
+  #   Conditionally append HBP output
+  if ("Hbp" %in% dataProducts) {
+    output.list <- append(output.list,
+                          list(scaleHerbMassOutputs = scaleHerbMassOutputs),
+                          after = length(output.list))
   }
   
-  if("Hbp" %in% dataProducts & !("Vst" %in% dataProducts)){
-    output.list <- list(
-      biomass_site = biomass_site,
-      scaleHerbMassOutputs = scaleHerbMassOutputs
-    )
+  #   Conditionally append VST output
+  if ("Vst" %in% dataProducts) {
+    output.list <- append(output.list,
+                          list(estimateWoodMassOutputs = estimateWoodMassOutputs),
+                          after = length(output.list))
   }
   
-  if("Vst" %in% dataProducts & "Hbp" %in% dataProducts){  # overwrites earlier list if both are present 
-    output.list <- list(
-      biomass_site = biomass_site,
-      estimateWoodMassOutputs = estimateWoodMassOutputs,
-      scaleHerbMassOutputs = scaleHerbMassOutputs
-    )
-  }
+  # if ("Bbc" %in% dataProducts) {
+  #   output.list <- list(
+  #     biomass_site = biomass_site,
+  #     scaleRootMassOutputs = scaleRootMassOutputs
+  #   )
+  # }
+  # 
+  # if ("Vst" %in% dataProducts & !("Hbp" %in% dataProducts)) {
+  #   output.list <- list(
+  #     biomass_site = biomass_site,
+  #     estimateWoodMassOutputs = estimateWoodMassOutputs
+  #   )
+  # }
+  # 
+  # if ("Hbp" %in% dataProducts & !("Vst" %in% dataProducts)) {
+  #   output.list <- list(
+  #     biomass_site = biomass_site,
+  #     scaleHerbMassOutputs = scaleHerbMassOutputs
+  #   )
+  # }
+  # 
+  # if ("Vst" %in% dataProducts & "Hbp" %in% dataProducts) {  # overwrites earlier list if both are present 
+  #   output.list <- list(
+  #     biomass_site = biomass_site,
+  #     estimateWoodMassOutputs = estimateWoodMassOutputs,
+  #     scaleHerbMassOutputs = scaleHerbMassOutputs
+  #   )
+  # }
+  # 
+  # if ("Vst" %in% dataProducts & "Hbp" %in% dataProducts & "Bbc" %in% dataProducts) {  # overwrites earlier list if all three are present 
+  #   output.list <- list(
+  #     biomass_site = biomass_site,
+  #     estimateWoodMassOutputs = estimateWoodMassOutputs,
+  #     scaleHerbMassOutputs = scaleHerbMassOutputs,
+  #     scaleRootMassOutputs = scaleRootMassOutputs
+  #   )
+  #   
+  # }
   
-  if("Vst" %in% dataProducts & "Hbp" %in% dataProducts & "Bbc" %in% dataProducts){  # overwrites earlier list if all three are present 
-    output.list <- list(
-      biomass_site = biomass_site,
-      estimateWoodMassOutputs = estimateWoodMassOutputs,
-      scaleHerbMassOutputs = scaleHerbMassOutputs,
-      scaleRootMassOutputs = scaleRootMassOutputs
-    )
-    
-  }
   return(output.list)
   
 }
