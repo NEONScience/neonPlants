@@ -1,20 +1,19 @@
-##############################################################################################
 #' @title Estimate ANPP (Aboveground Net Primary Productivity) contributed by herbaceous vegetation
-
-#' @author
-#' Samuel M Simkin \email{ssimkin@battelleecology.org} \cr
-
-#' @description Calculate herbaceous aboveground productivity Using inputs from companion scaleHerbMass function.
-#' The data input is a list of biomass dataframes created by the companion scaleHerbMass function (e.g. scaleHerbMassOutputs).
 #' 
-#' @details Input data can be filtered by plot type and plot priority.A list of herbaceous biomass dataframes created by the companion scaleHerbMass function is read in and aboveground net primary 
-#' productivity (ANPP) is calculated for NEON "Herbaceous clip harvest" (DP1.10023.001) data. Where grazing exclosures have been established consumption is calculated as
-#' biomass within exclosures minus biomass outside of exclosures. Consumption at each sampling bout is summed and then added to the 
-#' standing biomass of the last bout of the season for an estimate of herbaceous ANPP. Where grazing exclosures have not been established
-#' the estimate of herbaceous ANPP is simply the standing biomass of the last bout of the season.
+#' @author Samuel M Simkin \email{ssimkin@battelleecology.org} \cr
 
-#' @param inputDataList  Specify a loaded R list object (e.g. scaleHerbMassOutputs) that was produced by companion scaleHerbMass function. [character]
+#' @description Calculate herbaceous aboveground productivity using inputs from companion scaleHerbMass function.
+#' 
+#' @details A list of herbaceous biomass dataframes created by the companion scaleHerbMass() function is read in, and aboveground net primary productivity (ANPP) is calculated for NEON "Herbaceous clip harvest" (DP1.10023.001) data. 
+#' 
+#' Where grazing exclosures have been established, consumption is calculated for each sampling event as average biomass within exclosures minus average biomass outside of exclosures. Consumption at each sampling bout is summed and then added to the standing biomass of the last bout of the season for an estimate of herbaceous ANPP. 
+#' 
+#' Where herbaceous plants are not subject to grazing management and exclosures are not in use, the estimate of herbaceous ANPP is simply the standing biomass of the last bout of the season.
+#' 
+#' @param inputDataList An R list object produced by the companion scaleHerbMass() function. [list]
+#' 
 #' @param plotType Optional filter for NEON plot type. Options are "tower" (default) or "all". A subset of 5 Tower plots are sampled annually (those plots with the highest plot priority), and remaining Tower plots are scheduled every 5 years. If "all" is selected, results include data from Distributed plots that are also sampled every 5 years. [character]
+#' 
 #' @param plotPriority NEON plots have a priority number to spatially balance plots by NLCD class, etc. in the event that not all scheduled plots can be sampled. The lower the number the higher the priority. Options are "all" or "5". The default is "5" which retains just the 5 highest priority Tower plots that are sampled annually. [character]
 #' 
 #' @return A list that includes productivity summary data frames. Output tables include:
@@ -44,59 +43,83 @@ estimateHerbProd = function(inputDataList,
   
   options(dplyr.summarise.inform = FALSE)
   
+  #   Check that 'inputDataList' is an object with class 'list'
   if(!methods::is(inputDataList, class = "list" )){
-    stop("The inputDataList argument is expected to be a list. A character, data.frame, or NA argument is not allowed.")
+    stop("The inputDataList argument is expected to be a list generated with scaleHerbMass(). A character, data.frame, or NA argument is not allowed.")
     }
   
+  #   Unpack scaleHerbMass() input data to the environment
   list2env(inputDataList ,.GlobalEnv)
-  hbp_agb <- inputDataList$hbp_agb
-  hbp_plot <- inputDataList$hbp_plot
   
-  
+  #   Verify that 'inputDataList' contains expected tables
   listExpNames_Hbp <- c("hbp_agb", "hbp_plot", "hbp_site")
+  
   if (length(setdiff(listExpNames_Hbp, names(inputDataList))) > 0) {
-    stop(glue::glue("Required tables missing from inputDataList list:",
-      '{paste(setdiff(listExpNames_Hbp, names(inputDataList)), collapse = ", ")}',
-      .sep = " "))
+    
+    stop(glue::glue("Required tables missing from 'inputDataList' list:",
+                    '{paste(setdiff(listExpNames_Hbp, names(inputDataList)), collapse = ", ")}',
+                    .sep = " "))
   } 
   
-  
-  # Error if invalid plotType option selected
+  #   Error if invalid plotType option selected
   if (!plotType %in% c("tower", "all")) {
     stop("The only valid plotType options are 'tower' or 'all'.")
   }  
   
-  # Error if invalid plotPriority option selected
+  #   Error if invalid plotPriority option selected
   if (!(as.character(plotPriority)) %in% c("all", "5")) {
     stop("The plotPriority argument should be either 'all' (all plots) or '5' (the 5 highest priority plots).")
   }  
-  plotPriority <- ifelse(plotPriority == "5", 5, 30) # convert to numeric (30 is highest plotPriority)
+  
+  #   Conditionally convert 'plotPriority' to numeric (30 is highest plotPriority)
+  plotPriority <- ifelse(plotPriority == "5", 5, 30)
+  
   
   
   ### Verify inputDataList tables contain required columns and data ####
   
-  
   ### Verify user-supplied hbp_agb contains required data
   #   Check for required columns
-  hbp_agb_ExpCols <- c("domainID","siteID", "plotID","clipID","eventID","year","nlcdClass","plotType","plotSize","data_prod","bout",
-    "sampleID","clipArea","exclosure","peak","AllHerbaceousPlants_gm2")
+  hbp_agb_ExpCols <- c("domainID",
+                       "siteID",
+                       "plotID",
+                       "clipID",
+                       "eventID",
+                       "year",
+                       "nlcdClass",
+                       "plotType",
+                       "plotSize",
+                       "data_prod",
+                       "bout",
+                       "sampleID",
+                       "clipArea",
+                       "exclosure",
+                       "peak",
+                       "AllHerbaceousPlants_gm2")
+  
   if (length(setdiff(hbp_agb_ExpCols, colnames(hbp_agb))) > 0) {
     stop(glue::glue("Required columns missing from 'hbp_agb':", '{paste(setdiff(hbp_agb_ExpCols, colnames(hbp_agb)), collapse = ", ")}',
-      .sep = " "))
+                    .sep = " "))
   }
-    
+  
   #   Check for data
   if (nrow(hbp_agb) == 0) {
     stop(glue::glue("Table 'hbp_agb' has no data."))
   }
   
+  
+  
   ### Verify user-supplied hbp_plot contains required data
   #   Check for required columns
-  hbp_plot_ExpCols <- c("siteID","plotID","year","nlcdClass","herbPeakMassTotal_Mgha")
+  hbp_plot_ExpCols <- c("siteID",
+                        "plotID",
+                        "year",
+                        "nlcdClass",
+                        "herbPeakMassTotal_Mgha")
   
   if (length(setdiff(hbp_plot_ExpCols, colnames(hbp_plot))) > 0) {
     stop(glue::glue("Required columns missing from 'hbp_plot':", '{paste(setdiff(hbp_plot_ExpCols, colnames(hbp_plot)), collapse = ", ")}',
-      .sep = " "))
+                    .sep = " "))
   }
   
   #   Check for data
@@ -109,44 +132,90 @@ estimateHerbProd = function(inputDataList,
   end  <- max(hbp_plot$year)
   
   
-  ###### Error if not at least 2 years of data
-  if(as.numeric(end) - as.numeric(start) < 1){
-    print("At least 2 years of data are needed to calculate productivity (more for plots sampled less frequently than annually). Current dataset only has biomass data from: ")
-    print(unique(hbp_plot$year))
-    stop( )
+  
+  ### Error if not at least 2 years of data ####
+  if (as.numeric(end) - as.numeric(start) < 1) {
+    
+    stop(glue::glue("At least 2 years of data are needed to calculate productivity (more when the plot sampling interval is longer than annual). Input dataset only has biomass data from: {unique(hbp_plot$year)}"))
+    
   }
   
-  print("Summarizing above-ground herbaceous productivity  ..... ")
+  message("Summarizing above-ground herbaceous productivity  ..... ")
   
-  ### productivity by site and year
+  
+  
+  ### Calculate productivity by site and year ####
+  
   # hbp_event_means <- hbp_agb %>% 
   #   dplyr::group_by(.data$domainID, .data$siteID, .data$plotID, .data$plotType, .data$eventID, .data$year, .data$bout, .data$nlcdClass, .data$exclosure, .data$peak) %>% 
   #   dplyr::summarise(mean_herb_gm2 = mean(.data$AllHerbaceousPlants_gm2, na.rm = TRUE)) # calc the mean biomass of the individual plots within eventID
   # hbp_event_means$exclosure <- ifelse(is.na(hbp_event_means$exclosure), "N", hbp_event_means$exclosure)
   
-  if(nrow(hbp_agb %>% dplyr::filter(.data$exclosure == "Y")) > 0 ) {
-  
-  hbp_agb_long <- hbp_agb %>% dplyr::rename_with(~ stringr::str_remove(., "_gm2"), c("AllHerbaceousPlants_gm2", "CoolSeasonGraminoids_gm2", "AnnualAndPerennialForbs_gm2", "NFixingPlants_gm2",
-    "WarmSeasonGraminoids_gm2", "WoodyStemmedPlants_gm2")) %>% 
-  tidyr::pivot_longer(cols=c("AllHerbaceousPlants", "CoolSeasonGraminoids", "WoodyStemmedPlants", "WarmSeasonGraminoids",
-    "NFixingPlants","AnnualAndPerennialForbs"), names_to="herbGroup", values_to="gm2")
-  
-  #  hbp_agb_long$exclosure <- dplyr::if_else(hbp_agb_long$plotType == "distributed" & is.na(hbp_agb_long$exclosure), "N", hbp_agb_long$exclosure, hbp_agb_long$exclosure)
-  hbp_agb_long$exclosure <- dplyr::if_else(is.na(hbp_agb_long$exclosure), "N", hbp_agb_long$exclosure, hbp_agb_long$exclosure)
-  
-  hbp_agb_long <- hbp_agb_long[!duplicated(paste0(hbp_agb_long$plotID, hbp_agb_long$subplotID, hbp_agb_long$year, hbp_agb_long$bout, hbp_agb_long$exclosure, hbp_agb_long$herbGroup), fromLast = TRUE), ] 
-    # remove duplicates
-  
-  consumption <- hbp_agb_long %>% 
-    tidyr::pivot_wider(id_cols = c("domainID", "siteID", "plotID", "plotType", "nlcdClass", "subplotID", "year", "peak", "herbGroup", "eventID", "bout"), names_from = "exclosure",
-      values_from = "gm2", names_prefix = "gm2_") %>% 
-      # convert from long to wide format (exclosure Y and N in same row)
-    dplyr::mutate(gm2_C = .data$gm2_Y - .data$gm2_N)    # gm2_C is consumption, calculated as biomass in exclosure (Y) minus biomass outside of exclosure (N)
-  } else {
+  if (nrow(hbp_agb %>% dplyr::filter(.data$exclosure == "Y")) > 0) {
+    
+    hbp_agb_long <- hbp_agb %>% 
+      dplyr::rename_with(~ stringr::str_remove(., "_gm2"), 
+                         c("AllHerbaceousPlants_gm2", 
+                           "CoolSeasonGraminoids_gm2", 
+                           "AnnualAndPerennialForbs_gm2", 
+                           "NFixingPlants_gm2",
+                           "WarmSeasonGraminoids_gm2", 
+                           "WoodyStemmedPlants_gm2")) %>% 
+      tidyr::pivot_longer(cols = c("AllHerbaceousPlants", 
+                                   "CoolSeasonGraminoids", 
+                                   "WoodyStemmedPlants", 
+                                   "WarmSeasonGraminoids",
+                                   "NFixingPlants",
+                                   "AnnualAndPerennialForbs"), 
+                          names_to = "herbGroup", 
+                          values_to = "gm2")
+    
+    #  hbp_agb_long$exclosure <- dplyr::if_else(hbp_agb_long$plotType == "distributed" & is.na(hbp_agb_long$exclosure), "N", hbp_agb_long$exclosure, hbp_agb_long$exclosure)
+    
+    #   Populate exclosure == "N" if value is NA
+    hbp_agb_long$exclosure <- dplyr::if_else(is.na(hbp_agb_long$exclosure), 
+                                             "N", hbp_agb_long$exclosure, 
+                                             hbp_agb_long$exclosure)
+    
+    #   Remove duplicates based on primary keys
+    hbp_agb_long <- hbp_agb_long[!duplicated(paste0(hbp_agb_long$plotID, 
+                                                    hbp_agb_long$subplotID, 
+                                                    hbp_agb_long$year, 
+                                                    hbp_agb_long$bout, 
+                                                    hbp_agb_long$exclosure, 
+                                                    hbp_agb_long$herbGroup), 
+                                             fromLast = TRUE), ] 
+    
+    #   Calculate consumption as 'gm2_C'
     consumption <- hbp_agb_long %>% 
-      dplyr::mutate(gm2_C = 0) %>% # if no exclosure then set consumption to 0
+      tidyr::pivot_wider(id_cols = c("domainID", 
+                                     "siteID", 
+                                     "plotID", 
+                                     "plotType", 
+                                     "nlcdClass", 
+                                     "subplotID", 
+                                     "year", 
+                                     "peak", 
+                                     "herbGroup", 
+                                     "eventID", 
+                                     "bout"), 
+                         names_from = "exclosure",
+                         values_from = "gm2", 
+                         names_prefix = "gm2_") %>% 
+      
+      #   Consumption is biomass in exclosure (Y) minus biomass outside of exclosure (N)
+      dplyr::mutate(gm2_C = .data$gm2_Y - .data$gm2_N)
+    
+  } else {
+    
+    #   If no exclosure set consumption to 0
+    consumption <- hbp_agb_long %>% 
+      dplyr::mutate(gm2_C = 0) %>%
       dplyr::rename("gm2_N" = "gm2")
-  }
+    
+  } #   End exclosure conditional
+  
+  
   
   # all the same grouping variables as in the pivot_longer except subplotID, so the mean of subplots (typically 2) within plot is calculated
   plot_consumption <- consumption %>% dplyr::group_by(.data$domainID, .data$siteID, .data$plotID, .data$plotType, .data$nlcdClass, .data$year, .data$peak, .data$herbGroup, .data$eventID, .data$bout) %>%
