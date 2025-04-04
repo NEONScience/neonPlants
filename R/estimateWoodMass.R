@@ -1284,8 +1284,7 @@ vst_agb$agb_shrub <- ifelse((vst_agb$growthForm == "single shrub" | vst_agb$grow
   if (growthForm == "tree") {
     
     vst_agb_kg <- vst_agb_kg %>% 
-      dplyr::filter(.data$growthForm == "single bole tree" | .data$growthForm == "multi-bole tree"  | .data$growthForm == "sapling" |
-                      .data$growthForm == "small tree")
+      dplyr::filter(.data$growthForm == "single bole tree" | .data$growthForm == "multi-bole tree")
     
   }
 
