@@ -18,7 +18,7 @@
 #' @param inputMass The 'hbp_massdata' table for the site x month combination(s) of interest
 #' (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
 #' 
-#' @param plotSubset Applicable if dataProducts includes "Vst" or "Hbp". The options are "all" (all tower and distributed plots), the default of "towerAll" (all plots in the tower airshed but no distributed plots), "towerAnnualSubset" (only the subset of tower plots that are sampled annually), and "distributed" (all distributed plots, which are sampled in 5-yr bouts and are spatially representative of the NLCD classes at at site). [character]
+#' @param plotSubset The options are "all" (all tower and distributed plots), the default of "towerAll" (all plots in the tower airshed but no distributed plots), and "distributed" (all distributed plots, which are sampled in 5-yr bouts and are spatially representative of the NLCD classes at at site). [character]
 #' 
 #' @return A list that includes biomass summary data at multiple scales. Output tables include:
 #'   * hbp_agb - Summarizes above-ground herbaceous biomass for each record ("g/m2").
@@ -139,8 +139,8 @@ scaleHerbMass = function(inputDataList,
   }
   
   # Error if invalid plotSubset option selected
-  if (!plotSubset %in% c("all", "towerAll", "towerAnnualSubset", "distributed")) {
-    stop("The only valid plotSubset options are 'all', 'towerAll', 'towerAnnualSubset', 'distributed'.")
+  if (!plotSubset %in% c("all", "towerAll", "distributed")) {
+    stop("The only valid plotSubset options are 'all', 'towerAll', or 'distributed'.")
   }  
   
   plotPriority <- ifelse(plotSubset == "towerAnnualSubset", 5, 50) # convert to numeric (50 is highest plotPriority)

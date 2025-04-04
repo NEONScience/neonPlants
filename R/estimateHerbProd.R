@@ -215,22 +215,42 @@ estimateHerbProd = function(inputDataList,
     
   } #   End exclosure conditional
   
-  
-  
   # all the same grouping variables as in the pivot_longer except subplotID, so the mean of subplots (typically 2) within plot is calculated
-  plot_consumption <- consumption %>% dplyr::group_by(.data$domainID, .data$siteID, .data$plotID, .data$plotType, .data$nlcdClass, .data$year, .data$peak, .data$herbGroup, .data$eventID, .data$bout) %>%
-    dplyr::summarise(gm2_Y = mean(stats::na.omit(.data$gm2_Y)), gm2_N = mean(stats::na.omit(.data$gm2_N)), gm2_C = mean(stats::na.omit(.data$gm2_C)) )
-  
+  plot_consumption <- consumption %>% 
+    dplyr::group_by(.data$domainID, 
+                    .data$siteID, 
+                    .data$plotID, 
+                    .data$plotType, 
+                    .data$nlcdClass, 
+                    .data$year, 
+                    .data$peak, 
+                    .data$herbGroup, 
+                    .data$eventID, 
+                    .data$bout) %>%
+    dplyr::summarise(gm2_Y = mean(stats::na.omit(.data$gm2_Y)), 
+                     gm2_N = mean(stats::na.omit(.data$gm2_N)), 
+                     gm2_C = mean(stats::na.omit(.data$gm2_C)) )
   
   # all the same grouping variables used to create plot_consumption except for eventID and bout, allowing us to count the number of bouts or extract the values of the last bout
-  herb_ANPP_total <- plot_consumption %>% dplyr::filter(.data$herbGroup == "AllHerbaceousPlants") %>% dplyr::group_by(.data$domainID, .data$siteID, .data$plotID, .data$nlcdClass, .data$plotType, .data$year, .data$herbGroup) %>%
-    dplyr::summarise(
-      totalConsumption_gm2 = sum(stats::na.omit(.data$gm2_C)),
-      n_bouts_used_for_consumption = length(stats::na.omit(.data$gm2_C)),
-      last_bout = dplyr::last(.data$bout),
-      "last_bout_mean_herb_gm2" = dplyr::last(.data$gm2_N),
-      "herbANPP_gm2yr" = .data$last_bout_mean_herb_gm2 + .data$totalConsumption_gm2  # add standing biomass and, if applicable, consumption calculated from exclosures
-      ) %>% dplyr::ungroup()
+  #herb_ANPP_total <- plot_consumption %>% 
+  temp <- plot_consumption %>%
+    dplyr::filter(.data$herbGroup == "AllHerbaceousPlants") %>% 
+    dplyr::group_by(.data$domainID, 
+                    .data$siteID, 
+                    .data$plotID, 
+                    .data$nlcdClass, 
+                    .data$plotType, 
+                    .data$year, 
+                    .data$herbGroup) %>%
+    
+    # add standing biomass and, if applicable, consumption calculated from exclosures
+    dplyr::summarise(totalConsumption_gm2 = sum(stats::na.omit(.data$gm2_C)),
+                     n_bouts_used_for_consumption = length(stats::na.omit(.data$gm2_C)),
+                     last_bout = dplyr::last(.data$bout),
+                     "last_bout_mean_herb_gm2" = dplyr::last(.data$gm2_N),
+                     "herbANPP_gm2yr" = .data$last_bout_mean_herb_gm2 + .data$totalConsumption_gm2,
+                     .groups = "drop")
+  
   herb_ANPP_total$bout <- "allBouts"
   
   herb_ANPP_herbGroup <- plot_consumption %>% dplyr::filter(.data$herbGroup != "AllHerbaceousPlants" & .data$peak =="atPeak") %>% dplyr::group_by(.data$domainID, .data$siteID, .data$plotID, .data$nlcdClass, .data$plotType, .data$year, .data$herbGroup) %>%
