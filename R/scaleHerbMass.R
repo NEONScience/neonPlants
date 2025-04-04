@@ -18,9 +18,7 @@
 #' @param inputMass The 'hbp_massdata' table for the site x month combination(s) of interest
 #' (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
 #' 
-#' @param plotType Optional filter based on NEON plot type. Options are "all" (both Tower and Distributed plot types) or "tower". Defaults to "all". [character]
-#' 
-#' @param plotPriority NEON plots have a priority number in the event that not all plots are able to be sampled. The lower the number the higher the priority. The default is NA. [integer]
+#' @param plotSubset Applicable if dataProducts includes "Vst" or "Hbp". The options are "all" (all tower and distributed plots), the default of "towerAll" (all plots in the tower airshed but no distributed plots), "towerAnnualSubset" (only the subset of tower plots that are sampled annually), and "distributed" (all distributed plots, which are sampled in 5-yr bouts and are spatially representative of the NLCD classes at at site). [character]
 #' 
 #' @return A list that includes biomass summary data at multiple scales. Output tables include:
 #'   * hbp_agb - Summarizes above-ground herbaceous biomass for each record ("g/m2").
@@ -48,8 +46,7 @@
 scaleHerbMass = function(inputDataList, 
                          inputBout = NA, 
                          inputMass = NA,
-                         plotType = "all",
-                         plotPriority = NA) {
+                         plotSubset = "towerAll") {
   
   options(dplyr.summarise.inform = FALSE)
   
@@ -141,7 +138,15 @@ scaleHerbMass = function(inputDataList,
     stop(glue::glue("Table 'inputMass' has no data."))
   }
   
+  # Error if invalid plotSubset option selected
+  if (!plotSubset %in% c("all", "towerAll", "towerAnnualSubset", "distributed")) {
+    stop("The only valid plotSubset options are 'all', 'towerAll', 'towerAnnualSubset', 'distributed'.")
+  }  
   
+  plotPriority <- ifelse(plotSubset == "towerAnnualSubset", 5, 50) # convert to numeric (50 is highest plotPriority)
+  plotType <- ifelse(plotSubset == "towerAnnualSubset" | plotSubset == "towerAll", "tower", "distributed")
+  plotType <- ifelse(plotSubset == "all", "all", plotType)
+
   
   ###  Create 'year' column for grouping output at plot and site scales across data products
   inputBout$year <- as.numeric(substr(inputBout$eventID, 5, 8))
@@ -316,19 +321,22 @@ scaleHerbMass = function(inputDataList,
                     by = c("plotID"), 
                     all.x = TRUE)
   
-  #   Remove 'distributed' plots if focus is on 'tower' plots
-  if(plotType == "tower") {
+  #   Filter by plotType
+  if(plotType == "distributed") {
+    
+    hbp_plot <- hbp_plot %>% 
+      dplyr::filter(.data$plotType == "distributed")
+  }
+  
+ if(plotType == "tower") {
     
     hbp_plot <- hbp_plot %>% 
       dplyr::filter(.data$plotType == "tower")
   }
   
   #   Remove plots that do not meet 'priority' thresholds if 'plotPriority' supplied
-  if(!is.na(plotPriority)) {
-    
-    hbp_plot <- hbp_plot %>% 
+     hbp_plot <- hbp_plot %>% 
       dplyr::filter(.data$specificModuleSamplingPriority <= plotPriority)
-  } 
   
   #   Reorder columns and keep latest year
   hbp_plot <- hbp_plot %>% 

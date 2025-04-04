@@ -8,8 +8,7 @@ scaleHerbMass(
   inputDataList,
   inputBout = NA,
   inputMass = NA,
-  plotType = "all",
-  plotPriority = NA
+  plotSubset = "towerAll"
 )
 }
 \arguments{
@@ -21,9 +20,7 @@ scaleHerbMass(
 \item{inputMass}{The 'hbp_massdata' table for the site x month combination(s) of interest
 (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 
-\item{plotType}{Optional filter based on NEON plot type. Options are "all" (both Tower and Distributed plot types) or "tower". Defaults to "all". \link{character}}
-
-\item{plotPriority}{NEON plots have a priority number in the event that not all plots are able to be sampled. The lower the number the higher the priority. The default is NA. \link{integer}}
+\item{plotSubset}{Applicable if dataProducts includes "Vst" or "Hbp". The options are "all" (all tower and distributed plots), the default of "towerAll" (all plots in the tower airshed but no distributed plots), "towerAnnualSubset" (only the subset of tower plots that are sampled annually), and "distributed" (all distributed plots, which are sampled in 5-yr bouts and are spatially representative of the NLCD classes at at site). \link{character}}
 }
 \value{
 A list that includes biomass summary data at multiple scales. Output tables include:

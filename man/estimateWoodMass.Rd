@@ -10,9 +10,8 @@ estimateWoodMass(
   inputMapTag = NA,
   inputNonWoody = NA,
   inputPerPlot = NA,
-  growthForm = "all",
-  plotType = "tower",
-  plotPriority = "all"
+  plotSubset = "towerAll",
+  growthForm = "all"
 )
 }
 \arguments{
@@ -30,11 +29,9 @@ estimateWoodMass(
 \item{inputPerPlot}{The 'vst_perplotperyear' table for the site x month combination(s) of interest
 (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 
-\item{growthForm}{Select which growth forms to analyse. Options are "all", "tree", "shrubLiana", or "other". Consult the Vegetation Structure Quick Start Guide and/or the Data Product User Guide for more growth form information. \link{character}}
+\item{plotSubset}{Applicable if dataProducts includes "Vst" or "Hbp". The options are "all" (all tower and distributed plots), the default of "towerAll" (all plots in the tower airshed but no distributed plots), "towerAnnualSubset" (only the subset of tower plots that are sampled annually), and "distributed" (all distributed plots, which are sampled in 5-yr bouts and are spatially representative of the NLCD classes at at site). \link{character}}
 
-\item{plotType}{Optional filter for NEON plot type. Options are "tower" (default) or "all". A subset of 5 Tower plots are sampled annually (those plots with the highest plot priority), and remaining Tower plots are scheduled every 5 years. If "all" is selected, results include data from Distributed plots that are also sampled every 5 years. \link{character}}
-
-\item{plotPriority}{NEON plots have a priority number to spatially balance plots by NLCD class, etc. in the event that not all scheduled plots can be sampled. The lower the number the higher the priority. Options are "all" or "5". The default is "all" but if planning to use productivity functions then "5" retains just the 5 highest priority Tower plots that are sampled annually. \link{character}}
+\item{growthForm}{Applicable if dataProducts includes "Vst". Select which growth forms to analyse. The options are "tree" (sbt, mbt) for trees with a dbh > 10 cm, and the default of "all", which includes the large trees, and also small trees (smt, sap), shrubs (sis, sms), liana (lia), palms (plm, ptr, spm), tree ferns (ltf, stf, tfn), ocotillo (oco), yucca (yuc), and xerophyllum (xer).  Consult the Vegetation Structure Quick Start Guide and/or the Data Product User Guide for more growth form information. \link{character}}
 }
 \value{
 A list that includes biomass summary data frames and a helper data frame for needed by companion productivity functions - e.g., the estimateProd() function. Output tables include:
@@ -68,8 +65,8 @@ estimateWoodMassOutputs <- estimateWoodMass(inputDataList = VstDat)
 # example specifying several non-default arguments
 estimateWoodMassOutputs <- estimateWoodMass(
 inputDataList = VstDat,
-growthForm = "tree",
-plotPriority = "5"
+plotSubset = "towerAnnualSubset",
+growthForm = "tree"
 )
 
 }

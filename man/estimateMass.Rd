@@ -5,7 +5,7 @@
 \title{Generate summed site-level biomass estimates from NEON data products}
 \usage{
 estimateMass(
-  dataProducts = c("Hbp", "Vst"),
+  dataProducts = NA,
   inputDataListVst = NA,
   wood_apparentindividual = NA,
   wood_mappingandtagging = NA,
@@ -20,13 +20,12 @@ estimateMass(
   inputDilution = NA,
   includeDilution = TRUE,
   includeFragInTotal = FALSE,
-  plotType = "tower",
-  plotPriority = 5,
-  growthForm = "tree"
+  plotSubset = "towerAll",
+  growthForm = "all"
 )
 }
 \arguments{
-\item{dataProducts}{Character vector specifying the NEON data products to be summed. Valid options are "Bbc" (fine root biomass), "Hbp" (herbaceous clip harvest biomass), and "Vst" (above-ground allometrically estimated woody biomass, including palms and tree ferns); defaults to c("Hbp", "Vst"). \link{character}}
+\item{dataProducts}{Character vector specifying the NEON data products to be summed. Valid options are "Bbc" (fine root biomass), "Hbp" (herbaceous clip harvest biomass), and "Vst" (above-ground allometrically estimated woody biomass, including palms and tree ferns); Required argument with no default. \link{character}}
 
 \item{inputDataListVst}{A list object comprised of "Vegetation structure" tables (DP1.10098.001) downloaded using the neonUtilities::loadByProduct() function. If "Vst" list input is provided, the "Vst" table input arguments must all be NA; similarly, if list input is missing and "Vst" is included in the dataProducts argument, table inputs must be provided for 'wood_apparentindividual', 'wood_mappingandtagging', 'wood_nonWoody', and 'wood_perplotperyear' arguments. \link{list}}
 
@@ -56,17 +55,15 @@ estimateMass(
 
 \item{includeFragInTotal}{Required if dataProducts includes "Bbc". Indicator for whether mass of root fragments < 1 cm length calculated from dilution sampling should be included when summing across sizeCategory to calculate root 'totalDryMass'. Defaults to FALSE. If set to TRUE and 'inputDataListBbc' is missing, the 'bbc_dilution' table must be provided to the 'inputDilution' argument. \link{logical}}
 
-\item{plotType}{Applicable if dataProducts includes "Vst" or "Hbp". Optional filter based on NEON plot type. Defaults to "tower" plots, which are sampled annually. Otherwise "distributed" plots are examined also. \link{character}}
+\item{plotSubset}{Applicable if dataProducts includes "Vst" or "Hbp". The options are "all" (all tower and distributed plots), the default of "towerAll" (all plots in the tower airshed but no distributed plots), "towerAnnualSubset" (only the subset of tower plots that are sampled annually), and "distributed" (all distributed plots, which are sampled in 5-yr bouts and are spatially representative of the NLCD classes at at site). \link{character}}
 
-\item{plotPriority}{Applicable if dataProducts includes "Vst" or "Hbp". NEON plots have a priority number in the event that not all plots are able to be sampled. The lower the number the higher the priority. The default is 5. \link{numeric}}
-
-\item{growthForm}{Required if dataProducts includes "Vst" or "Hbp". Select which growth forms to analyze. \link{character}}
+\item{growthForm}{Applicable if dataProducts includes "Vst". Select which growth forms to analyse. The options are "tree" (sbt, mbt) for trees with a dbh > 10 cm and the default of "all", which includes the large trees, and also small trees (smt, sap), shrubs (sis, sms), liana (lia), palms (plm, ptr, spm), tree ferns (ltf, stf, tfn), ocotillo (oco), yucca (yuc), and xerophyllum (xer).  Consult the Vegetation Structure Quick Start Guide and/or the Data Product User Guide for more growth form information. \link{character}}
 }
 \value{
-A site-level summary dataframe named "biomass_site" with summed biomass from the selected NEON data products (megagrams per hectare). In addition, more granular data summaries are returned for each of the selected input data products. More detail is provided for product-specific data frames in the documentation associated wiht contributing functions - i.e., estimateWoodMass(), scaleHerbMass(), and scaleRootMass().
+A site-level summary dataframe named "biomass_site" with biomass from the selected NEON data products (megagrams per hectare). In addition, more granular data summaries are returned for each of the selected input data products. More detail is provided for product-specific data frames in the documentation associated wiht contributing functions - i.e., estimateWoodMass(), scaleHerbMass(), and scaleRootMass().
 }
 \description{
-Combine above- and/or below-ground biomass summaries from multiple NEON data products and generate summed site-level biomass estimates. Currently supported data products are "Herbaceous clip harvest" (DP1.10023.001), "Root biomass and chemistry, periodic" (DP1.10067.001), and "Vegetation structure" (DP1.10098.001). Biomass outputs can subsequently be used with the estimateProd() function. Data inputs are list objects retrieved using the neonUtilities::loadByProduct() function for each selected data product (preferred), or data downloaded from the NEON Data Portal.
+Combine above- and/or below-ground biomass summaries from multiple NEON data products. Currently supported data products are "Herbaceous clip harvest" (DP1.10023.001), "Root biomass and chemistry, periodic" (DP1.10067.001), and "Vegetation structure" (DP1.10098.001). Biomass outputs can subsequently be used with the estimateProd() function. Data inputs are list objects retrieved using the neonUtilities::loadByProduct() function for each selected data product (preferred), or data downloaded from the NEON Data Portal.
 }
 \details{
 A site-level summary of NEON biomass from the selected NEON data products is provided as a dataframe, in addition to more detailed outputs for each of the selected NEON data products used to generate the site-level summary. For more documentation details see the documentation for the companion functions - i.e., estimateWoodMass(), scaleHerbMass(), and scaleRootMass().
@@ -76,13 +73,14 @@ A site-level summary of NEON biomass from the selected NEON data products is pro
 
 #  Example with arguments at default values
 estimateMassOutputs <- estimateMass(
-dataProducts = c("Vst","Hbp"), 
+dataProducts = c("Vst","Hbp","Bbc"), 
 inputDataListVst = VstDat, 
 inputDataListHbp = HbpDat
 )
 
 #  Example specifying several non-default arguments
 estimateMassOutputs <- estimateMass(
+dataProducts = c("Vst","Hbp"), 
 inputDataListVst = VstDat, 
 inputDataListHbp = NA,
 growthForm = "tree"

@@ -2,11 +2,11 @@
 #'
 #' @author Samuel M Simkin \email{ssimkin@battelleecology.org} \cr
 #'
-#' @description Combine above- and/or below-ground biomass summaries from multiple NEON data products and generate summed site-level biomass estimates. Currently supported data products are "Herbaceous clip harvest" (DP1.10023.001), "Root biomass and chemistry, periodic" (DP1.10067.001), and "Vegetation structure" (DP1.10098.001). Biomass outputs can subsequently be used with the estimateProd() function. Data inputs are list objects retrieved using the neonUtilities::loadByProduct() function for each selected data product (preferred), or data downloaded from the NEON Data Portal.
+#' @description Combine above- and/or below-ground biomass summaries from multiple NEON data products. Currently supported data products are "Herbaceous clip harvest" (DP1.10023.001), "Root biomass and chemistry, periodic" (DP1.10067.001), and "Vegetation structure" (DP1.10098.001). Biomass outputs can subsequently be used with the estimateProd() function. Data inputs are list objects retrieved using the neonUtilities::loadByProduct() function for each selected data product (preferred), or data downloaded from the NEON Data Portal.
 #' 
 #' @details A site-level summary of NEON biomass from the selected NEON data products is provided as a dataframe, in addition to more detailed outputs for each of the selected NEON data products used to generate the site-level summary. For more documentation details see the documentation for the companion functions - i.e., estimateWoodMass(), scaleHerbMass(), and scaleRootMass().
  
-#' @param dataProducts Character vector specifying the NEON data products to be summed. Valid options are "Bbc" (fine root biomass), "Hbp" (herbaceous clip harvest biomass), and "Vst" (above-ground allometrically estimated woody biomass, including palms and tree ferns); defaults to c("Hbp", "Vst"). [character]
+#' @param dataProducts Character vector specifying the NEON data products to be summed. Valid options are "Bbc" (fine root biomass), "Hbp" (herbaceous clip harvest biomass), and "Vst" (above-ground allometrically estimated woody biomass, including palms and tree ferns); Required argument with no default. [character]
 #'
 #' @param inputDataListVst A list object comprised of "Vegetation structure" tables (DP1.10098.001) downloaded using the neonUtilities::loadByProduct() function. If "Vst" list input is provided, the "Vst" table input arguments must all be NA; similarly, if list input is missing and "Vst" is included in the dataProducts argument, table inputs must be provided for 'wood_apparentindividual', 'wood_mappingandtagging', 'wood_nonWoody', and 'wood_perplotperyear' arguments. [list]
 #' 
@@ -36,26 +36,25 @@
 #' 
 #' @param includeFragInTotal Required if dataProducts includes "Bbc". Indicator for whether mass of root fragments < 1 cm length calculated from dilution sampling should be included when summing across sizeCategory to calculate root 'totalDryMass'. Defaults to FALSE. If set to TRUE and 'inputDataListBbc' is missing, the 'bbc_dilution' table must be provided to the 'inputDilution' argument. [logical]
 #' 
-#' @param plotType Applicable if dataProducts includes "Vst" or "Hbp". Optional filter based on NEON plot type. Defaults to "tower" plots, which are sampled annually. Otherwise "distributed" plots are examined also. [character]
+#' @param plotSubset Applicable if dataProducts includes "Vst" or "Hbp". The options are "all" (all tower and distributed plots), the default of "towerAll" (all plots in the tower airshed but no distributed plots), "towerAnnualSubset" (only the subset of tower plots that are sampled annually), and "distributed" (all distributed plots, which are sampled in 5-yr bouts and are spatially representative of the NLCD classes at at site). [character]
 #' 
-#' @param plotPriority Applicable if dataProducts includes "Vst" or "Hbp". NEON plots have a priority number in the event that not all plots are able to be sampled. The lower the number the higher the priority. The default is 5. [numeric]
+#' @param growthForm Applicable if dataProducts includes "Vst". Select which growth forms to analyse. The options are "tree" (sbt, mbt) for trees with a dbh > 10 cm and the default of "all", which includes the large trees, and also small trees (smt, sap), shrubs (sis, sms), liana (lia), palms (plm, ptr, spm), tree ferns (ltf, stf, tfn), ocotillo (oco), yucca (yuc), and xerophyllum (xer).  Consult the Vegetation Structure Quick Start Guide and/or the Data Product User Guide for more growth form information. [character]
 #' 
-#' @param growthForm Required if dataProducts includes "Vst" or "Hbp". Select which growth forms to analyze. [character]
-#' 
-#' @return A site-level summary dataframe named "biomass_site" with summed biomass from the selected NEON data products (megagrams per hectare). In addition, more granular data summaries are returned for each of the selected input data products. More detail is provided for product-specific data frames in the documentation associated wiht contributing functions - i.e., estimateWoodMass(), scaleHerbMass(), and scaleRootMass().
+#' @return A site-level summary dataframe named "biomass_site" with biomass from the selected NEON data products (megagrams per hectare). In addition, more granular data summaries are returned for each of the selected input data products. More detail is provided for product-specific data frames in the documentation associated wiht contributing functions - i.e., estimateWoodMass(), scaleHerbMass(), and scaleRootMass().
 #' 
 #' @examples
 #' \dontrun{
 #' 
 #' #  Example with arguments at default values
 #' estimateMassOutputs <- estimateMass(
-#' dataProducts = c("Vst","Hbp"), 
+#' dataProducts = c("Vst","Hbp","Bbc"), 
 #' inputDataListVst = VstDat, 
 #' inputDataListHbp = HbpDat
 #' )
 #' 
 #' #  Example specifying several non-default arguments
 #' estimateMassOutputs <- estimateMass(
+#' dataProducts = c("Vst","Hbp"), 
 #' inputDataListVst = VstDat, 
 #' inputDataListHbp = NA,
 #' growthForm = "tree"
@@ -65,7 +64,7 @@
 #' @export estimateMass
 
 
-estimateMass = function(dataProducts = c("Hbp", "Vst"),
+estimateMass = function(dataProducts = NA,
                         inputDataListVst = NA,
                         wood_apparentindividual = NA,
                         wood_mappingandtagging = NA,
@@ -80,11 +79,14 @@ estimateMass = function(dataProducts = c("Hbp", "Vst"),
                         inputDilution = NA,
                         includeDilution = TRUE,
                         includeFragInTotal = FALSE,
-                        plotType = "tower",
-                        plotPriority = 5,
-                        growthForm = "tree") {
-  
-  
+                        plotSubset = "towerAll",
+                        growthForm = "all") {
+
+
+  if (!all(dataProducts %in% c("Bbc", "Hbp", "Vst") )) {
+    stop("The dataProducts argument must be one of: 'Bbc', 'Hbp', 'Vst', or a comma-separated combination of two or more of these.")
+  }  
+
   
   ### VST data: Conditionally obtain site-level data with estimateWoodMass() function
   if("Vst" %in% dataProducts){  
@@ -99,10 +101,10 @@ estimateMass = function(dataProducts = c("Hbp", "Vst"),
                                                 inputNonWoody = wood_nonWoody, 
                                                 inputPerPlot = wood_perplotperyear, 
                                                 growthForm = growthForm, 
-                                                plotType = plotType, 
-                                                plotPriority = plotPriority)
+                                                plotSubset = plotSubset)
     
-    Vst <- estimateWoodMassOutputs$vst_site
+    Vst <- estimateWoodMassOutputs$vst_site %>% 
+      dplyr::select("siteID","year","woodPlotNum","woodLiveMassMean_Mgha","woodLiveMassSD_Mgha","woodDeadMassMean_Mgha","woodDeadMassSD_Mgha")
   }
   
   
@@ -110,25 +112,21 @@ estimateMass = function(dataProducts = c("Hbp", "Vst"),
   ### HBP data: Conditionally obtain site-level data with scaleHerbMass() function
   if ("Hbp" %in% dataProducts) { 
     
-    inputDataList = inputDataListHbp
-    
     message("Calculating above-ground herbaceous biomass  ..... ")
     
     scaleHerbMassOutputs <- scaleHerbMass(inputDataList = inputDataListHbp, 
                                           inputBout = herb_perbout, 
                                           inputMass = herb_massdata,
-                                          plotType = plotType, 
-                                          plotPriority = plotPriority)
+                                          plotSubset = plotSubset)
     
-    Hbp <- scaleHerbMassOutputs$hbp_site
+    Hbp <- scaleHerbMassOutputs$hbp_site %>% 
+      dplyr::select("siteID","year","herbPlotNum","herbPeakMassMean_Mgha","herbPeakMassSD_Mgha")
   }
   
   
   
   ### BBC data: Conditionally obtain site-level data with scaleRootMass() function
   if ("Bbc" %in% dataProducts) { 
-    
-    inputDataList = inputDataListBbc
     
     message("Scaling below-ground biomass  ..... ")
     
@@ -140,7 +138,7 @@ estimateMass = function(dataProducts = c("Hbp", "Vst"),
                                           inputDilution = inputDilution)
     
     Bbc <- scaleRootMassOutputs$siteRootMass %>% 
-      dplyr::select(-"eventID","startDate","endDate")
+      dplyr::select("siteID","year","rootPlotNum","rootMassMean_Mgha","rootMassSD_Mgha")
   }
   
   
@@ -156,14 +154,27 @@ estimateMass = function(dataProducts = c("Hbp", "Vst"),
     purrr::reduce(dplyr::full_join, 
                   by = c("siteID", "year"))
   
-  #   Conditionally sum mean above- and below-ground biomass
-  if ("woodLiveMassMean_Mgha" %in% colnames(biomass_site) & "herbPeakMassMean_Mgha" %in% colnames(biomass_site)) {
-    biomass_site$mass_Mgha <- biomass_site$woodLiveMassMean_Mgha + biomass_site$herbPeakMassMean_Mgha
-  }
+  # #   Conditionally sum mean above- and below-ground biomass
+  # if("woodLiveMassMean_Mgha" %in% colnames(biomass_site) & "herbPeakMassMean_Mgha" %in% colnames(biomass_site) & "rootMassMean_Mgha" %in% colnames(biomass_site)){
+  #   biomass_site$mass_Mgha <- round(biomass_site$woodLiveMassMean_Mgha + biomass_site$herbPeakMassMean_Mgha + biomass_site$rootMassMean_Mgha, 3)
+  # }
+  # 
+  # if("woodLiveMassMean_Mgha" %in% colnames(biomass_site) & "rootMassMean_Mgha" %in% colnames(biomass_site)){
+  #   biomass_site$mass_Mgha <- round(biomass_site$woodLiveMassMean_Mgha + biomass_site$rootMassMean_Mgha, 3)
+  # }
+  # 
+  # if ("woodLiveMassMean_Mgha" %in% colnames(biomass_site) & "herbPeakMassMean_Mgha" %in% colnames(biomass_site)) {
+  #   biomass_site$mass_Mgha <- round(biomass_site$woodLiveMassMean_Mgha + biomass_site$herbPeakMassMean_Mgha, 3)
+  # }
+  # 
+  # if("herbPeakMassMean_Mgha" %in% colnames(biomass_site) & "rootMassMean_Mgha" %in% colnames(biomass_site)){
+  #   biomass_site$mass_Mgha <- round(biomass_site$herbPeakMassMean_Mgha + biomass_site$rootMassMean_Mgha, 3)
+  # }
+  # 
+  # if("woodLiveMassMean_Mgha" %in% colnames(biomass_site) & "herbPeakMassMean_Mgha" %in% colnames(biomass_site) & "rootMassMean_Mgha" %in% colnames(biomass_site)){
+  #   biomass_site$mass_Mgha <- round(biomass_site$woodLiveMassMean_Mgha + biomass_site$herbPeakMassMean_Mgha + biomass_site$rootMassMean_Mgha, 3)
+  # }
   
-  if("woodLiveMassMean_Mgha" %in% colnames(biomass_site) & "herbPeakMassMean_Mgha" %in% colnames(biomass_site) & "rootMassMean_Mgha" %in% colnames(biomass_site)){
-    biomass_site$mass_Mgha <- biomass_site$woodLiveMassMean_Mgha + biomass_site$rootMassMean_Mgha
-  }
   
   #   Create output.list object
   output.list <- list(biomass_site = biomass_site)
@@ -188,45 +199,6 @@ estimateMass = function(dataProducts = c("Hbp", "Vst"),
                           list(estimateWoodMassOutputs = estimateWoodMassOutputs),
                           after = length(output.list))
   }
-  
-  # if ("Bbc" %in% dataProducts) {
-  #   output.list <- list(
-  #     biomass_site = biomass_site,
-  #     scaleRootMassOutputs = scaleRootMassOutputs
-  #   )
-  # }
-  # 
-  # if ("Vst" %in% dataProducts & !("Hbp" %in% dataProducts)) {
-  #   output.list <- list(
-  #     biomass_site = biomass_site,
-  #     estimateWoodMassOutputs = estimateWoodMassOutputs
-  #   )
-  # }
-  # 
-  # if ("Hbp" %in% dataProducts & !("Vst" %in% dataProducts)) {
-  #   output.list <- list(
-  #     biomass_site = biomass_site,
-  #     scaleHerbMassOutputs = scaleHerbMassOutputs
-  #   )
-  # }
-  # 
-  # if ("Vst" %in% dataProducts & "Hbp" %in% dataProducts) {  # overwrites earlier list if both are present 
-  #   output.list <- list(
-  #     biomass_site = biomass_site,
-  #     estimateWoodMassOutputs = estimateWoodMassOutputs,
-  #     scaleHerbMassOutputs = scaleHerbMassOutputs
-  #   )
-  # }
-  # 
-  # if ("Vst" %in% dataProducts & "Hbp" %in% dataProducts & "Bbc" %in% dataProducts) {  # overwrites earlier list if all three are present 
-  #   output.list <- list(
-  #     biomass_site = biomass_site,
-  #     estimateWoodMassOutputs = estimateWoodMassOutputs,
-  #     scaleHerbMassOutputs = scaleHerbMassOutputs,
-  #     scaleRootMassOutputs = scaleRootMassOutputs
-  #   )
-  #   
-  # }
   
   return(output.list)
   
