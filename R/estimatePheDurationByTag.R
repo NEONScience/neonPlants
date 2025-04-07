@@ -1,13 +1,12 @@
 #' @title Estimate Phenophase Duration by Tag
 #'
-#' @author
-#' Katie Jones \email{kjones@battelleecology.org} \cr
+#' @author Katie Jones \email{kjones@battelleecology.org} \cr
 #'
-#' @description This function uses observation data from the NEON Plant Phenology Observation (DP1.10055.001) to calculate phenophase duration for each phenophase transition identified by the neonPlants::estimatePheTransByTag function for the time frame provided in the input data frame. Each  duration includes additional fields describing number of transitions reported for the given individual x phenophase combination, the start and end date and day of year, and the precision around the duration estimate. Required inputs are either a list of data frames (inputDataList) as returned from neonUtilities::loadByProduct() that must include a data frame titled "phe_statusintensity" and one titled "phe_perindividual". Alternatively, the function will accept two individual data frames, inputStatus, corresponding to the phe_statusintensity table and inputTags, corresponding to the phe_perindividual table. 
+#' @description Data from the NEON Plant Phenology Observation (DP1.10055.001) product are used to calculate phenophase duration for each phenophase transition identified by the neonPlants::estimatePheTransByTag() function for the time frame provided in the input data frame. Each  duration includes additional fields describing number of transitions reported for the given individual x phenophase combination, the start and end date and day of year, and the precision around the duration estimate. Required inputs are either a list of data frames as returned from neonUtilities::loadByProduct() that must include a data frame titled "phe_statusintensity" and one titled "phe_perindividual", or two individual data frames corresponding to the "phe_statusintensity" table and the "phe_perindividual" table. 
 #' 
-#' @details Input data may be provided either as a list generated from the neonUtilities::laodByProduct() function or as individual tables. However, if both list and table inputs are provided at the same time the function will error out.
+#' @details Input data may be provided either as a list generated from the neonUtilities::laodByProduct() function or as individual tables. However, if both list and table inputs are provided at the same time the function will error.
 #' 
-#' For table joining to be successful, inputs must contain data from the same sites for all tables. When individualID duplicates exist in the 'phe_perindividual' table, the function will error out. If this occurs when providing an inputDataList, extract individual data frames from the list, resolve duplicates and re-run with separate inputStatus and inputTags data frame inputs.  
+#' For table joining to be successful, inputs must contain data from the same sites for all tables. When individualID duplicates exist in the "phe_perindividual" table, the function will error. If this occurs when providing data via the inputDataList argument, extract individual data frames from the list, resolve duplicates, and re-run with separate inputStatus and inputTags inputs.  
 #' 
 #' @param inputDataList A list of data frames returned from the neonUtilities::loadByProduct() function. [list]
 #' 
@@ -15,7 +14,7 @@
 #' 
 #' @param inputTags A data frame with taxon data for individuals present in the inputStatus dataframe, either the "phe_perindividual" table or equivalent. [data.frame]
 #'
-#' @return This function uses the time series created by the neonPlants::estimatePheTransByTag() function to calculate phenophase durations for the time frame provided in the input data frame. Calculated values include: 
+#' @return The time series created by the neonPlants::estimatePheTransByTag() function is used to calculate phenophase durations for the time frame provided in the input data frame. Calculated values include: 
 #'  * dateTransitionStart - calendar date of the estimated transition onset
 #'  * doyTransitionStart - ordinal day of year of the estimated transition onset
 #'  * dateTransitionEnd - calendar date of the estimated transition end
@@ -51,7 +50,6 @@
 #' }
 #' 
 #' @export estimatePheDurationByTag
-##############################################################################################
 
 
 estimatePheDurationByTag <- function(inputDataList = NULL,
