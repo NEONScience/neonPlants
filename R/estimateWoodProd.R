@@ -4,23 +4,22 @@
 #' @author
 #' Samuel M Simkin \email{ssimkin@battelleecology.org} \cr
 
-#' @description Calculate annual productivity of woody vegetation (and "non-woody perennial" vegetation, if included in inputDataList) using inputs from companion estimateWoodMass function .
-#' The data input is a list of biomass dataframes created by the companion estimateWoodMass function (e.g. estimateWoodMassOutputs).
+#' @description Calculate annual productivity of woody vegetation (and "non-woody perennial" vegetation, if included in inputDataList) using inputs from the companion estimateWoodMass() function. 
 #' 
-#' @details Input data can be filtered by plot type and plot priority. An input data list of woody biomass dataframes created by the companion estimateWoodMass function is read in and aboveground net primary 
-#' productivity (ANPP) is calculated for woody vegetation from NEON "Vegetation structure" (DP1.10098.001) data. Both a whole plot level 
-#' approach and an individual-level approach calculation method are used, and output from the desired calculation method is returned. The 
-#' individual-level approach is currently an underestimate since it includes the growth increment component but not the recruitment component. 
-#' The recruitment component is currently very sensitive to stems that were overlooked in previous time periods, but when from true ingrowth 
-#' can be isolated the recruitment component will be added. Plots can be filtered to more frequently sampled plots using plotType and 
-#' plotPriority arguments, and outlier observations can be removed.
+#' @details Input data can be filtered by plot type and plot priority. An input data list of woody biomass dataframes created by the companion estimateWoodMass() function is read in and aboveground net primary productivity (ANPP) is calculated for woody vegetation from NEON "Vegetation structure" (DP1.10098.001) data. Both a whole plot level approach and an individual-level approach calculation method are used, and output from the desired calculation method is returned. 
+#' 
+#' The individual-level approach is currently an underestimate since it includes the growth increment component but not the recruitment component. The recruitment component is currently very sensitive to stems that were overlooked in previous time periods, but when from true in-growth can be isolated the recruitment component will be added. Plots can be filtered to more frequently sampled plots using plotType and plotPriority arguments, and outlier observations can be removed.
 #' 
 #' @param inputDataList Specify a loaded R list object (e.g. estimateWoodMassOutputs) that was produced by companion estimateWoodMass function. [character]
+#' 
 #' @param plotType Optional filter for NEON plot type. Options are "tower" (default) or "all". A subset of 5 Tower plots are sampled annually (those plots with the highest plot priority), and remaining Tower plots are scheduled every 5 years. If "all" is selected, results include data from Distributed plots that are also sampled every 5 years. [character]
+#' 
 #' @param plotPriority NEON plots have a priority number to spatially balance plots by NLCD class, etc. in the event that not all scheduled plots can be sampled. The lower the number the higher the priority. Options are "all" or "5". The default is "5" which retains just the 5 highest priority Tower plots that are sampled annually. [character]
-#' @param calcMethod Select plot-level (approach 2) or individual-level (approach 1) productivity calculations, as explained in Clark et al. 2001 The default is "approach_1" [character]
-#' ClarK DA, S Brown, DW Kicklighter, JQ Chambers, JR Thomlinson, and J Ni. 2001. Measuring Net Primary Production in Forests: Concepts and Field Methods. Ecological Applications 11:356-370.
+#' 
+#' @param calcMethod Select individual-level (Approach 1) or plot-level (Approach 2) productivity calculation methods; the default is "approach_1". See Clark DA, S Brown, DW Kicklighter, JQ Chambers, JR Thomlinson, and J Ni. 2001. Measuring Net Primary Production in Forests: Concepts and Field Methods. Ecological Applications 11:356-370. [character]
+#' 
 #' @param outlier Specify how much (if any) outlier removal should be performed. The default is 1.5. [numeric]
+#' 
 #' @param outlierType Specify the type of outlier, either SD (standard deviations) or IQR (interquartile range). The default is "IQR". [character]
 #' 
 #' @return A list that includes productivity summary data frames. Output tables include:
@@ -36,14 +35,19 @@
 #' \dontrun{
 #' # If list is not in memory, load woody biomass list of dataframes from local file:
 #' load('estimateWoodMassOutputs.rds') # load list of dataframes created by estimateWoodMass function
-
+#'
 #' # example with arguments at default values
 #' estimateWoodProdOutputs <- estimateWoodProd(input = estimateWoodMassOutputs)
 #'                       
 #' # example specifying many non-default arguments
-#' estimateWoodProdOutputs <- estimateWoodProd(input = estimateWoodMassOutputs, 
-#' plotType = "all", plotPriority = 50, 
-#' calcMethod = "approach_2", outlier = 2, outlierType = "SD")
+#' estimateWoodProdOutputs <- estimateWoodProd(
+#' input = estimateWoodMassOutputs, 
+#' plotType = "all", 
+#' plotPriority = 50, 
+#' calcMethod = "approach_2", 
+#' outlier = 2, 
+#' outlierType = "SD"
+#' )
 #' 
 #' }
 #' 
@@ -58,8 +62,11 @@ estimateWoodProd = function(inputDataList,
   
   options(dplyr.summarise.inform = FALSE)
   
-  if(!methods::is(inputDataList, class = "list" )){
-    stop("The inputDataList argument is expected to be a list. A character, data.frame, or NA argument is not allowed.")
+  
+  
+  ### Check that input arguments meet assumptions ####
+  if (!methods::is(inputDataList, class = "list" )) {
+    stop("The 'inputDataList' argument is expected to be a list generated via the 'estimateWoodMass()' function. A character, data.frame, or NA argument is not allowed.")
   }
   
   list2env(inputDataList ,.GlobalEnv)
@@ -69,6 +76,7 @@ estimateWoodProd = function(inputDataList,
 
   #   Check that required tables within list match expected names
   listExpNames <- c("vst_agb_kg", "vst_plot_w_0s", "vst_agb_zeros", "vst_site")
+  
   if (length(setdiff(listExpNames, names(inputDataList))) > 0) {
       stop(glue::glue("Required tables missing from inputDataList list:",
                       '{paste(setdiff(listExpNames, names(inputDataList)), collapse = ", ")}',
@@ -97,6 +105,8 @@ estimateWoodProd = function(inputDataList,
     stop("The only valid calcMethod options are 'SD' or 'IQR'.")
   }
 
+  
+  
   ### Verify inputDataList tables contain required columns and data ####
   
   ### Verify user-supplied vst_agb_kg table contains required data
@@ -156,7 +166,7 @@ estimateWoodProd = function(inputDataList,
   end  <- max(vst_plot_w_0s$year)
   
   
-  ###### Error if not at least 2 years of data
+  ### Error if not at least 2 years of data
   if(as.numeric(end) - as.numeric(start) < 1){
     print("At least 2 years of data are needed to calculate productivity (more for plots sampled less frequently than annually). Current dataset only has woody biomass data from: ")
     print(unique(vst_agb_kg$year))
@@ -165,7 +175,9 @@ estimateWoodProd = function(inputDataList,
 
   plotType_df <- unique(vst_plot_w_0s %>% dplyr::select("plotID", "plotType"))
   
-  ### PLOT-LEVEL BIOMASS INCREMENT (Clark et al. 2001 approach 2) 
+  
+  
+  ### PLOT-LEVEL BIOMASS INCREMENT (Clark et al. 2001 approach 2) ####
   print("Calculating woody increment component of productivity at the plot-level (approach 2) ..... ")
   
   vst_agb_Live <- vst_plot_w_0s %>% dplyr::group_by(.data$domainID, .data$siteID, .data$plotID, .data$plotType, .data$specificModuleSamplingPriority, 
@@ -281,8 +293,8 @@ estimateWoodProd = function(inputDataList,
   if(calcMethod == "approach_1")    {
   
   
-  ####################################################################################################################################################
-  ##########  CALCULATE WOODY BIOMASS INCREMENT AT THE LEVEL OF INDIVIDUALID, AS RECOMMENDED BY TWG MEMBERS (This is Clark et al 2001 Approach 1) ##########
+ 
+  ### CALCULATE WOODY BIOMASS INCREMENT AT THE LEVEL OF INDIVIDUALID, AS RECOMMENDED BY TWG MEMBERS (Clark et al 2001 Approach 1) ####
   
   print("Calculating woody increment productivity at the level of individualID (approach 1) ..... ")
   
