@@ -111,10 +111,13 @@ estimateWoodProd = function(inputDataList,
   
   ### Verify user-supplied vst_agb_kg table contains required data
   #   Check for required columns
-  vst_agb_kg_ExpCols <- c("siteID", "plotID", "eventID","year","plot_eventID","nlcdClass","taxonID","individualID","plantStatus2","agb_kg")
+  vst_agb_kg_ExpCols <- c("siteID", "plotID", "eventID", "year", 
+                          "plot_eventID", "nlcdClass", "taxonID",
+                          "individualID", "plantStatus2", "agb_kg")
   
   if (length(setdiff(vst_agb_kg_ExpCols, colnames(vst_agb_kg))) > 0) {
-    stop(glue::glue("Required columns missing from 'vst_agb_kg':", '{paste(setdiff(vst_agb_kg_ExpCols, colnames(vst_agb_kg)), collapse = ", ")}',
+    stop(glue::glue("Required columns missing from 'vst_agb_kg':", 
+                    '{paste(setdiff(vst_agb_kg_ExpCols, colnames(vst_agb_kg)), collapse = ", ")}',
                     .sep = " "))
   }
   
@@ -123,22 +126,31 @@ estimateWoodProd = function(inputDataList,
     stop(glue::glue("Table 'vst_agb_kg' has no data."))
   }
   
+  
+  
   ### Verify user-supplied vst_agb_zeros table contains required data
   #   Check for required columns
-  vst_agb_zeros_ExpCols <- c("siteID", "plotID", "eventID", "year", "plot_eventID", "plotType")
+  vst_agb_zeros_ExpCols <- c("siteID", "plotID", "eventID", "year",
+                             "plot_eventID", "plotType")
   
   if (length(setdiff(vst_agb_zeros_ExpCols, colnames(vst_agb_zeros))) > 0) {
-    stop(glue::glue("Required columns missing from 'vst_agb_zeros':", '{paste(setdiff(vst_agb_zeros_ExpCols, colnames(vst_agb_zeros)), collapse = ", ")}',
+    stop(glue::glue("Required columns missing from 'vst_agb_zeros':", 
+                    '{paste(setdiff(vst_agb_zeros_ExpCols, colnames(vst_agb_zeros)), collapse = ", ")}',
                     .sep = " "))
   }
   
+  
+  
   ### Verify user-supplied vst_plot_w_0s table contains required data
   #   Check for required columns
-  vst_plot_w_0s_ExpCols <- c("domainID", "siteID", "plotID", "eventID", "year", "plot_eventID", "nlcdClass", "taxonID", "Live_Mgha", "Dead_or_Lost_Mgha",
-                   "specificModuleSamplingPriority","plotType")
+  vst_plot_w_0s_ExpCols <- c("domainID", "siteID", "plotID", "eventID",
+                             "year", "plot_eventID", "nlcdClass", "taxonID",
+                             "Live_Mgha", "Dead_or_Lost_Mgha",
+                             "specificModuleSamplingPriority", "plotType")
   
   if (length(setdiff(vst_plot_w_0s_ExpCols, colnames(vst_plot_w_0s))) > 0) {
-    stop(glue::glue("Required columns missing from 'vst_plot_w_0s':", '{paste(setdiff(vst_plot_w_0s_ExpCols, colnames(vst_plot_w_0s)), collapse = ", ")}',
+    stop(glue::glue("Required columns missing from 'vst_plot_w_0s':", 
+                    '{paste(setdiff(vst_plot_w_0s_ExpCols, colnames(vst_plot_w_0s)), collapse = ", ")}',
                     .sep = " "))
   }
   
@@ -147,12 +159,16 @@ estimateWoodProd = function(inputDataList,
     stop(glue::glue("Table 'vst_plot_w_0s' has no data."))
   }
   
+  
+  
   ### Verify user-supplied vst_site contains required data
   #   Check for required columns
-  vst_site_ExpCols <- c("siteID","year","woodPlotNum","woodLiveMassMean_Mgha","woodLiveMassSD_Mgha")
+  vst_site_ExpCols <- c("siteID", "year", "woodPlotNum", 
+                        "woodLiveMassMean_Mgha", "woodLiveMassSD_Mgha")
   
   if (length(setdiff(vst_site_ExpCols, colnames(vst_site))) > 0) {
-    stop(glue::glue("Required columns missing from 'vst_site':", '{paste(setdiff(vst_site_ExpCols, colnames(vst_site)), collapse = ", ")}',
+    stop(glue::glue("Required columns missing from 'vst_site':", 
+                    '{paste(setdiff(vst_site_ExpCols, colnames(vst_site)), collapse = ", ")}',
                     .sep = " "))
   }
   
@@ -167,18 +183,21 @@ estimateWoodProd = function(inputDataList,
   
   
   ### Error if not at least 2 years of data
-  if(as.numeric(end) - as.numeric(start) < 1){
-    print("At least 2 years of data are needed to calculate productivity (more for plots sampled less frequently than annually). Current dataset only has woody biomass data from: ")
-    print(unique(vst_agb_kg$year))
-    stop( )
+  if (as.numeric(end) - as.numeric(start) < 1) {
+    
+    stop(glue::glue("At least 2 years of data are needed to calculate woody productivity (more for plots with a sampling interval longer than annual). Current dataset only has woody biomass data from: {unique(vst_agb_kg$year)}"))
+    
   }
 
+  
+  
+  ### Identify plotIDs and associated plotType in the dataset
   plotType_df <- unique(vst_plot_w_0s %>% dplyr::select("plotID", "plotType"))
   
   
   
   ### PLOT-LEVEL BIOMASS INCREMENT (Clark et al. 2001 approach 2) ####
-  print("Calculating woody increment component of productivity at the plot-level (approach 2) ..... ")
+  message("Calculating woody increment component of productivity at the plot-level (approach 2) ..... ")
   
   vst_agb_Live <- vst_plot_w_0s %>% dplyr::group_by(.data$domainID, .data$siteID, .data$plotID, .data$plotType, .data$specificModuleSamplingPriority, 
                     .data$eventID, .data$year, .data$plot_eventID, .data$nlcdClass, .data$taxonID) %>% 
