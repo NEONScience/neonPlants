@@ -196,85 +196,117 @@ estimateWoodProd = function(inputDataList,
   
   
   
-  ### PLOT-LEVEL BIOMASS INCREMENT (Clark et al. 2001 approach 2) ####
+  ### PLOT-LEVEL BIOMASS INCREMENT (Clark et al. 2001 approach 2 - stand level productivity calculation) ####
   message("Calculating woody increment component of productivity at the plot-level (approach 2) ..... ")
   
-  vst_agb_Live <- vst_plot_w_0s %>% dplyr::group_by(.data$domainID, .data$siteID, .data$plotID, .data$plotType, .data$specificModuleSamplingPriority, 
-                    .data$eventID, .data$year, .data$plot_eventID, .data$nlcdClass, .data$taxonID) %>% 
-                    dplyr::summarise(Live_Mgha = sum(.data$Live_Mgha, na.rm = TRUE), Dead_or_Lost_Mgha = sum(.data$Dead_or_Lost_Mgha, na.rm = TRUE)) 
-  # some taxonIDs are represented in multiple growthForms (e.g. sapling and single bole tree): This sums the growthForms
- 
+  #   Some taxonIDs are represented in multiple growthForms (e.g., sapling and single bole tree): This sums the growthForms
+  vst_agb_Live <- vst_plot_w_0s %>% 
+    dplyr::group_by(.data$domainID, 
+                    .data$siteID, 
+                    .data$plotID, 
+                    .data$plotType, 
+                    .data$specificModuleSamplingPriority, 
+                    .data$eventID, 
+                    .data$year, 
+                    .data$plot_eventID, 
+                    .data$nlcdClass, 
+                    .data$taxonID) %>% 
+    dplyr::summarise(Live_Mgha = sum(.data$Live_Mgha, na.rm = TRUE), 
+                     Dead_or_Lost_Mgha = sum(.data$Dead_or_Lost_Mgha, na.rm = TRUE),
+                     .groups = "drop")
+  
   vst_agb_Live$Mgha_live <- vst_agb_Live$Live_Mgha
   vst_agb_Live$Live_Mgha <- vst_agb_Live$Dead_or_Lost_Mgha <- NULL
   vst_agb_Live <- vst_agb_Live[order(vst_agb_Live$year),]
   
-  yearList <- unique(sort(vst_agb_Live$year))# sort list of years
-  vst_increment <- tidyr::pivot_wider(vst_agb_Live, id_cols = c("siteID", "plotID", "plotType", "nlcdClass", "taxonID"), names_from = "year", names_prefix = "Mgha_", values_from = "Mgha_live") # convert from long to wide format (both years in same row)
+  #   Sort list of years
+  yearList <- unique(sort(vst_agb_Live$year))
   
-  # plot-level increment (before incorporating mortality) calculated here
-  for(i in 2:length(yearList)){
-    column_name_prev <- paste0("Mgha_", yearList[i-1])
+  #   Convert 'vst_agb_Live' from long to wide format (all years in same row)
+  vst_increment <- tidyr::pivot_wider(vst_agb_Live, 
+                                      id_cols = c("siteID", "plotID", "plotType", "nlcdClass", "taxonID"), 
+                                      names_from = "year", 
+                                      names_prefix = "Mgha_", 
+                                      values_from = "Mgha_live")
+  
+  #   Calculate plot-level increment (before incorporating mortality)
+  for (i in 2:length(yearList)) {
+    
+    column_name_prev <- paste0("Mgha_", yearList[i - 1])
     column_name <- paste0("Mgha_", yearList[i])
-    increment_column_name <- paste0("Mgha_increment_",yearList[i])
-    vst_increment <- vst_increment %>% dplyr::mutate(!!increment_column_name := (!!sym(column_name)) - !!sym(column_name_prev) ) 
-  }
+    increment_column_name <- paste0("Mgha_increment_", yearList[i])
+    vst_increment <- vst_increment %>% 
+      dplyr::mutate(!!increment_column_name := (!!sym(column_name)) - !!sym(column_name_prev)) 
+    
+  } # end 'for' loop
   
-  vst_increment_long <- vst_increment %>% dplyr::select(-dplyr::contains("Mgha_2"))  %>% 
-    tidyr::pivot_longer( cols = !c("plotID","siteID","taxonID","nlcdClass","plotType"), names_to = "year",  names_prefix = "Mgha_increment_", values_to = "Mgha_increment" )
+  
+  vst_increment_long <- vst_increment %>% 
+    #   Remove individual 'year' columns
+    dplyr::select(-dplyr::contains("Mgha_2"))  %>% 
+    
+    #   Return to long format to obtain 'cols' below and increment by taxonID by year in each row
+    tidyr::pivot_longer(cols = !c("plotID", "siteID", "taxonID", "nlcdClass", "plotType"), 
+                        names_to = "year",  
+                        names_prefix = "Mgha_increment_", 
+                        values_to = "Mgha_increment")
 
-  ### PLOT-LEVEL MORTALITY
-  print("Calculating woody mortality component of productivity at the plot-level (approach 2) ..... ")
+  
+  
+  ### CALCULATE PLOT-LEVEL MORTALITY
+  message("Calculating woody mortality component of productivity at the plot-level (approach 2) ..... ")
 
   if(nrow(vst_agb_kg) >0) {
- #   Remove records that cannot be scaled to a per area basis
-  vst_agb_kg <- vst_agb_kg %>% 
-    dplyr::filter(!is.na(.data$sampledAreaM2) & .data$sampledAreaM2 > 0 )
-  
-  #   convert kg to  Mg
-  vst_agb_kg$agb_Mgha <- round(vst_agb_kg$agb_kg * 0.001 * (10000/vst_agb_kg$sampledAreaM2), 
-                                  digits = 4)
-  
-  
-  # Categorize individual IDs based on their changes (or not) in plantStatus2
-  input_to_transitions <- vst_agb_kg %>% dplyr::select("plot_eventID","siteID","plotID","individualID","taxonID","plantStatus2","year")
-  input_to_transitions <- input_to_transitions %>% dplyr::distinct(.data$individualID, .data$taxonID, .data$year, .data$plantStatus2, .keep_all = TRUE) 
-  input_to_transitions <- input_to_transitions[order(input_to_transitions$year),]
-  
-  yearList <- unique(sort(vst_agb_kg$year)) # sort list of years
-
-  transitions <- tidyr::pivot_wider(input_to_transitions, id_cols = c("siteID", "plotID", "individualID", "taxonID"), names_from = "year", names_prefix = "status_", values_from = "plantStatus2", values_fn = list)  
-
-  transitions[transitions == '", "'] <- '""' # Remove the comma. Otherwise one or more of the following lines may give error about converting list to character.
-  transitions[transitions == '("Live" "Live")'] <- "Live"
-  transitions[transitions == '("Dead_or_Lost" "Dead_or_Lost")'] <- "Dead_or_Lost"
-  transitions[transitions == 'c("Dead_or_Lost" "Live")'] <- "Live"
-  transitions[transitions == '("Live" "Dead_or_Lost")'] <- "Live"
-  transitions[transitions == '("Dead_or_Lost" "Live" "Live")'] <- "Live"
-  
-  for(i in 2:length(yearList)){
-    column_name_prev <- paste0("status_", yearList[i-1])
-    column_name <- paste0("status_", yearList[i])
+    
+    #   Remove records that cannot be scaled to a per area basis
+    vst_agb_kg <- vst_agb_kg %>% 
+      dplyr::filter(!is.na(.data$sampledAreaM2) & .data$sampledAreaM2 > 0 )
+    
+    #   convert kg to  Mg
+    vst_agb_kg$agb_Mgha <- round(vst_agb_kg$agb_kg * 0.001 * (10000/vst_agb_kg$sampledAreaM2), 
+                                 digits = 4)
+    
+    
+    # Categorize individual IDs based on their changes (or not) in plantStatus2
+    input_to_transitions <- vst_agb_kg %>% dplyr::select("plot_eventID","siteID","plotID","individualID","taxonID","plantStatus2","year")
+    input_to_transitions <- input_to_transitions %>% dplyr::distinct(.data$individualID, .data$taxonID, .data$year, .data$plantStatus2, .keep_all = TRUE) 
+    input_to_transitions <- input_to_transitions[order(input_to_transitions$year),]
+    
+    yearList <- unique(sort(vst_agb_kg$year)) # sort list of years
+    
+    transitions <- tidyr::pivot_wider(input_to_transitions, id_cols = c("siteID", "plotID", "individualID", "taxonID"), names_from = "year", names_prefix = "status_", values_from = "plantStatus2", values_fn = list)  
+    
+    transitions[transitions == '", "'] <- '""' # Remove the comma. Otherwise one or more of the following lines may give error about converting list to character.
+    transitions[transitions == '("Live" "Live")'] <- "Live"
+    transitions[transitions == '("Dead_or_Lost" "Dead_or_Lost")'] <- "Dead_or_Lost"
+    transitions[transitions == 'c("Dead_or_Lost" "Live")'] <- "Live"
+    transitions[transitions == '("Live" "Dead_or_Lost")'] <- "Live"
+    transitions[transitions == '("Dead_or_Lost" "Live" "Live")'] <- "Live"
+    
+    for(i in 2:length(yearList)){
+      column_name_prev <- paste0("status_", yearList[i-1])
+      column_name <- paste0("status_", yearList[i])
       transitionType_column_name <- paste0("transitionType_", yearList[i])
-    transitions <- transitions %>% dplyr::mutate(!!transitionType_column_name := dplyr::case_when(
-    (!!sym(column_name)) == 'Dead_or_Lost' & !!sym(column_name_prev) == 'Live' ~ 'mortality',
+      transitions <- transitions %>% dplyr::mutate(!!transitionType_column_name := dplyr::case_when(
+        (!!sym(column_name)) == 'Dead_or_Lost' & !!sym(column_name_prev) == 'Live' ~ 'mortality',
       ))
-  }
-  
-  mortality <- merge(vst_agb_kg, transitions, by=c("plotID", "siteID", "individualID", "taxonID"), all.x=TRUE)
-  mortality$mortality_Mgha <- NA
-  
-  # if transitionType for a given year is "mortality" then assign a mortality value based on the biomass at the PREVIOUS year
-  for(i in 2:length(yearList)){
-    year_previous <- yearList[i-1]
-    column_name <- paste0("transitionType_", yearList[i])
-    mortality <- mortality %>% dplyr::mutate(mortality_Mgha = dplyr::case_when(
-    (!!sym(column_name)) == 'mortality' & yearList[i] == year_previous ~ .data$agb_Mgha, TRUE ~ .data$mortality_Mgha
+    }
+    
+    mortality <- merge(vst_agb_kg, transitions, by=c("plotID", "siteID", "individualID", "taxonID"), all.x=TRUE)
+    mortality$mortality_Mgha <- NA
+    
+    # if transitionType for a given year is "mortality" then assign a mortality value based on the biomass at the PREVIOUS year
+    for(i in 2:length(yearList)){
+      year_previous <- yearList[i-1]
+      column_name <- paste0("transitionType_", yearList[i])
+      mortality <- mortality %>% dplyr::mutate(mortality_Mgha = dplyr::case_when(
+        (!!sym(column_name)) == 'mortality' & yearList[i] == year_previous ~ .data$agb_Mgha, TRUE ~ .data$mortality_Mgha
       ))
-  }
-  
-  mortality$year <- as.numeric(mortality$year + 1)
-  
-  plot_mortality <- mortality %>% dplyr::group_by(.data$siteID, .data$plotID, .data$taxonID, .data$year) %>% dplyr::summarise(Mgha_mortality = sum(.data$mortality_Mgha, na.rm = TRUE)) 
+    }
+    
+    mortality$year <- as.numeric(mortality$year + 1)
+    
+    plot_mortality <- mortality %>% dplyr::group_by(.data$siteID, .data$plotID, .data$taxonID, .data$year) %>% dplyr::summarise(Mgha_mortality = sum(.data$mortality_Mgha, na.rm = TRUE)) 
   } else {
     plot_mortality <- data.frame(siteID = character(), plotID = character(), taxonID = character(), year = character(), Mgha_mortality = numeric()) # create placeholder if vst_agb_kg is empty
   }
@@ -290,10 +322,10 @@ estimateWoodProd = function(inputDataList,
   vst_ANPP_plot_2 <- vst_ANPP_plot_2 %>% dplyr::filter(!is.na(.data$woodANPP_Mghayr)) %>% dplyr::select("siteID","plotID","plotType","year","woodANPP_Mghayr") # remove records with missing productivity
   
   if(nrow(vst_agb_zeros) >0){
-  vst_agb_zeros_plot <- vst_agb_zeros
+    vst_agb_zeros_plot <- vst_agb_zeros
     vst_agb_zeros_plot$eventID <- vst_agb_zeros_plot$plot_eventID <- NULL
     vst_agb_zeros_plot$woodANPP_Mghayr <- 0 
-  vst_ANPP_plot_2 <- rbind(vst_ANPP_plot_2, vst_agb_zeros_plot)}
+    vst_ANPP_plot_2 <- rbind(vst_ANPP_plot_2, vst_agb_zeros_plot)}
   
   priority_plots_add <- vst_plot_w_0s %>% dplyr::select("plotID", "specificModuleSamplingPriority")
   priority_plots_add <- unique(priority_plots_add)
@@ -302,11 +334,11 @@ estimateWoodProd = function(inputDataList,
   vst_ANPP_plot_2 <- vst_ANPP_plot_2 %>% dplyr::filter(.data$specificModuleSamplingPriority <= plotPriority) # remove lower priority plots that aren't required to be sampled every year (default is 5 (the 5 highest priority plots))
   
   vst_NPP_plot_yearFirst <- vst_ANPP_plot_2 %>% dplyr::group_by(.data$siteID, .data$plotID, .data$plotType) %>% dplyr::summarise(wood_N = dplyr::n(), 
-    woodANPP_Mghayr_sd = round(stats::sd(.data$woodANPP_Mghayr, na.rm = TRUE), 2), 
-    woodANPP_Mghayr_se = round((.data$woodANPP_Mghayr_sd / sqrt(.data$wood_N)), 2),  woodANPP_Mghayr = round(mean(.data$woodANPP_Mghayr, na.rm = TRUE),4) ) %>% dplyr::mutate(wood_count_type = "years")
+                                                                                                                                 woodANPP_Mghayr_sd = round(stats::sd(.data$woodANPP_Mghayr, na.rm = TRUE), 2), 
+                                                                                                                                 woodANPP_Mghayr_se = round((.data$woodANPP_Mghayr_sd / sqrt(.data$wood_N)), 2),  woodANPP_Mghayr = round(mean(.data$woodANPP_Mghayr, na.rm = TRUE),4) ) %>% dplyr::mutate(wood_count_type = "years")
   vst_ANPP_site_2 <- vst_ANPP_plot_2 %>% dplyr::group_by(.data$siteID, .data$year) %>% dplyr::summarise(woodPlotNum = dplyr::n(), 
-    woodANPPSD_Mghayr = round(stats::sd(.data$woodANPP_Mghayr, na.rm = TRUE),2), 
-    woodANPPMean_Mghayr = round(mean(.data$woodANPP_Mghayr, na.rm = TRUE),4) ) %>% dplyr::ungroup()
+                                                                                                        woodANPPSD_Mghayr = round(stats::sd(.data$woodANPP_Mghayr, na.rm = TRUE),2), 
+                                                                                                        woodANPPMean_Mghayr = round(mean(.data$woodANPP_Mghayr, na.rm = TRUE),4) ) %>% dplyr::ungroup()
   
   
   if(calcMethod == "approach_1")    {
