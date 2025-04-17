@@ -256,19 +256,26 @@ estimateWoodProd = function(inputDataList,
   ### CALCULATE PLOT-LEVEL MORTALITY
   message("Calculating woody mortality component of productivity at the plot-level (approach 2) ..... ")
 
-  if(nrow(vst_agb_kg) >0) {
+  if (nrow(vst_agb_kg) >0) {
     
     #   Remove records that cannot be scaled to a per area basis
     vst_agb_kg <- vst_agb_kg %>% 
       dplyr::filter(!is.na(.data$sampledAreaM2) & .data$sampledAreaM2 > 0 )
     
-    #   convert kg to  Mg
+    #   convert kg to Mg
     vst_agb_kg$agb_Mgha <- round(vst_agb_kg$agb_kg * 0.001 * (10000/vst_agb_kg$sampledAreaM2), 
                                  digits = 4)
     
+    #   Categorize individualIDs based on their changes (or not) in plantStatus2
+    input_to_transitions <- vst_agb_kg %>% 
+      dplyr::select("plot_eventID",
+                    "siteID",
+                    "plotID",
+                    "individualID",
+                    "taxonID",
+                    "plantStatus2",
+                    "year")
     
-    # Categorize individual IDs based on their changes (or not) in plantStatus2
-    input_to_transitions <- vst_agb_kg %>% dplyr::select("plot_eventID","siteID","plotID","individualID","taxonID","plantStatus2","year")
     input_to_transitions <- input_to_transitions %>% dplyr::distinct(.data$individualID, .data$taxonID, .data$year, .data$plantStatus2, .keep_all = TRUE) 
     input_to_transitions <- input_to_transitions[order(input_to_transitions$year),]
     
