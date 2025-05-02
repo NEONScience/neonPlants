@@ -4,7 +4,6 @@
 ### Read in test data
 
 VstDat <- readRDS(testthat::test_path("testdata", "VstDat.rds"))
-VstDat <- VstDat
 
 estimateWoodMassOutputs <- estimateWoodMass(inputDataList = VstDat)
 estimateWoodProdOutputs <- estimateWoodProd(inputDataList = estimateWoodMassOutputs)
@@ -20,27 +19,27 @@ testthat::test_that(desc = "Output type", {
 testthat::test_that(desc = "Output class", {
   testthat::expect_s3_class(object = estimateWoodProdOutputs$increment_all,
                             class = "data.frame")
-})  
+})
 
 testthat::test_that(desc = "Output class", {
   testthat::expect_s3_class(object = estimateWoodProdOutputs$increment_outlier,
                             class = "data.frame")
-})  
+})
 
 testthat::test_that(desc = "Output class", {
   testthat::expect_s3_class(object = estimateWoodProdOutputs$vst_ANPP_plot_w_taxa,
                             class = "data.frame")
-})  
+})
 
 testthat::test_that(desc = "Output class", {
   testthat::expect_s3_class(object = estimateWoodProdOutputs$vst_ANPP_plot,
                             class = "data.frame")
-})  
+})
 
 testthat::test_that(desc = "Output class", {
   testthat::expect_s3_class(object = estimateWoodProdOutputs$vst_ANPP_site,
                             class = "data.frame")
-})  
+})
 
 
 
