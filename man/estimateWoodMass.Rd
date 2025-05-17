@@ -29,15 +29,15 @@ estimateWoodMass(
 \item{inputPerPlot}{The 'vst_perplotperyear' table for the site x month combination(s) of interest
 (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 
-\item{plotSubset}{Applicable if dataProducts includes "Vst" or "Hbp". The options are "all" (all tower and distributed plots), the default of "towerAll" (all plots in the tower airshed but no distributed plots), "towerAnnualSubset" (only the subset of tower plots that are sampled annually), and "distributed" (all distributed plots, which are sampled in 5-yr bouts and are spatially representative of the NLCD classes at at site). \link{character}}
+\item{plotSubset}{The options are "all" (all Tower and Distributed plots), the default of "towerAll" (all plots in the Tower airshed but no Distributed plots), "towerAnnualSubset" (the subset of Tower plots that are sampled annually), and "distributed" (all Distributed plots, which are sampled at 5-yr intervals and are spatially representative of the NLCD classes at at site). \link{character}}
 
-\item{growthForm}{Applicable if dataProducts includes "Vst". Select which growth forms to analyse. The options are "tree" (sbt, mbt) for trees with a dbh > 10 cm, and the default of "all", which includes the large trees, and also small trees (smt, sap), shrubs (sis, sms), liana (lia), palms (plm, ptr, spm), tree ferns (ltf, stf, tfn), ocotillo (oco), yucca (yuc), and xerophyllum (xer).  Consult the Vegetation Structure Quick Start Guide and/or the Data Product User Guide for more growth form information. \link{character}}
+\item{growthForm}{Select which Vegetation Structure growth forms to analyse. The options are "tree" (sbt, mbt) for trees with a dbh > 10 cm, and the default of "all", which includes the large trees, and also small trees (smt, sap), shrubs (sis, sms), liana (lia), palms (plm, ptr, spm), tree ferns (ltf, stf, tfn), ocotillo (oco), yucca (yuc), and xerophyllum (xer).  Consult the Vegetation Structure Quick Start Guide and/or the Data Product User Guide for more growth form information. \link{character}}
 }
 \value{
-A list that includes biomass summary data frames and a helper data frame for needed by companion productivity functions - e.g., the estimateProd() function. Output tables include:
+A list that includes biomass summary data frames and a helper data frame needed by companion productivity functions - e.g., the estimateProd() function. Output tables include:
 \itemize{
 \item vst_agb_kg - Summarizes above-ground live and dead woody biomass for each individual ("kg").
-\item vst_plot_w_0s - Summarizes above-ground live and dead woody biomass for each plot ("Mg/ha").
+\item vst_plot_w_0s - Summarizes above-ground live and dead woody biomass for each taxonID x growthForm x eventID combination for each plot ("Mg/ha").
 \item vst_agb_zeros - Helper output for productivity estimation that contains plot x year combinations with biomass of zero.
 \item vst_site - Summarizes above-ground live and dead woody biomass for each site x year combination in the data. ("Mg/ha").
 }
@@ -48,14 +48,14 @@ Use allometric equations to estimate above-ground biomass for woody (and "non-wo
 Data inputs are "Vegetation structure" data (DP1.10098.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input tables with an equivalent structure and representing the same site x month combinations.
 }
 \details{
-Input data can be filtered by plot type and plot priority. Input data are combined with allometric equation parameters and taxon specific characteristics, and biomass is estimated for each individual using allometric equations. Generalized allometric equations are applied first and are replaced by taxon-specific equations if available. Only the set of growth forms selected via the growthForm parameter are included in outputs. The non-woody "cactus" and "ferns" growthForms are not currently included. Biomass is summarized on an areal basis at the hierarchical level of the plot and site.
+Input data can be filtered by 'plotSubset' if output for only certain types of plots or sampling intervals is desired. Input data are combined with allometric equation parameters and taxon specific characteristics, and biomass is estimated for each individual using allometric equations. Generalized allometric equations are applied first and are replaced by taxon-specific equations if available. Only the set of growth forms selected via the growthForm parameter are included in outputs. The non-woody "cactus" and "ferns" growthForms are not currently included. Biomass is summarized on an areal basis at the hierarchical level of the plot and site.
 }
 \examples{
 \dontrun{
 # Obtain NEON Vegetation structure
 VstDat <- neonUtilities::loadByProduct(
-dpID="DP1.10098.001", 
-package = "basic", 
+dpID="DP1.10098.001",
+package = "basic",
 check.size = FALSE
 )
 

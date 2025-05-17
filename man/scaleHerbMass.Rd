@@ -20,7 +20,7 @@ scaleHerbMass(
 \item{inputMass}{The 'hbp_massdata' table for the site x month combination(s) of interest
 (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 
-\item{plotSubset}{Applicable if dataProducts includes "Vst" or "Hbp". The options are "all" (all tower and distributed plots), the default of "towerAll" (all plots in the tower airshed but no distributed plots), "towerAnnualSubset" (only the subset of tower plots that are sampled annually), and "distributed" (all distributed plots, which are sampled in 5-yr bouts and are spatially representative of the NLCD classes at at site). \link{character}}
+\item{plotSubset}{The options are "all" (all tower and distributed plots), the default of "towerAll" (all plots in the tower airshed but no distributed plots), and "distributed" (all distributed plots, which are sampled in 5-yr bouts and are spatially representative of the NLCD classes at at site). \link{character}}
 }
 \value{
 A list that includes biomass summary data at multiple scales. Output tables include:
@@ -48,8 +48,8 @@ HbpDat <- neonUtilities::loadByProduct(dpID = "DP1.10023.001",
 
 # example with arguments at default values
 df <- neonPlants::scaleHerbMass(
-inputDataList = HbpDat, 
-inputBout = NA, 
+inputDataList = HbpDat,
+inputBout = NA,
 inputMass = NA
 )
 

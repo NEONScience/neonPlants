@@ -7,7 +7,7 @@
 estimateHerbProd(inputDataList, plotType = "tower", plotPriority = "5")
 }
 \arguments{
-\item{inputDataList}{Specify a loaded R list object (e.g. scaleHerbMassOutputs) that was produced by companion scaleHerbMass function. \link{character}}
+\item{inputDataList}{An R list object produced by the companion scaleHerbMass() function. \link{list}}
 
 \item{plotType}{Optional filter for NEON plot type. Options are "tower" (default) or "all". A subset of 5 Tower plots are sampled annually (those plots with the highest plot priority), and remaining Tower plots are scheduled every 5 years. If "all" is selected, results include data from Distributed plots that are also sampled every 5 years. \link{character}}
 
@@ -16,20 +16,21 @@ estimateHerbProd(inputDataList, plotType = "tower", plotPriority = "5")
 \value{
 A list that includes productivity summary data frames. Output tables include:
 \itemize{
-\item herb_ANPP_plot - Summarizes herbaceous ANPP for each plot x year combination ("Mg/ha/yr").
+\item herb_ANPP_plot - Summarizes herbaceous ANPP for each plot x year combination ("Mg/ha/yr"). Plot level summaries are not returned for grazed sites, for the reason outlined in details.
 \item herb_ANPP_site - Summarizes herbaceous ANPP for each site x year combination ("Mg/ha/yr").
 }
 }
 \description{
-Calculate herbaceous aboveground productivity Using inputs from companion scaleHerbMass function.
-The data input is a list of biomass dataframes created by the companion scaleHerbMass function (e.g. scaleHerbMassOutputs).
+Calculate herbaceous aboveground productivity using inputs from companion scaleHerbMass function.
 }
 \details{
-Input data can be filtered by plot type and plot priority.A list of herbaceous biomass dataframes created by the companion scaleHerbMass function is read in and aboveground net primary
-productivity (ANPP) is calculated for NEON "Herbaceous clip harvest" (DP1.10023.001) data. Where grazing exclosures have been established consumption is calculated as
-biomass within exclosures minus biomass outside of exclosures. Consumption at each sampling bout is summed and then added to the
-standing biomass of the last bout of the season for an estimate of herbaceous ANPP. Where grazing exclosures have not been established
-the estimate of herbaceous ANPP is simply the standing biomass of the last bout of the season.
+A list of herbaceous biomass dataframes created by the companion scaleHerbMass() function is read in, and aboveground net primary productivity (ANPP) is calculated for NEON "Herbaceous clip harvest" (DP1.10023.001) data.
+
+Where herbaceous plants are not subject to grazing management and exclosures are not in use, the estimate of herbaceous ANPP is simply the standing biomass of the last bout of the season.
+
+Where grazing exclosures have been established, consumption is calculated for each sampling event as average biomass within exclosures minus average biomass outside of exclosures. Consumption at each sampling bout is summed and then added to the standing biomass of the last bout of the season for an estimate of herbaceous ANPP.
+
+Note that the Science Design only supports calculating consumption at the site level. The exlosures are not close enough to non-exclosures to support plot level consumption estimates.
 }
 \examples{
 \dontrun{
@@ -37,11 +38,11 @@ the estimate of herbaceous ANPP is simply the standing biomass of the last bout 
 load('scaleHerbMassOutputs.rds') # load list of dataframes created by scaleHerbMass function
 # example with arguments at default values
 estimateHerbProdOutputs <-estimateHerbProd(inputDataList = scaleHerbMassOutputs)
-                      
+
 # example specifying many non-default arguments
-estimateHerbProdOutputs <-estimateHerbProd(inputDataList = scaleHerbMassOutputs, 
+estimateHerbProdOutputs <-estimateHerbProd(inputDataList = scaleHerbMassOutputs,
 plotType = "all",
-plotPriority = 50)
+plotPriority = "all")
 
 }
 

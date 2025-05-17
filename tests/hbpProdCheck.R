@@ -33,7 +33,7 @@ temp <- temp %>%
 
 #   Sum scaledMass by sampleID --> don't care about herbGroups for this exercise, only total mass per sampleID
 sampleDF <- temp %>%
-  dplyr::group_by(siteID, 
+  dplyr::group_by(siteID,
                   plotID,
                   subplotID,
                   eventID,

@@ -14,14 +14,13 @@ estimateWoodProd(
 )
 }
 \arguments{
-\item{inputDataList}{Specify a loaded R list object (e.g. estimateWoodMassOutputs) that was produced by companion estimateWoodMass function. \link{character}}
+\item{inputDataList}{Specify a loaded R list object (e.g. estimateWoodMassOutputs) that was produced by the companion estimateWoodMass function. \link{character}}
 
 \item{plotType}{Optional filter for NEON plot type. Options are "tower" (default) or "all". A subset of 5 Tower plots are sampled annually (those plots with the highest plot priority), and remaining Tower plots are scheduled every 5 years. If "all" is selected, results include data from Distributed plots that are also sampled every 5 years. \link{character}}
 
 \item{plotPriority}{NEON plots have a priority number to spatially balance plots by NLCD class, etc. in the event that not all scheduled plots can be sampled. The lower the number the higher the priority. Options are "all" or "5". The default is "5" which retains just the 5 highest priority Tower plots that are sampled annually. \link{character}}
 
-\item{calcMethod}{Select plot-level (approach 2) or individual-level (approach 1) productivity calculations, as explained in Clark et al. 2001 The default is "approach_1" \link{character}
-ClarK DA, S Brown, DW Kicklighter, JQ Chambers, JR Thomlinson, and J Ni. 2001. Measuring Net Primary Production in Forests: Concepts and Field Methods. Ecological Applications 11:356-370.}
+\item{calcMethod}{Select individual-level (Approach 1) or plot-level (Approach 2) productivity calculation methods; the default is "approach_1". See Clark DA, S Brown, DW Kicklighter, JQ Chambers, JR Thomlinson, and J Ni. 2001. Measuring Net Primary Production in Forests: Concepts and Field Methods. Ecological Applications 11:356-370. \link{character}}
 
 \item{outlier}{Specify how much (if any) outlier removal should be performed. The default is 1.5. \link{numeric}}
 
@@ -40,29 +39,30 @@ A list that includes productivity summary data frames. Output tables include:
 If calcMethod "approach_2" is selected then only the first three dataframes are returned, and they include an "_2" suffix.
 }
 \description{
-Calculate annual productivity of woody vegetation (and "non-woody perennial" vegetation, if included in inputDataList) using inputs from companion estimateWoodMass function .
-The data input is a list of biomass dataframes created by the companion estimateWoodMass function (e.g. estimateWoodMassOutputs).
+Calculate annual productivity of woody vegetation (and "non-woody perennial" vegetation, if included in inputDataList) using inputs from the companion estimateWoodMass() function.
 }
 \details{
-Input data can be filtered by plot type and plot priority. An input data list of woody biomass dataframes created by the companion estimateWoodMass function is read in and aboveground net primary
-productivity (ANPP) is calculated for woody vegetation from NEON "Vegetation structure" (DP1.10098.001) data. Both a whole plot level
-approach and an individual-level approach calculation method are used, and output from the desired calculation method is returned. The
-individual-level approach is currently an underestimate since it includes the growth increment component but not the recruitment component.
-The recruitment component is currently very sensitive to stems that were overlooked in previous time periods, but when from true ingrowth
-can be isolated the recruitment component will be added. Plots can be filtered to more frequently sampled plots using plotType and
-plotPriority arguments, and outlier observations can be removed.
+Input data can be filtered by plot type and plot priority. An input data list of woody biomass dataframes created by the companion estimateWoodMass() function is read in and aboveground net primary productivity (ANPP) is calculated for woody vegetation from NEON "Vegetation structure" (DP1.10098.001) data. Both a whole plot level approach and an individual-level approach calculation method are used, and output from the desired calculation method is returned.
+
+The individual-level approach is currently an underestimate since it includes the growth increment component but not the recruitment component. The recruitment component is currently very sensitive to stems that were overlooked in previous time periods, but when from true in-growth can be isolated the recruitment component will be added. Plots can be filtered to more frequently sampled plots using plotType and plotPriority arguments, and outlier observations can be removed.
 }
 \examples{
 \dontrun{
 # If list is not in memory, load woody biomass list of dataframes from local file:
 load('estimateWoodMassOutputs.rds') # load list of dataframes created by estimateWoodMass function
+
 # example with arguments at default values
 estimateWoodProdOutputs <- estimateWoodProd(input = estimateWoodMassOutputs)
-                      
+
 # example specifying many non-default arguments
-estimateWoodProdOutputs <- estimateWoodProd(input = estimateWoodMassOutputs, 
-plotType = "all", plotPriority = 50, 
-calcMethod = "approach_2", outlier = 2, outlierType = "SD")
+estimateWoodProdOutputs <- estimateWoodProd(
+input = estimateWoodMassOutputs,
+plotType = "all",
+plotPriority = 50,
+calcMethod = "approach_2",
+outlier = 2,
+outlierType = "SD"
+)
 
 }
 

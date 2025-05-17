@@ -21,7 +21,7 @@ testthat::test_that(desc = "Output type", {
 testthat::test_that(desc = "Output class", {
   testthat::expect_s3_class(object = estimateHerbProdOutputs$herb_ANPP_site,
                             class = "data.frame")
-})  
+})
 
 
 
@@ -51,9 +51,9 @@ testthat::test_that(desc = "Argument 'inputDataList' is list object", {
 })
 
 #   Test that inputDataList object contains required tables (expect 3 tables: "hbp_agb", "hbp_plot", "herb_ANPP_site")
-testthat::test_that(desc = "Required tables present in inputDataList object", {
+testthat::test_that(desc = "Required tables missing from 'inputDataList' list", {
   testthat::expect_error(object = estimateHerbProd(inputDataList = scaleHerbMassOutputs[1:2]),
-                         regexp = "Required tables missing from inputDataList list")
+                         regexp = "Required tables missing from 'inputDataList' list")
 })
 
 

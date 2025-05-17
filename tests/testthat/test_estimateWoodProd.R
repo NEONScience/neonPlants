@@ -104,7 +104,7 @@ testthat::test_that(desc = "Output data frame row number", {
 #   Test that inputDataList argument is a list
 testthat::test_that(desc = "Argument 'inputDataList' is list object", {
   testthat::expect_error(object = estimateWoodProd(inputDataList = estimateWoodMassOutputs$vst_agb_kg), # test whether function stops if supplied with a dataframe instead of list
-                         regexp = "The inputDataList argument is expected to be a list")
+                         regexp = "The 'inputDataList' argument is expected to be a list")
 })
 
 #   Test that inputDataList object contains required tables (expect 4 tables: vst_agb_kg", "vst_plot_w_0s", "vst_agb_zeros", "vst_site")
