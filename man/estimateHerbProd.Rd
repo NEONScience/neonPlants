@@ -4,14 +4,12 @@
 \alias{estimateHerbProd}
 \title{Estimate ANPP (Aboveground Net Primary Productivity) contributed by herbaceous vegetation}
 \usage{
-estimateHerbProd(inputDataList, plotType = "tower", plotPriority = "5")
+estimateHerbProd(inputDataList, plotSubset = "towerAnnualSubset")
 }
 \arguments{
 \item{inputDataList}{An R list object produced by the companion scaleHerbMass() function. \link{list}}
 
-\item{plotType}{Optional filter for NEON plot type. Options are "tower" (default) or "all". A subset of 5 Tower plots are sampled annually (those plots with the highest plot priority), and remaining Tower plots are scheduled every 5 years. If "all" is selected, results include data from Distributed plots that are also sampled every 5 years. \link{character}}
-
-\item{plotPriority}{NEON plots have a priority number to spatially balance plots by NLCD class, etc. in the event that not all scheduled plots can be sampled. The lower the number the higher the priority. Options are "all" or "5". The default is "5" which retains just the 5 highest priority Tower plots that are sampled annually. \link{character}}
+\item{plotSubset}{The options are "all" (all tower and distributed plots), the default of "towerAll" (all plots in the tower airshed but no distributed plots), "towerAnnualSubset" (only the subset of tower plots that are sampled annually), and "distributed" (all distributed plots, which are sampled in 5-yr bouts and are spatially representative of the NLCD classes at at site). \link{character}}
 }
 \value{
 A list that includes productivity summary data frames. Output tables include:
@@ -34,15 +32,24 @@ Note that the Science Design only supports calculating consumption at the site l
 }
 \examples{
 \dontrun{
-# If list is not in memory, load herbaceous biomass list of dataframes from local file:
-load('scaleHerbMassOutputs.rds') # load list of dataframes created by scaleHerbMass function
+# Obtain NEON Herbaceous clip harvest data
+HbpDat <- neonUtilities::loadByProduct(dpID = "DP1.10023.001",
+     package = "basic", check.size = FALSE)
+
+# Use scaleHerbMass to generate output list that is to be used as input to estimateHerbProd
+scaleHerbMassOutputs <- neonPlants::scaleHerbMass(
+inputDataList = HbpDat,
+inputBout = NA,
+inputMass = NA
+)
+
+
 # example with arguments at default values
 estimateHerbProdOutputs <-estimateHerbProd(inputDataList = scaleHerbMassOutputs)
 
 # example specifying many non-default arguments
 estimateHerbProdOutputs <-estimateHerbProd(inputDataList = scaleHerbMassOutputs,
-plotType = "all",
-plotPriority = "all")
+plotSubset = "towerAnnualSubset")
 
 }
 
