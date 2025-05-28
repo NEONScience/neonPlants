@@ -16,15 +16,6 @@ testthat::test_that(desc = "Output type", {
 
 
 ### Test: Function generates expected output class
-testthat::test_that(desc = "Output class", {
-  testthat::expect_s3_class(object = estimateWoodProdOutputs$increment_all,
-                            class = "data.frame")
-})
-
-testthat::test_that(desc = "Output class", {
-  testthat::expect_s3_class(object = estimateWoodProdOutputs$increment_outlier,
-                            class = "data.frame")
-})
 
 testthat::test_that(desc = "Output class", {
   testthat::expect_s3_class(object = estimateWoodProdOutputs$vst_ANPP_plot_w_taxa,
@@ -45,15 +36,6 @@ testthat::test_that(desc = "Output class", {
 
 ### Test: Function generates data frame with expected dimensions using test data
 #   Check expected column number of data frame
-testthat::test_that(desc = "Output data frame column number", {
-  testthat::expect_identical(object = ncol(estimateWoodProdOutputs$increment_all),
-                             expected = as.integer(87))
-})
-
-testthat::test_that(desc = "Output data frame column number", {
-  testthat::expect_identical(object = ncol(estimateWoodProdOutputs$increment_outlier),
-                             expected = as.integer(8))
-})
 
 testthat::test_that(desc = "Output data frame column number", {
   testthat::expect_identical(object = ncol(estimateWoodProdOutputs$vst_ANPP_plot_w_taxa),
@@ -73,15 +55,6 @@ testthat::test_that(desc = "Output data frame column number", {
 
 
 #   Check expected row number of data frame
-testthat::test_that(desc = "Output data frame row number", {
-  testthat::expect_identical(object = nrow(estimateWoodProdOutputs$increment_all),
-                             expected = as.integer(190))
-})
-
-testthat::test_that(desc = "Output data frame row number", {
-  testthat::expect_identical(object = nrow(estimateWoodProdOutputs$increment_outlier),
-                             expected = as.integer(0))
-})
 
 testthat::test_that(desc = "Output data frame row number", {
   testthat::expect_identical(object = nrow(estimateWoodProdOutputs$vst_ANPP_plot_w_taxa),
@@ -183,15 +156,6 @@ estimateWoodMassOutputs_mod$vst_site <- estimateWoodMassOutputs_mod$vst_site %>%
 testthat::test_that(desc = "Table 'vst_site' missing data", {
   testthat::expect_error(object = estimateWoodProd(inputDataList = estimateWoodMassOutputs_mod),
                          regexp = "Table 'vst_site' has no data.")
-})
-
-
-
-### Test: Generate error if output increment_all value not as expected
-testthat::test_that(desc = "Output increment_all value as expected", {
-  test <- estimateWoodProd(inputDataList = estimateWoodMassOutputs)
-  testthat::expect_equal(object = test$increment_all$Mghayr_inc[163],
-                         expected = 3.9864)
 })
 
 

@@ -4,24 +4,13 @@
 \alias{estimateWoodProd}
 \title{Estimate ANPP (Aboveground Net Primary Productivity) contributed by woody vegetation}
 \usage{
-estimateWoodProd(
-  inputDataList,
-  plotSubset = "towerAnnualSubset",
-  calcMethod = "approach_1",
-  outlier = 1.5,
-  outlierType = "IQR"
-)
+estimateWoodProd(inputDataList, plotSubset = "towerAnnualSubset")
 }
 \arguments{
 \item{inputDataList}{Specify a loaded R list object (e.g. estimateWoodMassOutputs) that was produced by the companion estimateWoodMass function. \link{character}}
 
-\item{plotSubset}{The options are "all" (all tower and distributed plots), "towerAll" (all plots in the tower airshed but no distributed plots), the default of "towerAnnualSubset" (only the subset of tower plots that are sampled annually), and "distributed" (all distributed plots, which are sampled in 5-yr bouts and are spatially representative of the NLCD classes at at site). \link{character}}
-
-\item{calcMethod}{Select individual-level (Approach 1) or plot-level (Approach 2) productivity calculation methods; the default is "approach_1". See Clark DA, S Brown, DW Kicklighter, JQ Chambers, JR Thomlinson, and J Ni. 2001. Measuring Net Primary Production in Forests: Concepts and Field Methods. Ecological Applications 11:356-370. \link{character}}
-
-\item{outlier}{Specify how much (if any) outlier removal should be performed. The default is 1.5. \link{numeric}}
-
-\item{outlierType}{Specify the type of outlier, either SD (standard deviations) or IQR (interquartile range). The default is "IQR". \link{character}}
+\item{plotSubset}{The options are "all" (all tower and distributed plots), "towerAll" (all plots in the tower airshed but no distributed plots), the default of "towerAnnualSubset" (only the subset of tower plots that are sampled annually), and "distributed" (all distributed plots, which are sampled in 5-yr bouts and are spatially representative of the NLCD classes at at site). \link{character}
+#'}
 }
 \value{
 A list that includes productivity summary data frames. Output tables include:
@@ -29,19 +18,15 @@ A list that includes productivity summary data frames. Output tables include:
 \item vst_ANPP_plot_w_taxa - Summarises woody ANPP for each plot x year x taxonID combination ("Mg/ha/yr").
 \item vst_ANPP_plot - Summarizes woody ANPP for each plot x year combination ("Mg/ha/yr").
 \item vst_ANPP_site - Summarizes woody ANPP for each site x year combination ("Mg/ha/yr").
-\item increment_all - Contains the increments for each woody individual (approach 1 only).
-\item increment_outlier - Contains the woody individual increments that were removed during outlier removal (approach 1 only).
 }
-
-If calcMethod "approach_2" is selected then only the first three dataframes are returned, and they include an "_2" suffix.
 }
 \description{
 Calculate annual productivity of woody vegetation (and "non-woody perennial" vegetation, if included in inputDataList) using inputs from the companion estimateWoodMass() function.
 }
 \details{
-Input data can be filtered by plot type and plot priority. An input data list of woody biomass dataframes created by the companion estimateWoodMass() function is read in and aboveground net primary productivity (ANPP) is calculated for woody vegetation from NEON "Vegetation structure" (DP1.10098.001) data. Both a whole plot level approach and an individual-level approach calculation method are used, and output from the desired calculation method is returned.
+Input data can be filtered by plotSubset. An input data list of woody biomass dataframes created by the companion estimateWoodMass() function is read in and aboveground net primary productivity (ANPP) is calculated for woody vegetation from NEON "Vegetation structure" (DP1.10098.001) data. The stand-level approach (approach 2) is used from Clark DA, S Brown, DW Kicklighter, JQ Chambers, JR Thomlinson, and J Ni. 2001. Measuring Net Primary Production in Forests: Concepts and Field Methods. Ecological Applications 11:356-370.
 
-The individual-level approach is currently an underestimate since it includes the growth increment component but not the recruitment component. The recruitment component is currently very sensitive to stems that were overlooked in previous time periods, but when from true in-growth can be isolated the recruitment component will be added. Plots can be filtered to more frequently sampled plots using plotType and plotPriority arguments, and outlier observations can be removed.
+The estimate is currently an underestimate since it includes the growth increment component but not the recruitment component. The recruitment component is currently very sensitive to stems that were overlooked in previous time periods, but when from true in-growth can be isolated the recruitment component will be added. Plots can be filtered to more frequently sampled plots using plotSubset argument.
 }
 \examples{
 \dontrun{

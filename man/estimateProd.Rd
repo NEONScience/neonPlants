@@ -19,12 +19,6 @@ estimateProd(
 \item{inputDataListHbpMass}{Specify a loaded R list object (e.g. scaleHerbMassOutputs) that was produced by companion scaleHerbMass or estimateMass function. \link{character}}
 
 \item{plotSubset}{The options are "all" (all tower and distributed plots), "towerAll" (all plots in the tower airshed but no distributed plots), the default of "towerAnnualSubset" (only the subset of tower plots that are sampled annually), and "distributed" (all distributed plots, which are sampled in 5-yr bouts and are spatially representative of the NLCD classes at at site). \link{character}}
-
-\item{calcMethod}{Select plot-level (approach 2) or individual-level (approach 1) productivity calculations (for woody data). The default is "approach_1" \link{character}}
-
-\item{outlier}{Specify how much (if any) outlier removal should be performed (for woody data). The default is 1.5. \link{numeric}}
-
-\item{outlierType}{Specify the type of outlier (for woody data), either SD (standard deviations) or IQR (interquartile range). The default is "IQR". \link{character}}
 }
 \value{
 A site-level summary dataframe named "productivity_site" with summed productivity ("Mg/ha/yr") from the selected NEON data products. In addition, more granular data summaries are returned for each of the selected input data products.
@@ -34,7 +28,7 @@ Combine above-ground productivity summaries from multiple NEON data products and
 Data inputs are list objects created by the estimateMass(), scaleHerbMass(), or estimateWoodMass() neonPlants functions.
 }
 \details{
-A site-level summary of NEON productivity from the selected NEON data products is provided as a dataframe, in addition to more detailed outputs for each of the selected NEON data products used to generate the site-level summary. For more documentation details see the documentation for the companion functions - i.e., estimateWoodProd() and estimateeHerbProd().
+A site-level summary of NEON productivity from the selected NEON data products is provided as a dataframe, in addition to more detailed outputs for each of the selected NEON data products used to generate the site-level summary. For more documentation details see the documentation for the companion functions - i.e., estimateWoodProd() and estimateHerbProd().
 }
 \examples{
 \dontrun{

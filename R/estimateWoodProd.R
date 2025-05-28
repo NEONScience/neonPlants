@@ -6,28 +6,19 @@
 
 #' @description Calculate annual productivity of woody vegetation (and "non-woody perennial" vegetation, if included in inputDataList) using inputs from the companion estimateWoodMass() function.
 #'
-#' @details Input data can be filtered by plot type and plot priority. An input data list of woody biomass dataframes created by the companion estimateWoodMass() function is read in and aboveground net primary productivity (ANPP) is calculated for woody vegetation from NEON "Vegetation structure" (DP1.10098.001) data. Both a whole plot level approach and an individual-level approach calculation method are used, and output from the desired calculation method is returned.
+#' @details Input data can be filtered by plotSubset. An input data list of woody biomass dataframes created by the companion estimateWoodMass() function is read in and aboveground net primary productivity (ANPP) is calculated for woody vegetation from NEON "Vegetation structure" (DP1.10098.001) data. The stand-level approach (approach 2) is used from Clark DA, S Brown, DW Kicklighter, JQ Chambers, JR Thomlinson, and J Ni. 2001. Measuring Net Primary Production in Forests: Concepts and Field Methods. Ecological Applications 11:356-370.
 #'
-#' The individual-level approach is currently an underestimate since it includes the growth increment component but not the recruitment component. The recruitment component is currently very sensitive to stems that were overlooked in previous time periods, but when from true in-growth can be isolated the recruitment component will be added. Plots can be filtered to more frequently sampled plots using plotType and plotPriority arguments, and outlier observations can be removed.
+#' The estimate is currently an underestimate since it includes the growth increment component but not the recruitment component. The recruitment component is currently very sensitive to stems that were overlooked in previous time periods, but when from true in-growth can be isolated the recruitment component will be added. Plots can be filtered to more frequently sampled plots using plotSubset argument.
 #'
 #' @param inputDataList Specify a loaded R list object (e.g. estimateWoodMassOutputs) that was produced by the companion estimateWoodMass function. [character]
 #'
 #' @param plotSubset The options are "all" (all tower and distributed plots), "towerAll" (all plots in the tower airshed but no distributed plots), the default of "towerAnnualSubset" (only the subset of tower plots that are sampled annually), and "distributed" (all distributed plots, which are sampled in 5-yr bouts and are spatially representative of the NLCD classes at at site). [character]
-#'
-#' @param calcMethod Select individual-level (Approach 1) or plot-level (Approach 2) productivity calculation methods; the default is "approach_1". See Clark DA, S Brown, DW Kicklighter, JQ Chambers, JR Thomlinson, and J Ni. 2001. Measuring Net Primary Production in Forests: Concepts and Field Methods. Ecological Applications 11:356-370. [character]
-#'
-#' @param outlier Specify how much (if any) outlier removal should be performed. The default is 1.5. [numeric]
-#'
-#' @param outlierType Specify the type of outlier, either SD (standard deviations) or IQR (interquartile range). The default is "IQR". [character]
-#'
+#'#'
 #' @return A list that includes productivity summary data frames. Output tables include:
 #'   * vst_ANPP_plot_w_taxa - Summarises woody ANPP for each plot x year x taxonID combination ("Mg/ha/yr").
 #'   * vst_ANPP_plot - Summarizes woody ANPP for each plot x year combination ("Mg/ha/yr").
 #'   * vst_ANPP_site - Summarizes woody ANPP for each site x year combination ("Mg/ha/yr").
-#'   * increment_all - Contains the increments for each woody individual (approach 1 only).
-#'   * increment_outlier - Contains the woody individual increments that were removed during outlier removal (approach 1 only).
 #'
-#'  If calcMethod "approach_2" is selected then only the first three dataframes are returned, and they include an "_2" suffix.
 #'
 #' @examples
 #' \dontrun{
@@ -56,10 +47,7 @@
 #' @export estimateWoodProd
 
 estimateWoodProd = function(inputDataList,
-                            plotSubset = "towerAnnualSubset",
-                            calcMethod = "approach_1",
-                            outlier = 1.5,
-                            outlierType = "IQR") {
+                            plotSubset = "towerAnnualSubset") {
 
   options(dplyr.summarise.inform = FALSE)
 
@@ -182,8 +170,8 @@ estimateWoodProd = function(inputDataList,
 
 
 
-  ### PLOT-LEVEL BIOMASS INCREMENT (Clark et al. 2001 approach 2 - stand level productivity calculation) ####
-  message("Calculating woody increment component of productivity at the plot-level (approach 2) ..... ")
+  ### STAND-LEVEL BIOMASS INCREMENT (Clark et al. 2001 approach 2 - stand level productivity calculation) ####
+  message("Calculating woody increment component of productivity at the stand-level ..... ")
 
   #   Some taxonIDs are represented in multiple growthForms (e.g., sapling and single bole tree): This sums the growthForms
   vst_agb_Live <- vst_plot_w_0s %>%
@@ -237,7 +225,7 @@ estimateWoodProd = function(inputDataList,
 
 
 
-  ### CALCULATE PLOT-LEVEL MORTALITY
+  ### CALCULATE STAND-LEVEL MORTALITY
   message("Calculating woody mortality component of productivity at the plot-level (approach 2) ..... ")
 
   if (nrow(vst_agb_kg) > 0) {
@@ -352,27 +340,27 @@ estimateWoodProd = function(inputDataList,
   }
 
   #   Gather mortality and increment data into same dataframe
-  vst_ANPP_plot_w_taxa_2 <- merge(vst_increment_long,
+  vst_ANPP_plot_w_taxa <- merge(vst_increment_long,
                                   plot_mortality,
                                   by = c("siteID", "plotID", "taxonID", "year"),
                                   all.x = TRUE)
 
   #   Set "year" data type
-  vst_ANPP_plot_w_taxa_2$year <- as.numeric(vst_ANPP_plot_w_taxa_2$year)
+  vst_ANPP_plot_w_taxa$year <- as.numeric(vst_ANPP_plot_w_taxa$year)
 
   #   Remove records with increment == NA; very important because NAs for both increment and mortality lead to false zeroes during subsequent group_by() steps.
-  vst_ANPP_plot_w_taxa_2 <- vst_ANPP_plot_w_taxa_2 %>%
+  vst_ANPP_plot_w_taxa <- vst_ANPP_plot_w_taxa %>%
     dplyr::filter(!is.na(.data$Mgha_increment))
 
 
   #   Assign mortality of zero if mortality is missing but increment is present
-  vst_ANPP_plot_w_taxa_2$Mgha_mortality <- dplyr::if_else(is.na(vst_ANPP_plot_w_taxa_2$Mgha_mortality) &
-                                                            !is.na(vst_ANPP_plot_w_taxa_2$Mgha_increment),
+  vst_ANPP_plot_w_taxa$Mgha_mortality <- dplyr::if_else(is.na(vst_ANPP_plot_w_taxa$Mgha_mortality) &
+                                                            !is.na(vst_ANPP_plot_w_taxa$Mgha_increment),
                                                           0,
-                                                          vst_ANPP_plot_w_taxa_2$Mgha_mortality,
-                                                          vst_ANPP_plot_w_taxa_2$Mgha_mortality)
+                                                          vst_ANPP_plot_w_taxa$Mgha_mortality,
+                                                          vst_ANPP_plot_w_taxa$Mgha_mortality)
 
-  vst_ANPP_plot_w_taxa_2 <- vst_ANPP_plot_w_taxa_2 %>%
+  vst_ANPP_plot_w_taxa <- vst_ANPP_plot_w_taxa %>%
     dplyr::group_by(.data$siteID,
                     .data$plotID,
                     .data$plotType,
@@ -382,10 +370,10 @@ estimateWoodProd = function(inputDataList,
     dplyr::summarise(dplyr::across(dplyr::where(is.numeric), ~ sum(.x, na.rm = TRUE)))
 
   #   Sum increment plus mortality to get woody ANPP
-  vst_ANPP_plot_w_taxa_2$woodANPP_Mghayr <- vst_ANPP_plot_w_taxa_2$Mgha_increment + vst_ANPP_plot_w_taxa_2$Mgha_mortality
+  vst_ANPP_plot_w_taxa$woodANPP_Mghayr <- vst_ANPP_plot_w_taxa$Mgha_increment + vst_ANPP_plot_w_taxa$Mgha_mortality
 
   #   Sum ANPP across taxa within plotID x year to generate ANPP by plotID x year
-  vst_ANPP_plot_2 <- vst_ANPP_plot_w_taxa_2 %>%
+  vst_ANPP_plot <- vst_ANPP_plot_w_taxa %>%
     dplyr::group_by(.data$siteID,
                     .data$plotID,
                     .data$plotType,
@@ -396,7 +384,7 @@ estimateWoodProd = function(inputDataList,
                      .groups = "drop")
 
   #   Remove records with missing productivity
-  vst_ANPP_plot_2 <- vst_ANPP_plot_2 %>%
+  vst_ANPP_plot <- vst_ANPP_plot %>%
     dplyr::filter(!is.na(.data$woodANPP_Mghayr)) %>%
     dplyr::select("siteID",
                   "plotID",
@@ -410,7 +398,7 @@ estimateWoodProd = function(inputDataList,
     vst_agb_zeros_plot <- vst_agb_zeros
     vst_agb_zeros_plot$eventID <- vst_agb_zeros_plot$plot_eventID <- NULL
     vst_agb_zeros_plot$woodANPP_Mghayr <- 0
-    vst_ANPP_plot_2 <- rbind(vst_ANPP_plot_2,
+    vst_ANPP_plot <- rbind(vst_ANPP_plot,
                              vst_agb_zeros_plot)
 
   }
@@ -422,7 +410,7 @@ estimateWoodProd = function(inputDataList,
   priority_plots_add <- unique(priority_plots_add)
 
   #   Add plot prioritization number to per plot ANPP estimate dataframe
-  vst_ANPP_plot_2 <- merge(vst_ANPP_plot_2,
+  vst_ANPP_plot <- merge(vst_ANPP_plot,
                            priority_plots_add,
                            by = c("plotID"),
                            all.x = TRUE)
@@ -430,16 +418,16 @@ estimateWoodProd = function(inputDataList,
   #   Filter plot output with user-provided plotSubset argument
   if(plotType == "tower") {
 
-    vst_ANPP_plot_2 <- vst_ANPP_plot_2 %>%
+    vst_ANPP_plot <- vst_ANPP_plot %>%
       dplyr::filter(.data$plotType == "tower")
 
   }
 
-  vst_ANPP_plot_2 <- vst_ANPP_plot_2 %>%
+  vst_ANPP_plot <- vst_ANPP_plot %>%
     dplyr::filter(.data$specificModuleSamplingPriority <= plotPriority)
 
   #   Add metadata to contextualize ANPP estimates
-  vst_NPP_plot_yearFirst <- vst_ANPP_plot_2 %>%
+  vst_NPP_plot_yearFirst <- vst_ANPP_plot %>%
     dplyr::group_by(.data$siteID,
                     .data$plotID,
                     .data$plotType) %>%
@@ -454,7 +442,7 @@ estimateWoodProd = function(inputDataList,
     dplyr::mutate(wood_count_type = "years")
 
   #   Estimate ANPP at site level using plot data
-  vst_ANPP_site_2 <- vst_ANPP_plot_2 %>%
+  vst_ANPP_site <- vst_ANPP_plot %>%
     dplyr::group_by(.data$siteID, .data$year) %>%
     dplyr::summarise(woodPlotNum = dplyr::n(),
                      woodANPPSD_Mghayr = round(stats::sd(.data$woodANPP_Mghayr, na.rm = TRUE),
@@ -465,637 +453,14 @@ estimateWoodProd = function(inputDataList,
 
 
 
-  ### CALCULATE WOODY BIOMASS INCREMENT AT THE LEVEL OF INDIVIDUALID (Clark et al 2001 Approach 1) ####
-  if (calcMethod == "approach_1") {
-
-    message("Calculating woody increment productivity at the level of the individualID (approach 1) ..... ")
-
-    #   Filter to year-pairs that were live at earlier years and still live at target year for increment, and year-pairs that were live at earlier years and dead at target year for mortality
-    #   Calculating in this way accommodated individualIDs that had more than one status for the same year (e.g., if one bole grew and another died)
-    #   Assumption: if data are not from consecutive years then assume equal rate of growth and divide increment and mortality by the number of elapsed years
-
-    if (nrow(vst_agb_kg) > 0) {
-
-      vst_agb_kg <- vst_agb_kg[order(vst_agb_kg$year), ]
-
-      vst_agb_plot_list <- unique(vst_agb_kg$plotID); length(vst_agb_plot_list)
-      vst_agb_indID_list <- unique(vst_agb_kg$individualID); length(vst_agb_indID_list)
-
-      startAGB <- min(vst_agb_kg$year)
-      endAGB  <- max(vst_agb_kg$year)
-
-      #   Create placeholder data frame for any years prior to start that are missing
-      dummy_rows <- data.frame(plot_eventID = rep(NA, 7),
-                               eventID = rep(NA, 7),
-                               siteID = rep(NA, 7),
-                               plotID = rep(NA, 7),
-                               plotType = rep(NA, 7),
-                               nlcdClass = rep(NA, 7),
-                               individualID = rep(NA, 7),
-                               taxonID = rep(NA, 7),
-                               plantStatus2 = rep(NA, 7),
-                               year = ((startAGB - 7):(startAGB - 1) ),
-                               agb_Mgha = rep(NA, 7))
-
-      yearLength <- length(startAGB:endAGB)
-
-      #   Another placeholder for any years within start to end year range that are missing
-      dummy_rows_2 <- data.frame(plot_eventID = rep(NA, yearLength),
-                                 eventID = rep(NA, yearLength),
-                                 siteID = rep(NA, yearLength),
-                                 plotID = rep(NA, yearLength),
-                                 plotType = rep(NA, yearLength),
-                                 nlcdClass = rep(NA, yearLength),
-                                 individualID = rep(NA, yearLength),
-                                 taxonID = rep(NA, yearLength),
-                                 plantStatus2 = rep(NA, yearLength),
-                                 year = (startAGB:endAGB),
-                                 agb_Mgha = rep(NA, yearLength))
-
-      dummy_rows <- rbind(dummy_rows, dummy_rows_2)
-
-      #   Remove dummy rows for years that are in the input data
-      dummy_rows <- dummy_rows[!dummy_rows$year %in% unique(vst_agb_kg$year), ]
-
-      #   Create empty increment data frames
-      increment_all = data.frame()
-      increment_qf_all = data.frame()
-      endYear <- as.numeric((startAGB):endAGB)
-
-
-      ##  Employ 'for' loop to calculate woody increment
-      for (i in 2:length(endYear)) {
-
-        #   Some individualIDs are represented in multiple growthForms (e.g. sapling and single bole tree): This sums the growthForms
-        transitions <- vst_agb_kg %>%
-          dplyr::group_by(.data$plot_eventID,
-                          .data$eventID,
-                          .data$siteID,
-                          .data$plotID,
-                          .data$plotType,
-                          .data$nlcdClass,
-                          .data$taxonID,
-                          .data$individualID,
-                          .data$plantStatus2,
-                          .data$year) %>%
-          dplyr::summarise(agb_Mgha = sum(.data$agb_Mgha, na.rm = TRUE))
-
-        #   Remove records that are not plantStatus2 == "live" in years before 'endYear'
-        transitions$keep <- dplyr::if_else(transitions$year < endYear[i] & transitions$plantStatus2 == "Live",
-                                           "keep",
-                                           "discard",
-                                           "discard")
-
-        transitions$keep <- dplyr::if_else(transitions$year == endYear[i] & !is.na(transitions$plantStatus2),
-                                           "keep",
-                                           transitions$keep,
-                                           transitions$keep)
-
-        transitions <- transitions %>%
-          dplyr::filter(.data$keep == "keep") %>%
-          dplyr::select(-"keep")
-
-        #   Remove records that are "dead" in 'endYear'
-        increment <- transitions %>%
-          dplyr::filter(!(.data$year == endYear[i] & .data$plantStatus2 == "Dead_or_Lost"))
-
-        #   Workaround to get blank columns for all years
-        increment <- rbind(increment, dummy_rows)
-
-        increment <- increment[increment$year <= endYear[i], ]
-        increment$year <- abs(increment$year - endYear[i])
-
-        #   Remove artifact row with NAs from dummy row
-        increment <- tidyr::pivot_wider(increment,
-                                        id_cols = c("siteID", "plotID", "individualID", "taxonID"),
-                                        names_from = "year",
-                                        names_prefix = "agb_Mgha_",
-                                        values_from = "agb_Mgha")
-
-        increment <- increment %>%
-          dplyr::filter(!is.na(.data$plotID))
-
-
-
-        ### Calculate increment1 for year "i"
-        increment$increment1 <- increment$agb_Mgha_0 - increment$agb_Mgha_1
-
-        #   Generate statistics for increment1 for year "i"
-        increment_stats <- increment %>%
-          dplyr::group_by(.data$siteID) %>%
-          dplyr::filter(!is.na(.data$increment1)) %>%
-          dplyr::summarise("increment1_n" = dplyr::n(),
-                           "increment1_sd" = round(stats::sd(.data$increment1, na.rm = TRUE),
-                                                   digits = 3),
-                           "increment1_se" = round(.data$increment1_sd / sqrt(.data$increment1_n),
-                                                   digits = 3),
-                           "increment1_mn" = round(mean(.data$increment1, na.rm = TRUE),
-                                                   digits = 3),
-                           "increment1_firstQuart" = stats::quantile(.data$increment1, probs = c(0.25), na.rm = TRUE),
-                           "increment1_thirdQuart" = stats::quantile(.data$increment1, probs = c(0.75), na.rm = TRUE),
-                           "increment1_IQR" = .data$increment1_thirdQuart - .data$increment1_firstQuart,
-                           .groups = "drop")
-
-        #   Join increment1 stats to 'increment' data frame
-        increment <- merge(increment,
-                           increment_stats,
-                           by = "siteID",
-                           all.x = TRUE)
-
-        #   Flag records with increment1 outside the user-specified IQR thresholds
-        increment$increment1_IQRqf <- dplyr::if_else(
-          (increment$increment1 < increment$increment1_firstQuart - (increment$increment1_IQR * outlier)) |
-            (increment$increment1 > increment$increment1_thirdQuart + (increment$increment1_IQR * outlier)),
-          "flag",
-          "ok",
-          "ok")
-
-        #   Flag records with increment1 outside user-specified SD thresholds
-        increment$increment1_SDqf <- dplyr::if_else(
-          abs(increment$increment1 - increment$increment1_mn) > (increment$increment1_sd * outlier),
-          "flag",
-          "ok",
-          "ok")
-
-
-
-        ### Calculate average increment2 for year "i"
-        increment$increment2 <- (increment$agb_Mgha_0 - increment$agb_Mgha_2)/2
-
-        #   Generate statistics for increment2 for year "i"
-        increment_stats <- increment %>%
-          dplyr::group_by(.data$siteID) %>%
-          dplyr::filter(!is.na(.data$increment2)) %>%
-          dplyr::summarise("increment2_n" = dplyr::n(),
-                           "increment2_sd" = round(stats::sd(.data$increment2, na.rm = TRUE),
-                                                   digits = 3),
-                           "increment2_se" = round(.data$increment2_sd / sqrt(.data$increment2_n),
-                                                   digits = 3),
-                           "increment2_mn" = round(mean(.data$increment2, na.rm = TRUE),
-                                                   digits = 3),
-                           "increment2_firstQuart" = stats::quantile(.data$increment2, probs = c(0.25), na.rm = TRUE),
-                           "increment2_thirdQuart" = stats::quantile(.data$increment2, probs = c(0.75), na.rm = TRUE),
-                           "increment2_IQR" = .data$increment2_thirdQuart - .data$increment2_firstQuart,
-                           .groups = "drop")
-
-        #   Join increment2 stats to increment data frame
-        increment <- merge(increment,
-                           increment_stats,
-                           by = "siteID",
-                           all.x = TRUE)
-
-        #   Flag records with increment2 outside the user-specified IQR thresholds
-        increment$increment2_IQRqf <- dplyr::if_else(
-          (increment$increment2 < increment$increment2_firstQuart - (increment$increment2_IQR * outlier)) |
-            (increment$increment2 > increment$increment2_thirdQuart + (increment$increment2_IQR * outlier)),
-          "flag",
-          "ok",
-          "ok")
-
-        #   Flag records with increment2 outside user-specified SD thresholds
-        increment$increment2_SDqf <- dplyr::if_else(abs(increment$increment2 - increment$increment2_mn) > (increment$increment2_sd * outlier), "flag","ok","ok")
-
-
-
-        ### Calculate average increment3 for year "i"
-        increment$increment3 <- (increment$agb_Mgha_0 - increment$agb_Mgha_3)/3
-
-        #   Generate statistics for increment3 for year "i"
-        increment_stats <- increment %>%
-          dplyr::group_by(.data$siteID) %>%
-          dplyr::filter(!is.na(.data$increment3)) %>%
-          dplyr::summarise("increment3_n" = dplyr::n(),
-                           "increment3_sd" = round(stats::sd(.data$increment3, na.rm = TRUE),
-                                                   digits = 3),
-                           "increment3_se" = round(.data$increment3_sd / sqrt(.data$increment3_n),
-                                                   digits = 3),
-                           "increment3_mn" = round(mean(.data$increment3, na.rm = TRUE),
-                                                   digits = 3),
-                           "increment3_firstQuart" = stats::quantile(.data$increment3, probs = c(0.25), na.rm = TRUE),
-                           "increment3_thirdQuart" = stats::quantile(.data$increment3, probs = c(0.75), na.rm = TRUE),
-                           "increment3_IQR" = .data$increment3_thirdQuart - .data$increment3_firstQuart,
-                           .groups = "drop")
-
-        #   Join increment3 stats to increment data frame
-        increment <- merge(increment,
-                           increment_stats,
-                           by = "siteID",
-                           all.x = TRUE)
-
-        #   Flag records with increment3 outside the user-specified IQR thresholds
-        increment$increment3_IQRqf <- dplyr::if_else(
-          (increment$increment3 < increment$increment3_firstQuart - (increment$increment3_IQR * outlier)) |
-            (increment$increment3 > increment$increment3_thirdQuart + (increment$increment3_IQR * outlier)),
-          "flag",
-          "ok",
-          "ok")
-
-        #   Flag records with increment3 outside the user-specified SD thresholds
-        increment$increment3_SDqf <- dplyr::if_else(
-          abs(increment$increment3 - increment$increment3_mn) > (increment$increment3_sd * outlier),
-          "flag",
-          "ok",
-          "ok")
-
-
-
-        ### Calculate average increment4 for year "i"
-        increment$increment4 <- (increment$agb_Mgha_0 - increment$agb_Mgha_4)/4
-
-        #   Generate statistics for increment4 for year "i"
-        increment_stats <- increment %>%
-          dplyr::group_by(.data$siteID) %>%
-          dplyr::filter(!is.na(.data$increment4)) %>%
-          dplyr::summarise("increment4_n" = dplyr::n(),
-                           "increment4_sd" = round(stats::sd(.data$increment4, na.rm = TRUE),
-                                                   digits = 3),
-                           "increment4_se" = round(.data$increment4_sd / sqrt(.data$increment4_n),
-                                                   digits = 3),
-                           "increment4_mn" = round(mean(.data$increment4, na.rm = TRUE),
-                                                   digits = 3),
-                           "increment4_firstQuart" = stats::quantile(.data$increment4, probs = c(0.25), na.rm = TRUE),
-                           "increment4_thirdQuart" = stats::quantile(.data$increment4, probs = c(0.75), na.rm = TRUE),
-                           "increment4_IQR" = .data$increment4_thirdQuart - .data$increment4_firstQuart,
-                           .groups = "drop")
-
-        #   Join increment4 stats to increment data frame
-        increment <- merge(increment,
-                           increment_stats,
-                           by = "siteID",
-                           all.x = TRUE)
-
-        #   Flag records with increment4 outside the user-specified IQR thresholds
-        increment$increment4_IQRqf <- dplyr::if_else(
-          (increment$increment4 < increment$increment4_firstQuart - (increment$increment4_IQR * outlier)) |
-            (increment$increment4 > increment$increment4_thirdQuart + (increment$increment4_IQR * outlier)),
-          "flag",
-          "ok",
-          "ok")
-
-        #   Flag records with increment4 outside the user-specified SD thresholds
-        increment$increment4_SDqf <- dplyr::if_else(
-          abs(increment$increment4 - increment$increment4_mn) > (increment$increment4_sd * outlier),
-          "flag",
-          "ok",
-          "ok")
-
-
-
-        ### Calculate average increment5 for year "i"
-        increment$increment5 <- (increment$agb_Mgha_0 - increment$agb_Mgha_5)/5
-
-        #   Generate statistics for increment5 for year "i"
-        increment_stats <- increment %>%
-          dplyr::group_by(.data$siteID) %>%
-          dplyr::filter(!is.na(.data$increment5)) %>%
-          dplyr::summarise("increment5_n" = dplyr::n(),
-                           "increment5_sd" = round(stats::sd(.data$increment5, na.rm = TRUE),
-                                                   digits = 3),
-                           "increment5_se" = round(.data$increment5_sd / sqrt(.data$increment5_n),
-                                                   digits = 3),
-                           "increment5_mn" = round(mean(.data$increment5, na.rm = TRUE),
-                                                   digits = 3),
-                           "increment5_firstQuart" = stats::quantile(.data$increment5, probs = c(0.25), na.rm = TRUE),
-                           "increment5_thirdQuart" = stats::quantile(.data$increment5, probs = c(0.75), na.rm = TRUE),
-                           "increment5_IQR" = .data$increment5_thirdQuart - .data$increment5_firstQuart,
-                           .groups = "drop")
-
-        #   Join increment5 stats to increment data frame
-        increment <- merge(increment,
-                           increment_stats,
-                           by = "siteID",
-                           all.x = TRUE)
-
-        #   Flag records with increment5 outside the user-specified IQR thresholds
-        increment$increment5_IQRqf <- dplyr::if_else(
-          (increment$increment5 < increment$increment5_firstQuart - (increment$increment5_IQR * outlier)) |
-            (increment$increment5 > increment$increment5_thirdQuart + (increment$increment5_IQR * outlier)),
-          "flag",
-          "ok",
-          "ok")
-
-        #   Flag records with increment5 outside the user-specified SD thresholds
-        increment$increment5_SDqf <- dplyr::if_else(
-          abs(increment$increment5 - increment$increment5_mn) > (increment$increment5_sd * outlier),
-          "flag",
-          "ok",
-          "ok")
-
-
-
-        ### Calculate average increment6 for year "i"
-        increment$increment6 <- (increment$agb_Mgha_0 - increment$agb_Mgha_6)/6
-
-        #   Generate statistics for increment6 for year "i"
-        increment_stats <- increment %>%
-          dplyr::group_by(.data$siteID) %>%
-          dplyr::filter(!is.na(.data$increment6)) %>%
-          dplyr::summarise("increment6_n" = dplyr::n(),
-                           "increment6_sd" = round(stats::sd(.data$increment6, na.rm = TRUE),
-                                                   digits = 3),
-                           "increment6_se" = round(.data$increment6_sd / sqrt(.data$increment6_n),
-                                                   digits = 3),
-                           "increment6_mn" = round(mean(.data$increment6, na.rm = TRUE),
-                                                   digits = 3),
-                           "increment6_firstQuart" = stats::quantile(.data$increment6, probs = c(0.25), na.rm = TRUE),
-                           "increment6_thirdQuart" = stats::quantile(.data$increment6, probs = c(0.75), na.rm = TRUE),
-                           "increment6_IQR" = .data$increment6_thirdQuart - .data$increment6_firstQuart,
-                           .groups = "drop")
-
-        #   Join increment6 stats to increment data frame
-        increment <- merge(increment,
-                           increment_stats,
-                           by = "siteID",
-                           all.x = TRUE)
-
-        #   Flag records with increment6 outside the user-specified IQR thresholds
-        increment$increment6_IQRqf <- dplyr::if_else(
-          (increment$increment6 < increment$increment6_firstQuart - (increment$increment6_IQR * outlier)) |
-            (increment$increment6 > increment$increment6_thirdQuart + (increment$increment6_IQR * outlier)),
-          "flag",
-          "ok",
-          "ok")
-
-        #   Flag records with increment6 outside the user-specified SD thresholds
-        increment$increment6_SDqf <- dplyr::if_else(
-          abs(increment$increment6 - increment$increment6_mn) > (increment$increment6_sd * outlier),
-          "flag",
-          "ok",
-          "ok")
-
-
-
-        ### Calculate average increment7 for year "i"
-        increment$increment7 <- (increment$agb_Mgha_0 - increment$agb_Mgha_7)/7
-
-        #   Generate statistics for increment7 for year "i"
-        increment_stats <- increment %>%
-          dplyr::group_by(.data$siteID) %>%
-          dplyr::filter(!is.na(.data$increment7)) %>%
-          dplyr::summarise("increment7_n" = dplyr::n(),
-                           "increment7_sd" = round(stats::sd(.data$increment7, na.rm = TRUE),
-                                                   digits = 3),
-                           "increment7_se" = round(.data$increment7_sd / sqrt(.data$increment7_n),
-                                                   digits = 3),
-                           "increment7_mn" = round(mean(.data$increment7, na.rm = TRUE),
-                                                   digits = 3),
-                           "increment7_firstQuart" = stats::quantile(.data$increment7, probs = c(0.25), na.rm = TRUE),
-                           "increment7_thirdQuart" = stats::quantile(.data$increment7, probs = c(0.75), na.rm = TRUE),
-                           "increment7_IQR" = .data$increment7_thirdQuart - .data$increment7_firstQuart,
-                           .groups = "drop")
-
-        #   Join increment7 stats to increment data frame
-        increment <- merge(increment,
-                           increment_stats,
-                           by = "siteID",
-                           all.x = TRUE)
-
-        #   Flag records with increment7 outside the user-specified IQR thresholds
-        increment$increment7_IQRqf <- dplyr::if_else(
-          (increment$increment7 < increment$increment7_firstQuart - (increment$increment7_IQR * outlier)) |
-            (increment$increment7 > increment$increment7_thirdQuart + (increment$increment7_IQR * outlier)),
-          "flag",
-          "ok",
-          "ok")
-
-        #   Flag records with increment7 outside the user-specified SD thresholds
-        increment$increment7_SDqf <- dplyr::if_else(
-          abs(increment$increment7 - increment$increment7_mn) > (increment$increment7_sd * outlier),
-          "flag",
-          "ok",
-          "ok")
-
-
-
-        ### Populate "Mghayr" column with most recent increment data
-        increment$Mghayr <- ifelse(!is.na(increment$increment7), increment$increment7, NA)
-        increment$bestIncrement <- ifelse(!is.na(increment$increment7), 7, NA)
-
-        increment$Mghayr <- ifelse(!is.na(increment$increment6), increment$increment6, increment$Mghayr)
-        increment$bestIncrement <- ifelse(!is.na(increment$increment6), 6, increment$bestIncrement)
-
-        increment$Mghayr <- ifelse(!is.na(increment$increment5), increment$increment5, increment$Mghayr)
-        increment$bestIncrement <- ifelse(!is.na(increment$increment5), 5, increment$bestIncrement)
-
-        increment$Mghayr <- ifelse(!is.na(increment$increment4), increment$increment4, increment$Mghayr)
-        increment$bestIncrement <- ifelse(!is.na(increment$increment4), 4, increment$bestIncrement)
-
-        increment$Mghayr <- ifelse(!is.na(increment$increment3), increment$increment3, increment$Mghayr)
-        increment$bestIncrement <- ifelse(!is.na(increment$increment3), 3, increment$bestIncrement)
-
-        increment$Mghayr <- ifelse(!is.na(increment$increment2), increment$increment2, increment$Mghayr)
-        increment$bestIncrement <- ifelse(!is.na(increment$increment2), 2, increment$bestIncrement)
-
-        increment$Mghayr <- ifelse(!is.na(increment$increment1), increment$increment1, increment$Mghayr)
-        increment$bestIncrement <- ifelse(!is.na(increment$increment1), 1, increment$bestIncrement)
-
-        #   Remove missing increment values and add endYear column
-        increment <- increment %>%
-          dplyr::filter(!is.na(.data$Mghayr)) %>%
-          dplyr::mutate(endYear = endYear[i])
-
-        increment <- dplyr::rename(increment,
-                                   "Mghayr_inc" = "Mghayr",
-                                   "bestIncrement_inc" = "bestIncrement")
-
-        increment_all = dplyr::bind_rows(increment_all, increment) %>%
-          dplyr::mutate(outlier_threshold = paste0(outlier, "_", outlierType))
-
-      } # End 'endYear' for() loop
-
-
-      if (nrow(increment_all) > 0) {
-
-        if (outlierType == "SD") {
-
-          #   Remove increments flagged as outliers
-          increment_ok <- increment_all %>%
-            dplyr::filter("increment1_SDqf" != "flag" & "increment2_SDqf" != "flag"  & "increment3_SDqf" != "flag" &
-                            "increment4_SDqf" != "flag" & "increment5_SDqf" != "flag" & "increment6_SDqf" != "flag" &
-                            "increment7_SDqf" != "flag")
-
-          #   Identify records flagged as outliers
-          increment_outlier <- increment_all %>%
-            dplyr::filter("increment1_SDqf" == "flag" | "increment2_SDqf" == "flag"  | "increment3_SDqf" == "flag" |
-                            "increment4_SDqf" == "flag" | "increment5_SDqf" == "flag" | "increment6_SDqf" == "flag" |
-                            "increment7_SDqf" == "flag")
-
-          increment_outlier <- increment_outlier %>%
-            dplyr::select("outlier_threshold",
-                          "siteID",
-                          "plotID",
-                          "individualID",
-                          "taxonID",
-                          "Mghayr_inc",
-                          "bestIncrement_inc",
-                          "endYear")
-
-        } # end outlierType == "SD" conditional
-
-
-        if (outlierType == "IQR") {
-
-          #   Remove increments flagged as outliers
-          increment_ok <- increment_all %>%
-            dplyr::filter("increment1_IQRqf" != "flag" & "increment2_IQRqf" != "flag"  & "increment3_IQRqf" != "flag" &
-                            "increment4_IQRqf" != "flag" & "increment5_IQRqf" != "flag" & "increment6_IQRqf" != "flag" &
-                            "increment7_IQRqf" != "flag")
-
-          #   Identify records flagged as outliers
-          increment_outlier <- increment_all %>%
-            dplyr::filter("increment1_IQRqf" == "flag" | "increment2_IQRqf" == "flag"  | "increment3_IQRqf" == "flag" |
-                            "increment4_IQRqf" == "flag" | "increment5_IQRqf" == "flag" | "increment6_IQRqf" == "flag" |
-                            "increment7_IQRqf" == "flag")
-
-          increment_outlier <- increment_outlier %>%
-            dplyr::select("outlier_threshold",
-                          "siteID",
-                          "plotID",
-                          "individualID",
-                          "taxonID",
-                          "Mghayr_inc",
-                          "bestIncrement_inc",
-                          "endYear")
-
-        } # end outlierType == "IQR" conditional
-
-
-        ##  Generate outlier summary stats
-        outlier_count <- length(increment_outlier$individualID)
-        increment_all_count <- length(increment_all$individualID)
-        percent_outliers <- round(100 * outlier_count / increment_all_count,
-                                  digits = 1)
-
-        message(paste0("Note: The chosen outlier criteria removed ", outlier_count, " records (", percent_outliers, "% of all records)"))
-
-        increment_ok <- increment_ok %>% dplyr::select("outlier_threshold", "siteID", "plotID", "individualID", "taxonID", "Mghayr_inc", "bestIncrement_inc", "endYear")
-
-        #   Remove increments without the allowed increment timeframe; we only need a single year increment for the 5 priority tower plots, but the 2 year increment means we don't lose 2 years worth of increment from missing just 1 measurement of an individual
-        increment_ok <- increment_ok %>%
-          dplyr::filter(.data$bestIncrement_inc == 1 | .data$bestIncrement_inc == 2 | .data$bestIncrement_inc == 3)  #(.data$bestIncrement_inc == 5 & (siteID =="JORN" | siteID =="MOAB" | siteID =="ONAQ" | siteID =="SRER") ) )
-
-        increment_indID_list <- unique(increment_ok$individualID); length(increment_indID_list)
-        increment_eventID_list <- unique(paste0(increment_ok$plotID, "_vst_", substr(increment_ok$plotID, 1, 4), "_", increment_ok$endYear))
-
-        message("Finish calculating woody productivity at the level of individualID (approach 1) ..... ")
-
-        #product_all <- merge(increment_all, recruitment_all, by=c("siteID", "plotID", "individualID", "taxonID","endYear"), all=TRUE)  # recruitment not yet incorporated since sensitive to large individ. missed in previous bout
-        #product_all <- product_all %>% dplyr::mutate_all(~replace(., is.na(.), 0)) %>% dplyr::mutate(wood_ANPP_Mghayr = .data$Mghayr_inc + .data$Mghayr_rec)
-
-        product_all <- increment_ok        # placeholder until incorporate recruitment
-        product_all <- dplyr::rename(product_all, "woodANPP_Mghayr" = "Mghayr_inc")
-        product_all <- dplyr::rename(product_all, "year" = "endYear")
-        productivity <- merge(product_all,
-                              plotType_df,
-                              by = "plotID",
-                              all.x = TRUE)
-
-        #   Sum the individualIDs by plot and taxonID
-        vst_ANPP_plot_w_taxa <- productivity %>%
-          dplyr::select(-"bestIncrement_inc") %>%
-          dplyr::group_by(.data$outlier_threshold,
-                          .data$siteID,
-                          .data$plotID,
-                          .data$plotType,
-                          .data$year,
-                          .data$taxonID) %>%
-          dplyr::summarise(dplyr::across(dplyr::where(is.numeric), ~ sum(.x, na.rm = TRUE)),
-                           .groups = "drop")
-
-        #   Sum the individualIDs by plot
-        vst_ANPP_plot <- vst_ANPP_plot_w_taxa %>%
-          dplyr::group_by(.data$outlier_threshold,
-                          .data$siteID,
-                          .data$plotID,
-                          .data$plotType,
-                          .data$year) %>%
-          dplyr::summarise(dplyr::across(dplyr::where(is.numeric), ~ sum(.x, na.rm = TRUE)),
-                           .groups = "drop")
-
-        #   Remove records with missing productivity
-        vst_ANPP_plot <- vst_ANPP_plot %>%
-          dplyr::filter(!is.na(.data$woodANPP_Mghayr)) %>%
-          dplyr::select("outlier_threshold",
-                        "siteID",
-                        "plotID",
-                        "plotType",
-                        "year",
-                        "woodANPP_Mghayr")
-
-
-
-        ### ADD PLOTS WITH 0 BIOMASS AND HERB BIOMASS
-        if (nrow(vst_agb_zeros) > 0) {
-
-          vst_agb_zeros_ind <- vst_agb_zeros
-          vst_agb_zeros_ind$eventID <- vst_agb_zeros_ind$plot_eventID <- NULL
-          vst_agb_zeros_ind$outlier_threshold <- paste0(outlier, "_", outlierType)
-          vst_agb_zeros_ind$woodANPP_Mghayr <- 0
-          vst_ANPP_plot <- rbind(vst_ANPP_plot, vst_agb_zeros_ind)
-
-        } # end vst_agb_zeros conditional
-
-        #   Remove records from before the start year
-        vst_ANPP_plot <- vst_ANPP_plot %>%
-          dplyr::filter(.data$year >= start)
-
-        vst_ANPP_plot <- merge(vst_ANPP_plot,
-                               priority_plots_add,
-                               by = c("plotID"),
-                               all.x = TRUE)
-
-        #   Remove Distributed plots if Tower plots are focus
-        if (plotType == "tower") {
-          vst_ANPP_plot <- vst_ANPP_plot %>%
-            dplyr::filter(.data$plotType == "tower")
-        }
-
-        #   Remove lower priority plots that aren't required to be sampled every year
-        if (!is.na(plotPriority)) {
-          vst_ANPP_plot <- vst_ANPP_plot %>%
-            dplyr::filter(.data$specificModuleSamplingPriority <= 5)
-        }
-
-        vst_ANPP_site <- vst_ANPP_plot %>%
-          dplyr::group_by(.data$outlier_threshold,
-                          .data$siteID,
-                          .data$year) %>%
-          dplyr::summarise("woodPlotNum" = dplyr::n(),
-                           "woodANPPSD_Mghayr" = round(stats::sd(.data$woodANPP_Mghayr, na.rm = TRUE),
-                                                       digits = 2),
-                           "woodANPPMean_Mghayr" = round(mean(.data$woodANPP_Mghayr, na.rm = TRUE),
-                                                         digits = 4),
-                           .groups = "drop")
-
-        message("Returning productivity summary data frames as a list object, calculated using approach 1  ..... ")
-
-      } else {
-
-        message("Current data subset has no individualID that has been measured more than once, so woody increment and productivity can not be calculated using approach 1.")}
-
-    } else {
-
-      message("Current data subset has no biomass, so woody increment and productivity can not be calculated using approach 1.")
-      }
-
-    output.list <- list(increment_all = increment_all,
-                        increment_outlier = increment_outlier,
-                        vst_ANPP_plot_w_taxa = vst_ANPP_plot_w_taxa,
-                        vst_ANPP_plot = vst_ANPP_plot,
-                        vst_ANPP_site = vst_ANPP_site)
-
-  }
-
-  if (calcMethod == "approach_2") {
-
-    message("Returning productivity summary data frames as a list object, calculated using approach 2  ..... ")
+    message("Returning productivity summary data frames as a list object  ..... ")
 
     output.list <- list(
-      vst_ANPP_plot_w_taxa_2 = vst_ANPP_plot_w_taxa_2,
-      vst_ANPP_plot_2 = vst_ANPP_plot_2,
-      vst_ANPP_site_2 = vst_ANPP_site_2
+      vst_ANPP_plot_w_taxa = vst_ANPP_plot_w_taxa,
+      vst_ANPP_plot = vst_ANPP_plot,
+      vst_ANPP_site = vst_ANPP_site
     )
-  }
+
 
   return(output.list)
 
