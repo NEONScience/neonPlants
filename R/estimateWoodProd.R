@@ -12,9 +12,7 @@
 #'
 #' @param inputDataList Specify a loaded R list object (e.g. estimateWoodMassOutputs) that was produced by the companion estimateWoodMass function. [character]
 #'
-#' @param plotType Optional filter for NEON plot type. Options are "tower" (default) or "all". A subset of 5 Tower plots are sampled annually (those plots with the highest plot priority), and remaining Tower plots are scheduled every 5 years. If "all" is selected, results include data from Distributed plots that are also sampled every 5 years. [character]
-#'
-#' @param plotPriority NEON plots have a priority number to spatially balance plots by NLCD class, etc. in the event that not all scheduled plots can be sampled. The lower the number the higher the priority. Options are "all" or "5". The default is "5" which retains just the 5 highest priority Tower plots that are sampled annually. [character]
+#' @param plotSubset The options are "all" (all tower and distributed plots), "towerAll" (all plots in the tower airshed but no distributed plots), the default of "towerAnnualSubset" (only the subset of tower plots that are sampled annually), and "distributed" (all distributed plots, which are sampled in 5-yr bouts and are spatially representative of the NLCD classes at at site). [character]
 #'
 #' @param calcMethod Select individual-level (Approach 1) or plot-level (Approach 2) productivity calculation methods; the default is "approach_1". See Clark DA, S Brown, DW Kicklighter, JQ Chambers, JR Thomlinson, and J Ni. 2001. Measuring Net Primary Production in Forests: Concepts and Field Methods. Ecological Applications 11:356-370. [character]
 #'
@@ -33,20 +31,24 @@
 #'
 #' @examples
 #' \dontrun{
-#' # If list is not in memory, load woody biomass list of dataframes from local file:
-#' load('estimateWoodMassOutputs.rds') # load list of dataframes created by estimateWoodMass function
+#' # Obtain NEON Vegetation structure
+#' VstDat <- neonUtilities::loadByProduct(
+#' dpID="DP1.10098.001",
+#' package = "basic",
+#' check.size = FALSE
+#' )
+#'
+#' # Use estimateWoodMass to generate output list that is to be used as input to estimateWoodProd
+#' estimateWoodMassOutputs <- estimateWoodMass(inputDataList = VstDat)
+#'
 #'
 #' # example with arguments at default values
-#' estimateWoodProdOutputs <- estimateWoodProd(input = estimateWoodMassOutputs)
+#' estimateWoodProdOutputs <- estimateWoodProd(inputDataList = estimateWoodMassOutputs)
 #'
-#' # example specifying many non-default arguments
+#' # example specifying a non-default argument
 #' estimateWoodProdOutputs <- estimateWoodProd(
-#' input = estimateWoodMassOutputs,
-#' plotType = "all",
-#' plotPriority = 50,
-#' calcMethod = "approach_2",
-#' outlier = 2,
-#' outlierType = "SD"
+#' inputDataList = estimateWoodMassOutputs,
+#' plotSubset = "all"
 #' )
 #'
 #' }
@@ -54,8 +56,7 @@
 #' @export estimateWoodProd
 
 estimateWoodProd = function(inputDataList,
-                            plotType = "tower",
-                            plotPriority = "5",
+                            plotSubset = "towerAnnualSubset",
                             calcMethod = "approach_1",
                             outlier = 1.5,
                             outlierType = "IQR") {
@@ -69,7 +70,7 @@ estimateWoodProd = function(inputDataList,
     stop("The 'inputDataList' argument is expected to be a list generated via the 'estimateWoodMass()' function. A character, data.frame, or NA argument is not allowed.")
   }
 
-  list2env(inputDataList ,.GlobalEnv)
+  vst_agb_kg <- inputDataList$vst_agb_kg
   vst_agb_zeros <- inputDataList$vst_agb_zeros
   vst_plot_w_0s <- inputDataList$vst_plot_w_0s
   vst_site <- inputDataList$vst_site
@@ -83,29 +84,14 @@ estimateWoodProd = function(inputDataList,
                       .sep = " "))
   }
 
-  # Error if invalid plotType option selected
-   if (!plotType %in% c("tower", "all")) {
-      stop("The only valid plotType options are 'tower' or 'all'.")
-    }
-
-  # Error if invalid plotPriority option selected
-  if (!(as.character(plotPriority)) %in% c("all", "5")) {
-    stop("The plotPriority argument should be either 'all' (all plots) or '5' (the 5 highest priority plots).")
-  }
-  plotPriority <- ifelse(plotPriority == "5", 5, 30) # convert to numeric (30 is highest plotPriority)
-
-
-  # Error if invalid calcMethod selected
-  if(calcMethod != "approach_1" & calcMethod != "approach_2"){
-    stop("The only valid outlierType options are 'approach_1' or 'approach_2'.")
+  # Error if invalid plotSubset option selected
+  if (!plotSubset %in% c("all", "towerAll", "towerAnnualSubset", "distributed")) {
+    stop("The only valid plotSubset options are 'all', 'towerAll', 'towerAnnualSubset', 'distributed'.")
   }
 
-  # Error if invalid outlierType selected
-  if(outlierType != "SD" & outlierType != "IQR"){
-    stop("The only valid calcMethod options are 'SD' or 'IQR'.")
-  }
-
-
+  plotPriority <- ifelse(plotSubset == "towerAnnualSubset", 5, 50) # convert to numeric (50 is highest plotPriority)
+  plotType <- ifelse(plotSubset == "towerAnnualSubset" | plotSubset == "towerAll", "tower", "distributed")
+  plotType <- ifelse(plotSubset == "all", "all", plotType)
 
   ### Verify inputDataList tables contain required columns and data ####
 
@@ -211,12 +197,10 @@ estimateWoodProd = function(inputDataList,
                     .data$plot_eventID,
                     .data$nlcdClass,
                     .data$taxonID) %>%
-    dplyr::summarise(Live_Mgha = sum(.data$Live_Mgha, na.rm = TRUE),
-                     Dead_or_Lost_Mgha = sum(.data$Dead_or_Lost_Mgha, na.rm = TRUE),
+    dplyr::summarise(Mgha_live = sum(.data$Live_Mgha, na.rm = TRUE),
+#                     Dead_or_Lost_Mgha = sum(.data$Dead_or_Lost_Mgha, na.rm = TRUE),
                      .groups = "drop")
 
-  vst_agb_Live$Mgha_live <- vst_agb_Live$Live_Mgha
-  vst_agb_Live$Live_Mgha <- vst_agb_Live$Dead_or_Lost_Mgha <- NULL
   vst_agb_Live <- vst_agb_Live[order(vst_agb_Live$year),]
 
   #   Sort list of years
@@ -297,13 +281,13 @@ estimateWoodProd = function(inputDataList,
                                       values_from = "plantStatus2",
                                       values_fn = list)
 
-    #   Remove the comma; otherwise, one or more of the following lines may give error about converting list to character.
-    transitions[transitions == '", "'] <- '""'
-    transitions[transitions == '("Live" "Live")'] <- "Live"
-    transitions[transitions == '("Dead_or_Lost" "Dead_or_Lost")'] <- "Dead_or_Lost"
-    transitions[transitions == 'c("Dead_or_Lost" "Live")'] <- "Live"
-    transitions[transitions == '("Live" "Dead_or_Lost")'] <- "Live"
-    transitions[transitions == '("Dead_or_Lost" "Live" "Live")'] <- "Live"
+    transitions <- as.data.frame(lapply(transitions, as.character))
+    transitions <- as.data.frame(lapply(transitions, function(x) { if (is.character(x)) {gsub('c("Live", "Live")', "Live", x, fixed=TRUE) } else {  x  } }))
+    transitions <- as.data.frame(lapply(transitions, function(x) { if (is.character(x)) {gsub('c("Dead_or_Lost", "Dead_or_Lost")', "Dead_or_Lost", x, fixed=TRUE) } else {  x  } }))
+    transitions <- as.data.frame(lapply(transitions, function(x) { if (is.character(x)) {gsub('c("Dead_or_Lost", "Live")', "Live", x, fixed=TRUE) } else {  x  } }))
+    transitions <- as.data.frame(lapply(transitions, function(x) { if (is.character(x)) {gsub('c("Live", "Dead_or_Lost")', "Live", x, fixed=TRUE) } else {  x  } }))
+    transitions <- as.data.frame(lapply(transitions, function(x) { if (is.character(x)) {gsub('c("Dead_or_Lost", "Live" "Live")', "Live", x, fixed=TRUE) } else {  x  } }))
+
 
     #   Identify cases where individual was previously "live" and is currently "dead_or_lost"
     for (i in 2:length(yearList)) {
@@ -315,8 +299,13 @@ estimateWoodProd = function(inputDataList,
       transitions <- transitions %>%
         dplyr::mutate(!!transitionType_column_name := dplyr::case_when(
         (!!sym(column_name)) == 'Dead_or_Lost' & !!sym(column_name_prev) == 'Live' ~ 'mortality',
+        (!!sym(column_name)) == 'Live' & !!sym(column_name_prev) == 'NULL' ~ 'recruitment',
       ))
 
+      # transitions <- transitions %>%
+      #   dplyr::mutate(!!transitionType_column_name := dplyr::case_when(
+      #   (!!sym(column_name)) == 'Live' & !!sym(column_name_prev) == NULL ~ 'recruitment',
+      #))
     }
 
     #   Associate biomass data in 'vst_agb_kg' with mortality transition data

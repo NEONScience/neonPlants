@@ -8,11 +8,7 @@ estimateProd(
   dataProducts = c("Vst", "Hbp"),
   inputDataListVstMass = NA,
   inputDataListHbpMass = NA,
-  plotType = "tower",
-  plotPriority = "5",
-  calcMethod = "approach_1",
-  outlier = 1.5,
-  outlierType = "IQR"
+  plotSubset = "towerAnnualSubset"
 )
 }
 \arguments{
@@ -22,9 +18,7 @@ estimateProd(
 
 \item{inputDataListHbpMass}{Specify a loaded R list object (e.g. scaleHerbMassOutputs) that was produced by companion scaleHerbMass or estimateMass function. \link{character}}
 
-\item{plotType}{Optional filter for NEON plot type. Options are "tower" (default) or "all". A subset of 5 Tower plots are sampled annually (those plots with the highest plot priority), and remaining Tower plots are scheduled every 5 years. If "all" is selected, results include data from Distributed plots that are also sampled every 5 years. \link{character}}
-
-\item{plotPriority}{NEON plots have a priority number to spatially balance plots by NLCD class, etc. in the event that not all scheduled plots can be sampled. The lower the number the higher the priority. Options are "all" or "5". The default is "5" which retains just the 5 highest priority Tower plots that are sampled annually. \link{character}}
+\item{plotSubset}{The options are "all" (all tower and distributed plots), "towerAll" (all plots in the tower airshed but no distributed plots), the default of "towerAnnualSubset" (only the subset of tower plots that are sampled annually), and "distributed" (all distributed plots, which are sampled in 5-yr bouts and are spatially representative of the NLCD classes at at site). \link{character}}
 
 \item{calcMethod}{Select plot-level (approach 2) or individual-level (approach 1) productivity calculations (for woody data). The default is "approach_1" \link{character}}
 
@@ -46,16 +40,13 @@ A site-level summary of NEON productivity from the selected NEON data products i
 \dontrun{
 
 #  Example with arguments at default values
-estimateProdOutputs <- estimateProd(inputDataListVstMass = estimateWoodMassOutputs, 
+estimateProdOutputs <- estimateProd(inputDataListVstMass = estimateWoodMassOutputs,
 inputDataListHbpMass = scaleHerbMassOutputs)
-                      
-#  Example specifying many non-default arguments
-estimateWoodProdOutputs <- estimateWoodProd(inputDataListVstMass = estimateWoodMassOutputs, 
-plotType = "all", 
-plotPriority = "all", 
-calcMethod = "approach_2", 
-outlier = 2, 
-outlierType = "SD")
+
+#  Example specifying a non-default arguments
+estimateWoodProdOutputs <- estimateWoodProd(inputDataListVstMass = estimateWoodMassOutputs,
+plotSubset = "all"
+)
 
 }
 

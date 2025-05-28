@@ -6,8 +6,7 @@
 \usage{
 estimateWoodProd(
   inputDataList,
-  plotType = "tower",
-  plotPriority = "5",
+  plotSubset = "towerAnnualSubset",
   calcMethod = "approach_1",
   outlier = 1.5,
   outlierType = "IQR"
@@ -16,9 +15,7 @@ estimateWoodProd(
 \arguments{
 \item{inputDataList}{Specify a loaded R list object (e.g. estimateWoodMassOutputs) that was produced by the companion estimateWoodMass function. \link{character}}
 
-\item{plotType}{Optional filter for NEON plot type. Options are "tower" (default) or "all". A subset of 5 Tower plots are sampled annually (those plots with the highest plot priority), and remaining Tower plots are scheduled every 5 years. If "all" is selected, results include data from Distributed plots that are also sampled every 5 years. \link{character}}
-
-\item{plotPriority}{NEON plots have a priority number to spatially balance plots by NLCD class, etc. in the event that not all scheduled plots can be sampled. The lower the number the higher the priority. Options are "all" or "5". The default is "5" which retains just the 5 highest priority Tower plots that are sampled annually. \link{character}}
+\item{plotSubset}{The options are "all" (all tower and distributed plots), "towerAll" (all plots in the tower airshed but no distributed plots), the default of "towerAnnualSubset" (only the subset of tower plots that are sampled annually), and "distributed" (all distributed plots, which are sampled in 5-yr bouts and are spatially representative of the NLCD classes at at site). \link{character}}
 
 \item{calcMethod}{Select individual-level (Approach 1) or plot-level (Approach 2) productivity calculation methods; the default is "approach_1". See Clark DA, S Brown, DW Kicklighter, JQ Chambers, JR Thomlinson, and J Ni. 2001. Measuring Net Primary Production in Forests: Concepts and Field Methods. Ecological Applications 11:356-370. \link{character}}
 
@@ -48,20 +45,24 @@ The individual-level approach is currently an underestimate since it includes th
 }
 \examples{
 \dontrun{
-# If list is not in memory, load woody biomass list of dataframes from local file:
-load('estimateWoodMassOutputs.rds') # load list of dataframes created by estimateWoodMass function
+# Obtain NEON Vegetation structure
+VstDat <- neonUtilities::loadByProduct(
+dpID="DP1.10098.001",
+package = "basic",
+check.size = FALSE
+)
+
+# Use estimateWoodMass to generate output list that is to be used as input to estimateWoodProd
+estimateWoodMassOutputs <- estimateWoodMass(inputDataList = VstDat)
+
 
 # example with arguments at default values
-estimateWoodProdOutputs <- estimateWoodProd(input = estimateWoodMassOutputs)
+estimateWoodProdOutputs <- estimateWoodProd(inputDataList = estimateWoodMassOutputs)
 
-# example specifying many non-default arguments
+# example specifying a non-default argument
 estimateWoodProdOutputs <- estimateWoodProd(
-input = estimateWoodMassOutputs,
-plotType = "all",
-plotPriority = 50,
-calcMethod = "approach_2",
-outlier = 2,
-outlierType = "SD"
+inputDataList = estimateWoodMassOutputs,
+plotSubset = "all"
 )
 
 }

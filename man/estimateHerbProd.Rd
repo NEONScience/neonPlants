@@ -9,7 +9,7 @@ estimateHerbProd(inputDataList, plotSubset = "towerAnnualSubset")
 \arguments{
 \item{inputDataList}{An R list object produced by the companion scaleHerbMass() function. \link{list}}
 
-\item{plotSubset}{The options are "all" (all tower and distributed plots), the default of "towerAll" (all plots in the tower airshed but no distributed plots), "towerAnnualSubset" (only the subset of tower plots that are sampled annually), and "distributed" (all distributed plots, which are sampled in 5-yr bouts and are spatially representative of the NLCD classes at at site). \link{character}}
+\item{plotSubset}{The options are "all" (all tower and distributed plots), "towerAll" (all plots in the tower airshed but no distributed plots), the default of "towerAnnualSubset" (only the subset of tower plots that are sampled annually), and "distributed" (all distributed plots, which are sampled in 5-yr bouts and are spatially representative of the NLCD classes at at site). \link{character}}
 }
 \value{
 A list that includes productivity summary data frames. Output tables include:
