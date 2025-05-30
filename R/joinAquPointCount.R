@@ -90,9 +90,11 @@ joinAquPointCount <- function(inputDataList,
   
   ### Verify all table inputs are data frames if inputDataList is NA
   if (is.null(inputDataList) & 
-      (!inherits(inputPoint, "data.frame") | !inherits(inputPerTax, "data.frame") | !inherits(inputTaxProc, "data.frame") | !inherits(inputMorph, "data.frame"))) {
+      (!inherits(inputPoint, "data.frame") | !inherits(inputPerTax, "data.frame") 
+       # | !inherits(inputTaxProc, "data.frame") | !inherits(inputMorph, "data.frame")
+       )) {
     
-    stop("Data frames must be supplied for all table inputs if 'inputDataList' is missing")
+    stop("Data frames must be supplied for table inputs if 'inputDataList' is missing")
     
   }
   
@@ -113,8 +115,6 @@ joinAquPointCount <- function(inputDataList,
     apPerTax <- inputPerTax
     apTaxProc <- inputTaxProc
     apMorph <- inputMorph
-    apVouch <- inputVouch
-    apVouchProc <- inputVouchProc
       
   }
   
@@ -325,7 +325,7 @@ joinAquPointCount <- function(inputDataList,
   ### Join apPoint and apPerTax tables 
     
   # Update morphospecies taxon identifications
-  apJoin3 <- apPoint %>%
+  joinPointCounts <- apPoint %>%
     dplyr::left_join(apJoin2, by = c("domainID", "siteID", "namedLocation", "pointNumber", "collectDate", "eventID"), suffix = c("_point", "_perTax")) %>% 
     dplyr::mutate(
       remarks = dplyr::case_when(
@@ -335,6 +335,6 @@ joinAquPointCount <- function(inputDataList,
         TRUE ~ NA)
     )
   
-  return(apJoin3)
+  return(joinPointCounts)
 
 } #function closer
