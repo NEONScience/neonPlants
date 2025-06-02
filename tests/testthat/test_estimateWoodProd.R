@@ -5,8 +5,8 @@
 
 VstDat <- readRDS(testthat::test_path("testdata", "VstDat.rds"))
 
-estimateWoodMassOutputs <- estimateWoodMass(inputDataList = VstDat)
-estimateWoodProdOutputs <- estimateWoodProd(inputDataList = estimateWoodMassOutputs)
+estimateWoodMassOutputs <- estimateWoodMass(inputDataList = VstDat, plotSubset = "towerAnnualSubset", growthForm = "tree")
+estimateWoodProdOutputs <- estimateWoodProd(inputDataList = estimateWoodMassOutputs, plotSubset = "towerAnnualSubset")
 
 ### Test: Function generates expected output type
 testthat::test_that(desc = "Output type", {
@@ -16,11 +16,6 @@ testthat::test_that(desc = "Output type", {
 
 
 ### Test: Function generates expected output class
-
-testthat::test_that(desc = "Output class", {
-  testthat::expect_s3_class(object = estimateWoodProdOutputs$vst_ANPP_plot_w_taxa,
-                            class = "data.frame")
-})
 
 testthat::test_that(desc = "Output class", {
   testthat::expect_s3_class(object = estimateWoodProdOutputs$vst_ANPP_plot,
@@ -37,19 +32,15 @@ testthat::test_that(desc = "Output class", {
 ### Test: Function generates data frame with expected dimensions using test data
 #   Check expected column number of data frame
 
-testthat::test_that(desc = "Output data frame column number", {
-  testthat::expect_identical(object = ncol(estimateWoodProdOutputs$vst_ANPP_plot_w_taxa),
-                             expected = as.integer(7))
-})
 
 testthat::test_that(desc = "Output data frame column number", {
   testthat::expect_identical(object = ncol(estimateWoodProdOutputs$vst_ANPP_plot),
-                             expected = as.integer(7))
+                             expected = as.integer(9))
 })
 
 testthat::test_that(desc = "Output data frame column number", {
   testthat::expect_identical(object = ncol(estimateWoodProdOutputs$vst_ANPP_site),
-                             expected = as.integer(6))
+                             expected = as.integer(5))
 })
 
 
@@ -57,18 +48,13 @@ testthat::test_that(desc = "Output data frame column number", {
 #   Check expected row number of data frame
 
 testthat::test_that(desc = "Output data frame row number", {
-  testthat::expect_identical(object = nrow(estimateWoodProdOutputs$vst_ANPP_plot_w_taxa),
-                             expected = as.integer(12))
-})
-
-testthat::test_that(desc = "Output data frame row number", {
   testthat::expect_identical(object = nrow(estimateWoodProdOutputs$vst_ANPP_plot),
-                             expected = as.integer(3))
+                             expected = as.integer(4))
 })
 
 testthat::test_that(desc = "Output data frame row number", {
   testthat::expect_identical(object = nrow(estimateWoodProdOutputs$vst_ANPP_site),
-                             expected = as.integer(2))
+                             expected = as.integer(3))
 })
 
 
@@ -107,21 +93,7 @@ testthat::test_that(desc = "Table 'vst_agb_kg' missing data", {
 
 
 ### Test: Generate expected errors for issues with vst_agb_zeros table
-# Test when input vst_agb_zeros lacks required column
-estimateWoodMassOutputs_mod <- estimateWoodMassOutputs
-estimateWoodMassOutputs_mod$vst_agb_zeros <- estimateWoodMassOutputs_mod$vst_agb_zeros %>% dplyr::select(-plotID)
-testthat::test_that(desc = "Table 'vst_agb_zeros' missing column", {
-  testthat::expect_error(object = estimateWoodProd(inputDataList = estimateWoodMassOutputs_mod),
-                         regexp = "Required columns missing from 'vst_agb_zeros': plotID")
-})
 
-#   Test when vst_agb_zeros has no data
-# estimateWoodMassOutputs_mod <- estimateWoodMassOutputs
-# estimateWoodMassOutputs_mod$vst_agb_zeros <- estimateWoodMassOutputs_mod$vst_agb_zeros %>% dplyr::filter(year == "notRealyear")
-# testthat::test_that(desc = "Table 'vst_agb_zeros' missing data", {
-#   testthat::expect_error(object = estimateWoodProd(inputDataList = estimateWoodMassOutputs_mod),
-#                          regexp = "Table 'vst_agb_zeros' has no data.")
-# })
 
 ### Test: Generate expected errors for issues with vst_plot_w_0s table
 # Test when input vst_plot_w_0s lacks required column
@@ -159,25 +131,17 @@ testthat::test_that(desc = "Table 'vst_site' missing data", {
 })
 
 
-### Test: Generate error if output vst_ANPP_plot_w_taxa value not as expected
-testthat::test_that(desc = "Output vst_ANPP_plot_w_taxa value as expected", {
-  test <- estimateWoodProd(inputDataList = estimateWoodMassOutputs)
-  testthat::expect_equal(object = test$vst_ANPP_plot_w_taxa$woodANPP_Mghayr[6],
-                         expected = 0.9843)
-})
-
-
 ### Test: Generate error if output vst_ANPP_plot value not as expected
 testthat::test_that(desc = "Output vst_ANPP_plot value as expected", {
   test <- estimateWoodProd(inputDataList = estimateWoodMassOutputs)
   testthat::expect_equal(object = test$vst_ANPP_plot$woodANPP_Mghayr[2],
-                         expected = 5.0636)
+                         expected = 3.334)
 })
 
 ### Test: Generate error if output vst_ANPP_site value not as expected
 testthat::test_that(desc = "Output vst_ANPP_site value as expected", {
   test <- estimateWoodProd(inputDataList = estimateWoodMassOutputs)
   testthat::expect_equal(object = test$vst_ANPP_site$woodANPPMean_Mghayr[2],
-                         expected = 3.2346)
+                         expected = 2.2705)
 })
 

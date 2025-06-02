@@ -67,7 +67,6 @@ estimateWoodMass = function(inputDataList,
   options(dplyr.summarise.inform = FALSE)
 
 
-
   ### Verify user inputs are correct type and contain expected tables ####
 
   ### Verify user-supplied 'inputDataList' object contains correct data if not missing
@@ -1368,6 +1367,7 @@ estimateWoodMass = function(inputDataList,
                     .data$eventID,
                     .data$siteID,
                     .data$plotID,
+                    .data$sampledAreaM2,
                     .data$plotType,
                     .data$nlcdClass,
                     .data$taxonID,
@@ -1379,7 +1379,7 @@ estimateWoodMass = function(inputDataList,
 
   #   Within a given year, transpose live and dead AGB into separate columns
   vst_plot_wide <- tidyr::pivot_wider(vst_plot_summary,
-                                      id_cols = c("plot_eventID", "eventID", "siteID", "plotID",
+                                      id_cols = c("plot_eventID", "eventID", "siteID", "plotID",  "sampledAreaM2",
                                                   "plotType", "nlcdClass", "taxonID", "growthForm", "year"),
                                       names_from = "plantStatus2",
                                       names_glue = "{plantStatus2}_Mgha",
@@ -1393,7 +1393,7 @@ estimateWoodMass = function(inputDataList,
   vst_agb_zeros_plot <- vst_agb_zeros
 
   if (nrow(vst_agb_zeros_plot) > 0) {
-    vst_agb_zeros_plot$nlcdClass <-  vst_agb_zeros_plot$taxonID <-  vst_agb_zeros_plot$growthForm <- NA # placeholders to allow rbind without errors
+    vst_agb_zeros_plot$nlcdClass <-  vst_agb_zeros_plot$taxonID <-  vst_agb_zeros_plot$growthForm <- vst_agb_zeros_plot$sampledAreaM2 <- NA # placeholders to allow rbind without errors
     vst_agb_zeros_plot$Dead_or_Lost_Mgha <- vst_agb_zeros_plot$Live_Mgha <- 0
   }
 
@@ -1444,6 +1444,7 @@ estimateWoodMass = function(inputDataList,
                       .data$eventID,
                       .data$siteID,
                       .data$plotID,
+                      .data$sampledAreaM2,
                       .data$plotType,
                       .data$nlcdClass,
                       .data$year) %>%

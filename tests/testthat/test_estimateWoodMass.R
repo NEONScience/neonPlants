@@ -7,7 +7,7 @@
 
 VstDat <- readRDS(testthat::test_path("testdata", "VstDat.rds"))
 
-estimateWoodMassOutputs <- estimateWoodMass(inputDataList = VstDat)
+estimateWoodMassOutputs <- estimateWoodMass(inputDataList = VstDat, growthForm = "all")
 
 ### Test: Function generates expected output type
 testthat::test_that(desc = "Output type", {
@@ -20,22 +20,22 @@ testthat::test_that(desc = "Output type", {
 testthat::test_that(desc = "Output class vst_agb_kg", {
   testthat::expect_s3_class(object = estimateWoodMassOutputs$vst_agb_kg,
                             class = "data.frame")
-})  
+})
 
 testthat::test_that(desc = "Output class vst_plot_w_0s", {
   testthat::expect_s3_class(object = estimateWoodMassOutputs$vst_plot_w_0s,
                             class = "data.frame")
-})  
+})
 
 testthat::test_that(desc = "Output class vst_agb_zeros", {
   testthat::expect_s3_class(object = estimateWoodMassOutputs$vst_agb_zeros,
                             class = "data.frame")
-})  
+})
 
 testthat::test_that(desc = "Output class vst_site", {
   testthat::expect_s3_class(object = estimateWoodMassOutputs$vst_site,
                             class = "data.frame")
-})  
+})
 
 
 
@@ -48,7 +48,7 @@ testthat::test_that(desc = "Output data frame column number", {
 
 testthat::test_that(desc = "Output data frame column number", {
   testthat::expect_identical(object = ncol(estimateWoodMassOutputs$vst_plot_w_0s),
-                             expected = as.integer(13))
+                             expected = as.integer(14))
 })
 
 testthat::test_that(desc = "Output data frame column number", {
@@ -67,12 +67,12 @@ testthat::test_that(desc = "Output data frame column number", {
 #   Check expected row number of data frame
 testthat::test_that(desc = "Output data frame row number", {
   testthat::expect_identical(object = nrow(estimateWoodMassOutputs$vst_agb_kg),
-                             expected = as.integer(805))
+                             expected = as.integer(1073))
 })
 
 testthat::test_that(desc = "Output data frame row number", {
   testthat::expect_identical(object = nrow(estimateWoodMassOutputs$vst_plot_w_0s),
-                             expected = as.integer(69))
+                             expected = as.integer(91))
 })
 
 testthat::test_that(desc = "Output data frame row number", {
@@ -82,7 +82,7 @@ testthat::test_that(desc = "Output data frame row number", {
 
 testthat::test_that(desc = "Output data frame row number", {
   testthat::expect_identical(object = nrow(estimateWoodMassOutputs$vst_site),
-                             expected = as.integer(6))
+                             expected = as.integer(8))
 })
 
 

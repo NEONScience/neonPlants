@@ -31,7 +31,7 @@ testthat::test_that(desc = "Output type", {
 testthat::test_that(desc = "Output class biomass_site", {
   testthat::expect_s3_class(object = estimateMassOutputs$biomass_site,
                             class = "data.frame")
-})  
+})
 
 
 
@@ -46,7 +46,7 @@ testthat::test_that(desc = "Output data frame column number", {
 #   Check expected row number of data frame
 testthat::test_that(desc = "Output data frame row number", {
   testthat::expect_identical(object = nrow(estimateMassOutputs$biomass_site),
-                             expected = as.integer(13))
+                             expected = as.integer(15))
 })
 
 
@@ -54,7 +54,7 @@ testthat::test_that(desc = "Output data frame row number", {
 #   Test 'dataProducts' includes appropriate dataProduct option(s)
 testthat::test_that(desc = "Argument 'dataProducts' includes appropriate dataProduct option(s)", {
   testthat::expect_error(object = estimateMass(dataProducts = c("Wat","Air"), # test whether function stops if supplied with an incorrect dataProduct code
-                                               inputDataListVst = VstDat), 
+                                               inputDataListVst = VstDat),
                          regexp = "The dataProducts argument must be one of: 'Bbc', 'Hbp', 'Vst', or a comma-separated combination of two or more of these.")
 })
 

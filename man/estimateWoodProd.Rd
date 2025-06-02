@@ -9,13 +9,12 @@ estimateWoodProd(inputDataList, plotSubset = "towerAnnualSubset")
 \arguments{
 \item{inputDataList}{Specify a loaded R list object (e.g. estimateWoodMassOutputs) that was produced by the companion estimateWoodMass function. \link{character}}
 
-\item{plotSubset}{The options are "all" (all tower and distributed plots), "towerAll" (all plots in the tower airshed but no distributed plots), the default of "towerAnnualSubset" (only the subset of tower plots that are sampled annually), and "distributed" (all distributed plots, which are sampled in 5-yr bouts and are spatially representative of the NLCD classes at at site). \link{character}
+\item{plotSubset}{The only current option is "towerAnnualSubset" (only the subset of tower plots that are sampled annually). Other options that may be added in the future are "all" (all tower and distributed plots), "towerAll" (all plots in the tower airshed but no distributed plots), and "distributed" (all distributed plots, which are sampled in 5-yr bouts and are spatially representative of the NLCD classes at at site). \link{character}
 #'}
 }
 \value{
 A list that includes productivity summary data frames. Output tables include:
 \itemize{
-\item vst_ANPP_plot_w_taxa - Summarises woody ANPP for each plot x year x taxonID combination ("Mg/ha/yr").
 \item vst_ANPP_plot - Summarizes woody ANPP for each plot x year combination ("Mg/ha/yr").
 \item vst_ANPP_site - Summarizes woody ANPP for each site x year combination ("Mg/ha/yr").
 }
@@ -24,9 +23,9 @@ A list that includes productivity summary data frames. Output tables include:
 Calculate annual productivity of woody vegetation (and "non-woody perennial" vegetation, if included in inputDataList) using inputs from the companion estimateWoodMass() function.
 }
 \details{
-Input data can be filtered by plotSubset. An input data list of woody biomass dataframes created by the companion estimateWoodMass() function is read in and aboveground net primary productivity (ANPP) is calculated for woody vegetation from NEON "Vegetation structure" (DP1.10098.001) data. The stand-level approach (approach 2) is used from Clark DA, S Brown, DW Kicklighter, JQ Chambers, JR Thomlinson, and J Ni. 2001. Measuring Net Primary Production in Forests: Concepts and Field Methods. Ecological Applications 11:356-370.
-
-The estimate is currently an underestimate since it includes the growth increment component but not the recruitment component. The recruitment component is currently very sensitive to stems that were overlooked in previous time periods, but when from true in-growth can be isolated the recruitment component will be added. Plots can be filtered to more frequently sampled plots using plotSubset argument.
+An input data list of woody biomass dataframes created by the companion estimateWoodMass() function is read in and aboveground net primary productivity (ANPP) is calculated for woody vegetation from NEON "Vegetation structure" (DP1.10098.001) data. The stand-level approach (approach 2) is used from Clark DA, S Brown, DW Kicklighter, JQ Chambers, JR Thomlinson, and J Ni. 2001. Measuring Net Primary Production in Forests: Concepts and Field Methods. Ecological Applications 11:356-370.
+At present woody productivity is only calculated for trees with growthForm of "single bole tree" or "multi-bole tree". Therefore, in estimateWoodMass function, specify growthForm "tree".
+NEON has an extensive data QA/QC process, but users should be aware that these productivity estimates are very sensitive to any residual errors and so the data should be examined carefully
 }
 \examples{
 \dontrun{
@@ -44,11 +43,6 @@ estimateWoodMassOutputs <- estimateWoodMass(inputDataList = VstDat)
 # example with arguments at default values
 estimateWoodProdOutputs <- estimateWoodProd(inputDataList = estimateWoodMassOutputs)
 
-# example specifying a non-default argument
-estimateWoodProdOutputs <- estimateWoodProd(
-inputDataList = estimateWoodMassOutputs,
-plotSubset = "all"
-)
 
 }
 
