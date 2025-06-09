@@ -43,12 +43,12 @@ testthat::test_that(desc = "Output class vst_site", {
 #   Check expected column number of data frame
 testthat::test_that(desc = "Output data frame column number", {
   testthat::expect_identical(object = ncol(estimateWoodMassOutputs$vst_agb_kg),
-                             expected = as.integer(16))
+                             expected = as.integer(17))
 })
 
 testthat::test_that(desc = "Output data frame column number", {
   testthat::expect_identical(object = ncol(estimateWoodMassOutputs$vst_plot_w_0s),
-                             expected = as.integer(14))
+                             expected = as.integer(15))
 })
 
 testthat::test_that(desc = "Output data frame column number", {
@@ -67,12 +67,12 @@ testthat::test_that(desc = "Output data frame column number", {
 #   Check expected row number of data frame
 testthat::test_that(desc = "Output data frame row number", {
   testthat::expect_identical(object = nrow(estimateWoodMassOutputs$vst_agb_kg),
-                             expected = as.integer(1073))
+                             expected = as.integer(1347))
 })
 
 testthat::test_that(desc = "Output data frame row number", {
   testthat::expect_identical(object = nrow(estimateWoodMassOutputs$vst_plot_w_0s),
-                             expected = as.integer(91))
+                             expected = as.integer(129))
 })
 
 testthat::test_that(desc = "Output data frame row number", {
@@ -82,7 +82,7 @@ testthat::test_that(desc = "Output data frame row number", {
 
 testthat::test_that(desc = "Output data frame row number", {
   testthat::expect_identical(object = nrow(estimateWoodMassOutputs$vst_site),
-                             expected = as.integer(8))
+                             expected = as.integer(10))
 })
 
 
@@ -94,9 +94,9 @@ testthat::test_that(desc = "Argument 'inputDataList' is list object", {
                          regexp = "Argument 'inputDataList' must be a list object from neonUtilities::loadByProduct()")
 })
 
-#   Test 'inputDataList' contains required tables (expect at least 4: appInd, mapandtag, nonwoody, and perplot)
+#   Test 'inputDataList' contains required tables (expect at least 3: appInd, mapandtag, and perplot)
 testthat::test_that(desc = "Required tables present in 'inputDataList' input", {
-  testthat::expect_error(object = estimateWoodMass(inputDataList = VstDat[1:3]),
+  testthat::expect_error(object = estimateWoodMass(inputDataList = VstDat[1:2]),
                          regexp = "Required tables missing from 'inputDataList'")
 })
 
@@ -167,7 +167,7 @@ testthat::test_that(desc = "Table 'vst_perplotperyear' missing data", {
 ### Test: Generate error if output vst_agb_kg value not as expected
 testthat::test_that(desc = "Output vst_agb_kg value as expected", {
   test <- estimateWoodMass(inputDataList = VstDat)
-  testthat::expect_equal(object = test$vst_agb_kg$agb_kg[616],
+  testthat::expect_equal(object = test$vst_agb_kg$agb_kg[889],
                          expected = 1274.513)
 })
 
@@ -175,7 +175,7 @@ testthat::test_that(desc = "Output vst_agb_kg value as expected", {
 ### Test: Generate error if output vst_plot_w_0s value not as expected
 testthat::test_that(desc = "Output vst_plot_w_0s value as expected", {
   test <- estimateWoodMass(inputDataList = VstDat)
-  testthat::expect_equal(object = test$vst_plot_w_0s$Live_Mgha[47],
+  testthat::expect_equal(object = test$vst_plot_w_0s$Live_Mgha[85],
                          expected = 10.3588)
 })
 
@@ -183,6 +183,6 @@ testthat::test_that(desc = "Output vst_plot_w_0s value as expected", {
 ### Test: Generate error if output vst_site value not as expected
 testthat::test_that(desc = "Output vst_site value as expected", {
   test <- estimateWoodMass(inputDataList = VstDat)
-  testthat::expect_equal(object = test$vst_site$woodLiveMassMean_Mgha[5],
+  testthat::expect_equal(object = test$vst_site$woodLiveMassMean_Mgha[7],
                          expected = 51.90)
 })

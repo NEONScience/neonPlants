@@ -79,7 +79,7 @@ estimateWoodMass = function(inputDataList,
     }
 
     #   Check that required tables within list match expected names
-    listExpNames <- c("vst_apparentindividual", "vst_mappingandtagging", "vst_perplotperyear", "vst_non-woody")
+    listExpNames <- c("vst_apparentindividual", "vst_mappingandtagging", "vst_perplotperyear") #, "vst_non-woody")
 
 
     #   All expected tables required
@@ -135,7 +135,7 @@ estimateWoodMass = function(inputDataList,
 
   ### Verify 'vst_mappingandtagging' table contains required data
   #   Check for required columns
-  mapExpCols <- c("domainID", "siteID", "plotID", "individualID", "taxonID")
+  mapExpCols <- c("siteID", "plotID", "individualID", "taxonID")
 
   if (length(setdiff(mapExpCols, colnames(vst_mappingandtagging))) > 0) {
     stop(glue::glue("Required columns missing from 'vst_mappingandtagging':", '{paste(setdiff(mapExpCols, colnames(vst_mappingandtagging)), collapse = ", ")}',
@@ -166,7 +166,7 @@ estimateWoodMass = function(inputDataList,
 
   ### Verify 'vst_apparentindividual' table contains required data
   #   Check for required columns
-  appIndExpCols <- c("domainID", "siteID", "plotID", "individualID", "growthForm", "plantStatus", "date", "eventID", "stemDiameter", "basalStemDiameter")
+  appIndExpCols <- c("plotID", "individualID", "growthForm", "plantStatus", "date", "eventID", "stemDiameter", "basalStemDiameter")
 
   if (length(setdiff(appIndExpCols, colnames(vst_apparentindividual))) > 0) {
     stop(glue::glue("Required columns missing from 'vst_apparentindividual':", '{paste(setdiff(appIndExpCols, colnames(vst_apparentindividual)), collapse = ", ")}',
@@ -249,8 +249,6 @@ estimateWoodMass = function(inputDataList,
                   "nlcdClass",
                   "plotType",
                   "eventType",
-                  "dataCollected",
-                  "targetTaxaPresent",
                   "totalSampledAreaTrees",
                   "totalSampledAreaShrubSapling",
                   "totalSampledAreaLiana",
@@ -422,6 +420,7 @@ estimateWoodMass = function(inputDataList,
                       .data$siteID,
                       .data$plotID,
                       .data$taxonID,
+                      .data$scientificName,
                       .data$individualID,
                       .data$plantStatus2,
                       .data$growthForm,
@@ -461,8 +460,7 @@ estimateWoodMass = function(inputDataList,
     dplyr::select("taxonID",
                   "scientificName",
                   "family",
-                  "genus",
-                  "taxonRank") %>%
+                  "genus") %>%
     unique()
 
   vst_taxonIDs <- taxonID_df$taxonID
@@ -523,7 +521,7 @@ estimateWoodMass = function(inputDataList,
   #   Add total sampled area fields
   appInd <- merge(appInd,
                   perplot,
-                  by = c("plotID", "eventID"),
+                  by = c("plotID", "eventID", "plot_eventID"),
                   all.x = TRUE)
 
   #   Create additional identifiers by eventID
@@ -785,7 +783,8 @@ estimateWoodMass = function(inputDataList,
                   "spg_gcm3",
                   "nativeStatus",
                   "tropical",
-                  "family")
+                  "family",
+                  "genus")
 
   Choj <- merge(parameters,
                 Choj,
@@ -830,13 +829,23 @@ estimateWoodMass = function(inputDataList,
                                      vst_agb$spg_gcm3,
                                      vst_agb$spg_gcm3)
 
+    # If growthForm is missing for a record but is available from another instance of the same individualID then populate.
+    # There are many dead and downed individuals that are missing growthForm, and without a growthForm and area this leaves out some instances of mortality
+  growth_form_lookup <- vst_agb %>% dplyr::select("individualID", "growthForm", "date") %>%
+    dplyr::filter(!is.na(growthForm)) %>%
+    dplyr::arrange("individualID", dplyr::desc(date)) %>%
+     dplyr::distinct(.data$individualID, .keep_all = TRUE) %>%
+     dplyr::select(-"date")
+
+  vst_agb <- dplyr::left_join(vst_agb, growth_form_lookup, by = "individualID", suffix = c("", ".lookup")) %>%
+    dplyr::mutate(growthForm = dplyr::if_else(is.na(.data$growthForm), .data$growthForm.lookup, .data$growthForm)) %>%
+    dplyr::select(-"growthForm.lookup")
+
   #   Assign growthForm == "unknown" when value is NA
   vst_agb$growthForm <- dplyr::if_else(is.na(vst_agb$growthForm),
                                        "unknown",
                                        vst_agb$growthForm,
                                        vst_agb$growthForm)
-
-
 
   #   Select columns to remove unneeded data, and simplify values of 'plantStatus2'
   vst_agb <- vst_agb %>%
@@ -869,7 +878,8 @@ estimateWoodMass = function(inputDataList,
                   "spg_gcm3",
                   "nativeStatus",
                   "tropical",
-                  "family")
+                  "family",
+                  "genus")
 
   vst_agb$plantStatus2 <- ifelse(vst_agb$plantStatus %in% c("Live",
                                                             "Live, disease damaged",
@@ -921,6 +931,7 @@ estimateWoodMass = function(inputDataList,
                    .data$nativeStatus,
                    .data$tropical,
                    .data$family,
+                   .data$genus,
                    .data$plantStatus2) %>%
     dplyr::summarise(basalArea = sum(.data$basalArea, na.rm = TRUE),
                      basalAreaDBH = sum(.data$basalAreaDBH, na.rm = TRUE),
@@ -1228,14 +1239,25 @@ estimateWoodMass = function(inputDataList,
 
   vst_agb$year <- as.numeric(substr(vst_agb$eventID, 10, 13))
 
-
   ##  Retain only those records with unambiguous live or dead plantStatus values
   vst_agb <- vst_agb %>%
     dplyr::filter(!is.na(.data$plantStatus) & .data$plantStatus != "No longer qualifies" & .data$plantStatus != "Removed" &
                     .data$plantStatus != "Lost, fate unknown" & .data$plantStatus != "Lost, tag damaged" &
                     .data$plantStatus != "Lost, herbivory" & .data$plantStatus != "Lost, burned" &
-                    .data$plantStatus != "Lost, presumed dead" & .data$plantStatus != "Downed")
+                    .data$plantStatus != "Lost, presumed dead")
 
+  ##  Set aside individuals that are dead but have no mass, for use in productivity function mortality calculations
+   vst_deadNoMass <- vst_agb %>%
+    dplyr::filter(is.na(.data$agb) & .data$plantStatus2 == "Dead_or_Lost")
+
+   if(nrow(vst_deadNoMass) > 0){
+   vst_deadNoMass  <- merge(vst_deadNoMass, perplot, by = c("plot_eventID", "eventID", "plotID", "year","nlcdClass"), all.x = TRUE)
+
+   vst_deadNoMass <- vst_deadNoMass %>% dplyr::select("plot_eventID", "eventID", "siteID", "plotID", "taxonID", "scientificName", "family",
+                                               "genus", "individualID", "plantStatus2", "growthForm", "year", "nlcdClass", "plotType", "eventType")
+
+   vst_deadNoMass$sampledAreaM2 <- vst_deadNoMass$agb_kg <- NA
+   }
 
   ##  Aggregate woody biomass data by individualID within 'year'
   #   Remove records with NA biomass estimate to avoid assigning to zero due to group_by() output
@@ -1249,6 +1271,9 @@ estimateWoodMass = function(inputDataList,
                     .data$siteID,
                     .data$plotID,
                     .data$taxonID,
+                    .data$scientificName,
+                    .data$family,
+                    .data$genus,
                     .data$individualID,
                     .data$plantStatus2,
                     .data$growthForm,
@@ -1283,7 +1308,8 @@ estimateWoodMass = function(inputDataList,
   ### Combine AGB for vst_apparentindividual (vst_agb_Mg_final) and vst_nonWoody (vst_agb_Mg_other)
 
   if (methods::is(vst_nonWoody, class = "data.frame" )) {
-    vst_agb_kg <- rbind(vst_agb_final, vst_agb_final_other)
+       vst_agb_final_other$family <- vst_agb_final_other$genus <- NA
+       vst_agb_kg <- rbind(vst_agb_final, vst_agb_final_other)
   } else {
     vst_agb_kg <- vst_agb_final
   }
@@ -1368,6 +1394,7 @@ estimateWoodMass = function(inputDataList,
                     .data$siteID,
                     .data$plotID,
                     .data$sampledAreaM2,
+                    .data$eventType,
                     .data$plotType,
                     .data$nlcdClass,
                     .data$taxonID,
@@ -1379,21 +1406,29 @@ estimateWoodMass = function(inputDataList,
 
   #   Within a given year, transpose live and dead AGB into separate columns
   vst_plot_wide <- tidyr::pivot_wider(vst_plot_summary,
-                                      id_cols = c("plot_eventID", "eventID", "siteID", "plotID",  "sampledAreaM2",
+                                      id_cols = c("plot_eventID", "eventID", "siteID", "plotID",  "sampledAreaM2", "eventType",
                                                   "plotType", "nlcdClass", "taxonID", "growthForm", "year"),
                                       names_from = "plantStatus2",
                                       names_glue = "{plantStatus2}_Mgha",
                                       values_from = "agb_Mgha")
+  if (!"Dead_or_Lost_Mgha" %in% names(vst_plot_wide)) {
+    vst_plot_wide$Dead_or_Lost_Mgha <- NA
+  }
+
 
   #   Assumption: Replace NAs created during transpose with zeroes; assume both live and dead were sampled in a plot
-  vst_plot_wide[is.na(vst_plot_wide)] <- 0
+
+  vst_plot_wide$Dead_or_Lost_Mgha[is.na(vst_plot_wide$Dead_or_Lost_Mgha)] <- 0
+  vst_plot_wide$Live_Mgha[is.na(vst_plot_wide$Live_Mgha)] <- 0
 
 
   #   Assign zero AGB values to plots with zero biomass
   vst_agb_zeros_plot <- vst_agb_zeros
 
   if (nrow(vst_agb_zeros_plot) > 0) {
-    vst_agb_zeros_plot$nlcdClass <-  vst_agb_zeros_plot$taxonID <-  vst_agb_zeros_plot$growthForm <- vst_agb_zeros_plot$sampledAreaM2 <- NA # placeholders to allow rbind without errors
+    perplot_meta_for_missing <- unique(perplot %>% dplyr::select("plotID", "eventID", "eventType", "nlcdClass"))
+    vst_agb_zeros_plot <- merge(vst_agb_zeros_plot, perplot_meta_for_missing, by = c("plotID", "eventID"), all.x = T)
+    vst_agb_zeros_plot$taxonID <-  vst_agb_zeros_plot$growthForm <- vst_agb_zeros_plot$sampledAreaM2 <- NA # placeholders to allow rbind without errors
     vst_agb_zeros_plot$Dead_or_Lost_Mgha <- vst_agb_zeros_plot$Live_Mgha <- 0
   }
 
@@ -1444,6 +1479,7 @@ estimateWoodMass = function(inputDataList,
                       .data$eventID,
                       .data$siteID,
                       .data$plotID,
+                      .data$eventType,
                       .data$sampledAreaM2,
                       .data$plotType,
                       .data$nlcdClass,
@@ -1498,6 +1534,7 @@ estimateWoodMass = function(inputDataList,
   output.list <- list(vst_agb_kg = vst_agb_kg,
                       vst_plot_w_0s = vst_plot_w_0s,
                       vst_agb_zeros = vst_agb_zeros,
+                      vst_deadNoMass = vst_deadNoMass,
                       vst_site = vst_site)
 
   return(output.list)

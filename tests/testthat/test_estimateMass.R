@@ -46,7 +46,7 @@ testthat::test_that(desc = "Output data frame column number", {
 #   Check expected row number of data frame
 testthat::test_that(desc = "Output data frame row number", {
   testthat::expect_identical(object = nrow(estimateMassOutputs$biomass_site),
-                             expected = as.integer(15))
+                             expected = as.integer(17))
 })
 
 
@@ -67,6 +67,6 @@ testthat::test_that(desc = "Output biomass_site value as expected", {
                                         inputDataListBbc = BbcDat,
                                         plotSubset = "all")
   testthat::expect_equal(object = test$biomass_site$woodLiveMassMean_Mgha[7],
-                         expected = 2.00)
+                         expected = 49.5)
 })
 

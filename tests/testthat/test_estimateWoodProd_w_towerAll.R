@@ -5,12 +5,12 @@
 
 VstDat <- readRDS(testthat::test_path("testdata", "VstDat.rds"))
 
-estimateWoodMassOutputs <- estimateWoodMass(inputDataList = VstDat, plotSubset = "towerAnnualSubset", growthForm = "tree")
-estimateWoodProdOutputs <- estimateWoodProd(inputDataList = estimateWoodMassOutputs, plotSubset = "towerAnnualSubset", siteID = "WREF")
+estimateWoodMassOutputs <- estimateWoodMass(inputDataList = VstDat, plotSubset = "towerAll", growthForm = "tree")
+estimateWoodProdOutputs <- estimateWoodProd(inputDataList = estimateWoodMassOutputs, plotSubset = "towerAll", siteID = "LENO")
 
 ### Test: Function generates expected output type
 testthat::test_that(desc = "Output type", {
-  testthat::expect_type(object = estimateWoodProd(inputDataList = estimateWoodMassOutputs, plotSubset = "towerAnnualSubset", siteID = "WREF"),
+  testthat::expect_type(object = estimateWoodProd(inputDataList = estimateWoodMassOutputs, plotSubset = "towerAll", siteID = "LENO"),
                         type = "list")
 })
 
@@ -116,15 +116,15 @@ testthat::test_that(desc = "Table 'vst_plot_w_0s' missing data", {
 
 ### Test: Generate error if output vst_ANPP_plot value not as expected
 testthat::test_that(desc = "Output vst_ANPP_plot value as expected", {
-  test <- estimateWoodProd(inputDataList = estimateWoodMassOutputs, plotSubset = "towerAnnualSubset", siteID = "WREF")
+  test <- estimateWoodProd(inputDataList = estimateWoodMassOutputs, plotSubset = "towerAll", siteID = "LENO")
   testthat::expect_equal(object = test$vst_ANPP_plot$woodANPP_Mghayr[1],
-                         expected = 2.387)
+                         expected = 5.219)
 })
 
 ### Test: Generate error if output vst_ANPP_site value not as expected
 testthat::test_that(desc = "Output vst_ANPP_site value as expected", {
-  test <- estimateWoodProd(inputDataList = estimateWoodMassOutputs, plotSubset = "towerAnnualSubset", siteID = "WREF")
+  test <- estimateWoodProd(inputDataList = estimateWoodMassOutputs, plotSubset = "towerAll", siteID = "LENO")
   testthat::expect_equal(object = test$vst_ANPP_site$woodANPPMean_Mghayr[1],
-                         expected = 2.387)
+                         expected = 5.219)
 })
 
