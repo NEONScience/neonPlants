@@ -45,7 +45,7 @@
 #'
 #' }
 #' 
-#' @export joinPointCounts
+#' @export joinAquPointCount
 
 
 

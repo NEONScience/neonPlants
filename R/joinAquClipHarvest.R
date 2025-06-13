@@ -45,7 +45,7 @@
 #'
 #' }
 #' 
-#' @export joinClipHarvest
+#' @export joinAquClipHarvest
 
 
 
