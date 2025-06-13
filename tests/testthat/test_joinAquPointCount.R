@@ -100,7 +100,7 @@ testthat::test_that(desc = "Output data frame row number table input", {
 testthat::test_that(desc = "Output data frame source: taxonomyProcessed", {
   
   outDF <- joinAquPointCount(inputDataList = testList)
-  testthat::expect_identical(object = unique(outDF$taxonIDSourceTable[outDF$uid == '1bc5392f-a567-4b6d-83b4-55ca74457ecd']),
+  testthat::expect_identical(object = unique(outDF$taxonIDSourceTable[which(outDF$uid == '1bc5392f-a567-4b6d-83b4-55ca74457ecd')]),
                              expected = "apc_taxonomyProcessed")
 })
 
@@ -109,13 +109,11 @@ testthat::test_that(desc = "Output data frame source: taxonomyProcessed", {
 testthat::test_that(desc = "Output data frame source: apc_morphospecies", {
   
   outDF <- joinAquPointCount(inputDataList = testList)
-  testthat::expect_identical(object = unique(outDF$taxonIDSourceTable[outDF$sampleID == 'KING.20230719.AP1.1.T1
-']),
+  testthat::expect_identical(object = unique(outDF$taxonIDSourceTable[which(outDF$sampleID == 'KING.20230719.AP1.1.T1')]),
                              expected = "apc_morphospecies")
 
 
-  testthat::expect_identical(object = unique(outDF$acceptedTaxonID[outDF$sampleID == 'KING.20230719.AP1.1.T1
-  ']),
+  testthat::expect_identical(object = unique(outDF$acceptedTaxonID[which(outDF$sampleID == 'KING.20230719.AP1.1.T1')]),
                              expected = "NAOF")
 })
 
@@ -124,11 +122,10 @@ testthat::test_that(desc = "Output data frame source: apc_morphospecies", {
 testthat::test_that(desc = "Output data frame source: perTaxon", {
   
   outDF <- joinAquPointCount(inputDataList = testList)
-  testthat::expect_identical(object = unique(outDF$taxonIDSourceTable[outDF$sampleID == 'POSE.20230718.AP16.1.T7']),
+  testthat::expect_identical(object = unique(outDF$taxonIDSourceTable[which(outDF$sampleID == 'POSE.20230718.AP16.1.T7')]),
                              expected = "apc_perTaxon")
   
-  testthat::expect_identical(object = unique(outDF$acceptedTaxonID[outDF$sampleID == 'POSE.20230718.AP16.1.T7
-  ']),
+  testthat::expect_identical(object = unique(outDF$acceptedTaxonID[which(outDF$sampleID == 'POSE.20230718.AP16.1.T7')]),
                              expected = "2PLANT")
 })
 
@@ -174,16 +171,16 @@ testthat::test_that(desc = "Table inputs are data frames when required", {
 testthat::test_that(desc = "Table 'inputPoint' missing column", {
   
   testthat::expect_error(object = joinAquPointCount(inputPoint = testPoint %>%
-                                                      dplyr::select(-taxonID),
+                                                      dplyr::select(-pointNumber),
                                                     inputPerTax = testPerTax),
-                         regexp = "Required columns missing from 'inputPoint': taxonID")
+                         regexp = "Required columns missing from 'inputPoint': pointNumber")
 })
 
 #   Test when inputPoint has no data
 testthat::test_that(desc = "Table 'inputPoint' missing data", {
   
   testthat::expect_error(object = joinAquPointCount(inputPoint = testPoint %>%
-                                                      dplyr::filter(taxonID == "coconut"),
+                                                      dplyr::filter(pointNumber == "999"),
                                                     inputPerTax = testPerTax),
                          regexp = "Table 'inputPoint' has no data.")
 })

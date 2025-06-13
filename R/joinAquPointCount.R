@@ -104,8 +104,16 @@ joinAquPointCount <- function(inputDataList,
     
     apPoint <- inputDataList$apc_pointTransect
     apPerTax <- inputDataList$apc_perTaxon
-    apTaxProc <- inputDataList$apc_taxonomyProcessed
-    apMorph <- inputDataList$apc_morphospecies
+    if(!is.null(inputDataList$apc_taxonomyProcessed)){
+      apTaxProc <- inputDataList$apc_taxonomyProcessed
+    }else{
+      apTaxProc <- NA
+    }
+    if(!is.null(inputDataList$apc_morphospecies)){
+      apMorph <- inputDataList$apc_morphospecies
+    }else{
+      apMorph <- NA
+    }
     
   } else {
     
@@ -156,8 +164,8 @@ joinAquPointCount <- function(inputDataList,
   taxProcExpCols <- c( "sampleID", "acceptedTaxonID", "scientificName", "sampleCondition", "identificationHistoryID", "dataQF", "publicationDate", "release", "phylum", "division", "class", "order", "family", "genus", "section", "specificEpithet", "infraspecificEpithet", "variety", "form", "scientificNameAuthorship", "identificationQualifier", "identificationReferences", "taxonRank", "remarks", "identifiedBy", "identifiedDate", "morphospeciesID", "uid", "domainID", "siteID", "namedLocation", "collectDate")
   
   #   Check for data
-  if(exists("apTaxProc")){
-    if (is.null(apTaxProc) | nrow(apTaxProc) == 0) {
+  if(is.data.frame(apTaxProc)){
+    if (nrow(apTaxProc) == 0) {
       message(glue::glue("Warning: Table 'inputTaxProc' has no data. Join will not include processed taxonomy data."))
     } else {
       
@@ -175,8 +183,8 @@ joinAquPointCount <- function(inputDataList,
   
   
   #   Check for data
-  if(exists("apMorph")){
-    if(is.null(apMorph) | nrow(apMorph) == 0){
+  if(is.data.frame(apMorph)){
+    if(nrow(apMorph) == 0){
       message("Warning: Table 'inputMorph' has no data. Join will not include identifications from the morphospecies table.")
     } else {
 
