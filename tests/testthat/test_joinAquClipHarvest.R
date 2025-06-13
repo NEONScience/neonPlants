@@ -32,7 +32,7 @@
 
 
 ### Read in test data
-testList <- readRDS(test_that::test_path("testdata", "joinAquClipHarvest_testData_202307.rds"))
+testList <- readRDS(testthat::test_path("testdata", "joinAquClipHarvest_testData_202307.rds"))
 testBio <- testList$apl_biomass
 testClip <- testList$apl_clipHarvest
 testTaxProc <- testList$apl_taxonomyProcessed

@@ -4,7 +4,7 @@
 
 
 ### Read in test data
-testList <- readRDS(test_that::test_path("testdata", "joinAquPointCount_testData_202307.rds"))
+testList <- readRDS(testthat::test_path("testdata", "joinAquPointCount_testData_202307.rds"))
 testPoint <- testList$apc_pointTransect
 testPerTax <- testList$apc_perTaxon
 testTaxProc <- testList$apc_taxonomyProcessed
