@@ -3,6 +3,8 @@
 export("%>%")
 export(estimatePheDurationByTag)
 export(estimatePheTransByTag)
+export(joinAquClipHarvest)
+export(joinAquPointCount)
 export(joinRootChem)
 export(scaleRootMass)
 export(stackPlantPresence)
