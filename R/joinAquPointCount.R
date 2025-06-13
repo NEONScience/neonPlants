@@ -106,8 +106,6 @@ joinAquPointCount <- function(inputDataList,
     apPerTax <- inputDataList$apc_perTaxon
     apTaxProc <- inputDataList$apc_taxonomyProcessed
     apMorph <- inputDataList$apc_morphospecies
-    apVouch <- inputDataList$apc_voucher
-    apVouchProc <- inputDataList$apc_voucherTaxonomyProcessed
     
   } else {
     
@@ -124,7 +122,7 @@ joinAquPointCount <- function(inputDataList,
   
   ### Verify 'apPoint' table contains required data
   #   Check for required columns
-  pointExpCols <- c("namedLocation", "pointNumber", "collectDate", "targetTaxaPresent")
+  pointExpCols <- c("domainID", "siteID", "namedLocation", "pointNumber", "collectDate", "eventID", "remarks")
 
   if (length(setdiff(pointExpCols, colnames(apPoint))) > 0) {
     stop(glue::glue("Required columns missing from 'inputPoint':", '{paste(setdiff(pointExpCols, colnames(apPoint)), collapse = ", ")}',
@@ -140,7 +138,7 @@ joinAquPointCount <- function(inputDataList,
   
   ### Verify 'apPerTax' table contains required data
   #   Check for required columns
-  perTaxExpCols <- c("namedLocation", "pointNumber", "collectDate", "sampleID", "aquaticPlantType", "growthForm", "taxonID", "scientificName", "morphospeciesID", "identificationQualifier")
+  perTaxExpCols <- c("sampleID", "taxonID", "scientificName", "morphospeciesID","sampleCondition", "identificationHistoryID", "dataQF", "publicationDate", "release", "phylum", "division", "class", "order", "family", "genus", "section", "specificEpithet", "infraspecificEpithet", "variety", "form", "scientificNameAuthorship", "identificationQualifier", "identificationReferences", "taxonRank", "remarks", "identifiedBy", "identifiedDate", "uid")
   
   if (length(setdiff(perTaxExpCols, colnames(apPerTax))) > 0) {
     stop(glue::glue("Required columns missing from 'inputPerTax':", '{paste(setdiff(perTaxExpCols, colnames(apPerTax)), collapse = ", ")}',
@@ -155,7 +153,7 @@ joinAquPointCount <- function(inputDataList,
   
   
   ### Verify 'apTaxProc' table contains required data if data exists
-  taxProcExpCols <- c("sampleID", "acceptedTaxonID")
+  taxProcExpCols <- c( "sampleID", "acceptedTaxonID", "scientificName", "sampleCondition", "identificationHistoryID", "dataQF", "publicationDate", "release", "phylum", "division", "class", "order", "family", "genus", "section", "specificEpithet", "infraspecificEpithet", "variety", "form", "scientificNameAuthorship", "identificationQualifier", "identificationReferences", "taxonRank", "remarks", "identifiedBy", "identifiedDate", "morphospeciesID", "uid", "domainID", "siteID", "namedLocation", "collectDate")
   
   #   Check for data
   if(exists("apTaxProc")){
@@ -173,11 +171,12 @@ joinAquPointCount <- function(inputDataList,
     
     
   ### Verify 'apMorph' table contains required data if data exists
-  morphExpCols <- c("sampleID")
+  morphExpCols<- c("taxonID", "scientificName", "morphospeciesID", "identificationQualifier", "identificationReferences", "identifiedBy", "dataQF")
+  
   
   #   Check for data
   if(exists("apMorph")){
-    if(is.null(apMorph) | !is.null(apMorph)){
+    if(is.null(apMorph) | nrow(apMorph) == 0){
       message("Warning: Table 'inputMorph' has no data. Join will not include identifications from the morphospecies table.")
     } else {
 
