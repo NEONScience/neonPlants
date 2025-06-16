@@ -2,7 +2,6 @@
 ### POC: Madaline Ritter, ritterm1@BattelleEcology.org
 
 
-
 ### Read in test data
 testList <- readRDS(testthat::test_path("testdata", "joinAquPointCount_testData_202307.rds"))
 testPoint <- testList$apc_pointTransect
@@ -151,7 +150,7 @@ testthat::test_that(desc = "Table inputs NA when required", {
   
   testthat::expect_error(object = joinAquPointCount(inputDataList = testList,
                                                inputPoint = testPoint),
-                         regexp = "When 'inputDataList' is supplied all table input arguments must be NA")
+                         regexp = "When 'inputDataList' is supplied, all table input arguments must be NA.")
 })
 
 
@@ -160,7 +159,7 @@ testthat::test_that(desc = "Table inputs NA when required", {
 testthat::test_that(desc = "Table inputs are data frames when required", {
   
   testthat::expect_error(object = joinAquPointCount(inputPoint = testPoint,
-                                                    inputPerTax = testPerTax),
+                                                    inputTaxProc = testTaxProc),
                          regexp = "Data frames must be supplied for table inputs if 'inputDataList' is missing")
 })
 
