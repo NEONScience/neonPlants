@@ -86,22 +86,11 @@ joinAquPointCount <- function(inputDataList,
     
   } # end missing conditional
   
-  # message(paste('inputDataList= ', inputDataList))
   
   ### Verify table inputs are NA if inputDataList is supplied
-  # any_table_supplied <- !isTRUE(is.na(inputPoint)) || !isTRUE(is.na(inputPerTax)) ||
-  #   !isTRUE(is.na(inputTaxProc)) || !isTRUE(is.na(inputMorph))
-  
-  # if (!missing(inputDataList) && !isTRUE(is.na(inputDataList)) && any_table_supplied) {
-  #   stop("Provide either 'inputDataList' OR individual table inputs, not both.")
-  # }
-  # if (inherits(inputDataList, "list") & (!is.logical(inputPoint) | !is.logical(inputPerTax) | !is.logical(inputTaxProc) | !is.logical(inputMorph))) {
-  #   stop("When 'inputDataList' is supplied all table input arguments must be NA")
-  # }
   if (!is.null(inputDataList)) {
     if (!isTRUE(is.na(inputPoint)) || !isTRUE(is.na(inputPerTax)) ||
-        !isTRUE(is.na(inputTaxProc)) ||
-        !isTRUE(is.na(inputMorph))) {
+        !isTRUE(is.na(inputTaxProc)) || !isTRUE(is.na(inputMorph))) {
       stop("When 'inputDataList' is supplied, all table input arguments must be NA.")
     }
   }
@@ -111,7 +100,6 @@ joinAquPointCount <- function(inputDataList,
   if (is.null(inputDataList) &
       (
         !is.data.frame(inputPoint) || !is.data.frame(inputPerTax)
-        # | !inherits(inputTaxProc, "data.frame") | !inherits(inputMorph, "data.frame")
       )) {
     stop("Data frames must be supplied for table inputs if 'inputDataList' is missing")
     

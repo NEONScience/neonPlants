@@ -128,7 +128,7 @@ testthat::test_that(desc = "Output data frame row number table input", {
 testthat::test_that(desc = "Output data frame source: taxonomyProcessed", {
   
   outDF <- joinAquClipHarvest(inputDataList = testList)
-  testthat::expect_identical(object = unique(outDF$taxonIDSourceTable[which(outDF$uid == '1bcced55-6162-4cc1-b91b-63edb4422f7f')]),
+  testthat::expect_identical(object = unique(outDF$taxonIDSourceTable[which(outDF$sampleID == 'PRLA.20230703.AP1.P6')]),
                              expected = "apl_taxonomyProcessed")
 })
 
@@ -154,7 +154,7 @@ testthat::test_that(desc = "Output data frame source: biomass", {
                              expected = "apl_biomass")
   
   testthat::expect_identical(object = unique(outDF$acceptedTaxonID[which(outDF$sampleID == 'CRAM.20230720.AP1.P2')]),
-                             expected = "ISTE5")
+                             expected = "DRADA")
 })
 
 
@@ -178,8 +178,8 @@ testthat::test_that(desc = "Required tables present in 'inputDataList' input", {
 testthat::test_that(desc = "Table inputs NA when required", {
   
   testthat::expect_error(object = joinAquClipHarvest(inputDataList = testList,
-                                                    inputPoint = testPoint),
-                         regexp = "When 'inputDataList' is supplied all table input arguments must be NA")
+                                                    inputBio = testBio),
+                         regexp = "When 'inputDataList' is supplied, all table input arguments must be NA")
 })
 
 
@@ -187,7 +187,7 @@ testthat::test_that(desc = "Table inputs NA when required", {
 ### Tests: Generate expected errors with table inputs ####
 testthat::test_that(desc = "Table inputs are data frames when required", {
   
-  testthat::expect_error(object = joinAquClipHarvest(inputPoint = testPoint,
+  testthat::expect_error(object = joinAquClipHarvest(inputMorph = testMorph,
                                                     inputBio = testBio),
                          regexp = "Data frames must be supplied for table inputs if 'inputDataList' is missing")
 })
@@ -240,10 +240,10 @@ testthat::test_that(desc = "Table 'inputClip' missing data", {
 testthat::test_that(desc = "Table 'inputTaxProc' missing column", {
   
   testthat::expect_error(object = joinAquClipHarvest(inputTaxProc = testTaxProc %>%
-                                                      dplyr::select(-acceptedTaxonID),
-                                                    inputPoint = testPoint,
-                                                    inputPerTax = testPerTax),
-                         regexp = "Required columns missing from 'inputTaxProc': acceptedTaxonID")
+                                                      dplyr::select(-taxonID),
+                                                     inputBio = testBio,
+                                                     inputClip = testClip),
+                         regexp = "Required columns missing from 'inputTaxProc': taxonID")
 })
 
 
@@ -254,8 +254,8 @@ testthat::test_that(desc = "Table 'inputMorph' missing column", {
   
   testthat::expect_error(object = joinAquClipHarvest(inputMorph = testMorph %>%
                                                       dplyr::select(-taxonID),
-                                                    inputPoint = testPoint,
-                                                    inputPerTax = testPerTax),
+                                                     inputBio = testBio,
+                                                     inputClip = testClip),
                          regexp = "Required columns missing from 'inputMorph': taxonID")
 })
 
