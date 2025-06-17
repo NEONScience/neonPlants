@@ -12,7 +12,7 @@
 #' 
 #' Where:
 #' 
-#' - \eqn{N_i} is the number of observed points in a transect that match class type “i” (i.., a particular taxonID)
+#' - \eqn{N_i} is the number of observed points in a transect that match class type “i” (i.e., a particular taxonID or substrate)
 #' - \eqn{N_t} is the total number of points observed in the transect
 #'
 #' Note: This calculation can generate percent cover values >100% if there is vertical stacking of plants.
