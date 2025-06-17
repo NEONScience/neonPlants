@@ -22,6 +22,9 @@
 #' 
 #' @return A table containing point transect data with all associated taxonomic information for each point where targetTaxaPresent == 'Y'.
 #' 
+#' @references
+#' License: GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007
+#' 
 #' @examples
 #' \dontrun{
 #' #   Obtain NEON Aquatic Plant Point Count data
@@ -319,7 +322,7 @@ joinAquPointCount <- function(inputDataList,
         -"collectDate",
         -"morphospeciesID"
       ) %>%
-      dplyr::rename(taxonID = .data$acceptedTaxonID)
+      dplyr::rename(taxonID = "acceptedTaxonID")
     
     #   Update expert taxonomist identifications
     apJoin1 <- apPerTax %>%
@@ -559,7 +562,10 @@ joinAquPointCount <- function(inputDataList,
                     -"tempTaxonID",-dplyr::matches("_morph"),-dplyr::matches("_perTax"))
   } else {
     message("No data joined from apc_morphospecies table.")
-    apJoin2 <- apJoin1
+    
+    apJoin2 <- apJoin1 %>% 
+      dplyr::mutate(acceptedTaxonID = .data$tempTaxonID) %>% 
+      dplyr::select(-"tempTaxonID")
   }
   
   
