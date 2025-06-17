@@ -24,7 +24,7 @@ joinAquClipHarvest(
 \item{inputMorph}{The 'apc_morphospecies' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 }
 \value{
-A table containing clip harvest data with all associated taxonomic information for each apl_clipHarvest record where targetTaxaPresent == 'Y'.
+A table containing bout 2 clip harvest data with all associated taxonomic information for each apl_clipHarvest record where targetTaxaPresent = 'Y' and an identification has been published..
 }
 \description{
 Join the 'apl_clipHarvest', 'apl_biomass', 'apl_taxonomyProcessed' and 'apc_morphospecies' tables to generate a single table that contains clip harvest data with taxonomic identifications for each sampleID. Data inputs are NEON Aquatic Plant Bryophyte Macroalgae Clip Harvest (DP1.20066.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input data tables with an equivalent structure and representing the same site x month combinations.
@@ -38,7 +38,7 @@ In the joined output table, the 'acceptedTaxonID' and associated taxonomic field
 }
 \examples{
 \dontrun{
-#   Obtain NEON Aquatic Plant Point Count data
+#   Obtain NEON Aquatic Plant Clip Harvest data
 apl <- neonUtilities::loadByProduct(
 dpID = "DP1.20066.001",
 site = "all",
@@ -48,7 +48,7 @@ tabl = "all",
 check.size = FALSE
 )
 
-#   Join downloaded root data
+#   Join downloaded clip harvest data
 df <- neonPlants::joinAquClipHarvest(
 inputDataList = apl,
 inputBio = NA,
