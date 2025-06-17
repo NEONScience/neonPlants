@@ -34,7 +34,7 @@
 #' check.size = FALSE
 #' )
 #' 
-#' #   Join downloaded root data
+#' #   Join downloaded point count data
 #' df <- neonPlants::joinAquPointCount(
 #' inputDataList = apc,
 #' inputPoint = NA,
