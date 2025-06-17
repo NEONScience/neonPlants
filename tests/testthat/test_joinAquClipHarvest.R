@@ -1,35 +1,7 @@
 ### Unit tests for joinAquClipHarvest function ####
 ### POC: Madaline Ritter, ritterm1@BattelleEcology.org
 
-### Download initial test data - DELETE
-# clip_testDat <- neonUtilities::loadByProduct(
-#   dpID="DP1.20066.001",
-#   check.size=F,
-#   startdate = '2023-07',
-#   enddate = '2023-07',
-#   site = "all",
-#   # site = "SYCA",
-#   package='expanded',
-#   include.provisional = T,
-#   release = "LATEST",
-#   token = Sys.getenv('NEON_PAT'))
-# 
-# clip_testDat$apl_identificationHistory <- NULL
-# clip_testDat$apl_taxonomyRaw <- NULL
-# clip_testDat$categoricalCodes_20066 <- NULL
-# clip_testDat$issueLog_20066 <- NULL
-# clip_testDat$readme_20066 <- NULL
-# clip_testDat$validation_20066 <- NULL
-# clip_testDat$variables_20066 <- NULL
-# 
-# View(clip_testDat$apc_morphospecies)
-# View(clip_testDat$apl_biomass)
-# View(clip_testDat$apl_clipHarvest)
-# View(clip_testDat$apl_taxonomyProcessed)
-# 
-# saveRDS(clip_testDat, "C:/Users/ritterm1/Documents/GitHub/a_neonPackages/neonPlants/tests/testthat/testdata/joinAquClipHarvest_testData_202307.rds")
 # testList <- readRDS("C:/Users/ritterm1/Documents/GitHub/a_neonPackages/neonPlants/tests/testthat/testdata/joinAquClipHarvest_testData_202307.rds")
-
 
 ### Read in test data
 testList <- readRDS(testthat::test_path("testdata", "joinAquClipHarvest_testData_202307.rds"))

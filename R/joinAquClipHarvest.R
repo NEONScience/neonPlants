@@ -214,7 +214,7 @@ joinAquClipHarvest <- function(inputDataList,
   }
   
   #   Check for bout 2 data
-  if (nrow(apClip %>% filter(boutNumber == '2')) == 0) {
+  if (nrow(apClip %>% dplyr::filter(.data$boutNumber == '2')) == 0) {
     stop(
       glue::glue(
         "The input data does not contain any bout 2 records. No taxonomy data to join."
@@ -600,7 +600,7 @@ joinAquClipHarvest <- function(inputDataList,
   
   
   #  Filter out bout 1 and 3 data
-  joinClipHarvest <- joinClipHarvest %>% filter(boutNumber == '2')
+  joinClipHarvest <- joinClipHarvest %>% dplyr::filter(.data$boutNumber == '2')
   
   return(joinClipHarvest)
   

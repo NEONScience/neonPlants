@@ -453,14 +453,14 @@ joinAquPointCount <- function(inputDataList,
         )
         
       ) %>%
-      select(-matches("_taxProc"),-matches("_perTax"),-"targetTaxaPresent",
+      dplyr::select(-matches("_taxProc"),-matches("_perTax"),-"targetTaxaPresent",
              -"uid")
     
   } else {
     message("No data joined from apc_taxonomyProcessed table.")
     # rename columns if no taxProc join
     apJoin1 <- apPerTax %>%
-      mutate(
+      dplyr::mutate(
         tempTaxonID = taxonID,
         remarks = dplyr::if_else(is.na(remarks), NA, paste0("perTaxon remarks - ", remarks)),
         perTaxonRelease = release,
@@ -468,7 +468,7 @@ joinAquPointCount <- function(inputDataList,
         perTaxonDataQF = dataQF,
         perTaxonPublicationDate = publicationDate
       ) %>%
-      select(-"taxonID",
+      dplyr::select(-"taxonID",
              -"release",
              -"dataQF",
              -"publicationDate",
