@@ -319,7 +319,7 @@ joinAquPointCount <- function(inputDataList,
         -"collectDate",
         -"morphospeciesID"
       ) %>%
-      dplyr::rename(taxonID = acceptedTaxonID)
+      dplyr::rename(taxonID = .data$acceptedTaxonID)
     
     #   Update expert taxonomist identifications
     apJoin1 <- apPerTax %>%
@@ -350,14 +350,14 @@ joinAquPointCount <- function(inputDataList,
           TRUE ~ NA
         ),
         tempTaxonID = dplyr::if_else(
-          !is.na(taxonID_taxProc),
-          taxonID_taxProc,
-          taxonID_perTax
+          !is.na(.data$taxonID_taxProc),
+          .data$taxonID_taxProc,
+          .data$taxonID_perTax
         ),
         scientificName = dplyr::if_else(
-          !is.na(taxonID_taxProc),
-          scientificName_taxProc,
-          scientificName_perTax
+          !is.na(.data$taxonID_taxProc),
+          .data$scientificName_taxProc,
+          .data$scientificName_perTax
         ),
         identificationHistoryID = dplyr::case_when(
           !is.na(.data$identificationHistoryID_perTax) &
@@ -371,62 +371,73 @@ joinAquPointCount <- function(inputDataList,
             is.na(.data$identificationHistoryID_perTax) ~ .data$identificationHistoryID_taxProc,
           TRUE ~ NA
         ),
-        perTaxonDataQF = dataQF_perTax,
-        taxProcessedDataQF = dataQF_taxProc,
-        perTaxonPublicationDate = publicationDate_perTax,
-        taxProcessedPublicationDate = publicationDate_taxProc,
-        taxProcessedRelease = release_taxProc,
-        perTaxonRelease = release_perTax,
-        phylum = dplyr::if_else(!is.na(taxonID_taxProc), phylum_taxProc, phylum_perTax),
+        perTaxonDataQF = .data$dataQF_perTax,
+        taxProcessedDataQF = .data$dataQF_taxProc,
+        perTaxonPublicationDate = .data$publicationDate_perTax,
+        taxProcessedPublicationDate = .data$publicationDate_taxProc,
+        taxProcessedRelease = .data$release_taxProc,
+        perTaxonRelease = .data$release_perTax,
+        phylum = dplyr::if_else(!is.na(.data$taxonID_taxProc), .data$phylum_taxProc, .data$phylum_perTax),
         division = dplyr::if_else(
-          !is.na(taxonID_taxProc),
-          division_taxProc,
-          division_perTax
+          !is.na(.data$taxonID_taxProc),
+          .data$division_taxProc,
+          .data$division_perTax
         ),
-        class = dplyr::if_else(!is.na(taxonID_taxProc), class_taxProc, class_perTax),
-        order = dplyr::if_else(!is.na(taxonID_taxProc), order_taxProc, order_perTax),
-        family = dplyr::if_else(!is.na(taxonID_taxProc), family_taxProc, family_perTax),
-        genus = dplyr::if_else(!is.na(taxonID_taxProc), genus_taxProc, genus_perTax),
+        class = dplyr::if_else(
+          !is.na(.data$taxonID_taxProc), 
+          .data$class_taxProc, 
+          .data$class_perTax),
+        order = dplyr::if_else(!is.na(.data$taxonID_taxProc), 
+                               .data$order_taxProc, 
+                               .data$order_perTax),
+        family = dplyr::if_else(!is.na(.data$taxonID_taxProc), 
+                                .data$family_taxProc, 
+                                .data$family_perTax),
+        genus = dplyr::if_else(!is.na(.data$taxonID_taxProc), 
+                               .data$genus_taxProc, 
+                               .data$genus_perTax),
         section = dplyr::if_else(
-          !is.na(taxonID_taxProc),
-          section_taxProc,
-          section_perTax
+          !is.na(.data$taxonID_taxProc),
+          .data$section_taxProc,
+          .data$section_perTax
         ),
         specificEpithet = dplyr::if_else(
-          !is.na(taxonID_taxProc),
-          specificEpithet_taxProc,
-          specificEpithet_perTax
+          !is.na(.data$taxonID_taxProc),
+          .data$specificEpithet_taxProc,
+          .data$specificEpithet_perTax
         ),
         infraspecificEpithet = dplyr::if_else(
-          !is.na(taxonID_taxProc),
-          infraspecificEpithet_taxProc,
-          infraspecificEpithet_perTax
+          !is.na(.data$taxonID_taxProc),
+          .data$infraspecificEpithet_taxProc,
+          .data$infraspecificEpithet_perTax
         ),
         variety = dplyr::if_else(
-          !is.na(taxonID_taxProc),
-          variety_taxProc,
-          variety_perTax
+          !is.na(.data$taxonID_taxProc),
+          .data$variety_taxProc,
+          .data$variety_perTax
         ),
-        form = dplyr::if_else(!is.na(taxonID_taxProc), form_taxProc, form_perTax),
+        form = dplyr::if_else(!is.na(.data$taxonID_taxProc), 
+                              .data$form_taxProc, 
+                              .data$form_perTax),
         scientificNameAuthorship = dplyr::if_else(
-          !is.na(taxonID_taxProc),
-          scientificNameAuthorship_taxProc,
-          scientificNameAuthorship_perTax
+          !is.na(.data$taxonID_taxProc),
+          .data$scientificNameAuthorship_taxProc,
+          .data$scientificNameAuthorship_perTax
         ),
         identificationQualifier = dplyr::if_else(
-          !is.na(taxonID_taxProc),
-          identificationQualifier_taxProc,
-          identificationQualifier_perTax
+          !is.na(.data$taxonID_taxProc),
+          .data$identificationQualifier_taxProc,
+          .data$identificationQualifier_perTax
         ),
         identificationReferences = dplyr::if_else(
-          !is.na(taxonID_taxProc),
-          identificationReferences_taxProc,
-          identificationReferences_perTax
+          !is.na(.data$taxonID_taxProc),
+          .data$identificationReferences_taxProc,
+          .data$identificationReferences_perTax
         ),
         taxonRank = dplyr::if_else(
-          !is.na(taxonID_taxProc),
-          taxonRank_taxProc,
-          taxonRank_perTax
+          !is.na(.data$taxonID_taxProc),
+          .data$taxonRank_taxProc,
+          .data$taxonRank_perTax
         ),
         remarks = dplyr::case_when(
           !is.na(.data$remarks_perTax) &
@@ -442,18 +453,18 @@ joinAquPointCount <- function(inputDataList,
           TRUE ~ NA
         ),
         identifiedBy = dplyr::if_else(
-          !is.na(taxonID_taxProc),
-          identifiedBy_taxProc,
-          identifiedBy_perTax
+          !is.na(.data$taxonID_taxProc),
+          .data$identifiedBy_taxProc,
+          .data$identifiedBy_perTax
         ),
         identifiedDate = dplyr::if_else(
-          !is.na(identifiedDate_taxProc),
-          identifiedDate_taxProc,
-          identifiedDate_perTax
+          !is.na(.data$identifiedDate_taxProc),
+          .data$identifiedDate_taxProc,
+          .data$identifiedDate_perTax
         )
         
       ) %>%
-      dplyr::select(-matches("_taxProc"),-matches("_perTax"),-"targetTaxaPresent",
+      dplyr::select(-dplyr::matches("_taxProc"),-dplyr::matches("_perTax"),-"targetTaxaPresent",
              -"uid")
     
   } else {
@@ -461,12 +472,12 @@ joinAquPointCount <- function(inputDataList,
     # rename columns if no taxProc join
     apJoin1 <- apPerTax %>%
       dplyr::mutate(
-        tempTaxonID = taxonID,
-        remarks = dplyr::if_else(is.na(remarks), NA, paste0("perTaxon remarks - ", remarks)),
-        perTaxonRelease = release,
-        taxonIDSourceTable = dplyr::if_else(is.na(taxonID), NA, "apc_perTaxon"),
-        perTaxonDataQF = dataQF,
-        perTaxonPublicationDate = publicationDate
+        tempTaxonID = .data$taxonID,
+        remarks = dplyr::if_else(is.na(.data$remarks), NA, paste0("perTaxon remarks - ", .data$remarks)),
+        perTaxonRelease = .data$release,
+        taxonIDSourceTable = dplyr::if_else(is.na(.data$taxonID), NA, "apc_perTaxon"),
+        perTaxonDataQF = .data$dataQF,
+        perTaxonPublicationDate = .data$publicationDate
       ) %>%
       dplyr::select(-"taxonID",
              -"release",
@@ -475,7 +486,7 @@ joinAquPointCount <- function(inputDataList,
              -"uid")
   }
   
-  ### Join apJoin1 and apMorph tables
+  ### Join apJoin1 and apMorph tables ####
   
   #   Select needed columns from apMorph
   if (is.data.frame(apMorph) && nrow(apMorph) > 0) {
@@ -495,9 +506,9 @@ joinAquPointCount <- function(inputDataList,
     # Update morphospecies taxon identifications
     apJoin2 <- apJoin1 %>%
       dplyr::mutate(morphospeciesID = dplyr::if_else(
-        !is.na(morphospeciesID),
-        paste0(morphospeciesID, ".", substr(collectDate, 1, 4)),
-        morphospeciesID
+        !is.na(.data$morphospeciesID),
+        paste0(.data$morphospeciesID, ".", substr(.data$collectDate, 1, 4)),
+        .data$morphospeciesID
       )) %>%
       dplyr::left_join(apMorph,
                        by = "morphospeciesID",
@@ -505,54 +516,54 @@ joinAquPointCount <- function(inputDataList,
       # filter(!is.na(taxonID) & acceptedTaxonID %in% c('2PLANT', 'UNKALG')) %>%
       dplyr::mutate(
         taxonIDSourceTable = dplyr::if_else(
-          !is.na(taxonID) &
-            tempTaxonID %in% c('2PLANT', 'UNKALG'),
+          !is.na(.data$taxonID) &
+            .data$tempTaxonID %in% c('2PLANT', 'UNKALG'),
           "apc_morphospecies",
-          taxonIDSourceTable
+          .data$taxonIDSourceTable
         ),
         acceptedTaxonID = dplyr::if_else(
-          !is.na(taxonID) &
-            tempTaxonID %in% c('2PLANT', 'UNKALG'),
-          taxonID,
-          tempTaxonID
+          !is.na(.data$taxonID) &
+            .data$tempTaxonID %in% c('2PLANT', 'UNKALG'),
+          .data$taxonID,
+          .data$tempTaxonID
         ),
         scientificName = dplyr::if_else(
-          !is.na(taxonID) &
-            tempTaxonID %in% c('2PLANT', 'UNKALG'),
-          scientificName_morph,
-          scientificName_perTax
+          !is.na(.data$taxonID) &
+            .data$tempTaxonID %in% c('2PLANT', 'UNKALG'),
+          .data$scientificName_morph,
+          .data$scientificName_perTax
         ),
         identificationQualifier = dplyr::if_else(
-          !is.na(taxonID) &
-            tempTaxonID %in% c('2PLANT', 'UNKALG'),
-          identificationQualifier_morph,
-          identificationQualifier_perTax
+          !is.na(.data$taxonID) &
+            .data$tempTaxonID %in% c('2PLANT', 'UNKALG'),
+          .data$identificationQualifier_morph,
+          .data$identificationQualifier_perTax
         ),
         identificationReferences = dplyr::if_else(
-          !is.na(taxonID) &
-            tempTaxonID %in% c('2PLANT', 'UNKALG'),
-          identificationReferences_morph,
-          identificationReferences_perTax
+          !is.na(.data$taxonID) &
+            .data$tempTaxonID %in% c('2PLANT', 'UNKALG'),
+          .data$identificationReferences_morph,
+          .data$identificationReferences_perTax
         ),
         identifiedBy = dplyr::if_else(
-          !is.na(taxonID) &
-            tempTaxonID %in% c('2PLANT', 'UNKALG'),
-          identifiedBy_morph,
-          identifiedBy_perTax
+          !is.na(.data$taxonID) &
+            .data$tempTaxonID %in% c('2PLANT', 'UNKALG'),
+          .data$identifiedBy_morph,
+          .data$identifiedBy_perTax
         ),
         identifiedDate = NA #not currently in pub table
         #dataQF = ifelse(!is.na(taxonID), )#either that may be relevant?
         
       ) %>%
       dplyr::select(-"taxonID",
-                    -"tempTaxonID",-matches("_morph"),-matches("_perTax"))
+                    -"tempTaxonID",-dplyr::matches("_morph"),-dplyr::matches("_perTax"))
   } else {
     message("No data joined from apc_morphospecies table.")
     apJoin2 <- apJoin1
   }
   
   
-  ### Join apPoint and apPerTax tables
+  ### Join apPoint and apPerTax tables ####
   
   # Update morphospecies taxon identifications
   joinPointCounts <- apPoint %>%
