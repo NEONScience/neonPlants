@@ -20,11 +20,11 @@
 #' 
 #' @param inputMorph The 'apc_morphospecies' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
 #' 
-#' @return A table containing clip harvest data with all associated taxonomic information for each apl_clipHarvest record where targetTaxaPresent == 'Y'.
+#' @return A table containing bout 2 clip harvest data with all associated taxonomic information for each apl_clipHarvest record where targetTaxaPresent = 'Y' and an identification has been published..
 #' 
 #' @examples
 #' \dontrun{
-#' #   Obtain NEON Aquatic Plant Point Count data
+#' #   Obtain NEON Aquatic Plant Clip Harvest data
 #' apl <- neonUtilities::loadByProduct(
 #' dpID = "DP1.20066.001",
 #' site = "all",
@@ -34,7 +34,7 @@
 #' check.size = FALSE
 #' )
 #' 
-#' #   Join downloaded root data
+#' #   Join downloaded clip harvest data
 #' df <- neonPlants::joinAquClipHarvest(
 #' inputDataList = apl,
 #' inputBio = NA,
@@ -309,11 +309,11 @@ joinAquClipHarvest <- function(inputDataList,
     }
   }
   
-  ### Verify that 'apClip' table contains bout 2 data
+  
   
   ### Join apBio and apTaxProc tables using sampleID
   
-  if (!is.null(apTaxProc) && nrow(apTaxProc) > 0) {
+  if (is.data.frame(apTaxProc) && nrow(apTaxProc) > 0) {
     # message("Join taxonomyProcessed taxonomic identifications.")
     #   Select needed columns from apTaxProc
     apTaxProc <- apTaxProc %>%
@@ -458,7 +458,7 @@ joinAquClipHarvest <- function(inputDataList,
              -"uid")
     
   } else {
-    # message("No data joined from apl_taxonomyProcessed table.")
+    message("No data joined from apl_taxonomyProcessed table.")
     # rename columns if no taxProc join
     apJoin1 <- apBio %>%
       mutate(
@@ -479,7 +479,7 @@ joinAquClipHarvest <- function(inputDataList,
   ### Join apJoin1 and apMorph tables
   
   #   Select needed columns from apMorph
-  if (!is.null(apMorph) && nrow(apMorph) > 0) {
+  if (is.data.frame(apMorph) && nrow(apMorph) > 0) {
     # message("Join morphospecies taxonomic identifications.")
     apMorph <- apMorph %>%
       dplyr::select(
@@ -550,7 +550,7 @@ joinAquClipHarvest <- function(inputDataList,
                     -"tempTaxonID",
                     -"dataQF",-matches("_morph"),-matches("_bio"))
   } else {
-    # message("No data joined from apc_morphospecies table.")
+    message("No data joined from apc_morphospecies table.")
     apJoin2 <- apJoin1 %>%
       mutate(acceptedTaxonID = tempTaxonID) %>%
       select(-"tempTaxonID")
@@ -601,7 +601,6 @@ joinAquClipHarvest <- function(inputDataList,
   
   #  Filter out bout 1 and 3 data
   joinClipHarvest <- joinClipHarvest %>% filter(boutNumber == '2')
-  
   
   return(joinClipHarvest)
   
