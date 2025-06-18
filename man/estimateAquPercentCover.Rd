@@ -9,7 +9,8 @@ estimateAquPercentCover(
   inputPoint = NA,
   inputPerTax = NA,
   inputTaxProc = NA,
-  inputMorph = NA
+  inputMorph = NA,
+  barPlots = FALSE
 )
 }
 \arguments{
@@ -22,12 +23,18 @@ estimateAquPercentCover(
 \item{inputTaxProc}{The 'apc_taxonomyProcessed' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 
 \item{inputMorph}{The 'apc_morphospecies' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
+
+\item{barPlots}{If TRUE, will produce a list of plots, one for each site/date in the data provided.}
 }
 \value{
-A data frame that estimates percent cover for each species observed on a given aquatic plant transect. Description of columns can be found in the Data Product User Guide.
+Two tables are produced containing point count summary data. The first "percentCover" table contains estimated percent cover for each observed species and/or substrate class on aquatic plant transects. This table includes a 'type' column indicating whether the estimate corresponds to a taxonID or a substrate class, and a 'substrateOrTaxonID' column which provides the corresponding identifier.
+
+The second "transectMetrics" table contains summary information including the length, habitatType, and total number of points sampled at each transect.
+
+If barPlots = TRUE, a list containing plots of the data will also be produced.
 }
 \description{
-Data inputs are NEON Aquatic Plant, Bryophyte, Lichen, and Macroalgae Point Counts in Wadeable Streams (DP1.20072.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input data tables with an equivalent structure and representing the same site x month combinations. The calculateAquPercentCover() function aggregates the occurrence data from the Aquatic Plant Point Count data product to return estimates of percent cover at the scale of each transect.
+Data inputs are NEON Aquatic Plant, Bryophyte, Lichen, and Macroalgae Point Counts in Wadeable Streams (DP1.20072.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input data tables with an equivalent structure and representing the same site x month combinations. The estimateAquPercentCover() function joins taxonomy information across point count tables and aggregates occurrence data to estimate percent cover at the transect level.
 }
 \details{
 Input data may be provided either as a list generated from the neonUtilities::laodByProduct() function or as individual tables. However, if both list and table inputs are provided at the same time the function will error.
@@ -38,7 +45,7 @@ Percent cover is calculated using the equation from Bowden et al. 2006:
 
 Where:
 \itemize{
-\item \eqn{N_i} is the number of observed points in a transect that match class type “i” (i.., a particular taxonID)
+\item \eqn{N_i} is the number of observed points in a transect that match class type “i” (i.e., a particular taxonID or substrate)
 \item \eqn{N_t} is the total number of points observed in the transect
 }
 
@@ -62,7 +69,8 @@ inputDataList = apc,
 inputPoint = NA,
 inputPerTax = NA,
 inputTaxProc = NA,
-inputMorph = NA
+inputMorph = NA,
+barPlots = F
 )
 }
 }
