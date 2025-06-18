@@ -1,14 +1,16 @@
 #' @title Scale herbaceous biomass by functional group data to mass per area
 #'
-#' @author Samuel M Simkin \email{ssimkin@battelleecology.org} \cr
+#' @author
+#' Samuel M Simkin \email{ssimkin@battelleecology.org} \cr
+#' Courtney Meier \email{cmeier@BattelleEcology.org} \cr
 #'
-#' @description Join NEON Herbaceous Clip Harvest data tables (DP1.10023.001) to calculate herbaceous biomass by functional group per unit area as well as total herbaceous biomass per unit area. Biomass outputs can be used in the neonPlants estimateMass() function, and the estimateHerbProd() and estimateProd() productivity functions.
+#' @description Join NEON Herbaceous Clip Harvest data tables (DP1.10023.001) to calculate herbaceous biomass by functional group per unit area as well as total herbaceous biomass per unit area. Biomass outputs can be used in the neonPlants estimateMass() function, and the estimateHerbProd() productivity function.
 #'
 #' Data inputs are "Herbaceous clip harvest" data (DP1.10023.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input tables with an equivalent structure and representing the same site x month combinations.
 #'
-#' @details Input data can be filtered by site, date, plot type, and plot priority. Herbaceous biomass are scaled to an area basis at the hierarchical levels of sampling cell, plot, and site. Input data may be provided either as a list or as individual tables. However, if both list and table inputs are provided at the same time the function will error out. For all output data, columns with the same name as input data have identical units and definitions; where needed, new columns contain new units information.
+#' @details Input data can be filtered by site, date, and plot subset. Herbaceous biomass data are scaled to an area basis at the hierarchical levels of sampling cell, plot, and site. Input data may be provided either as a list or as individual tables. However, if both list and table inputs are provided at the same time the function will error out. For all output data, columns with the same name as input data have identical units and definitions; where needed, new columns contain new units information.
 #'
-#' NEON weighs a minimum of 5% of samples a second time so that data users can estimate the uncertainty associated with different technicians weighing dried herbaceous biomass; QA samples of this nature are identified via qaDryMass == "Y". The function calculates the mean when QA masses exist and any 'remarks' are concatenated. Samples with Sampling Impractical values other than "OK" are removed prior to generating output data.
+#' NEON weighs a minimum of 5% of samples a second time so that data users can estimate the uncertainty associated with different technicians weighing dried herbaceous biomass; QA samples of this nature are identified via qaDryMass == "Y". The function calculates the mean when QA masses exist. Samples with Sampling Impractical values other than "OK" are removed prior to generating output data.
 #'
 #' @param inputDataList A list object comprised of "Herbaceous clip harvest" tables (DP1.10023.001) downloaded using the neonUtilities::loadByProduct() function. If list input is provided, the table input arguments must all be NA; similarly, if list input is missing, table inputs must be provided for 'inputBout', and 'inputMass' arguments. [list]
 #'
@@ -18,10 +20,10 @@
 #' @param inputMass The 'hbp_massdata' table for the site x month combination(s) of interest
 #' (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
 #'
-#' @param plotSubset The options are "all" (all tower and distributed plots), the default of "tower" (all plots in the tower airshed but no distributed plots), and "distributed" (all distributed plots, which are sampled in 5-yr bouts and are spatially representative of the NLCD classes at a site). [character]
+#' @param plotSubset The options are "all" (all tower and distributed plots), the default of "tower" (all plots in the tower airshed but no distributed plots), and "distributed" (all distributed plots, which are sampled on a 5-year interval and are spatially representative of the NLCD classes at a site). [character]
 #'
 #' @return A list that includes biomass summary data at multiple scales. Output tables include:
-#'   * hbp_agb - Summarizes above-ground herbaceous biomass for each record ("g/m2").
+#'   * hbp_agb - Summarizes above-ground herbaceous biomass for each sampleID in the input data ("g/m2").
 #'   * hbp_plot - Summarizes above-ground herbaceous biomass for each plot by year combination (both "g/m2" and "Mg/ha").
 #'   * hbp_site - Summarizes above-ground herbaceous biomass for each site by year combination (both "g/m2" and "Mg/ha").
 #'
@@ -150,7 +152,26 @@ scaleHerbMass = function(inputDataList,
 
 
 
-  ###  Create 'year' column for grouping output at plot and site scales across data products
+  ###  Generate final columns needed in 'inputBout' data frame
+  #   Reduce 'hbp_perbout' columns to subset needed for join
+  inputBout <- inputBout %>%
+    dplyr::select("namedLocation",
+                  "domainID",
+                  "siteID",
+                  "plotID",
+                  "subplotID",
+                  "clipID",
+                  "nlcdClass",
+                  "plotType",
+                  "plotSize",
+                  "plotManagement",
+                  "collectDate",
+                  "eventID",
+                  "sampleID",
+                  "clipArea",
+                  "exclosure")
+
+  #   Create 'year' column for grouping output at plot and site scales across data products
   inputBout <- dplyr::mutate(inputBout,
                              year = as.numeric(substr(.data$eventID, start = 5, stop = 8)),
                              .before = "eventID")
@@ -173,23 +194,7 @@ scaleHerbMass = function(inputDataList,
     dplyr::summarise(dryMass = mean(.data$dryMass, na.rm = TRUE),
                      .groups = "drop")
 
-  #   Reduce 'hbp_perbout' columns to those needed for join
-  inputBout <- inputBout %>%
-    dplyr::select("namedLocation",
-                  "domainID",
-                  "siteID",
-                  "plotID",
-                  "subplotID",
-                  "clipID",
-                  "nlcdClass",
-                  "plotType",
-                  "plotSize",
-                  "plotManagement",
-                  "collectDate",
-                  "eventID",
-                  "sampleID",
-                  "clipArea",
-                  "exclosure")
+
 
   #   Join tables and calculate mass per area
   hbp <- dplyr::right_join(inputBout,
@@ -274,31 +279,35 @@ scaleHerbMass = function(inputDataList,
 
 
   ### Cell-level output: Finalize data frame ####
-  #   Separate "eventID" into components
+  #   Separate "eventID" into components, relocate and remove columns, set "year" data type, arrange
   hbp_standing_biomass_in_clip_cells <- hbp2 %>%
     dplyr::select(-"dryMassSum") %>%
     tidyr::separate(col = "eventID",
                     into = c("data_prod", "year", "siteID2", "bout"),
                     sep = "\\.",
                     remove = FALSE,
-                    extra = "drop")
-
-  #   Remove unneeded 'siteID2' column
-  hbp_standing_biomass_in_clip_cells$siteID2 <- NULL
+                    extra = "drop") %>%
+    dplyr::relocate("sampleID",
+                    .after = "peak") %>%
+    dplyr::relocate("year",
+                    .before = "collectDate") %>%
+    dplyr::select(-"siteID2",
+                  -"bout") %>%
+    dplyr::mutate(year = as.numeric(.data$year)) %>%
+    dplyr::arrange(.data$domainID,
+                   .data$siteID,
+                   .data$year,
+                   .data$plotID,
+                   .data$clipID)
 
 
 
   ### Filter by plotSubset
-  if(plotSubset == "distributed") {
+  if (plotSubset %in% c("distributed", "tower")) {
 
     hbp_standing_biomass_in_clip_cells <- hbp_standing_biomass_in_clip_cells %>%
-      dplyr::filter(.data$plotType == "distributed")
-  }
+      dplyr::filter(.data$plotType == plotSubset)
 
-  if(plotSubset == "tower") {
-
-    hbp_standing_biomass_in_clip_cells <- hbp_standing_biomass_in_clip_cells %>%
-      dplyr::filter(.data$plotType == "tower")
   }
 
 
@@ -310,7 +319,8 @@ scaleHerbMass = function(inputDataList,
 
   hbp_plot <- hbp_standing_biomass_in_clip_cells %>%
     dplyr::filter(.data$peak == "atPeak" & .data$exclosure == "N") %>%
-    dplyr::group_by(.data$siteID,
+    dplyr::group_by(.data$domainID,
+                    .data$siteID,
                     .data$plotID,
                     .data$year,
                     .data$nlcdClass) %>%
@@ -345,10 +355,18 @@ scaleHerbMass = function(inputDataList,
   #   Load 'priority_plots' data frame into environment from 'data' folder and merge with plot-level data
   priority_plots <- priority_plots
 
-  hbp_plot <- merge(hbp_plot,
-                    priority_plots,
-                    by = c("plotID"),
-                    all.x = TRUE) #--> re-work to just bring in "plotType", and relocate before 'nlcdClass'
+  hbp_plot <- dplyr::left_join(hbp_plot,
+                               priority_plots %>%
+                                 dplyr::select("plotID",
+                                               "plotType"),
+                               by = "plotID") %>%
+    dplyr::relocate("plotType",
+                    .before = "nlcdClass")
+
+  # hbp_plot <- merge(hbp_plot,
+  #                   priority_plots,
+  #                   by = c("plotID"),
+  #                   all.x = TRUE) #--> re-work to just bring in "plotType", and relocate before 'nlcdClass'
   #
   #
   # #   Remove plots that do not meet 'priority' thresholds if 'plotPriority' supplied
@@ -364,14 +382,15 @@ scaleHerbMass = function(inputDataList,
   #   dplyr::relocate(dplyr::any_of(c("plotType", "specificModuleSamplingPriority")),
   #                   .after = "nlcdClass")
 
-  hbp_plot$year <- as.numeric(hbp_plot$year)
-  hbp_plot <- hbp_plot[order(hbp_plot$year), ] #--> test and make sure this doesn't filter out any years
+  # hbp_plot$year <- as.numeric(hbp_plot$year)
+  # hbp_plot <- hbp_plot[order(hbp_plot$year), ] #--> test and make sure this doesn't filter out any years
 
 
 
   ### Calculate site-level peak biomass by year ####
   hbp_site <- hbp_plot %>%
-    dplyr::group_by(.data$siteID,
+    dplyr::group_by(.data$domainID,
+                    .data$siteID,
                     .data$year) %>%
     dplyr::summarise(herbPlotNum = length(stats::na.omit(.data$herbPeakMassTotal_gm2)),
                      herbPeakMassMean_gm2 = round(mean(.data$herbPeakMassTotal_gm2, na.rm = TRUE),
