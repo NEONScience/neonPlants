@@ -18,7 +18,7 @@
 #' @param inputMass The 'hbp_massdata' table for the site x month combination(s) of interest
 #' (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
 #'
-#' @param plotSubset The options are "all" (all tower and distributed plots), the default of "towerAll" (all plots in the tower airshed but no distributed plots), and "distributed" (all distributed plots, which are sampled in 5-yr bouts and are spatially representative of the NLCD classes at at site). [character]
+#' @param plotSubset The options are "all" (all tower and distributed plots), the default of "tower" (all plots in the tower airshed but no distributed plots), and "distributed" (all distributed plots, which are sampled in 5-yr bouts and are spatially representative of the NLCD classes at a site). [character]
 #'
 #' @return A list that includes biomass summary data at multiple scales. Output tables include:
 #'   * hbp_agb - Summarizes above-ground herbaceous biomass for each record ("g/m2").
@@ -46,7 +46,7 @@
 scaleHerbMass = function(inputDataList,
                          inputBout = NA,
                          inputMass = NA,
-                         plotSubset = "towerAll") {
+                         plotSubset = "tower") {
 
   options(dplyr.summarise.inform = FALSE)
 
@@ -138,18 +138,22 @@ scaleHerbMass = function(inputDataList,
     stop(glue::glue("Table 'inputMass' has no data."))
   }
 
-  # Error if invalid plotSubset option selected
-  if (!plotSubset %in% c("all", "towerAll", "distributed")) {
-    stop("The only valid plotSubset options are 'all', 'towerAll', or 'distributed'.")
+  #   Error if invalid plotSubset option selected
+  if (!plotSubset %in% c("all", "tower", "distributed")) {
+    stop("The only valid plotSubset options are 'all', 'tower', or 'distributed'.")
   }
 
-  plotPriority <- ifelse(plotSubset == "towerAnnualSubset", 5, 50) # convert to numeric (50 is highest plotPriority)
-  plotType <- ifelse(plotSubset == "towerAnnualSubset" | plotSubset == "towerAll", "tower", "distributed")
-  plotType <- ifelse(plotSubset == "all", "all", plotType)
+  # #   Assign plotType from user-supplied plotSubset
+  # plotType <- dplyr::case_when(plotSubset == "tower" ~ "tower",
+  #                              plotSubset == "all" ~ "all",
+  #                              TRUE ~ "distributed")
+
 
 
   ###  Create 'year' column for grouping output at plot and site scales across data products
-  inputBout$year <- as.numeric(substr(inputBout$eventID, 5, 8))
+  inputBout <- dplyr::mutate(inputBout,
+                             year = as.numeric(substr(.data$eventID, start = 5, stop = 8)),
+                             .before = "eventID")
 
 
 
@@ -164,9 +168,9 @@ scaleHerbMass = function(inputDataList,
   inputMass <- inputMass  %>%
     dplyr::filter((.data$samplingImpractical == "OK" | is.na(.data$samplingImpractical)) & .data$herbGroup != "Bryophyte") %>%
     dplyr::group_by(.data$sampleID,
-                       .data$subsampleID,
-                       .data$herbGroup) %>%
-    dplyr::summarise(dryMass = mean(.data$dryMass),
+                    .data$subsampleID,
+                    .data$herbGroup) %>%
+    dplyr::summarise(dryMass = mean(.data$dryMass, na.rm = TRUE),
                      .groups = "drop")
 
   #   Reduce 'hbp_perbout' columns to those needed for join
@@ -194,11 +198,11 @@ scaleHerbMass = function(inputDataList,
     dplyr::mutate(dryMass_gm2 = .data$dryMass / .data$clipArea)
 
   #   Categorize mass as "peak" biomass or "offPeak"
-  hbp$peak <- ifelse(hbp$herbGroup == 'All herbaceous plants',
+  hbp$peak <- ifelse(hbp$herbGroup == "All herbaceous plants",
                      "offPeak",
                      "atPeak")
 
-  #   Standardize herbGroups to remove spaces
+  #   Standardize herbGroups to remove spaces and hyphens
   hbp$herbGroup <- gsub(pattern = "All herbaceous plants",
                         replacement = "AllHerbaceousPlants",
                         hbp$herbGroup)
@@ -247,14 +251,14 @@ scaleHerbMass = function(inputDataList,
 
   #   Aggregate dryMass among herbGroups in peak biomass bouts
   hbp_peak_biomass_herb_groups <- hbp %>%
-    dplyr::filter(.data$herbGroup != 'AllHerbaceousPlants') %>%
+    dplyr::filter(.data$herbGroup != "AllHerbaceousPlants") %>%
     dplyr::mutate(peak = "atPeak")
 
   hbp_peak_biomass_sum_groups <- hbp_peak_biomass_herb_groups %>%
     dplyr::group_by(.data$sampleID) %>%
     dplyr::summarise(dryMassSum = sum(.data$dryMass_gm2))
 
-  #   Populate "All herbaceous plants" column for peak biomass bouts
+  #   Populate "AllHerbaceousPlants" column for peak biomass bouts
   hbp2 <- merge(hbp_wide,
                 hbp_peak_biomass_sum_groups,
                 by = "sampleID",
@@ -269,7 +273,7 @@ scaleHerbMass = function(inputDataList,
 
 
 
-  ### Calculate plot-level means by year ####
+  ### Cell-level output: Finalize data frame ####
   #   Separate "eventID" into components
   hbp_standing_biomass_in_clip_cells <- hbp2 %>%
     dplyr::select(-"dryMassSum") %>%
@@ -279,13 +283,33 @@ scaleHerbMass = function(inputDataList,
                     remove = FALSE,
                     extra = "drop")
 
+  #   Remove unneeded 'siteID2' column
   hbp_standing_biomass_in_clip_cells$siteID2 <- NULL
 
-  #   Group by eventID and average across sampling cells (across plots) within a treatment group (exclosure Y/N)
-  #   Possible for consumption to be negative. To get total NPP = last bout Standing biomass + consumption estimated for each time step.
+
+
+  ### Filter by plotSubset
+  if(plotSubset == "distributed") {
+
+    hbp_standing_biomass_in_clip_cells <- hbp_standing_biomass_in_clip_cells %>%
+      dplyr::filter(.data$plotType == "distributed")
+  }
+
+  if(plotSubset == "tower") {
+
+    hbp_standing_biomass_in_clip_cells <- hbp_standing_biomass_in_clip_cells %>%
+      dplyr::filter(.data$plotType == "tower")
+  }
+
+
+
+  ### Plot-level output: Calculate plot-level means by year ####
+
+  ##  Calculate plot-level peak biomass
+  #   Requires filtering out exclosure == "Y"
 
   hbp_plot <- hbp_standing_biomass_in_clip_cells %>%
-    dplyr::filter(.data$peak == 'atPeak' & .data$exclosure == 'N') %>%
+    dplyr::filter(.data$peak == "atPeak" & .data$exclosure == "N") %>%
     dplyr::group_by(.data$siteID,
                     .data$plotID,
                     .data$year,
@@ -309,49 +333,39 @@ scaleHerbMass = function(inputDataList,
                                                    digits = 2),
       herbPeakMassAnnualAndPerennialForbs_gm2 = round(mean(.data$AnnualAndPerennialForbs_gm2, na.rm = TRUE),
                                                       digits = 2),
-      .groups = "drop")
+      .groups = "drop") %>%
 
-  #   Calculate "Mg/ha" for total herbaceous peak biomass; g/m2 x 10,000 m2/ha x 0.000001 Mg/g = Mg/ha
-  hbp_plot$herbPeakMassTotal_Mgha <-  round(hbp_plot$herbPeakMassTotal_gm2 * 10000 * 0.000001, digits = 2)
+    #   Calculate "Mg/ha" for total herbaceous peak biomass; g/m2 x 10,000 m2/ha x 0.000001 Mg/g = Mg/ha
+    dplyr::mutate(herbPeakMassTotal_Mgha = round(.data$herbPeakMassTotal_gm2 * 10000 * 0.000001,
+                                                 digits = 2),
+                  .before = "herbPeakMassTotal_gm2")
 
 
-  ##  Filter output according to user-supplied arguments
+
   #   Load 'priority_plots' data frame into environment from 'data' folder and merge with plot-level data
   priority_plots <- priority_plots
 
   hbp_plot <- merge(hbp_plot,
                     priority_plots,
                     by = c("plotID"),
-                    all.x = TRUE)
+                    all.x = TRUE) #--> re-work to just bring in "plotType", and relocate before 'nlcdClass'
+  #
+  #
+  # #   Remove plots that do not meet 'priority' thresholds if 'plotPriority' supplied
+  #    hbp_plot <- hbp_plot %>%
+  #     dplyr::filter(.data$specificModuleSamplingPriority <= plotPriority)
 
-  #   Filter by plotType
-  if(plotType == "distributed") {
+  # #   Reorder columns and keep latest year
+  # hbp_plot <- hbp_plot %>%
+  #   dplyr::relocate("herbPeakMassTotal_gm2",
+  #                   .before = "herbPeakMassTotal_Mgha")
 
-    hbp_plot <- hbp_plot %>%
-      dplyr::filter(.data$plotType == "distributed")
-  }
-
- if(plotType == "tower") {
-
-    hbp_plot <- hbp_plot %>%
-      dplyr::filter(.data$plotType == "tower")
-  }
-
-  #   Remove plots that do not meet 'priority' thresholds if 'plotPriority' supplied
-     hbp_plot <- hbp_plot %>%
-      dplyr::filter(.data$specificModuleSamplingPriority <= plotPriority)
-
-  #   Reorder columns and keep latest year
-  hbp_plot <- hbp_plot %>%
-    dplyr::relocate("herbPeakMassTotal_gm2",
-                    .before = "herbPeakMassTotal_Mgha")
-
-  hbp_plot <- hbp_plot %>%
-    dplyr::relocate(dplyr::any_of(c("plotType", "specificModuleSamplingPriority")),
-                    .after = "nlcdClass")
+  # hbp_plot <- hbp_plot %>%
+  #   dplyr::relocate(dplyr::any_of(c("plotType", "specificModuleSamplingPriority")),
+  #                   .after = "nlcdClass")
 
   hbp_plot$year <- as.numeric(hbp_plot$year)
-  hbp_plot <- hbp_plot[order(hbp_plot$year), ]
+  hbp_plot <- hbp_plot[order(hbp_plot$year), ] #--> test and make sure this doesn't filter out any years
 
 
 
