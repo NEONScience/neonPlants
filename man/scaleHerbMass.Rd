@@ -8,7 +8,7 @@ scaleHerbMass(
   inputDataList,
   inputBout = NA,
   inputMass = NA,
-  plotSubset = "towerAll"
+  plotSubset = "tower"
 )
 }
 \arguments{
@@ -20,25 +20,25 @@ scaleHerbMass(
 \item{inputMass}{The 'hbp_massdata' table for the site x month combination(s) of interest
 (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 
-\item{plotSubset}{The options are "all" (all tower and distributed plots), the default of "towerAll" (all plots in the tower airshed but no distributed plots), and "distributed" (all distributed plots, which are sampled in 5-yr bouts and are spatially representative of the NLCD classes at at site). \link{character}}
+\item{plotSubset}{The options are "all" (all tower and distributed plots), the default of "tower" (all plots in the tower airshed but no distributed plots), and "distributed" (all distributed plots, which are sampled on a 5-year interval and are spatially representative of the NLCD classes at a site). \link{character}}
 }
 \value{
 A list that includes biomass summary data at multiple scales. Output tables include:
 \itemize{
-\item hbp_agb - Summarizes above-ground herbaceous biomass for each record ("g/m2").
+\item hbp_agb - Summarizes above-ground herbaceous biomass for each sampleID in the input data ("g/m2").
 \item hbp_plot - Summarizes above-ground herbaceous biomass for each plot by year combination (both "g/m2" and "Mg/ha").
 \item hbp_site - Summarizes above-ground herbaceous biomass for each site by year combination (both "g/m2" and "Mg/ha").
 }
 }
 \description{
-Join NEON Herbaceous Clip Harvest data tables (DP1.10023.001) to calculate herbaceous biomass by functional group per unit area as well as total herbaceous biomass per unit area. Biomass outputs can be used in the neonPlants estimateMass() function, and the estimateHerbProd() and estimateProd() productivity functions.
+Join NEON Herbaceous Clip Harvest data tables (DP1.10023.001) to calculate herbaceous biomass by functional group per unit area as well as total herbaceous biomass per unit area. Biomass outputs can be used in the neonPlants estimateMass() function, and the estimateHerbProd() productivity function.
 
 Data inputs are "Herbaceous clip harvest" data (DP1.10023.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input tables with an equivalent structure and representing the same site x month combinations.
 }
 \details{
-Input data can be filtered by site, date, plot type, and plot priority. Herbaceous biomass are scaled to an area basis at the hierarchical levels of sampling cell, plot, and site. Input data may be provided either as a list or as individual tables. However, if both list and table inputs are provided at the same time the function will error out. For all output data, columns with the same name as input data have identical units and definitions; where needed, new columns contain new units information.
+Input data can be filtered by site, date, and plot subset. Herbaceous biomass data are scaled to an area basis at the hierarchical levels of sampling cell, plot, and site. Input data may be provided either as a list or as individual tables. However, if both list and table inputs are provided at the same time the function will error out. For all output data, columns with the same name as input data have identical units and definitions; where needed, new columns contain new units information.
 
-NEON weighs a minimum of 5\% of samples a second time so that data users can estimate the uncertainty associated with different technicians weighing dried herbaceous biomass; QA samples of this nature are identified via qaDryMass == "Y". The function calculates the mean when QA masses exist and any 'remarks' are concatenated. Samples with Sampling Impractical values other than "OK" are removed prior to generating output data.
+NEON weighs a minimum of 5\% of samples a second time so that data users can estimate the uncertainty associated with different technicians weighing dried herbaceous biomass; QA samples of this nature are identified via qaDryMass == "Y". The function calculates the mean when QA masses exist. Samples with Sampling Impractical values other than "OK" are removed prior to generating output data.
 }
 \examples{
 \dontrun{
@@ -58,4 +58,5 @@ inputMass = NA
 }
 \author{
 Samuel M Simkin \email{ssimkin@battelleecology.org} \cr
+Courtney Meier \email{cmeier@BattelleEcology.org} \cr
 }
