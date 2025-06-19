@@ -512,7 +512,7 @@ estimateWoodProd = function(inputDataList,
                                                           vst_ANPP_plot$recruitment_Mghayr)
 
   #   Sum increment plus mortality to get woody ANPP by plotID x year
-  vst_ANPP_plot$woodANPP_Mghayr <- round(vst_ANPP_plot$increment_Mghayr + vst_ANPP_plot$mortality_Mghayr - vst_ANPP_plot$recruitment_Mghayr,
+  vst_ANPP_plot$woodANPP_Mghayr <- round(vst_ANPP_plot$increment_Mghayr + vst_ANPP_plot$mortality_Mghayr + vst_ANPP_plot$recruitment_Mghayr,
                                              digits = 3)
 
   # remove fields not adjusted for prod_interval
