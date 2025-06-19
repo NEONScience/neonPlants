@@ -1,14 +1,16 @@
 # estimateHerbProd function tests
 # Samuel M Simkin (2024-12-15)  ssimkin@battelleecology.org
 
-### Read in test data
-
+### Read in test data ####
 HbpDat <- readRDS(testthat::test_path("testdata", "HbpDat.rds"))
-HbpDat <- HbpDat
+
 
 scaleHerbMassOutputs <- scaleHerbMass(inputDataList = HbpDat)
 estimateHerbProdOutputs <- estimateHerbProd(inputDataList = scaleHerbMassOutputs)
 
+
+
+### Output type tests ####
 ### Test: Function generates expected output type
 testthat::test_that(desc = "Output type", {
   testthat::expect_type(object = estimateHerbProd(inputDataList = scaleHerbMassOutputs),
@@ -25,6 +27,7 @@ testthat::test_that(desc = "Output class", {
 
 
 
+### Output dimension tests ####
 ### Test: Function generates data frame with expected dimensions using test data
 #   Check expected column number of data frame
 
@@ -32,8 +35,6 @@ testthat::test_that(desc = "Output data frame column number", {
   testthat::expect_identical(object = ncol(estimateHerbProdOutputs$herb_ANPP_site),
                              expected = as.integer(8))
 })
-
-
 
 #   Check expected row number of data frame
 
@@ -43,7 +44,8 @@ testthat::test_that(desc = "Output data frame row number", {
 })
 
 
-### Tests: Generate expected errors for inputDataList object ####
+
+### Expected error tests: Generate expected errors for inputDataList object ####
 #   Test that inputDataList argument is a list
 testthat::test_that(desc = "Argument 'inputDataList' is list object", {
   testthat::expect_error(object = estimateHerbProd(inputDataList = scaleHerbMassOutputs$hbp_agb), # test whether function stops if supplied with a dataframe instead of list
@@ -76,6 +78,7 @@ testthat::test_that(desc = "Table 'hbp_agb' missing data", {
 })
 
 
+
 ### Test: Generate expected errors for issues with hbp_plot table
 # Test when input hbp_plot lacks required column
 scaleHerbMassOutputs_mod <- scaleHerbMassOutputs
@@ -84,6 +87,7 @@ testthat::test_that(desc = "Table 'hbp_plot' missing column", {
   testthat::expect_error(object = estimateHerbProd(inputDataList = scaleHerbMassOutputs_mod),
                          regexp = "Required columns missing from 'hbp_plot': herbPeakMassTotal_Mgha")
 })
+
 
 
 ### Test: Generate error if output herb_ANPP_site value not as expected
