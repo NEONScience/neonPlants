@@ -253,10 +253,12 @@ estimateHerbProd = function(inputDataList,
 
     } # end SJER conditional
 
-
+    #   Bind SJER data to other sites
     finalStandingMass <- finalStandingMass %>%
       dplyr::bind_rows(sjerFinalMass) %>%
       dplyr::filter(!is.nan(.data$finalStandingMass_gm2)) %>%
+      dplyr::mutate(finalStandingMass_gm2 = round(.data$finalStandingMass_gm2,
+                                                  digits = 3)) %>%
       dplyr::arrange(.data$domainID,
                      .data$siteID,
                      .data$year,
@@ -268,6 +270,8 @@ estimateHerbProd = function(inputDataList,
     if (nrow(hbp_agb %>% dplyr::filter(.data$exclosure == "Y")) > 0) {
 
       #   Calculate mean exclosure == "Y" and exclosure == "N" mass across plotIDs by eventID
+      #--> Verify whether this needs modifying for correct SJER output --> it does.
+
       exclosure <- hbp_agb_plot %>%
         dplyr::filter(.data$herbGroup == "AllHerbaceousPlants") %>%
         dplyr::group_by(.data$domainID,
@@ -276,9 +280,9 @@ estimateHerbProd = function(inputDataList,
                         .data$peak,
                         .data$herbGroup,
                         .data$eventID,
-                        .data$bout,
                         .data$exclosure) %>%
-        dplyr::summarise(gm2 = mean(stats::na.omit(.data$gm2)),
+        dplyr::summarise(gm2 = round(mean(stats::na.omit(.data$gm2)),
+                                     digits = 3),
                          sampleSize = dplyr::n(),
                          .groups = "drop")
 
@@ -288,59 +292,94 @@ estimateHerbProd = function(inputDataList,
         tidyr::pivot_wider(names_from = "exclosure",
                            values_from = "gm2",
                            names_prefix = "exclosure")
+
       eventConsum$consumption_gm2 <- eventConsum$exclosureY - eventConsum$exclosureN
 
       #   Sum consumption for all events per site and year
-      siteConsum <- eventConsum %>% # sum(eventConsum$consumption) + dplyr::last(eventConsum$exclosureN)
+      #--> This does not work for SJER; also strange consumption is reported as "0" at sites where it is not estimated, should be "NA". Maybe fix by preventing non-grazed sites from getting into 'eventConsum' data frame...
+      siteConsum <- eventConsum %>%
         dplyr::group_by(.data$domainID,
                         .data$siteID,
                         .data$year,
                         .data$herbGroup) %>%
-        dplyr::summarise(consumption_gm2 = sum(stats::na.omit(.data$consumption_gm2)),
+        dplyr::summarise(consumption_gm2 = round(sum(stats::na.omit(.data$consumption_gm2)),
+                                                 digits = 3),
                          bouts = dplyr::n(),
                          .groups = "drop")
 
 
-      herb_ANPP <- merge(finalStandingMass, siteConsum, by = c("domainID","siteID","year","herbGroup"), all.x = TRUE)
+      herb_ANPP <- merge(finalStandingMass,
+                         siteConsum,
+                         by = c("domainID", "siteID", "year", "herbGroup"),
+                         all.x = TRUE)
+
+      #   Assign "0" consumption to "NaN" and "NA" rows
       herb_ANPP$consumption_gm2 <- ifelse(is.nan(herb_ANPP$consumption_gm2), 0, herb_ANPP$consumption_gm2)
+
       herb_ANPP$consumption_gm2 <- ifelse(is.na(herb_ANPP$consumption_gm2), 0, herb_ANPP$consumption_gm2)
 
-      # Add standing mass and consumption to get productivity
+      #   Add standing mass and consumption to get productivity
       herb_ANPP$herbANPP_gm2yr <- herb_ANPP$finalStandingMass_gm2 + herb_ANPP$consumption_gm2
 
     } else {
 
       herb_ANPP <- finalStandingMass %>%
-        dplyr::mutate(consumption_gm2 = 0, bouts = NA, herbANPP_gmn2yr = .data$finalStandingMass_gm2)
+        dplyr::mutate(consumption_gm2 = 0,
+                      bouts = NA,
+                      herbANPP_gmn2yr = .data$finalStandingMass_gm2)
 
     } #   End exclosure conditional
 
 
+    #--> Avoid using 'priority_plots' and use 'plotType' from input data instead
+    # priority_plots <- priority_plots %>% dplyr::select("plotID", "specificModuleSamplingPriority") # load into environment
+    # herb_ANPP <- merge(herb_ANPP, priority_plots, by = "plotID", all.x = TRUE)
 
-  herb_ANPP$year <- as.numeric(herb_ANPP$year)
-  priority_plots <- priority_plots %>% dplyr::select("plotID", "specificModuleSamplingPriority") # load into environment
-  herb_ANPP <- merge(herb_ANPP, priority_plots, by = "plotID", all.x = TRUE)
+    #   Filter plotType in output based on user-supplied 'plotSubset' argument
+    if (plotType == "tower") {
+      herb_ANPP <- herb_ANPP %>% dplyr::filter(.data$plotType == "tower")} # if plotType argument is "tower" then remove distributed plots
 
-  if(plotType == "tower") {herb_ANPP <- herb_ANPP %>% dplyr::filter(.data$plotType == "tower")} # if plotType argument is "tower" then remove distributed plots
-  if(!is.na(plotPriority)) {herb_ANPP <- herb_ANPP %>% dplyr::filter(.data$specificModuleSamplingPriority <= plotPriority)} # remove lower priority plots that aren't required to be sampled every year (default is 5 (the 5 highest priority plots))
-#  herb_ANPP <- herb_ANPP %>% dplyr::filter(!is.na(.data$herbANPP_gm2yr) ) # remove records that are missing productivity
+    #--> plotPriority argument no longer exists
+    #   if(!is.na(plotPriority)) {herb_ANPP <- herb_ANPP %>% dplyr::filter(.data$specificModuleSamplingPriority <= plotPriority)} # remove lower priority plots that aren't required to be sampled every year (default is 5 (the 5 highest priority plots))
+    # #  herb_ANPP <- herb_ANPP %>% dplyr::filter(!is.na(.data$herbANPP_gm2yr) ) # remove records that are missing productivity
 
-  herb_ANPP <- herb_ANPP %>% dplyr::relocate(dplyr::any_of(c("plotType", "specificModuleSamplingPriority")), .after = "nlcdClass")
-  herb_ANPP <- herb_ANPP %>% dplyr::relocate(dplyr::any_of(c("bout", "n_bouts_used_for_consumption")), .after = "herbGroup")
-  herb_ANPP$herbANPP_Mghayr <- round(herb_ANPP$herbANPP_gm2yr * 10000 * 0.000001,4) # convert g/m2 to Mg/ha ;   g/m2 x 10,000 m2/ha x 0.000001 Mg/g = Mg/ha
+    #   Relocate columns in 'herb_ANPP'
+    herb_ANPP <- herb_ANPP %>%
+      dplyr::relocate(dplyr::any_of(c("plotType", "specificModuleSamplingPriority")),
+                      .after = "nlcdClass") %>%
+      dplyr::relocate(dplyr::any_of(c("bout", "n_bouts_used_for_consumption")),
+                      .after = "herbGroup")
 
-  herb_ANPP_site <- herb_ANPP %>% dplyr::filter(.data$herbGroup == "AllHerbaceousPlants") %>% dplyr::group_by(.data$siteID, .data$year, .data$herbGroup) %>% dplyr::summarise(herbPlotNum = dplyr::n(),
-    herbANPPSD_gm2yr = round(stats::sd(.data$herbANPP_gm2yr, na.rm = TRUE),2),
-    herbANPPMean_gm2yr = round(mean(.data$herbANPP_gm2yr, na.rm = TRUE),4),
-    herbANPPSD_Mghayr = round(.data$herbANPPSD_gm2yr * 10000 * 0.000001,2),  # convert g/m2 to Mg/ha ;   g/m2 x 10,000 m2/ha x 0.000001 Mg/g = Mg/ha
-    herbANPPMean_Mghayr = round(.data$herbANPPMean_gm2yr * 10000 * 0.000001,4) )
+    #   Convert ANPP to Mg/ha/y
+    herb_ANPP$herbANPP_Mghayr <- round(herb_ANPP$herbANPP_gm2yr * 10000 * 0.000001,
+                                       digits = 3)
 
-  herb_ANPP <- herb_ANPP %>% dplyr::filter(!.data$siteID %in% grazed_site_list) # remove grazed plots, since exclosures are not close enough to non-exclosures to accomodate a plot-level estimate
+    #   Generate site-level herbaceous ANPP estimates
+    herb_ANPP_site <- herb_ANPP %>%
+      dplyr::filter(.data$herbGroup == "AllHerbaceousPlants") %>%
+      dplyr::group_by(.data$siteID,
+                      .data$year,
+                      .data$herbGroup) %>%
+      dplyr::summarise(herbPlotNum = dplyr::n(),
+                       herbANPPSD_gm2yr = round(stats::sd(.data$herbANPP_gm2yr, na.rm = TRUE),
+                                                digits = 2),
+                       herbANPPMean_gm2yr = round(mean(.data$herbANPP_gm2yr, na.rm = TRUE),
+                                                  digits = 3),
+                       herbANPPSD_Mghayr = round(.data$herbANPPSD_gm2yr * 10000 * 0.000001,
+                                                 digits = 2),
+                       herbANPPMean_Mghayr = round(.data$herbANPPMean_gm2yr * 10000 * 0.000001,
+                                                   digits = 3))
 
-  output.list <- list(
-    herb_ANPP_plot = herb_ANPP,
-    herb_ANPP_site = herb_ANPP_site)
+    #   Remove plots from grazed sites because Science Design does not support plot-level productivity estimate
+    herb_ANPP <- herb_ANPP %>%
+      dplyr::filter(!.data$siteID %in% grazed_site_list)
 
-  return(output.list)
+
+
+    ### Output data
+    output.list <- list(herb_ANPP_plot = herb_ANPP,
+                        herb_ANPP_site = herb_ANPP_site)
+
+    return(output.list)
 }
 
