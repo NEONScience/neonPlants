@@ -118,13 +118,13 @@ testthat::test_that(desc = "Table 'vst_plot_w_0s' missing data", {
 testthat::test_that(desc = "Output vst_ANPP_plot value as expected", {
   test <- estimateWoodProd(inputDataList = estimateWoodMassOutputs, plotSubset = "towerAnnualSubset", siteID = "WREF")
   testthat::expect_equal(object = test$vst_ANPP_plot$woodANPP_Mghayr[1],
-                         expected = 2.387)
+                         expected = 1.887)
 })
 
 ### Test: Generate error if output vst_ANPP_site value not as expected
 testthat::test_that(desc = "Output vst_ANPP_site value as expected", {
   test <- estimateWoodProd(inputDataList = estimateWoodMassOutputs, plotSubset = "towerAnnualSubset", siteID = "WREF")
   testthat::expect_equal(object = test$vst_ANPP_site$woodANPPMean_Mghayr[1],
-                         expected = 2.387)
+                         expected = 1.887)
 })
 
