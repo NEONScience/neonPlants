@@ -353,7 +353,7 @@ scaleHerbMass = function(inputDataList,
 
 
   #   Load 'priority_plots' data frame into environment from 'data' folder and merge with plot-level data
-  priority_plots <- priority_plots
+  #utils::data("priority_plots", envir = environment())
 
   hbp_plot <- dplyr::left_join(hbp_plot,
                                priority_plots %>%
