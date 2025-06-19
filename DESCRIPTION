@@ -48,3 +48,4 @@ Imports:
     rlang,
     stringr,
     tidyr
+LazyData: true
