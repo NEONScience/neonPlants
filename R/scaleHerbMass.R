@@ -145,14 +145,11 @@ scaleHerbMass = function(inputDataList,
     stop("The only valid plotSubset options are 'all', 'tower', or 'distributed'.")
   }
 
-  # #   Assign plotType from user-supplied plotSubset
-  # plotType <- dplyr::case_when(plotSubset == "tower" ~ "tower",
-  #                              plotSubset == "all" ~ "all",
-  #                              TRUE ~ "distributed")
 
 
-
-  ###  Generate final columns needed in 'inputBout' data frame
+  ### Aggregate the herbaceous data ####
+  
+  ##  Prepare 'inputBout' data frame
   #   Reduce 'hbp_perbout' columns to subset needed for join
   inputBout <- inputBout %>%
     dplyr::select("namedLocation",
@@ -177,9 +174,7 @@ scaleHerbMass = function(inputDataList,
                              .before = "eventID")
 
 
-
-  ### Aggregate the herbaceous data ####
-
+  ##  Prepare 'inputMass' dataframe
   #   Assign 'unknown' to missing herbGroup
   inputMass$herbGroup <- ifelse(is.na(inputMass$herbGroup),
                                 "Unknown",
@@ -195,13 +190,14 @@ scaleHerbMass = function(inputDataList,
                      .groups = "drop")
 
 
-
-  #   Join tables and calculate mass per area
+  ##  Join tables and calculate mass per area
   hbp <- dplyr::right_join(inputBout,
                            inputMass,
                            by = "sampleID") %>%
     dplyr::mutate(dryMass_gm2 = .data$dryMass / .data$clipArea)
 
+
+  ##  Additional data organizing and cleaning
   #   Categorize mass as "peak" biomass or "offPeak"
   hbp$peak <- ifelse(hbp$herbGroup == "All herbaceous plants",
                      "offPeak",
@@ -323,7 +319,8 @@ scaleHerbMass = function(inputDataList,
                     .data$siteID,
                     .data$plotID,
                     .data$year,
-                    .data$nlcdClass) %>%
+                    .data$nlcdClass,
+                    .data$plotType) %>%
 
     #   Calculate average per plot if there are multiple subplots
     dplyr::summarise(
@@ -352,47 +349,15 @@ scaleHerbMass = function(inputDataList,
 
 
 
-  #   Load 'priority_plots' data frame into environment from 'data' folder and merge with plot-level data
-  priority_plots <- priority_plots
-
-  hbp_plot <- dplyr::left_join(hbp_plot,
-                               priority_plots %>%
-                                 dplyr::select("plotID",
-                                               "plotType"),
-                               by = "plotID") %>%
-    dplyr::relocate("plotType",
-                    .before = "nlcdClass")
-
-  # hbp_plot <- merge(hbp_plot,
-  #                   priority_plots,
-  #                   by = c("plotID"),
-  #                   all.x = TRUE) #--> re-work to just bring in "plotType", and relocate before 'nlcdClass'
-  #
-  #
-  # #   Remove plots that do not meet 'priority' thresholds if 'plotPriority' supplied
-  #    hbp_plot <- hbp_plot %>%
-  #     dplyr::filter(.data$specificModuleSamplingPriority <= plotPriority)
-
-  # #   Reorder columns and keep latest year
-  # hbp_plot <- hbp_plot %>%
-  #   dplyr::relocate("herbPeakMassTotal_gm2",
-  #                   .before = "herbPeakMassTotal_Mgha")
-
-  # hbp_plot <- hbp_plot %>%
-  #   dplyr::relocate(dplyr::any_of(c("plotType", "specificModuleSamplingPriority")),
-  #                   .after = "nlcdClass")
-
-  # hbp_plot$year <- as.numeric(hbp_plot$year)
-  # hbp_plot <- hbp_plot[order(hbp_plot$year), ] #--> test and make sure this doesn't filter out any years
-
-
-
   ### Calculate site-level peak biomass by year ####
   hbp_site <- hbp_plot %>%
     dplyr::group_by(.data$domainID,
                     .data$siteID,
                     .data$year) %>%
     dplyr::summarise(herbPlotNum = length(stats::na.omit(.data$herbPeakMassTotal_gm2)),
+                     herbPlotType = dplyr::case_when(dplyr::n_distinct(plotType, na.rm = TRUE) == 1 ~
+                                                       paste(unique(plotType), collapse = ", "),
+                                                     TRUE ~ paste(plotType, collapse = ", ")),
                      herbPeakMassMean_gm2 = round(mean(.data$herbPeakMassTotal_gm2, na.rm = TRUE),
                                                   digits = 3),
                      herbPeakMassSD_gm2 = round(stats::sd(.data$herbPeakMassTotal_gm2, na.rm = TRUE),
@@ -405,7 +370,8 @@ scaleHerbMass = function(inputDataList,
 
 
 
-  ### Bundle output as list and return
+  ### Return results: Bundle output as list and return ####
+
   output.list <- list(hbp_agb = hbp_standing_biomass_in_clip_cells,
                       hbp_plot = hbp_plot,
                       hbp_site = hbp_site)

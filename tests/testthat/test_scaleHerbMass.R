@@ -65,7 +65,7 @@ testthat::test_that(desc = "Output data frame column number 'hbp_plot'", {
 testthat::test_that(desc = "Output data frame column number 'hbp_site'", {
 
   testthat::expect_identical(object = ncol(scaleHerbMassOutputs$hbp_site),
-                             expected = as.integer(8))
+                             expected = as.integer(9))
 })
 
 #   Check expected row number of per sampling cell data frame output
