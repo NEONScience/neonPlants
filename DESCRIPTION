@@ -45,7 +45,6 @@ Imports:
     lifecycle,
     lubridate,
     magrittr,
-    purrr,
     rlang,
     stringr,
     tidyr
