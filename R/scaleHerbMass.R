@@ -148,6 +148,7 @@ scaleHerbMass = function(inputDataList,
 
 
   ### Aggregate the herbaceous data ####
+  
   ##  Prepare 'inputBout' data frame
   #   Reduce 'hbp_perbout' columns to subset needed for join
   inputBout <- inputBout %>%
@@ -370,6 +371,7 @@ scaleHerbMass = function(inputDataList,
 
 
   ### Return results: Bundle output as list and return ####
+
   output.list <- list(hbp_agb = hbp_standing_biomass_in_clip_cells,
                       hbp_plot = hbp_plot,
                       hbp_site = hbp_site)
