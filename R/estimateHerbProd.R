@@ -266,14 +266,13 @@ estimateHerbProd = function(inputDataList,
 
 
 
-    ### Grazed sites: Process exclosure == Y data ####
+    ### Grazed sites: Estimate consumption to add to finalStandingMass ####
     if (nrow(hbp_agb %>% dplyr::filter(.data$exclosure == "Y")) > 0) {
 
       #   Calculate mean exclosure == "Y" and exclosure == "N" mass across plotIDs by eventID
-      #--> Verify whether this needs modifying for correct SJER output --> it does.
-
       exclosure <- hbp_agb_plot %>%
-        dplyr::filter(.data$herbGroup == "AllHerbaceousPlants") %>%
+        dplyr::filter(.data$herbGroup == "AllHerbaceousPlants",
+                      .data$siteID %in% grazed_site_list) %>%
         dplyr::group_by(.data$domainID,
                         .data$siteID,
                         .data$year,
@@ -295,8 +294,36 @@ estimateHerbProd = function(inputDataList,
 
       eventConsum$consumption_gm2 <- eventConsum$exclosureY - eventConsum$exclosureN
 
+
+      ##  For SJER: Assign sampling eventIDs to 'year' using 15th July cut-off
+      if ("SJER" %in% eventConsum$siteID) {
+
+        #   Determine startDate, endDate for each eventID and assign corrected growing season 'year'
+        sjerEvents <- hbp_agb_plot %>%
+          dplyr::filter(.data$siteID == "SJER") %>%
+          dplyr::group_by(.data$eventID,
+                          .data$year) %>%
+          dplyr::summarise(startDate = min(.data$collectDate),
+                           endDate = max(.data$collectDate),
+                           .groups = "drop") %>%
+          dplyr::mutate(correctedYear = dplyr::case_when(.data$endDate < as.Date(glue::glue("{.data$year}-07-15")) ~
+                                                           (.data$year - 1),
+                                                         TRUE ~ .data$year))
+
+        #   Join with eventConsum then assign 'correctedYear' for SJER eventIDs
+        eventConsum <- dplyr::left_join(eventConsum,
+                                        sjerEvents %>%
+                                          dplyr::select("eventID",
+                                                        "correctedYear"),
+                                        by = "eventID") %>%
+          dplyr::mutate(year = dplyr::case_when(.data$siteID == "SJER" ~ correctedYear,
+                                                TRUE ~ year)) %>%
+          dplyr::select(-"correctedYear")
+
+      } # End SJER conditional
+
       #   Sum consumption for all events per site and year
-      #--> This does not work for SJER; also strange consumption is reported as "0" at sites where it is not estimated, should be "NA". Maybe fix by preventing non-grazed sites from getting into 'eventConsum' data frame...
+      #--> Test if this now works for SJER
       siteConsum <- eventConsum %>%
         dplyr::group_by(.data$domainID,
                         .data$siteID,
@@ -313,18 +340,15 @@ estimateHerbProd = function(inputDataList,
                          by = c("domainID", "siteID", "year", "herbGroup"),
                          all.x = TRUE)
 
-      #   Assign "0" consumption to "NaN" and "NA" rows
-      herb_ANPP$consumption_gm2 <- ifelse(is.nan(herb_ANPP$consumption_gm2), 0, herb_ANPP$consumption_gm2)
-
-      herb_ANPP$consumption_gm2 <- ifelse(is.na(herb_ANPP$consumption_gm2), 0, herb_ANPP$consumption_gm2)
-
       #   Add standing mass and consumption to get productivity
-      herb_ANPP$herbANPP_gm2yr <- herb_ANPP$finalStandingMass_gm2 + herb_ANPP$consumption_gm2
+      herb_ANPP <- herb_ANPP %>%
+        dplyr::mutate(herbANPP_gm2yr = rowSums(dplyr::across(c("finalStandingMass_gm2", "consumption_gm2")),
+                                               na.rm = TRUE))
 
     } else {
 
       herb_ANPP <- finalStandingMass %>%
-        dplyr::mutate(consumption_gm2 = 0,
+        dplyr::mutate(consumption_gm2 = NA,
                       bouts = NA,
                       herbANPP_gmn2yr = .data$finalStandingMass_gm2)
 
