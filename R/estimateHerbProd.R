@@ -182,7 +182,8 @@ estimateHerbProd = function(inputDataList,
 
     ##  Obtain final standing mass for sites with no grazing management; also bring in Distributed plots at grazed sites
     standardFinalMass <- hbp_agb_plot %>%
-      dplyr::filter(!.data$siteID %in% grazed_sites | (siteID %in% grazed_sites & plotType == "distributed")) %>%
+      dplyr::filter(!.data$siteID %in% grazed_sites | (.data$siteID %in% grazed_sites &
+                                                         .data$plotType == "distributed")) %>%
       dplyr::group_by(.data$domainID,
                       .data$siteID,
                       .data$plotID,
