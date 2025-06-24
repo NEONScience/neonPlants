@@ -5,23 +5,37 @@
 HbpDat <- readRDS(testthat::test_path("testdata", "HbpDat.rds"))
 
 
-scaleHerbMassOutputs <- scaleHerbMass(inputDataList = HbpDat)
-estimateHerbProdOutputs <- estimateHerbProd(inputDataList = scaleHerbMassOutputs)
+
+### Generate estimateHerbProd outputs ####
+estimateHerbProdOutputs <- estimateHerbProd(inputDataList = HbpDat)
 
 
 
 ### Output type tests ####
 ### Test: Function generates expected output type
 testthat::test_that(desc = "Output type", {
-  testthat::expect_type(object = estimateHerbProd(inputDataList = scaleHerbMassOutputs),
+  testthat::expect_type(object = estimateHerbProd(inputDataList = HbpDat),
                         type = "list")
 })
 
 
-### Test: Function generates expected output class
 
-testthat::test_that(desc = "Output class", {
+### Test: Function generates expected output class
+#   Check 'herb_ANPP_site' output table is a data frame
+testthat::test_that(desc = "Output class 'herb_ANPP_site'", {
   testthat::expect_s3_class(object = estimateHerbProdOutputs$herb_ANPP_site,
+                            class = "data.frame")
+})
+
+#   Check 'herb_ANPP_plot' output table is a data frame
+testthat::test_that(desc = "Output class 'herb_ANPP_plot'", {
+  testthat::expect_s3_class(object = estimateHerbProdOutputs$herb_ANPP_plot,
+                            class = "data.frame")
+})
+
+#   Check that 'herb_ANPP_plot_herbGroup' output table is a data frame
+testthat::test_that(desc = "Output class 'herb_ANPP_plot_herbgroup'", {
+  testthat::expect_s3_class(object = estimateHerbProdOutputs$herb_ANPP_plot_herbgroup,
                             class = "data.frame")
 })
 
@@ -29,71 +43,78 @@ testthat::test_that(desc = "Output class", {
 
 ### Output dimension tests ####
 ### Test: Function generates data frame with expected dimensions using test data
-#   Check expected column number of data frame
-
-testthat::test_that(desc = "Output data frame column number", {
+#   Check expected column number of 'herb_ANPP_site' data frame
+testthat::test_that(desc = "Output 'herb_ANPP_site' column number", {
   testthat::expect_identical(object = ncol(estimateHerbProdOutputs$herb_ANPP_site),
-                             expected = as.integer(8))
+                             expected = as.integer(15))
 })
 
-#   Check expected row number of data frame
-
-testthat::test_that(desc = "Output data frame row number", {
+#   Check expected row number of 'herb_ANPP_site' data frame
+testthat::test_that(desc = "Output 'herb_ANPP_site' row number", {
   testthat::expect_identical(object = nrow(estimateHerbProdOutputs$herb_ANPP_site),
-                             expected = as.integer(4))
+                             expected = as.integer(12))
+})
+
+#   Check expected column number of 'herb_ANPP_plot' data frame
+testthat::test_that(desc = "Output 'herb_ANPP_plot' column number", {
+  testthat::expect_identical(object = ncol(estimateHerbProdOutputs$herb_ANPP_plot),
+                             expected = as.integer(10))
+})
+
+#   Check expected row number of 'herb_ANPP_plot' data frame
+testthat::test_that(desc = "Output 'herb_ANPP_plot' row number", {
+  testthat::expect_identical(object = nrow(estimateHerbProdOutputs$herb_ANPP_plot),
+                             expected = as.integer(10))
+})
+
+#   Check expected column number of 'herb_ANPP_plot_groups' data frame
+testthat::test_that(desc = "Output 'herb_ANPP_plot_herbgroup' column number", {
+  testthat::expect_identical(object = ncol(estimateHerbProdOutputs$herb_ANPP_plot_herbgroup),
+                             expected = as.integer(10))
+})
+
+#   Check expected row number of 'herb_ANPP_plot' data frame
+testthat::test_that(desc = "Output 'herb_ANPP_plot_herbgroup' row number", {
+  testthat::expect_identical(object = nrow(estimateHerbProdOutputs$herb_ANPP_plot_herbgroup),
+                             expected = as.integer(50))
 })
 
 
 
-### Expected error tests: Generate expected errors for inputDataList object ####
-#   Test that inputDataList argument is a list
+### Output value tests ####
+#   Check output 'herb_ANPP_site' value is as expected
+testthat::test_that(desc = "Output 'herb_ANPP_site' table value as expected", {
+  test <- estimateHerbProd(inputDataList = HbpDat)
+  testthat::expect_equal(object = test$herb_ANPP_site$herbANPP_Mghayr[1],
+                         expected = 0.72)
+})
+
+#   Check output 'herb_ANPP_plot' value is as expected
+testthat::test_that(desc = "Output 'herb_ANPP_site' table value as expected", {
+  test <- estimateHerbProd(inputDataList = HbpDat)
+  testthat::expect_equal(object = test$herb_ANPP_plot$herbANPP_gm2yr[1],
+                         expected = 72.38)
+})
+
+#   Check output 'herb_ANPP_plot_herbgroup' value is as expected
+testthat::test_that(desc = "Output 'herb_ANPP_site' table value as expected", {
+  test <- estimateHerbProd(inputDataList = HbpDat)
+  testthat::expect_equal(object = test$herb_ANPP_plot_herbgroup$herbANPP_gm2yr[1],
+                         expected = 1.15)
+})
+
+
+
+### Expected error tests: Generate expected errors for input arguments ####
+#   Check that error is produced when inputDataList argument is not a list
 testthat::test_that(desc = "Argument 'inputDataList' is list object", {
-  testthat::expect_error(object = estimateHerbProd(inputDataList = scaleHerbMassOutputs$hbp_agb), # test whether function stops if supplied with a dataframe instead of list
+  testthat::expect_error(object = estimateHerbProd(inputDataList = HbpDat$hbp_perbout),
                          regexp = "The inputDataList argument is expected to be a list")
 })
 
-#   Test that inputDataList object contains required tables (expect 3 tables: "hbp_agb", "hbp_plot", "herb_ANPP_site")
-testthat::test_that(desc = "Required tables missing from 'inputDataList' list", {
-  testthat::expect_error(object = estimateHerbProd(inputDataList = scaleHerbMassOutputs[1:2]),
-                         regexp = "Required tables missing from 'inputDataList' list")
+#   Check that 'plotSubset' error is produced when expected
+testthat::test_that(desc = "Argument 'plotSubset' is valid", {
+  testthat::expect_error(object = estimateHerbProd(inputDataList = HbpDat,
+                                                   plotSubset = "fish"),
+                         regexp = "The only valid plotSubset options are 'all', 'tower', 'distributed'")
 })
-
-
-
-### Test: Generate expected errors for issues with hbp_agb table
-# Test when input hbp_agb lacks required column
-scaleHerbMassOutputs_mod <- scaleHerbMassOutputs
-scaleHerbMassOutputs_mod$hbp_agb <- scaleHerbMassOutputs_mod$hbp_agb %>% dplyr::select(-AllHerbaceousPlants_gm2)
-testthat::test_that(desc = "Table 'hbp_agb' missing column", {
-  testthat::expect_error(object = estimateHerbProd(inputDataList = scaleHerbMassOutputs_mod),
-                         regexp = "Required columns missing from 'hbp_agb': AllHerbaceousPlants_gm2")
-})
-
-#   Test when hbp_agb has no data
-scaleHerbMassOutputs_mod <- scaleHerbMassOutputs
-scaleHerbMassOutputs_mod$hbp_agb <- scaleHerbMassOutputs_mod$hbp_agb %>% dplyr::filter(year == "notRealyear")
-testthat::test_that(desc = "Table 'hbp_agb' missing data", {
-  testthat::expect_error(object = estimateHerbProd(inputDataList = scaleHerbMassOutputs_mod),
-                         regexp = "Table 'hbp_agb' has no data.")
-})
-
-
-
-### Test: Generate expected errors for issues with hbp_plot table
-# Test when input hbp_plot lacks required column
-scaleHerbMassOutputs_mod <- scaleHerbMassOutputs
-scaleHerbMassOutputs_mod$hbp_plot <- scaleHerbMassOutputs_mod$hbp_plot %>% dplyr::select(-herbPeakMassTotal_Mgha)
-testthat::test_that(desc = "Table 'hbp_plot' missing column", {
-  testthat::expect_error(object = estimateHerbProd(inputDataList = scaleHerbMassOutputs_mod),
-                         regexp = "Required columns missing from 'hbp_plot': herbPeakMassTotal_Mgha")
-})
-
-
-
-### Test: Generate error if output herb_ANPP_site value not as expected
-testthat::test_that(desc = "Output herb_ANPP_site value as expected", {
-  test <- estimateHerbProd(inputDataList = scaleHerbMassOutputs)
-  testthat::expect_equal(object = test$herb_ANPP_site$herbANPPMean_Mghayr[4],
-                         expected = 0.7182)
-})
-
