@@ -72,7 +72,6 @@ estimateHerbProd = function(inputDataList,
   #   Unlist outputs
   hbp_agb <- scaleHerbMassOutputs$hbp_agb
   hbp_plot <- scaleHerbMassOutputs$hbp_plot
-  hbp_site <- scaleHerbMassOutputs$hbp_site
 
 
 
@@ -125,13 +124,27 @@ estimateHerbProd = function(inputDataList,
                            "AnnualAndPerennialForbs_gm2",
                            "NFixingPlants_gm2",
                            "WarmSeasonGraminoids_gm2",
-                           "WoodyStemmedPlants_gm2")) %>%
+                           "WoodyStemmedPlants_gm2",
+                           "Corn_gm2",
+                           "Barley_gm2",
+                           "OrchardGrass_gm2",
+                           "Soybean_gm2",
+                           "Sorghum_gm2",
+                           "Wheat_gm2",
+                           "Millet_gm2")) %>%
       tidyr::pivot_longer(cols = c("AllHerbaceousPlants",
                                    "CoolSeasonGraminoids",
                                    "WoodyStemmedPlants",
                                    "WarmSeasonGraminoids",
                                    "NFixingPlants",
-                                   "AnnualAndPerennialForbs"),
+                                   "AnnualAndPerennialForbs",
+                                   "Corn",
+                                   "Barley",
+                                   "OrchardGrass",
+                                   "Soybean",
+                                   "Sorghum",
+                                   "Wheat",
+                                   "Millet"),
                           names_to = "herbGroup",
                           values_to = "agb_gm2")
 
@@ -181,6 +194,7 @@ estimateHerbProd = function(inputDataList,
     #-->  This is productivity for sites/plots with no grazing exclosures.
 
     ##  Obtain final standing mass for sites with no grazing management; also bring in Distributed plots at grazed sites
+    #--> problem: logic leaves out Tower plots at grazed sites that never have exclosures because portion of plots never have grazers. Try group_by 'year' and 'plotID' and filter to look for plots that never have exclosure == Y?
     standardFinalMass <- hbp_agb_plot %>%
       dplyr::filter(!.data$siteID %in% grazed_sites | (.data$siteID %in% grazed_sites &
                                                          .data$plotType == "distributed")) %>%
@@ -230,10 +244,12 @@ estimateHerbProd = function(inputDataList,
 
       grazedNoSJER <- setdiff(grazed_sites, "SJER")
 
+      #--> problem: when not all Tower plots are grazed, grouping by plotID and then taking last eventID means plots clipped at peak biomass with no exclosure (shouldn't happen but does) are included in 'grazedFinalMass'; need to fix --> use arrange() and slice_tail() to identify latest eventID per year by grazed site?
       grazedFinalMass <- hbp_agb_plot %>%
         dplyr::filter(.data$exclosure == "N",
                       .data$siteID %in% grazedNoSJER,
-                      .data$plotType == "tower") %>%
+                      .data$plotType == "tower",
+                      .data$herbGroup == "AllHerbaceousPlants") %>%
         dplyr::group_by(.data$domainID,
                         .data$siteID,
                         .data$plotID,
@@ -251,12 +267,14 @@ estimateHerbProd = function(inputDataList,
 
 
     ##  Obtain final standing mass for SJER; assumption is "final" eventID for given growing season is before 15th July
+    #--> potentially same problem as above
     if ("SJER" %in% grazed_sites) {
 
       sjerFinalMass <- hbp_agb_plot %>%
         dplyr::filter(.data$exclosure == "N",
                       .data$siteID == "SJER",
-                      .data$plotType == "tower") %>%
+                      .data$plotType == "tower",
+                      .data$herbGroup == "AllHerbaceousPlants") %>%
         dplyr::group_by(.data$domainID,
                         .data$siteID,
                         .data$plotID,
@@ -313,7 +331,8 @@ estimateHerbProd = function(inputDataList,
       #   Calculate mean exclosure == "Y" and exclosure == "N" mass across plotIDs by eventID
       exclosure <- hbp_agb_plot %>%
         dplyr::filter(.data$herbGroup == "AllHerbaceousPlants",
-                      .data$siteID %in% grazed_sites) %>%
+                      .data$siteID %in% grazed_sites,
+                      .data$plotType == "tower") %>%
         dplyr::group_by(.data$domainID,
                         .data$siteID,
                         .data$year,
@@ -321,14 +340,20 @@ estimateHerbProd = function(inputDataList,
                         .data$herbGroup,
                         .data$eventID,
                         .data$exclosure) %>%
-        dplyr::summarise("agbMean_gm2" = round(mean(stats::na.omit(.data$agb_gm2)),
+        dplyr::summarise("eventPlotCount" = dplyr::n(),
+                         "agbMean_gm2" = round(mean(stats::na.omit(.data$agb_gm2)),
                                                digits = 2),
                          "agbSD_gm2" = round(stats::sd(.data$agb_gm2, na.rm = TRUE),
                                              digits = 2),
-                         .groups = "drop")
+                         .groups = "drop") %>%
+        dplyr::arrange(.data$domainID,
+                       .data$siteID,
+                       .data$year,
+                       .data$eventID)
 
       #   Calculate mean consumption per eventID
       eventConsum <- exclosure %>%
+        dplyr::select(-"eventPlotCount") %>%
         tidyr::pivot_wider(names_from = "exclosure",
                            values_from = c("agbMean_gm2", "agbSD_gm2"),
                            names_prefix = "exclosure") %>%
@@ -366,6 +391,7 @@ estimateHerbProd = function(inputDataList,
 
       ##  Sum consumption for all events per site and year
       siteConsum <- eventConsum %>%
+        dplyr::filter(!is.na(.data$consumpMean_gm2)) %>%
         dplyr::group_by(.data$domainID,
                         .data$siteID,
                         .data$year,
@@ -401,13 +427,17 @@ estimateHerbProd = function(inputDataList,
     herb_ANPP_site <- dplyr::bind_rows(herb_ANPP_site,
                                        herb_ANPP_grazed)
 
-    #   Add columns with "Mg/ha/y" units for ANPP and SD
+    #   Add columns with "Mg/ha/y" units for ANPP and SD and arrange
     herb_ANPP_site <- herb_ANPP_site %>%
       dplyr::mutate(herbANPP_Mghayr = round(.data$herbANPP_gm2yr * 10000 * 0.000001,
                                             digits = 2),
                     herbANPPSD_Mghayr = round(.data$herbANPPSD_gm2yr * 10000 * 0.000001,
                                               digits = 2),
-                    .after = "herbPlotCount")
+                    .after = "herbPlotCount") %>%
+      dplyr::arrange(.data$domainID,
+                     .data$siteID,
+                     .data$year,
+                     .data$plotType)
 
 
 
