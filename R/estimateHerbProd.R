@@ -66,12 +66,12 @@ estimateHerbProd = function(inputDataList,
 
 
   ### Generate scaleHerbMass outputs
-  scaleHerbMassOutputs <- neonPlants::scaleHerbMass(inputDataList = inputDataList,
-                                                    plotSubset = plotSubset)
+  scaleHerbMassOutput <- neonPlants::scaleHerbMass(inputDataList = inputDataList,
+                                                   plotSubset = plotSubset)
 
   #   Unlist outputs
-  hbp_agb <- scaleHerbMassOutputs$hbp_agb
-  hbp_plot <- scaleHerbMassOutputs$hbp_plot
+  hbp_agb <- scaleHerbMassOutput$hbp_agb
+  hbp_plot <- scaleHerbMassOutput$hbp_plot
 
 
 
@@ -175,10 +175,21 @@ estimateHerbProd = function(inputDataList,
                                              format = "%Y-%m-%d"),
                        agb_gm2 = dplyr::case_when(all(is.na(.data$agb_gm2)) ~ NA,
                                                   TRUE ~ mean(stats::na.omit(.data$agb_gm2))),
-                       .groups = "drop")
+                       .groups = "drop") %>%
+
+      #   SJER eventID correct: Update 'year' to correctly group eventIDs in Mediterranean growing season
+      dplyr::mutate(year = dplyr::case_when(.data$siteID == "SJER" &
+                                              .data$collectDate < as.Date(glue::glue("{.data$year}-07-15")) ~
+                                              (.data$year - 1),
+                                            TRUE ~ .data$year)) %>%
+
+      #   Create 'plot-year' variable for subsequent ID of Tower plots likely managed for grazing
+      dplyr::mutate(plotYear = paste(.data$plotID, .data$year, sep = "-"))
 
     #   Order by eventID; needed for later use of dplyr::last()
     hbp_agb_plot <-  hbp_agb_plot[order(hbp_agb_plot$eventID), ]
+
+
 
     #   Identify grazed sites using exclosure == Y
     grazed_sites <- hbp_agb %>%
@@ -186,18 +197,61 @@ estimateHerbProd = function(inputDataList,
                     "exclosure") %>%
       dplyr::filter(.data$exclosure == "Y")
 
-    grazed_sites <- unique(as.character(grazed_sites$siteID))
+    grazed_sites <- sort(unique(as.character(grazed_sites$siteID)))
 
 
 
     ### Standard sites: Determine latest standing ambient biomass within a 'year' for each herbGroup ####
     #-->  This is productivity for sites/plots with no grazing exclosures.
 
-    ##  Obtain final standing mass for sites with no grazing management; also bring in Distributed plots at grazed sites
+    ### Obtain final standing mass for sites with no grazing management; also bring in Distributed plots at grazed sites and Tower plots at grazed sites that are not actively managed for grazing (i.e., only a portion of the Tower plots have cows and exclosures).
+
+    ##  For each plot-year combination, determine whether an exclosure was deployed in that year; if "Y", the plot-year is assumed to be under grazing management. Plots managed for grazing in a given year do not contribute to "standard" site-level productivity estimates and instead are put through the "consumption" workflow.
+
+    #   Create list of unique Tower 'plot-year' combinations
+    thePlotYears <- sort(unique(hbp_agb_plot$plotYear[hbp_agb_plot$plotType == "tower"]))
+
+    #   Identify grazed 'plot-year' combinations
+    if (length(thePlotYears) > 0) {
+
+      grazedPlotYears <- c()
+
+      for (i in 1:length(thePlotYears)) {
+
+        tempDF <- plotYears %>%
+          dplyr::filter(plotYear == thePlotYears[i])
+
+        if ("Y" %in% tempDF$exclosure) {grazedPlotYears <- c(grazedPlotYears, thePlotYears[i])}
+
+      }
+
+    } else {
+
+      grazedPlotYears <- c()
+
+    } # End length(plotYears) conditional
+
+    #   Identify latest eventID for each 'site' x 'year' x 'plotType' combination; these are used to calculate ANPP at "standard" sites and are used to determine final standing biomass at grazed sites.
+    latestEvents <- hbp_agb_plot %>%
+      dplyr::distinct(.data$domainID,
+                      .data$siteID,
+                      .data$year,
+                      .data$plotType,
+                      .data$eventID) %>%
+      dplyr::group_by(.data$domainID,
+                      .data$siteID,
+                      .data$year,
+                      .data$plotType) %>%
+      dplyr::arrange(.data$eventID) %>%
+      dplyr::slice_tail()
+
+
+
+
     #--> problem: logic leaves out Tower plots at grazed sites that never have exclosures because portion of plots never have grazers. Try group_by 'year' and 'plotID' and filter to look for plots that never have exclosure == Y?
     standardFinalMass <- hbp_agb_plot %>%
-      dplyr::filter(!.data$siteID %in% grazed_sites | (.data$siteID %in% grazed_sites &
-                                                         .data$plotType == "distributed")) %>%
+      dplyr::filter(!.data$siteID %in% grazed_sites | (.data$siteID %in% grazed_sites & .data$plotType == "distributed") |
+                      (.data$siteID %in% grazed_sites & .data$plotType == "tower" & !.data$plotYear %in% grazedPlotYears)) %>%
       dplyr::group_by(.data$domainID,
                       .data$siteID,
                       .data$plotID,
