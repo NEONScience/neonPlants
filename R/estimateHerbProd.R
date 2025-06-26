@@ -1,9 +1,9 @@
 #' @title Estimate ANPP (Above-ground Net Primary Productivity) contributed by herbaceous vegetation
 #'
 #' @author
-#' Samuel M Simkin \email{ssimkin@battelleecology.org} \cr
 #' Courtney Meier \email{cmeier@BattelleEcology.org} \cr
-
+#' Samuel M Simkin \email{ssimkin@battelleecology.org} \cr
+#'
 #' @description Estimate above-ground herbaceous productivity using NEON Herbaceous Clip Harvest data tables (DP1.10023.001).
 #'
 #' @details Input data should be a list of herbaceous biomass (DP1.10023.001) data frames downloaded via the neonUtilities::loadByProduct() function. The companion scaleHerbMass() function is called internally, and outputs from this function are used to estimate herbaceous productivity.
@@ -180,7 +180,7 @@ estimateHerbProd = function(inputDataList,
                   "agb_gm2") %>%
 
     #   SJER eventID correct: Update 'year' to correctly group eventIDs in Mediterranean growing season
-    dplyr::mutate(collectDate = as.Date(collectDate),
+    dplyr::mutate(collectDate = as.Date(.data$collectDate),
                   year = dplyr::case_when(.data$siteID == "SJER" &
                                             .data$collectDate < as.Date(glue::glue("{.data$year}-07-15")) ~
                                             (.data$year - 1),
@@ -219,7 +219,7 @@ estimateHerbProd = function(inputDataList,
     for (i in 1:length(thePlotYears)) {
 
       tempDF <- hbp_agb_long %>%
-        dplyr::filter(plotYear == thePlotYears[i])
+        dplyr::filter(.data$plotYear == thePlotYears[i])
 
       if ("Y" %in% tempDF$exclosure) {grazedPlotYears <- c(grazedPlotYears, thePlotYears[i])}
 
@@ -406,7 +406,7 @@ estimateHerbProd = function(inputDataList,
                        "consumClipCount" = sum(.data$consumClipCount),
                        "consumption_gm2" = round(sum(.data$consumMean_gm2, na.rm = TRUE),
                                                  digits = 2),
-                       "consumptionSD_gm2" = round(sqrt(sum(consumSD2_N, na.rm = TRUE)),
+                       "consumptionSD_gm2" = round(sqrt(sum(.data$consumSD2_N, na.rm = TRUE)),
                                                    digits = 2),
                        .groups = "drop")
 

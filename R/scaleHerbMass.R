@@ -354,7 +354,7 @@ scaleHerbMass = function(inputDataList,
       .groups = "drop") %>%
 
     #   Remove 'NaN' values introduced when herbGroup is absent from all subplots (usually crops)
-    dplyr::mutate(across("herbPeakMassTotal_gm2":"herbPeakMassWheat_gm2", ~dplyr::na_if(., NaN))) %>%
+    dplyr::mutate(dplyr::across("herbPeakMassTotal_gm2":"herbPeakMassWheat_gm2", ~dplyr::na_if(., NaN))) %>%
 
     #   Calculate "Mg/ha" for total herbaceous peak biomass; g/m2 x 10,000 m2/ha x 0.000001 Mg/g = Mg/ha
     dplyr::mutate(herbPeakMassTotal_Mgha = round(.data$herbPeakMassTotal_gm2 * 10000 * 0.000001,

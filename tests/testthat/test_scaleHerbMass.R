@@ -7,7 +7,7 @@
 HbpDat <- readRDS(testthat::test_path("testdata", "HbpDat.rds"))
 
 
-scaleHerbMassOutputs <- scaleHerbMass(inputDataList = HbpDat)
+scaleHerbMassOutputs <- neonPlants::scaleHerbMass(inputDataList = HbpDat)
 
 
 
@@ -51,14 +51,14 @@ testthat::test_that(desc = "Output class hbp_site", {
 testthat::test_that(desc = "Output data frame column number 'hbp_agb'", {
 
   testthat::expect_identical(object = ncol(scaleHerbMassOutputs$hbp_agb),
-                             expected = as.integer(24))
+                             expected = as.integer(31))
 })
 
 #   Check expected column number of per plot output
 testthat::test_that(desc = "Output data frame column number 'hbp_plot'", {
 
   testthat::expect_identical(object = ncol(scaleHerbMassOutputs$hbp_plot),
-                             expected = as.integer(13))
+                             expected = as.integer(20))
 })
 
 #   Check expected column number of per site output

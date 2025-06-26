@@ -51,6 +51,6 @@ plotSubset = "all")
 
 }
 \author{
-Samuel M Simkin \email{ssimkin@battelleecology.org} \cr
 Courtney Meier \email{cmeier@BattelleEcology.org} \cr
+Samuel M Simkin \email{ssimkin@battelleecology.org} \cr
 }

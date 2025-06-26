@@ -1,5 +1,6 @@
 # estimateHerbProd function tests
 # Samuel M Simkin (2024-12-15)  ssimkin@battelleecology.org
+# Courtney Meier (2025-06-20)   cmeier@BattelleEcology.org
 
 ### Read in test data ####
 HbpDat <- readRDS(testthat::test_path("testdata", "HbpDat.rds"))
@@ -42,41 +43,41 @@ testthat::test_that(desc = "Output class 'herb_ANPP_plot_herbgroup'", {
 
 
 ### Output dimension tests ####
-### Test: Function generates data frame with expected dimensions using test data
+### Test: Function generates data frame with expected dimensions using test data and function defaults (plotSubset = "tower")
 #   Check expected column number of 'herb_ANPP_site' data frame
 testthat::test_that(desc = "Output 'herb_ANPP_site' column number", {
   testthat::expect_identical(object = ncol(estimateHerbProdOutputs$herb_ANPP_site),
-                             expected = as.integer(15))
+                             expected = as.integer(19))
 })
 
 #   Check expected row number of 'herb_ANPP_site' data frame
 testthat::test_that(desc = "Output 'herb_ANPP_site' row number", {
   testthat::expect_identical(object = nrow(estimateHerbProdOutputs$herb_ANPP_site),
-                             expected = as.integer(12))
+                             expected = as.integer(13))
 })
 
 #   Check expected column number of 'herb_ANPP_plot' data frame
 testthat::test_that(desc = "Output 'herb_ANPP_plot' column number", {
   testthat::expect_identical(object = ncol(estimateHerbProdOutputs$herb_ANPP_plot),
-                             expected = as.integer(10))
+                             expected = as.integer(16))
 })
 
 #   Check expected row number of 'herb_ANPP_plot' data frame
 testthat::test_that(desc = "Output 'herb_ANPP_plot' row number", {
   testthat::expect_identical(object = nrow(estimateHerbProdOutputs$herb_ANPP_plot),
-                             expected = as.integer(10))
+                             expected = as.integer(14))
 })
 
 #   Check expected column number of 'herb_ANPP_plot_groups' data frame
 testthat::test_that(desc = "Output 'herb_ANPP_plot_herbgroup' column number", {
   testthat::expect_identical(object = ncol(estimateHerbProdOutputs$herb_ANPP_plot_herbgroup),
-                             expected = as.integer(10))
+                             expected = as.integer(16))
 })
 
 #   Check expected row number of 'herb_ANPP_plot' data frame
 testthat::test_that(desc = "Output 'herb_ANPP_plot_herbgroup' row number", {
   testthat::expect_identical(object = nrow(estimateHerbProdOutputs$herb_ANPP_plot_herbgroup),
-                             expected = as.integer(50))
+                             expected = as.integer(70))
 })
 
 
@@ -90,17 +91,17 @@ testthat::test_that(desc = "Output 'herb_ANPP_site' table value as expected", {
 })
 
 #   Check output 'herb_ANPP_plot' value is as expected
-testthat::test_that(desc = "Output 'herb_ANPP_site' table value as expected", {
+testthat::test_that(desc = "Output 'herb_ANPP_plot' table value as expected", {
   test <- estimateHerbProd(inputDataList = HbpDat)
   testthat::expect_equal(object = test$herb_ANPP_plot$herbANPP_gm2yr[1],
                          expected = 72.38)
 })
 
 #   Check output 'herb_ANPP_plot_herbgroup' value is as expected
-testthat::test_that(desc = "Output 'herb_ANPP_site' table value as expected", {
+testthat::test_that(desc = "Output 'herb_ANPP_plot_herbgroup' table value as expected", {
   test <- estimateHerbProd(inputDataList = HbpDat)
-  testthat::expect_equal(object = test$herb_ANPP_plot_herbgroup$herbANPP_gm2yr[1],
-                         expected = 1.15)
+  testthat::expect_equal(object = test$herb_ANPP_plot_herbgroup$herbANPP_gm2yr[2],
+                         expected = 70.03)
 })
 
 
