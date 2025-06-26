@@ -118,378 +118,364 @@ estimateHerbProd = function(inputDataList,
 
   #   Create long-format table from input 'hbp_agb' data frame; need to begin with sampleID-level data because plot-level output from scaleHerbMass function omits majority of grazed bouts at grazed sites.
   hbp_agb_long <- hbp_agb %>%
-      dplyr::rename_with(~ stringr::str_remove(., "_gm2"),
-                         c("AllHerbaceousPlants_gm2",
-                           "CoolSeasonGraminoids_gm2",
-                           "AnnualAndPerennialForbs_gm2",
-                           "NFixingPlants_gm2",
-                           "WarmSeasonGraminoids_gm2",
-                           "WoodyStemmedPlants_gm2",
-                           "Corn_gm2",
-                           "Barley_gm2",
-                           "OrchardGrass_gm2",
-                           "Soybean_gm2",
-                           "Sorghum_gm2",
-                           "Wheat_gm2",
-                           "Millet_gm2")) %>%
-      tidyr::pivot_longer(cols = c("AllHerbaceousPlants",
-                                   "CoolSeasonGraminoids",
-                                   "WoodyStemmedPlants",
-                                   "WarmSeasonGraminoids",
-                                   "NFixingPlants",
-                                   "AnnualAndPerennialForbs",
-                                   "Corn",
-                                   "Barley",
-                                   "OrchardGrass",
-                                   "Soybean",
-                                   "Sorghum",
-                                   "Wheat",
-                                   "Millet"),
-                          names_to = "herbGroup",
-                          values_to = "agb_gm2")
+    dplyr::rename_with(~ stringr::str_remove(., "_gm2"),
+                       c("AllHerbaceousPlants_gm2",
+                         "CoolSeasonGraminoids_gm2",
+                         "AnnualAndPerennialForbs_gm2",
+                         "NFixingPlants_gm2",
+                         "WarmSeasonGraminoids_gm2",
+                         "WoodyStemmedPlants_gm2",
+                         "Corn_gm2",
+                         "Barley_gm2",
+                         "OrchardGrass_gm2",
+                         "Soybean_gm2",
+                         "Sorghum_gm2",
+                         "Wheat_gm2",
+                         "Millet_gm2")) %>%
+    tidyr::pivot_longer(cols = c("AllHerbaceousPlants",
+                                 "CoolSeasonGraminoids",
+                                 "WoodyStemmedPlants",
+                                 "WarmSeasonGraminoids",
+                                 "NFixingPlants",
+                                 "AnnualAndPerennialForbs",
+                                 "Corn",
+                                 "Barley",
+                                 "OrchardGrass",
+                                 "Soybean",
+                                 "Sorghum",
+                                 "Wheat",
+                                 "Millet"),
+                        names_to = "herbGroup",
+                        values_to = "agb_gm2")
 
-    #   Populate exclosure == "N" if value is NA
-    hbp_agb_long$exclosure <- dplyr::if_else(is.na(hbp_agb_long$exclosure),
-                                             "N", hbp_agb_long$exclosure,
-                                             hbp_agb_long$exclosure)
+  #   Populate exclosure == "N" if value is NA
+  hbp_agb_long$exclosure <- dplyr::if_else(is.na(hbp_agb_long$exclosure),
+                                           "N", hbp_agb_long$exclosure,
+                                           hbp_agb_long$exclosure)
 
-    #   Remove duplicates based on primary keys
-    hbp_agb_long <- hbp_agb_long[!duplicated(paste0(hbp_agb_long$sampleID,
-                                                    hbp_agb_long$eventID,
-                                                    hbp_agb_long$herbGroup),
-                                             fromLast = TRUE), ]
+  #   Remove duplicates based on primary keys
+  hbp_agb_long <- hbp_agb_long[!duplicated(paste0(hbp_agb_long$sampleID,
+                                                  hbp_agb_long$eventID,
+                                                  hbp_agb_long$herbGroup),
+                                           fromLast = TRUE), ]
 
-    #   Calculate mean of subplots within each plot (for large-stature Tower plots); uncertainty ignored at this step
-    hbp_agb_plot <- hbp_agb_long %>%
+
+  ##  Prepare 'hbp_agb_long' data frame for downstream processing
+  #   Remove unneeded columns from 'hbp_agb_long' and keep 'ambient' and 'exclosure' data at native spatial resolution;
+  #   i.e., assume subplots within large-stature Tower plots are independent.
+  hbp_agb_long <- hbp_agb_long %>%
+    dplyr::select("domainID",
+                  "siteID",
+                  "plotID",
+                  "subplotID",
+                  "sampleID",
+                  "nlcdClass",
+                  "plotType",
+                  "year",
+                  "collectDate",
+                  "eventID",
+                  "peak",
+                  "herbGroup",
+                  "exclosure",
+                  "agb_gm2") %>%
+
+    #   SJER eventID correct: Update 'year' to correctly group eventIDs in Mediterranean growing season
+    dplyr::mutate(collectDate = as.Date(collectDate),
+                  year = dplyr::case_when(.data$siteID == "SJER" &
+                                            .data$collectDate < as.Date(glue::glue("{.data$year}-07-15")) ~
+                                            (.data$year - 1),
+                                          TRUE ~ .data$year)) %>%
+
+    #   Create 'plot-year' variable for subsequent ID of Tower plots likely managed for grazing
+    dplyr::mutate(plotYear = paste(.data$plotID, .data$year, sep = "-"),
+                  .before = "plotID")
+
+
+  ##  Identify grazed sites using exclosure == Y
+  grazed_sites <- hbp_agb %>%
+    dplyr::select("siteID",
+                  "exclosure") %>%
+    dplyr::filter(.data$exclosure == "Y")
+
+  grazed_sites <- sort(unique(as.character(grazed_sites$siteID)))
+
+
+
+  ### Standard sites: Determine latest standing ambient biomass within a 'year' for each herbGroup ####
+  #-->  This is productivity for sites/plots with no grazing exclosures.
+
+  ### Obtain final standing mass for sites with no grazing management; also bring in Distributed plots at grazed sites and Tower plots at grazed sites that are not actively managed for grazing (i.e., only a portion of the Tower plots have cows and exclosures).
+
+  ##  For each plot-year combination, determine whether an exclosure was deployed in that year; if "Y", the plot-year is assumed to be under grazing management. Plots managed for grazing in a given year do not contribute to "standard" site-level productivity estimates and instead are put through the "consumption" workflow.
+
+  #   Create list of unique Tower 'plot-year' combinations
+  thePlotYears <- sort(unique(hbp_agb_long$plotYear[hbp_agb_long$plotType == "tower"]))
+
+  #   Identify grazed 'plot-year' combinations
+  if (length(thePlotYears) > 0) {
+
+    grazedPlotYears <- c()
+
+    for (i in 1:length(thePlotYears)) {
+
+      tempDF <- hbp_agb_long %>%
+        dplyr::filter(plotYear == thePlotYears[i])
+
+      if ("Y" %in% tempDF$exclosure) {grazedPlotYears <- c(grazedPlotYears, thePlotYears[i])}
+
+    }
+
+    rm(tempDF, i)
+
+  } else {
+
+    grazedPlotYears <- c()
+
+  } # End length(thePlotYears) conditional
+
+
+
+  ### Standard sites: Calculate site-level productivity and SD by 'year' and 'herbGroup' ####
+
+  #   Filter to "standard" plot data: Sites with no grazing, Distributed plots at grazed sites, Tower plots at grazed sites but that are not grazed. Also remove rows for herbGroups with "NA" mass (mostly crops).
+  standardFinalMass <- hbp_agb_long %>%
+    dplyr::filter(!.data$siteID %in% grazed_sites | (.data$siteID %in% grazed_sites & .data$plotType == "distributed") |
+                    (.data$siteID %in% grazed_sites & .data$plotType == "tower" & !.data$plotYear %in% grazedPlotYears),
+                  !is.na(.data$agb_gm2))
+
+  #   Identify latest eventID for each 'site' x 'year' x 'plotType' combination
+  standardLatestEvents <- standardFinalMass %>%
+    dplyr::distinct(.data$domainID,
+                    .data$siteID,
+                    .data$year,
+                    .data$plotType,
+                    .data$eventID) %>%
+    dplyr::group_by(.data$domainID,
+                    .data$siteID,
+                    .data$year,
+                    .data$plotType) %>%
+    dplyr::arrange(.data$eventID) %>%
+    dplyr::slice_tail()
+
+  #   Further filter to latest "standard" eventID --> should be redundant with filtering above unless Tower plot was accidentally clipped twice and never had an exclosure in it for entire 'plot' x 'year' combination
+  standardFinalMass <- standardFinalMass %>%
+    dplyr::filter(.data$eventID %in% standardLatestEvents$eventID)
+
+  #   Create site-level ANPP estimates for "standard" sites/plots
+  if (nrow(standardFinalMass) > 0) {
+
+    herb_ANPP_site <- standardFinalMass %>%
+      dplyr::filter(.data$herbGroup == "AllHerbaceousPlants") %>%
       dplyr::group_by(.data$domainID,
                       .data$siteID,
-                      .data$plotID,
-                      .data$plotType,
-                      .data$nlcdClass,
                       .data$year,
-                      .data$peak,
-                      .data$herbGroup,
+                      .data$plotType,
                       .data$eventID,
-                      .data$exclosure) %>%
-      dplyr::summarise(collectDate = as.Date(max(.data$collectDate),
-                                             format = "%Y-%m-%d"),
-                       agb_gm2 = dplyr::case_when(all(is.na(.data$agb_gm2)) ~ NA,
-                                                  TRUE ~ mean(stats::na.omit(.data$agb_gm2))),
-                       .groups = "drop") %>%
-
-      #   SJER eventID correct: Update 'year' to correctly group eventIDs in Mediterranean growing season
-      dplyr::mutate(year = dplyr::case_when(.data$siteID == "SJER" &
-                                              .data$collectDate < as.Date(glue::glue("{.data$year}-07-15")) ~
-                                              (.data$year - 1),
-                                            TRUE ~ .data$year)) %>%
-
-      #   Create 'plot-year' variable for subsequent ID of Tower plots likely managed for grazing
-      dplyr::mutate(plotYear = paste(.data$plotID, .data$year, sep = "-"))
-
-    #   Order by eventID; needed for later use of dplyr::last()
-    hbp_agb_plot <-  hbp_agb_plot[order(hbp_agb_plot$eventID), ]
-
-
-
-    #   Identify grazed sites using exclosure == Y
-    grazed_sites <- hbp_agb %>%
-      dplyr::select("siteID",
-                    "exclosure") %>%
-      dplyr::filter(.data$exclosure == "Y")
-
-    grazed_sites <- sort(unique(as.character(grazed_sites$siteID)))
-
-
-
-    ### Standard sites: Determine latest standing ambient biomass within a 'year' for each herbGroup ####
-    #-->  This is productivity for sites/plots with no grazing exclosures.
-
-    ### Obtain final standing mass for sites with no grazing management; also bring in Distributed plots at grazed sites and Tower plots at grazed sites that are not actively managed for grazing (i.e., only a portion of the Tower plots have cows and exclosures).
-
-    ##  For each plot-year combination, determine whether an exclosure was deployed in that year; if "Y", the plot-year is assumed to be under grazing management. Plots managed for grazing in a given year do not contribute to "standard" site-level productivity estimates and instead are put through the "consumption" workflow.
-
-    #   Create list of unique Tower 'plot-year' combinations
-    thePlotYears <- sort(unique(hbp_agb_plot$plotYear[hbp_agb_plot$plotType == "tower"]))
-
-    #   Identify grazed 'plot-year' combinations
-    if (length(thePlotYears) > 0) {
-
-      grazedPlotYears <- c()
-
-      for (i in 1:length(thePlotYears)) {
-
-        tempDF <- hbp_agb_plot %>%
-          dplyr::filter(plotYear == thePlotYears[i])
-
-        if ("Y" %in% tempDF$exclosure) {grazedPlotYears <- c(grazedPlotYears, thePlotYears[i])}
-
-      }
-
-    } else {
-
-      grazedPlotYears <- c()
-
-    } # End length(plotYears) conditional
-
-
-
-    ### Standard sites: Calculate site-level productivity and SD by 'year' and 'herbGroup' ####
-
-    #   Filter to "standard" plot data: Sites with no grazing, Distributed plots at grazed sites, Tower plots at grazed sites but that are not grazed. Also remove rows for herbGroups with "NA" mass (mostly crops).
-    standardFinalMass <- hbp_agb_plot %>%
-      dplyr::filter(!.data$siteID %in% grazed_sites | (.data$siteID %in% grazed_sites & .data$plotType == "distributed") |
-                      (.data$siteID %in% grazed_sites & .data$plotType == "tower" & !.data$plotYear %in% grazedPlotYears),
-                    !is.na(.data$agb_gm2))
-
-    #   Identify latest eventID for each 'site' x 'year' x 'plotType' combination
-    standardLatestEvents <- standardFinalMass %>%
-      dplyr::distinct(.data$domainID,
-                      .data$siteID,
-                      .data$year,
-                      .data$plotType,
-                      .data$eventID) %>%
-      dplyr::group_by(.data$domainID,
-                      .data$siteID,
-                      .data$year,
-                      .data$plotType) %>%
-      dplyr::arrange(.data$eventID) %>%
-      dplyr::slice_tail()
-
-    #   Further filter to latest "standard" eventID --> should be redundant with filtering above unless Tower plot was accidentally clipped twice and never had an exclosure in it for entire 'plot' x 'year' combination
-    standardFinalMass <- standardFinalMass %>%
-      dplyr::filter(.data$eventID %in% standardLatestEvents$eventID)
-
-    #   Create site-level ANPP estimates for "standard" sites/plots
-    if (nrow(standardFinalMass) > 0) {
-
-      herb_ANPP_site <- standardFinalMass %>%
-        dplyr::filter(.data$herbGroup == "AllHerbaceousPlants") %>%
-        dplyr::group_by(.data$domainID,
-                        .data$siteID,
-                        .data$year,
-                        .data$plotType,
-                        .data$eventID,
-                        .data$herbGroup) %>%
-        dplyr::summarise(herbPlotCount = dplyr::n(),
-                         herbANPP_gm2yr = round(mean(.data$agb_gm2, na.rm = TRUE),
-                                                digits = 2),
-                         herbANPPSD_gm2yr = round(stats::sd(.data$agb_gm2, na.rm = TRUE),
-                                                  digits = 2))
-
-    } else {
-
-      herb_ANPP_site <- data.frame()
-
-    }
-
-
-
-    ### Grazed sites: Determine final standing mass needed for ANPP ####
-
-    ##  Obtain final standing mass at plot level for sites with grazing management
-    #   First, identify latest eventID for each 'site' x 'year' combination; these are used to estimate standing crop at last sampling eventID of the year.
-    grazedLatestEvents <- hbp_agb_plot %>%
-      dplyr::filter(.data$plotType == "tower") %>%
-      dplyr::distinct(.data$domainID,
-                      .data$siteID,
-                      .data$year,
-                      .data$eventID) %>%
-      dplyr::group_by(.data$domainID,
-                      .data$siteID,
-                      .data$year) %>%
-      dplyr::arrange(.data$eventID) %>%
-      dplyr::slice_tail()
-
-    #   Determine latest ambient standing crop at grazed sites
-    if (length(grazed_sites) > 0) {
-
-      grazedFinalMass <- hbp_agb_plot %>%
-        dplyr::filter(.data$exclosure == "N",
-                      .data$siteID %in% grazed_sites,
-                      .data$plotType == "tower",
-                      .data$herbGroup == "AllHerbaceousPlants",
-                      .data$eventID %in% grazedLatestEvents$eventID) %>%
-        dplyr::arrange(.data$domainID,
-                       .data$siteID,
-                       .data$year,
-                       .data$plotID)
-
-    } else {
-
-      grazedFinalMass <- data.frame()
-
-    }
-
-
-
-    ### Grazed sites: Estimate consumption to add to finalStandingMass ####
-    if (nrow(grazedFinalMass) > 0) {
-
-      ### For last eventID of season: Determine mean standing mass by siteID x year
-      #   Remove NAs from 'finalAGB_gm2' and arrange data
-      grazedFinalMass <- grazedFinalMass %>%
-        dplyr::filter(!is.na(.data$agb_gm2))
-
-      #   Generate means and SD for siteID x year
-      grazedFinalMass <- grazedFinalMass %>%
-        dplyr::group_by(.data$domainID,
-                        .data$siteID,
-                        .data$year,
-                        .data$plotType,
-                        .data$herbGroup) %>%
-        dplyr::summarise("herbPlotCount" = dplyr::n(),
-                         "finalAGBMean_gm2" = round(mean(.data$agb_gm2, na.rm = TRUE),
-                                                    digits = 2),
-                         "finalAGBSD_gm2" = round(stats::sd(.data$agb_gm2, na.rm = TRUE),
-                                                  digits = 2),
-                         .groups = "drop")
-
-
-
-      ### Calculate consumption productivity component using exclosure data
-      #   Calculate mean exclosure == "Y" and exclosure == "N" mass across plotIDs by eventID
-      exclosure <- hbp_agb_plot %>%
-        dplyr::filter(.data$herbGroup == "AllHerbaceousPlants",
-                      .data$siteID %in% grazed_sites,
-                      .data$plotType == "tower",
-                      !is.na(.data$agb_gm2),
-                      .data$plotYear %in% grazedPlotYears) %>%
-        dplyr::group_by(.data$domainID,
-                        .data$siteID,
-                        .data$year,
-                        .data$peak,
-                        .data$herbGroup,
-                        .data$eventID,
-                        .data$exclosure) %>%
-        dplyr::summarise("eventPlotCount" = dplyr::n(),
-                         "agbMean_gm2" = round(mean(.data$agb_gm2, na.rm = TRUE),
-                                               digits = 2),
-                         "agbSD_gm2" = round(stats::sd(.data$agb_gm2, na.rm = TRUE),
-                                             digits = 2),
-                         .groups = "drop") %>%
-        dplyr::arrange(.data$domainID,
-                       .data$siteID,
-                       .data$year,
-                       .data$eventID)
-
-      #   Calculate mean consumption per eventID
-      #--> Combining uncertainties for consumption term possibly should be done as sqrt(exclYSD^2 + exclNSD^2); this looks valid when n is equal for both groups; more complicated when summing uncertainties derived from groups with different n
-      #-->
-      eventConsum <- exclosure %>%
-        dplyr::select(-"eventPlotCount") %>%
-        tidyr::pivot_wider(names_from = "exclosure",
-                           values_from = c("agbMean_gm2", "agbSD_gm2"),
-                           names_prefix = "exclosure") %>%
-        dplyr::mutate("consumpMean_gm2" = .data$agbMean_gm2_exclosureY - .data$agbMean_gm2_exclosureN,
-                      "consumpSD_gm2" = .data$agbSD_gm2_exclosureY + .data$agbSD_gm2_exclosureN)
-
-
-      ##  For SJER: Assign sampling eventIDs to 'year' using 15th July cut-off
-      if ("SJER" %in% eventConsum$siteID) {
-
-        #   Determine startDate, endDate for each eventID and assign corrected growing season 'year'
-        sjerEvents <- hbp_agb_plot %>%
-          dplyr::filter(.data$siteID == "SJER") %>%
-          dplyr::group_by(.data$eventID,
-                          .data$year) %>%
-          dplyr::summarise(startDate = min(.data$collectDate),
-                           endDate = max(.data$collectDate),
-                           .groups = "drop") %>%
-          dplyr::mutate(correctedYear = dplyr::case_when(.data$endDate < as.Date(glue::glue("{.data$year}-07-15")) ~
-                                                           (.data$year - 1),
-                                                         TRUE ~ .data$year))
-
-        #   Join with eventConsum then assign 'correctedYear' for SJER eventIDs
-        eventConsum <- dplyr::left_join(eventConsum,
-                                        sjerEvents %>%
-                                          dplyr::select("eventID",
-                                                        "correctedYear"),
-                                        by = "eventID") %>%
-          dplyr::mutate(year = dplyr::case_when(.data$siteID == "SJER" ~ correctedYear,
-                                                TRUE ~ year)) %>%
-          dplyr::select(-"correctedYear")
-
-      } # End SJER conditional
-
-
-      ##  Sum consumption for all events per site and year
-      siteConsum <- eventConsum %>%
-        dplyr::filter(!is.na(.data$consumpMean_gm2)) %>%
-        dplyr::group_by(.data$domainID,
-                        .data$siteID,
-                        .data$year,
-                        .data$herbGroup) %>%
-        dplyr::summarise("consumpEventCount" = dplyr::n(),
-                         "consumption_gm2" = round(sum(.data$consumpMean_gm2, na.rm = TRUE),
-                                                   digits = 2),
-                         "consumptionSD_gm2" = sum(.data$consumpSD_gm2, na.rm = TRUE),
-                         .groups = "drop")
-
-
-      ##  Join with 'grazedFinalMass' to calculate herbaceous ANPP at grazed sites
-      herb_ANPP_grazed <- dplyr::left_join(grazedFinalMass,
-                                           siteConsum,
-                                           by = c("domainID", "siteID", "year", "herbGroup")) %>%
-        dplyr::mutate(herbANPP_gm2yr = rowSums(dplyr::across(c("finalAGBMean_gm2", "consumption_gm2")),
-                                               na.rm = TRUE),
-                      herbANPPSD_gm2yr = rowSums(dplyr::across(c("finalAGBSD_gm2", "consumptionSD_gm2")),
-                                                 na.rm = TRUE),
-                      .after = "herbGroup")
-
-
-    } else {
-
-      herb_ANPP_grazed <- data.frame()
-
-    } # end nrow(grazedFinalMass) conditional
-
-
-
-    ### Site-level output: Bind 'standard' and 'grazed' data ####
-
-    herb_ANPP_site <- dplyr::bind_rows(herb_ANPP_site,
-                                       herb_ANPP_grazed)
-
-    #   Add columns with "Mg/ha/y" units for ANPP and SD and arrange
-    herb_ANPP_site <- herb_ANPP_site %>%
-      dplyr::mutate(herbANPP_Mghayr = round(.data$herbANPP_gm2yr * 10000 * 0.000001,
-                                            digits = 2),
-                    herbANPPSD_Mghayr = round(.data$herbANPPSD_gm2yr * 10000 * 0.000001,
+                      .data$herbGroup) %>%
+      dplyr::summarise(herbClipCount = dplyr::n(),
+                       herbANPP_gm2yr = round(mean(.data$agb_gm2, na.rm = TRUE),
                                               digits = 2),
-                    .after = "herbPlotCount") %>%
+                       herbANPPSD_gm2yr = round(stats::sd(.data$agb_gm2, na.rm = TRUE),
+                                                digits = 2))
+
+  } else {
+
+    herb_ANPP_site <- data.frame()
+
+  }
+
+
+
+  ### Grazed sites: Determine final standing mass needed for ANPP ####
+
+  ##  Obtain final standing mass at plot level for sites with grazing management
+  #   First, identify latest eventID for each 'site' x 'year' combination; these are used to estimate standing crop at last sampling eventID of the year.
+  grazedLatestEvents <- hbp_agb_long %>%
+    dplyr::filter(.data$plotType == "tower",
+                  .data$siteID %in% grazed_sites) %>%
+    dplyr::distinct(.data$domainID,
+                    .data$siteID,
+                    .data$year,
+                    .data$eventID) %>%
+    dplyr::group_by(.data$domainID,
+                    .data$siteID,
+                    .data$year) %>%
+    dplyr::arrange(.data$eventID) %>%
+    dplyr::slice_tail()
+
+  #   Determine latest ambient standing crop at grazed sites
+  if (length(grazed_sites) > 0) {
+
+    grazedFinalMass <- hbp_agb_long %>%
+      dplyr::filter(.data$exclosure == "N",
+                    .data$siteID %in% grazed_sites,
+                    .data$plotType == "tower",
+                    .data$herbGroup == "AllHerbaceousPlants",
+                    .data$eventID %in% grazedLatestEvents$eventID) %>%
       dplyr::arrange(.data$domainID,
                      .data$siteID,
                      .data$year,
-                     .data$plotType)
+                     .data$plotID,
+                     .data$subplotID)
+
+  } else {
+
+    grazedFinalMass <- data.frame()
+
+  }
 
 
 
-    ### Plot-level output: Finalize dataframe ####
-    #   Create plot-level output for herbGroup = "AllHerbaceousPlants"
-    herb_ANPP_plot <- standardFinalMass %>%
-      dplyr::filter(.data$herbGroup == "AllHerbaceousPlants") %>%
-      dplyr::rename("eventID" = "finalEventID",
-                    "herbANPP_gm2yr" = "finalAGB_gm2") %>%
-      dplyr::mutate(herbANPP_Mghayr = round(.data$herbANPP_gm2yr * 10000 * 0.000001,
-                                            digits = 2),
+  ### Grazed sites: Estimate consumption to add to finalStandingMass ####
+  if (nrow(grazedFinalMass) > 0) {
+
+    ### For last eventID of season: Determine mean standing mass by siteID x year
+    #   Remove NAs from 'agb_gm2' (insurance step)
+    grazedFinalMass <- grazedFinalMass %>%
+      dplyr::filter(!is.na(.data$agb_gm2))
+
+    #   Generate means and SD for siteID x year
+    grazedFinalMass <- grazedFinalMass %>%
+      dplyr::group_by(.data$domainID,
+                      .data$siteID,
+                      .data$plotType,
+                      .data$year,
+                      .data$eventID,
+                      .data$herbGroup) %>%
+      dplyr::summarise("finalClipCount" = dplyr::n(),
+                       "finalAGBMean_gm2" = round(mean(.data$agb_gm2, na.rm = TRUE),
+                                                  digits = 2),
+                       "finalAGBSD_gm2" = round(stats::sd(.data$agb_gm2, na.rm = TRUE),
+                                                digits = 2),
+                       .groups = "drop") %>%
+      dplyr::rename("finalEventID" = "eventID")
+
+
+
+    ### Calculate consumption productivity component using exclosure data
+    #   Calculate mean exclosure == "Y" and exclosure == "N" mass across clip samples by eventID
+    exclosure <- hbp_agb_long %>%
+      dplyr::filter(.data$herbGroup == "AllHerbaceousPlants",
+                    .data$siteID %in% grazed_sites,
+                    .data$plotType == "tower",
+                    !is.na(.data$agb_gm2),
+                    .data$plotYear %in% grazedPlotYears) %>%
+      dplyr::group_by(.data$domainID,
+                      .data$siteID,
+                      .data$year,
+                      .data$eventID,
+                      .data$peak,
+                      .data$herbGroup,
+                      .data$exclosure) %>%
+      dplyr::summarise("clipCount" = dplyr::n(),
+                       "agbMean_gm2" = round(mean(.data$agb_gm2, na.rm = TRUE),
+                                             digits = 2),
+                       "agbSD_gm2" = round(stats::sd(.data$agb_gm2, na.rm = TRUE),
+                                           digits = 2),
+                       .groups = "drop") %>%
+      dplyr::arrange(.data$domainID,
+                     .data$siteID,
+                     .data$year,
+                     .data$eventID)
+
+    #   Calculate consumption mean and SD per eventID
+    #--> Uncertainties combined according to: https://www.mathbench.umd.edu/modules/statistical-tests_t-tests/page06.htm
+
+    eventConsum <- exclosure %>%
+      tidyr::pivot_wider(names_from = "exclosure",
+                         values_from = c("clipCount" , "agbMean_gm2", "agbSD_gm2"),
+                         names_prefix = "excl") %>%
+      dplyr::mutate("consumClipCount" = .data$clipCount_exclN + .data$clipCount_exclY,
+                    "consumMean_gm2" = round(.data$agbMean_gm2_exclY - .data$agbMean_gm2_exclN,
+                                             digits = 2),
+                    "consumSD_gm2" = round(sqrt((.data$agbSD_gm2_exclN^2 / .data$clipCount_exclN) +
+                                                  (.data$agbSD_gm2_exclY^2 / .data$clipCount_exclY)),
+                                           digits = 2),
+                    "consumSD2_N" = round(.data$consumSD_gm2^2 / .data$consumClipCount,
+                                          digits = 2))
+
+
+    ##  Sum consumption for all events per site and year
+    siteConsum <- eventConsum %>%
+      dplyr::filter(!is.na(.data$consumMean_gm2)) %>%
+      dplyr::group_by(.data$domainID,
+                      .data$siteID,
+                      .data$year,
+                      .data$herbGroup) %>%
+      dplyr::summarise("consumEventCount" = dplyr::n(),
+                       "consumClipCount" = sum(.data$consumClipCount),
+                       "consumption_gm2" = round(sum(.data$consumMean_gm2, na.rm = TRUE),
+                                                 digits = 2),
+                       "consumptionSD_gm2" = round(sqrt(sum(consumSD2_N, na.rm = TRUE)),
+                                                   digits = 2),
+                       .groups = "drop")
+
+
+    ##  Join with 'grazedFinalMass' to calculate herbaceous ANPP at grazed sites
+    herb_ANPP_grazed <- dplyr::left_join(grazedFinalMass,
+                                         siteConsum,
+                                         by = c("domainID", "siteID", "year", "herbGroup")) %>%
+      dplyr::mutate(herbClipCount = .data$finalClipCount + .data$consumClipCount,
+                    herbANPP_gm2yr = rowSums(dplyr::across(c("finalAGBMean_gm2", "consumption_gm2")),
+                                             na.rm = TRUE),
+                    herbANPPSD_gm2yr = round(sqrt((.data$finalAGBSD_gm2^2 / .data$finalClipCount) +
+                                                    (.data$consumptionSD_gm2^2 / .data$consumClipCount)),
+                                             digits = 2),
+                    .after = "herbGroup")
+
+
+  } else {
+
+    herb_ANPP_grazed <- data.frame()
+
+  } # end nrow(grazedFinalMass) conditional
+
+
+
+  ### Site-level output: Bind 'standard' and 'grazed' data ####
+
+  herb_ANPP_site <- dplyr::bind_rows(herb_ANPP_site,
+                                     herb_ANPP_grazed) %>%
+    dplyr::relocate("finalEventID",
                     .after = "eventID")
 
-    #   Create plot-level output for all herbGroups (but not "AllHerbaceousPlants")
-    herb_ANPP_plot_herbgroup <- standardFinalMass %>%
-      dplyr::filter(.data$herbGroup != "AllHerbaceousPlants") %>%
-      dplyr::rename("eventID" = "finalEventID",
-                    "herbANPP_gm2yr" = "finalAGB_gm2") %>%
-      dplyr::mutate(herbANPP_Mghayr = round(.data$herbANPP_gm2yr * 10000 * 0.000001,
+  #   Add columns with "Mg/ha/y" units for ANPP and SD and arrange
+  herb_ANPP_site <- herb_ANPP_site %>%
+    dplyr::mutate(herbANPP_Mghayr = round(.data$herbANPP_gm2yr * 10000 * 0.000001,
+                                          digits = 2),
+                  herbANPPSD_Mghayr = round(.data$herbANPPSD_gm2yr * 10000 * 0.000001,
                                             digits = 2),
-                    .after = "eventID")
+                  .after = "herbClipCount") %>%
+    dplyr::arrange(.data$domainID,
+                   .data$siteID,
+                   .data$year,
+                   .data$plotType)
 
 
 
-    ### Output data
-    output <- list(herb_ANPP_site = herb_ANPP_site,
-                   herb_ANPP_plot = herb_ANPP_plot,
-                   herb_ANPP_plot_herbgroup = herb_ANPP_plot_herbgroup)
+  ### Plot-level output: Finalize dataframe ####
+  #   Create plot-level output for herbGroup = "AllHerbaceousPlants"
+  herb_ANPP_plot <- standardFinalMass %>%
+    dplyr::filter(.data$herbGroup == "AllHerbaceousPlants") %>%
+    dplyr::rename("herbANPP_gm2yr" = "agb_gm2") %>%
+    dplyr::mutate(herbANPP_Mghayr = round(.data$herbANPP_gm2yr * 10000 * 0.000001,
+                                          digits = 2),
+                  .after = "exclosure")
 
-    return(output)
+  #   Create plot-level output for all herbGroups (but not "AllHerbaceousPlants")
+  herb_ANPP_plot_herbgroup <- standardFinalMass %>%
+    dplyr::filter(.data$herbGroup != "AllHerbaceousPlants") %>%
+    dplyr::rename("herbANPP_gm2yr" = "agb_gm2") %>%
+    dplyr::mutate(herbANPP_Mghayr = round(.data$herbANPP_gm2yr * 10000 * 0.000001,
+                                          digits = 2),
+                  .after = "exclosure")
+
+
+
+  ### Output data
+  output <- list(herb_ANPP_site = herb_ANPP_site,
+                 herb_ANPP_plot = herb_ANPP_plot,
+                 herb_ANPP_plot_herbgroup = herb_ANPP_plot_herbgroup)
+
+  return(output)
 }
-
