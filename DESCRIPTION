@@ -45,6 +45,7 @@ Imports:
     lifecycle,
     lubridate,
     magrittr,
+    methods,
     rlang,
     stringr,
     tidyr
