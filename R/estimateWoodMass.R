@@ -1,14 +1,16 @@
 #' @title Estimate above-ground biomass of woody vegetation
 #'
-#' @author Samuel M Simkin \email{ssimkin@battelleecology.org} \cr
+#' @author
+#' Samuel M Simkin \email{ssimkin@BattelleEcology.org} \cr
+#' Courtney Meier \email{cmeier@BattelleEcology.org} \cr
 #'
-#' @description Use allometric equations to estimate above-ground biomass for woody (and "non-woody perennial", if selected) individuals and summarise results as mass per unit area for siteID, plotID, and taxonID. Biomass outputs can be used in the neonPlants estimateMass() function, and the estimateWoodProd() and estimateProd() productivity functions.
+#' @description Allometric equations are used to estimate above-ground biomass for woody individuals reported in the NEON "Vegetation structure" data product (DP1.10098.001). Results are summarized as mass per unit area at scales of the siteID, plotID, and taxonID. Biomass outputs can be used in the neonPlants estimateMass() and estimateWoodProd() functions.
 #'
 #' Data inputs are "Vegetation structure" data (DP1.10098.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input tables with an equivalent structure and representing the same site x month combinations.
 #'
-#' @details Input data can be filtered by 'plotSubset' if output for only certain types of plots or sampling intervals is desired. Input data are combined with allometric equation parameters and taxon specific characteristics, and biomass is estimated for each individual using allometric equations. Generalized allometric equations are applied first and are replaced by taxon-specific equations if available. Only the set of growth forms selected via the growthForm parameter are included in outputs. The non-woody "cactus" and "ferns" growthForms are not currently included. Biomass is summarized on an areal basis at the hierarchical level of the plot and site.
+#' @details Input data can be filtered by 'plotSubset' if output for only certain types of plots or sampling intervals is desired. Input data are combined with allometric equation parameters and taxon specific characteristics, and biomass is estimated for each individual using allometric equations. Generalized allometric equations are applied first and are replaced by taxon-specific equations if available. Biomass may be estimated only for "tree" individuals (i.e., woody individuals with DBH ≥ 10 cm) or for "all" growth forms excluding "cactus", "ferns", and "yucca". Biomass is summarized on an areal basis at the hierarchical level of the plot and site.
 #'
-#' @param inputDataList A list object comprised of "Vegetation structure" tables (DP1.10098.001) downloaded using the neonUtilities::loadByProduct() function. If list input is provided, the table input arguments must all be NA; similarly, if list input is missing, table inputs must be provided for 'inputIndividual', 'inputMapTag', and 'inputPerPlot' arguments. [list]
+#' @param inputDataList A list object comprised of "Vegetation structure" tables (DP1.10098.001) downloaded using the neonUtilities::loadByProduct() function. It is optional to include the "vst_non-woody" table in the list. If list input is provided, the table input arguments must all be NA; similarly, if list input is missing, table inputs must be provided for the 'inputIndividual', 'inputMapTag', and 'inputPerPlot' arguments.  [list]
 #'
 #' @param inputIndividual The 'vst_apparentindividual' table for the site x month combination(s) of interest
 #' (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
@@ -19,14 +21,14 @@
 #' @param inputPerPlot The 'vst_perplotperyear' table for the site x month combination(s) of interest
 #' (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
 #'
-#' @param inputNonWoody The 'vst_non-woody' table for the site x month combination(s) of interest
+#' @param inputNonWoody (Optional) The 'vst_non-woody' table for the site x month combination(s) of interest
 #' (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
 #'
-#' @param plotSubset The options are "all" (all Tower and Distributed plots), the default of "towerAll" (all plots in the Tower airshed but no Distributed plots), "towerAnnualSubset" (the subset of Tower plots that are sampled annually), and "distributed" (all Distributed plots, which are sampled at 5-yr intervals and are spatially representative of the NLCD classes at at site). [character]
+#' @param plotSubset The options are "all" (all Tower and Distributed plots), the default of "towerAll" (all plots in the Tower airshed but no Distributed plots), "towerAnnualSubset" (the subset of n=5 Tower plots that are sampled annually), and "distributed" (all Distributed plots, which are sampled at 5-yr intervals and are spatially representative of the NLCD classes at a site). [character]
 #'
-#' @param growthForm Select which Vegetation Structure growth forms to analyse. The options are "tree" (sbt, mbt) for trees with a dbh > 10 cm, and the default of "all", which includes the large trees, and also small trees (smt, sap), shrubs (sis, sms), liana (lia), palms (plm, ptr, spm), tree ferns (ltf, stf, tfn), ocotillo (oco), yucca (yuc), and xerophyllum (xer).  Consult the Vegetation Structure Quick Start Guide and/or the Data Product User Guide for more growth form information. [character]
+#' @param growthForm Select Vegetation Structure growth forms for biomass estimation. The options are "tree" (sbt, mbt), which enables biomass estimation only for trees with a DBH ≥ 10 cm, and the default of "all", which includes "tree" individuals, and also small trees (smt, sap), shrubs (sis, sms), lianas (lia), palms (ptr, spm), tree ferns (ltf, stf), ocotillo (oco), and xerophyllum (xer). Consult the Vegetation Structure Quick Start Guide and/or the Data Product User Guide for more growth form information. [character]
 #'
-#' @return A list that includes biomass summary data frames and a helper data frame needed by companion productivity functions - e.g., the estimateProd() function. Output tables include:
+#' @return A list that includes biomass summary data frames and a helper data frame needed by companion productivity functions - e.g., the estimateWoodProd() function. Output tables include:
 #'   * vst_agb_kg - Summarizes above-ground live and dead woody biomass for each individual ("kg").
 #'   * vst_plot_w_0s - Summarizes above-ground live and dead woody biomass for each taxonID x growthForm x eventID combination for each plot ("Mg/ha").
 #'   * vst_agb_zeros - Helper output for productivity estimation that contains plot x year combinations with biomass of zero.
@@ -34,19 +36,19 @@
 #'
 #' @examples
 #' \dontrun{
-#' # Obtain NEON Vegetation structure
-#' VstDat <- neonUtilities::loadByProduct(
-#' dpID="DP1.10098.001",
+#' #  Obtain NEON Vegetation structure data
+#' vstDF <- neonUtilities::loadByProduct(
+#' dpID = "DP1.10098.001",
 #' package = "basic",
 #' check.size = FALSE
 #' )
 #'
 #' # example with arguments at default values
-#' estimateWoodMassOutputs <- estimateWoodMass(inputDataList = VstDat)
+#' estimateWoodMassOutputs <- estimateWoodMass(inputDataList = vstDF)
 #'
 #' # example specifying several non-default arguments
 #' estimateWoodMassOutputs <- estimateWoodMass(
-#' inputDataList = VstDat,
+#' inputDataList = vstDF,
 #' plotSubset = "towerAnnualSubset",
 #' growthForm = "tree"
 #' )
@@ -79,7 +81,7 @@ estimateWoodMass = function(inputDataList,
     }
 
     #   Check that required tables within list match expected names
-    listExpNames <- c("vst_apparentindividual", "vst_mappingandtagging", "vst_perplotperyear") #, "vst_non-woody")
+    listExpNames <- c("vst_apparentindividual", "vst_mappingandtagging", "vst_perplotperyear")
 
 
     #   All expected tables required
@@ -103,6 +105,8 @@ estimateWoodMass = function(inputDataList,
     stop("When 'inputDataList' is supplied all table input arguments must be NA")
   }
 
+
+
   ### Verify 'inputIndividual', 'inputMapTag', and 'inputPerPlot' are data frames if 'inputDataList' is missing
   if (is.null(inputDataList) &
       (!inherits(inputIndividual, "data.frame") | !inherits(inputMapTag, "data.frame")  |
@@ -112,20 +116,27 @@ estimateWoodMass = function(inputDataList,
   }
 
 
-  #   Assign input independent standardized names
+  #   Assign standardized names to input data frames
   if (inherits(inputDataList, "list")) {
 
-    vst_mappingandtagging <- inputDataList$vst_mappingandtagging
-    vst_perplotperyear <- inputDataList$vst_perplotperyear
-    vst_apparentindividual <- inputDataList$vst_apparentindividual
-    vst_nonWoody <- inputDataList$`vst_non-woody`
+    map <- inputDataList$vst_mappingandtagging
+    perPlot <- inputDataList$vst_perplotperyear
+    appInd <- inputDataList$vst_apparentindividual
+
+    #   Account for optional input of vst_non-woody
+    if ("vst_non-woody" %in% names(inputDataList)) {
+      nonWoody <- inputDataList$`vst_non-woody`
+    } else {
+      nonWoody <- NA
+    }
+
 
   } else {
 
-    vst_mappingandtagging <- inputMapTag
-    vst_perplotperyear <- inputPerPlot
-    vst_apparentindividual <- inputIndividual
-    vst_nonWoody <- inputNonWoody
+    map <- inputMapTag
+    perPlot <- inputPerPlot
+    appInd <- inputIndividual
+    nonWoody <- inputNonWoody
 
   }
 
@@ -137,29 +148,28 @@ estimateWoodMass = function(inputDataList,
   #   Check for required columns
   mapExpCols <- c("siteID", "plotID", "individualID", "taxonID")
 
-  if (length(setdiff(mapExpCols, colnames(vst_mappingandtagging))) > 0) {
-    stop(glue::glue("Required columns missing from 'vst_mappingandtagging':", '{paste(setdiff(mapExpCols, colnames(vst_mappingandtagging)), collapse = ", ")}',
+  if (length(setdiff(mapExpCols, colnames(map))) > 0) {
+    stop(glue::glue("Required columns missing from 'vst_mappingandtagging':", '{paste(setdiff(mapExpCols, colnames(map)), collapse = ", ")}',
                     .sep = " "))
   }
 
   #   Check for data
-  if (nrow(vst_mappingandtagging) == 0) {
+  if (nrow(map) == 0) {
     stop(glue::glue("Table 'vst_mappingandtagging' has no data."))
   }
 
 
   ### Verify 'vst_perplotperyear' table contains required data
   #   Check for required columns
-  plotExpCols <- c("domainID", "siteID", "plotID", "plotType", "nlcdClass", "eventID", "totalSampledAreaTrees", "totalSampledAreaShrubSapling", "totalSampledAreaLiana",
-                   "totalSampledAreaFerns", "totalSampledAreaOther")
+  plotExpCols <- c("domainID", "siteID", "plotID", "plotType", "nlcdClass", "eventID", "totalSampledAreaTrees", "totalSampledAreaShrubSapling", "totalSampledAreaLiana", "totalSampledAreaFerns", "totalSampledAreaOther")
 
-  if (length(setdiff(plotExpCols, colnames(vst_perplotperyear))) > 0) {
-    stop(glue::glue("Required columns missing from 'vst_perplotperyear':", '{paste(setdiff(plotExpCols, colnames(vst_perplotperyear)), collapse = ", ")}',
+  if (length(setdiff(plotExpCols, colnames(perPlot))) > 0) {
+    stop(glue::glue("Required columns missing from 'vst_perplotperyear':", '{paste(setdiff(plotExpCols, colnames(perPlot)), collapse = ", ")}',
                     .sep = " "))
   }
 
   #   Check for data
-  if (nrow(vst_perplotperyear) == 0) {
+  if (nrow(perPlot) == 0) {
     stop(glue::glue("Table 'vst_perplotperyear' has no data."))
   }
 
@@ -168,80 +178,80 @@ estimateWoodMass = function(inputDataList,
   #   Check for required columns
   appIndExpCols <- c("plotID", "individualID", "growthForm", "plantStatus", "date", "eventID", "stemDiameter", "basalStemDiameter")
 
-  if (length(setdiff(appIndExpCols, colnames(vst_apparentindividual))) > 0) {
-    stop(glue::glue("Required columns missing from 'vst_apparentindividual':", '{paste(setdiff(appIndExpCols, colnames(vst_apparentindividual)), collapse = ", ")}',
+  if (length(setdiff(appIndExpCols, colnames(appInd))) > 0) {
+    stop(glue::glue("Required columns missing from 'vst_apparentindividual':", '{paste(setdiff(appIndExpCols, colnames(appInd)), collapse = ", ")}',
                     .sep = " "))
   }
 
   #   Check for data
-  if (nrow(vst_apparentindividual) == 0) {
+  if (nrow(appInd) == 0) {
     stop(glue::glue("Table 'vst_apparentindividual' has no data."))
   }
 
 
   ### Verify vst_nonWoody table contains required data
   #   Check for required columns
-  nonwoodyExpCols <- c("domainID", "siteID", "plotID", "individualID", "growthForm", "plantStatus", "date", "stemDiameter", "basalStemDiameter", "taxonID",
-                       "height", "leafNumber", "meanLeafLength", "meanPetioleLength", "meanBladeLength")
+  nonwoodyExpCols <- c("domainID", "siteID", "plotID", "individualID", "growthForm", "plantStatus", "date", "stemDiameter", "basalStemDiameter", "taxonID", "height", "leafNumber", "meanLeafLength", "meanPetioleLength", "meanBladeLength")
 
   #  if (class(vst_nonWoody) == "data.frame"){if(length(setdiff(nonwoodyExpCols, colnames(vst_nonWoody))) > 0) {
-  if (methods::is(vst_nonWoody, class = "data.frame" )) {
+  if (methods::is(nonWoody, class = "data.frame" )) {
 
-    if (length(setdiff(nonwoodyExpCols, colnames(vst_nonWoody))) > 0) {
-    stop(glue::glue("Required columns missing from vst_nonWoody:", '{paste(setdiff(nonwoodyExpCols, colnames(vst_non-woody), collapse = ", ")}',
-                    .sep = " "))
-  }
+    if (length(setdiff(nonwoodyExpCols, colnames(nonWoody))) > 0) {
+      stop(glue::glue("Required columns missing from vst_nonWoody:", '{paste(setdiff(nonwoodyExpCols, colnames(nonWoody), collapse = ", ")}',
+                      .sep = " "))
+    }
   }
 
   # Error if invalid growthForm option selected
   if (!growthForm %in% c("all", "tree")) {
-    stop("The growthForm argument must be one of: 'all', 'tree'.")
+    stop("The growthForm argument must be one of: 'all', 'tree'")
   }
 
   # Error if invalid plotSubset option selected
   if (!plotSubset %in% c("all", "towerAll", "towerAnnualSubset", "distributed")) {
-    stop("The only valid plotSubset options are 'all', 'towerAll', 'towerAnnualSubset', 'distributed'.")
+    stop("The plotSubset argument must be one of: 'all', 'towerAll', 'towerAnnualSubset', 'distributed'")
   }
 
-  plotPriority <- ifelse(plotSubset == "towerAnnualSubset", 5, 50) # convert to numeric (50 is highest plotPriority)
-  plotType <- ifelse(plotSubset == "towerAnnualSubset" | plotSubset == "towerAll", "tower", "distributed")
-  plotType <- ifelse(plotSubset == "all", "all", plotType)
+  #   For plotPriority: 50 is highest possible value
+  plotPriority <- ifelse(plotSubset == "towerAnnualSubset", 5, 50)
+
+  #   Assign plotType needed in output based on 'plotSubset' argument
+  plotType <- unique(dplyr::case_when(plotSubset == "all" ~ c("distributed", "tower"),
+                                      plotSubset == "distributed" ~ "distributed",
+                                      plotSubset %in% c("towerAll", "towerAnnualSubset") ~ "tower"))
 
 
-  ##  Read in plot sample area for each growthForm by eventID combo from vst_perplotperyear table
-  #   Create working table from vst_perplotperyear input
-  perplot <- vst_perplotperyear
-
+  ##  Read in plot sample area for each growthForm by eventID combo from 'perPlot' table
   #   Extract year from eventID
-  perplot$year <- as.numeric(substr(perplot$eventID, 10, 13))
+  perPlot$year <- as.numeric(substr(perPlot$eventID, 10, 13))
 
-  #   The specificModuleSamplingPriority field is used to optionally filter only to plots with priority 1-5 (the plots that are most likely to have been sampled the year they were scheduled)
+  #   Load companion 'priority_plots' dataset to obtain 'specificModuleSamplingPriority' data. Field is used to optionally filter only to plots with priority 1-5 when user-supplied 'plotSubset' == "towerAnnualSubset"
   priority_plots <- priority_plots %>%
     dplyr::select("plotID",
                   "specificModuleSamplingPriority")
 
-  #   Merge to add plot priority data to perplot data
-  perplot <- merge(perplot,
+  #   Merge to add plot priority data to 'perPlot' data
+  perPlot <- merge(perPlot,
                    priority_plots,
                    by = c("plotID"),
                    all.x = TRUE)
 
   #   Create unique plotID x eventID identifier
-  perplot$plot_eventID <- paste0(perplot$plotID, "_", perplot$eventID)
+  perPlot$plot_eventID <- paste0(perPlot$plotID, "_", perPlot$eventID)
 
   #   Sort by date before removing duplicates so that if duplicates are from different dates the record from latest date will be retained. Sorting by date and then using fromLast = TRUE should retain the most recent version of duplicates.
-  perplot <- perplot[order(perplot$date), ]
-  perplot <- perplot[!duplicated(perplot$plot_eventID, fromLast = TRUE), ]
+  perPlot <- perPlot[order(perPlot$date), ]
+  perPlot <- perPlot[!duplicated(perPlot$plot_eventID, fromLast = TRUE), ]
 
   #   Discard Sampling Impractical other than "OK"
-  perplot_not_SI <- perplot %>%
+  perPlot_not_SI <- perPlot %>%
     dplyr::filter(.data$samplingImpractical == "OK" | .data$samplingImpractical == "" | is.na(.data$samplingImpractical))
 
   #   Create list of ALL plot by eventID combos from the vst_perplotperyear tables from vst woody, vst non-herb perennial, or both, regardless of whether they have biomass. Generates a list of all unique combos of plotID and eventID where full sampling should have taken place
-  plot_eventID_list <- unique(perplot_not_SI$plot_eventID)
+  plot_eventID_list <- unique(perPlot_not_SI$plot_eventID)
 
-  #   Retain subset of columns in "perplot" data
-  perplot <- perplot %>%
+  #   Retain subset of columns in "perPlot" data; 'dataCollected' needed to identify plots for which biomass cannot be accurately estimated on an areal basis (because not all trees were sampled).
+  perPlot <- perPlot %>%
     dplyr::select("plot_eventID",
                   "plotID",
                   "eventID",
@@ -249,55 +259,57 @@ estimateWoodMass = function(inputDataList,
                   "nlcdClass",
                   "plotType",
                   "eventType",
+                  "dataCollected",
                   "totalSampledAreaTrees",
                   "totalSampledAreaShrubSapling",
                   "totalSampledAreaLiana",
                   "totalSampledAreaOther")
 
-  #   Identify vst_perplotperyear records that are not duplicates
-  plotType_df <- inputDataList$vst_perplotperyear
-
-  plotType_df <- plotType_df %>%
-    dplyr::select("plotID",
-                  "plotType")
-
-  plotType_df <- plotType_df[!duplicated(plotType_df$plotID), ]
+  #   Identify unique 'plotID' and 'plotType' values in the dataset; table 'plotType_df' used later to add 'plotType' to output data frames
+  plotType_df <- inputDataList$vst_perplotperyear %>%
+    dplyr::distinct(.data$plotID,
+                    .data$plotType)
 
 
 
-  ### Calculate biomass from vst_non-woody table ####
+  ### Estimate non-woody biomass: Calculate biomass from vst_non-woody table ####
 
   ### Conditionally generate non-woody biomass estimates from vst_nonWoody table
-  if (methods::is(vst_nonWoody, class = "data.frame" )) {
-
-    vst_agb_other <- vst_nonWoody
+  if (methods::is(nonWoody, class = "data.frame" )) {
 
     #   Merge with perplot data to add total sampled areas
-    vst_agb_other <- merge(vst_agb_other,
-                           perplot,
+    vst_agb_other <- merge(nonWoody,
+                           perPlot,
                            by = c("plotID", "eventID"),
                            all.x = TRUE)
 
     vst_agb_other$agb_source <- "no source"
 
-    #   Estimate yucca biomass: White, J.D., K.J. Gutzwiller, W.C. Barrow, L.J. Randall, and P. Swint. 2008. Modeling mechanisms of vegetation change due to fire in a semi-arid ecosystem. Ecological Modelling 214:181-200; divide by 1000 to convert output from "grams" to "kg"
-    vst_agb_other$agb_yucca <- ifelse(vst_agb_other$growthForm == "yucca",
-                                      round(((0.0022*vst_agb_other$height) + (0.00096*(vst_agb_other$height^2)) + 0.04)/1000,
-                                            digits = 3),
-                                      NA)
+    #   Create 'agb' = NA column to update as biomass is calculated by growthForm
+    vst_agb_other$agb <- NA
 
-    #   Provide yucca biomass allometry reference
-    vst_agb_other$agb_source <- ifelse(!is.na(vst_agb_other$agb_yucca),
-                                       "White_et_al_2008_yucca",
-                                       vst_agb_other$agb_source)
 
-    vst_agb_other$agb <- ifelse(vst_agb_other$agb_source == "White_et_al_2008_yucca",
-                                vst_agb_other$agb_yucca,
-                                NA)
+    ##  Estimate yucca biomass: White, J.D., K.J. Gutzwiller, W.C. Barrow, L.J. Randall, and P. Swint. 2008. Modeling mechanisms of vegetation change due to fire in a semi-arid ecosystem. Ecological Modelling 214:181-200; divide by 1000 to convert output from "grams" to "kg"
+    # vst_agb_other$agb_yucca <- ifelse(vst_agb_other$growthForm == "yucca",
+    #                                   round(((0.0022*vst_agb_other$height) + (0.00096*(vst_agb_other$height^2)) + 0.04)/1000,
+    #                                         digits = 3),
+    #                                   NA)
+    #
+    # #   Provide yucca biomass allometry reference
+    # vst_agb_other$agb_source <- ifelse(!is.na(vst_agb_other$agb_yucca),
+    #                                    "White_et_al_2008_yucca",
+    #                                    vst_agb_other$agb_source)
+    #
+    # vst_agb_other$agb <- ifelse(vst_agb_other$agb_source == "White_et_al_2008_yucca",
+    #                             vst_agb_other$agb_yucca,
+    #                             vst_agb_other$agb)
 
-    ##  Estimate ocotillo biomass: Bobich, E.G., and T.E. Huxman. 2009. Dry mass partitioning and gas exhange for young ocotillos (Fouquieria splendends) in the Sonoran Desert. International Journal of Plant Science 170:283-289.
-     # Equations: log(height_m) = 0.13 + 0.45 * log(total above and below ground biomass in kg); log(total above and below ground biomass in kg) = (log(height_m) - 0.13)/0.45 = -0.2889 +  (2.2222 * log(height_m)); log(root/shoot) = -0.63 + 0.18 * log(total above and below ground biomass in kg);
-     # aboveground biomass in kg = 1(1+exp(log(root/shoot))) * exp(log(total above and below ground biomass in kg)) = fraction aboveground * total biomass
+
+    ##  Estimate ocotillo biomass: Bobich, E.G., and T.E. Huxman. 2009. Dry mass partitioning and gas exhange for young ocotillos (Fouquieria splendends) in the Sonoran Desert. International Journal of Plant Science 170:283-289. Equations:
+    #   log(height_m) = 0.13 + 0.45 * log(total above and below ground biomass in kg)
+    #   log(total above and below ground biomass in kg) = (log(height_m) - 0.13)/0.45 = -0.2889 +  (2.2222 * log(height_m))
+    #   log(root/shoot) = -0.63 + 0.18 * log(total above and below ground biomass in kg)
+    #   aboveground biomass in kg = 1(1+exp(log(root/shoot))) * exp(log(total above and below ground biomass in kg)) = fraction aboveground * total biomass
 
     #   Estimate total ocotillo mass: aboveground + belowground
     vst_agb_other$tot_ocotillo <- ifelse(vst_agb_other$growthForm == "ocotillo",
@@ -306,54 +318,59 @@ estimateWoodMass = function(inputDataList,
 
     #   Estimate aboveground ocotillo mass
     vst_agb_other$agb_ocotillo <- ifelse(vst_agb_other$growthForm == "ocotillo",
-                                         round(1/(exp(-0.63 - 0.18 * log(vst_agb_other$tot_ocotillo)) + 1) * vst_agb_other$tot_ocotillo,
+                                         round(1/(exp(-0.63 + 0.18 * log(vst_agb_other$tot_ocotillo)) + 1) *
+                                                 vst_agb_other$tot_ocotillo,
                                                digits = 3),
                                          NA)
 
     #   Remove total ocotillo mass: Belowground estimate not needed
     vst_agb_other$tot_ocotillo <- NULL
 
-    #   Provide ocotillo biomass allometry reference
-    vst_agb_other$agb_source <- ifelse(!is.na(vst_agb_other$agb_ocotillo),
-                                       "Bobich_and_Huxman_2009",
-                                       vst_agb_other$agb_source)
+    #   Update "agb" column with ocotillo mass and provide allometry reference
+    vst_agb_other <- vst_agb_other %>%
+      dplyr::mutate(agb_source = dplyr::case_when(!is.na(.data$agb_ocotillo) ~ "Bobich_and_Huxman_2009",
+                                                  TRUE ~ .data$agb_source),
+                    agb = dplyr::case_when(!is.na(.data$agb_ocotillo) ~ .data$agb_ocotillo,
+                                           TRUE ~ .data$agb))
 
-    vst_agb_other$agb <- ifelse(vst_agb_other$agb_source == "Bobich_and_Huxman_2009",
-                                vst_agb_other$agb_ocotillo,
-                                vst_agb_other$agb)
 
-    #   Estimate xerophyllum tenax (bear grass) biomass: Gholz, H.L., C.C. Grier, A.G. Campbell, and A.T. Brown. 1979. Equations for estimating biomass and leaf area of plants in the pacific northwest. Research paper 41. Forest Research Laboratory, School of Forestry at Oregon State University, Corvallis. Divide by 1000 to convert output to "kg".
-    vst_agb_other$agb_Gholz_XETE <- ifelse(vst_agb_other$growthForm == "xerophyllum",
-                                           round((18.873 + (0.0280*((vst_agb_other$basalStemDiameter^2) * vst_agb_other$meanLeafLength)))/1000,
-                                                 digits = 3),
-                                           NA)
+    ##  Estimate Xerophyllum tenax (bear grass) biomass: Gholz, H.L., C.C. Grier, A.G. Campbell, and A.T. Brown. 1979. Equations for estimating biomass and leaf area of plants in the pacific northwest. Research paper 41. Forest Research Laboratory, School of Forestry at Oregon State University, Corvallis. Divide by 1000 to convert output to "kg".
+    vst_agb_other$agb_xer <- ifelse(vst_agb_other$growthForm == "xerophyllum",
+                                    round((18.873 + (0.0280*((vst_agb_other$basalStemDiameter^2) *
+                                                               vst_agb_other$meanLeafLength)))/1000,
+                                          digits = 3),
+                                    NA)
 
-    #   Provide xerophyllum biomass allometry reference
-    vst_agb_other$agb_source <- ifelse(!is.na(vst_agb_other$agb_Gholz_XETE),
-                                       "Gholz_et_al_1979_XETE",
-                                       vst_agb_other$agb_source)
+    #   Update "agb" column with xerophyllum mass and provide allometry reference
+    vst_agb_other <- vst_agb_other %>%
+      dplyr::mutate(agb_source = dplyr::case_when(!is.na(.data$agb_xer) ~ "Gholz_et_al_1979",
+                                                  TRUE ~ .data$agb_source),
+                    agb = dplyr::case_when(!is.na(.data$agb_xer) ~ .data$agb_xer,
+                                           TRUE ~ .data$agb))
 
-    vst_agb_other$agb <- ifelse(vst_agb_other$agb_source == "Gholz_et_al_1979_XETE",
-                                vst_agb_other$agb_Gholz_XETE,
-                                vst_agb_other$agb)
 
-    #   Estimate small palm biomass (primarily Serenoa repens): Gholz, H.L., D.N. Guerin, and W.P. Cropper. 1999. Phenology and productivity of saw palmetto (Serenoa repens) in a north Florida slash pine plantation. Canadian Journal of Forest Research 29:1248-1253.
-     # Use separate equations for rachis/petiole biomass (g) and blade/leaf biomass (g); add together and divide by 1000 to get total biomass (kg).
-    vst_agb_other$agb_palm <- ifelse(!is.na(vst_agb_other$meanPetioleLength) & vst_agb_other$growthForm == "small palm",
-                                     round((exp(-10.38 + 2.72 * log(vst_agb_other$meanPetioleLength)) + (-13.31 + 0.85 * vst_agb_other$meanBladeLength))/1000,
+    ##  Estimate small palm biomass (primarily Serenoa repens): Gholz, H.L., D.N. Guerin, and W.P. Cropper. 1999. Phenology and productivity of saw palmetto (Serenoa repens) in a north Florida slash pine plantation. Canadian Journal of Forest Research 29:1248-1253.
+    #   Use separate equations for rachis/petiole biomass (g) and blade/leaf biomass (g). Add together and multiply by leafNumber, then divide by 1000 to get total biomass (kg).
+    #   Alexis et al. 2007 Biogeochemistry add petiole length and blade length together to get rachis biomass.
+
+    vst_agb_other$agb_palm <- ifelse(vst_agb_other$growthForm == "small palm" & !is.na(vst_agb_other$meanPetioleLength) &
+                                       !is.na(vst_agb_other$meanBladeLength) & !is.na(vst_agb_other$leafNumber),
+                                     round((exp(-10.38 + 2.72 * log(vst_agb_other$meanPetioleLength +
+                                                                      vst_agb_other$meanBladeLength)) +
+                                              (-13.31 + 0.85 * vst_agb_other$meanBladeLength)) *
+                                             vst_agb_other$leafNumber / 1000,
                                            digits = 3),
                                      NA)
 
-    #   Provide small palm biomass allometry reference
-    vst_agb_other$agb_source <- ifelse(!is.na(vst_agb_other$agb_palm),
-                                       "Gholz_et_al_1999",
-                                       vst_agb_other$agb_source)
+    #   Update "agb" column with small palm biomass and provide allometry reference
+    vst_agb_other <- vst_agb_other %>%
+      dplyr::mutate(agb_source = dplyr::case_when(!is.na(.data$agb_palm) ~ "Gholz_et_al_1999",
+                                                  TRUE ~ .data$agb_source),
+                    agb = dplyr::case_when(!is.na(.data$agb_palm) ~ .data$agb_palm,
+                                           TRUE ~ .data$agb))
 
-    vst_agb_other$agb <- ifelse(vst_agb_other$agb_source == "Gholz_et_al_1999",
-                                vst_agb_other$agb_palm,
-                                vst_agb_other$agb)
 
-    #   Estimate Cibotium biomass (tree fern): Ostertag, R, F Inman-Narahari, S Cordell, CP Giardina, and L Sack. 2014. Forest Structure in low-diversity tropical forests: A study of Hawaiian wet and dry forests. PLOS One. 9:e103268; Cibotium wood density (spg_gcm3) is taken as 0.22, the value for Cibotium glaucum.
+    ##  Estimate Cibotium biomass (tree fern): Ostertag, R, F Inman-Narahari, S Cordell, CP Giardina, and L Sack. 2014. Forest Structure in low-diversity tropical forests: A study of Hawaiian wet and dry forests. PLOS One. 9:e103268; Cibotium wood density (spg_gcm3) is taken as 0.22, the value for Cibotium glaucum.
     vst_agb_other$agb_Cibotium <- ifelse(substring(vst_agb_other$scientificName,1,8) == "Cibotium",
                                          round(0.2085 * (pi * (vst_agb_other$stemDiameter/2)^2 * vst_agb_other$height * 100 * 0.22/1000),
                                                digits = 3),
