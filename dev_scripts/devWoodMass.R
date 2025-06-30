@@ -94,5 +94,22 @@ palmDF <- palmDF %>%
                                          TRUE ~ "nothing"))
 
 
+#   Check current tree fern output vs what I think it should be based on Asner et al 2011
+cibDF <- vst_agb_other %>%
+  dplyr::filter(growthForm == "large tree fern") %>%
+  dplyr::select("individualID",
+                "taxonID",
+                "stemDiameter",
+                "height",
+                "stemLength") %>%
+  dplyr::mutate(agbOrig = round(0.2085 * (pi * (stemDiameter/2)^2 * height * 100 * 0.22/1000),
+                                digits = 3),
+                agbCorr = round(pi * (stemDiameter/2)^2 * stemLength * 100 * 0.22/1000,
+                                digits = 3))
+
+
+
+
+
 
 

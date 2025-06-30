@@ -271,6 +271,28 @@ estimateWoodMass = function(inputDataList,
                     .data$plotType)
 
 
+  ##  Define plantStatus groups to identify standing individuals that are live/dead and individuals absent, missing, or with ambiguous fate
+  standingLiveDead <- c("Live",
+                        "Live, insect damaged",
+                        "Live, disease damaged",
+                        "Live, physically damaged",
+                        "Live, other damage",
+                        "Live, broken bole",
+                        "Standing dead",
+                        "Dead, broken bole")
+
+  missingDowned <- c("Removed",
+                     "No longer qualifies",
+                     "Lost, burned",
+                     "Lost, herbivory",
+                     "Lost, presumed dead",
+                     "Lost, fate unknown",
+                     "Downed")
+
+  #   Create 'missingDownedDF" table for later output
+  missingDownedDF <- data.frame()
+
+
 
   ### Estimate non-woody biomass: Calculate biomass from vst_non-woody table ####
 
@@ -371,19 +393,36 @@ estimateWoodMass = function(inputDataList,
 
 
     ##  Estimate Cibotium biomass (tree fern): Ostertag, R, F Inman-Narahari, S Cordell, CP Giardina, and L Sack. 2014. Forest Structure in low-diversity tropical forests: A study of Hawaiian wet and dry forests. PLOS One. 9:e103268; Cibotium wood density (spg_gcm3) is taken as 0.22, the value for Cibotium glaucum.
-    vst_agb_other$agb_Cibotium <- ifelse(substring(vst_agb_other$scientificName,1,8) == "Cibotium",
-                                         round(0.2085 * (pi * (vst_agb_other$stemDiameter/2)^2 * vst_agb_other$height * 100 * 0.22/1000),
-                                               digits = 3),
-                                         NA)
 
-    #   Provide tree fern allometry reference
-    vst_agb_other$agb_source <- ifelse(!is.na(vst_agb_other$agb_Cibotium),
-                                       "Ostertag_et_al_2014",
-                                       vst_agb_other$agb_source)
+    # vst_agb_other$agb_Cibotium <- ifelse(substring(vst_agb_other$scientificName,1,8) == "Cibotium",
+    #                                      round(0.2085 * (pi * (vst_agb_other$stemDiameter/2)^2 * vst_agb_other$height * 100 * 0.22/1000),
+    #                                            digits = 3),
+    #                                      NA)
+    #
+    # # #   Provide tree fern allometry reference
+    # vst_agb_other$agb_source <- ifelse(!is.na(vst_agb_other$agb_Cibotium),
+    #                                    "Ostertag_et_al_2014",
+    #                                    vst_agb_other$agb_source)
+    #
+    # vst_agb_other$agb <- ifelse(vst_agb_other$agb_source == "Ostertag_et_al_2014",
+    #                             vst_agb_other$agb_Cibotium,
+    #                             vst_agb_other$agb)
 
-    vst_agb_other$agb <- ifelse(vst_agb_other$agb_source == "Ostertag_et_al_2014",
-                                vst_agb_other$agb_Cibotium,
-                                vst_agb_other$agb)
+    vst_agb_other <- vst_agb_other %>%
+      dplyr::mutate(agb_Cibotium = dplyr::case_when(grepl("Cibotium", .data$scientificName) &
+                                                      .data$growthForm == "large tree fern" ~
+                                                      round(pi * (.data$stemDiameter/2)^2 * .data$stemLength * 100 *
+                                                              0.22/1000,
+                                                            digits = 2),
+                                                    TRUE ~ NA),
+                    agb_source = dplyr::case_when(!is.na(.data$agb_Cibotium) ~ "Asner_et_al_2011",
+                                                  TRUE ~ .data$agb_source),
+                    agb = dplyr::case_when(!is.na(.data$agb_Cibotium) ~ .data$agb_Cibotium,
+                                           TRUE ~ .data$agb))
+
+
+
+    ### Clean-up of nonWoody data: Add required fields and remove unneeded fields
 
     #   Identify unique plot x eventIDs in vst_nonWoody data
     vst_agb_other$plot_eventID <- paste0(vst_agb_other$plotID, "_", vst_agb_other$eventID)
@@ -392,29 +431,33 @@ estimateWoodMass = function(inputDataList,
     #   Identify unique years in vst_nonWoody data
     vst_agb_other$year <- as.numeric(substr(vst_agb_other$eventID, 10, 13))
 
-    #   Retain individuals that are unambiguously 'alive' or 'dead' according to plantStatus
+
+    ##  Collate missing individuals (removed, lost, downed) and those with agb = "NA" for separate output table
+    missingDownedDF <- vst_agb_other %>%
+      dplyr::filter(.data$plantStatus %in% missingDowned | is.na(.data$agb)) %>%
+      dplyr::select("plot_eventID",
+                    "eventID",
+                    "plotID",
+                    "taxonID",
+                    "scientificName",
+                    "individualID",
+                    "plantStatus",
+                    "growthForm",
+                    "year",
+                    "agb") %>%
+      dplyr::bind_rows(missingDownedDF)
+
+
+    ##  Retain standing individuals in the plot with agb != NA that are unambiguously 'alive' or 'dead' according to plantStatus and create simplified 'plantStatus2' variable. Removing NA records avoids misinterpreting as "0" mass in later steps. Cactus and ferns removed because no allometries are applied to these individuals.
     vst_agb_other <- vst_agb_other %>%
-      dplyr::filter(!is.na(.data$plantStatus) & .data$plantStatus != "No longer qualifies" & .data$plantStatus != "Removed" &
-                      .data$plantStatus != "Lost, fate unknown" & .data$plantStatus != "Lost, tag damaged" &
-                      .data$plantStatus != "Lost, herbivory" & .data$plantStatus != "Lost, burned" &
-                      .data$plantStatus != "Lost, presumed dead" & .data$plantStatus != "Downed")
+      dplyr::filter(.data$plantStatus %in% standingLiveDead,
+                    !is.na(.data$agb),
+                    !.data$growthForm %in% c("cactus", "fern")) %>%
+      dplyr::mutate(plantStatus2 = dplyr::case_when(.data$plantStatus %in% head(standingLiveDead, -2) ~ "live",
+                                                    TRUE ~ "dead"))
 
-    #   Simplify plantStatus to "live", "dead_or_lost"
-    vst_agb_other$plantStatus2 <- dplyr::if_else(vst_agb_other$plantStatus %in% c("Live",
-                                                                                  "Live, disease damaged",
-                                                                                  "Live, insect damaged",
-                                                                                  "Live,  other damage",
-                                                                                  "Live, physically damaged",
-                                                                                  "Live, broken bole"),
-                                                 "Live",
-                                                 "Dead_or_Lost",
-                                                 "Live")
 
-    #   Remove biomass "NA" records to avoid misinterpreting as "0" mass in later steps
-    vst_agb_other <- vst_agb_other %>%
-      dplyr::filter(!is.na(.data$agb))
-
-    #   Remove unneeded columns
+    ##  Remove unneeded columns
     vst_agb_other <- vst_agb_other %>%
       dplyr::select(-"uid",
                     -"namedLocation",
@@ -448,21 +491,23 @@ estimateWoodMass = function(inputDataList,
 
     ##  Join to associate records with total sampled areas
     vst_agb_final_other <- merge(vst_agb_final_other,
-                                 perplot,
+                                 perPlot,
                                  by = c("plot_eventID", "eventID", "year", "plotID"),
                                  all.x = TRUE)
 
-    vst_agb_final_other$sampledAreaM2 <- vst_agb_final_other$totalSampledAreaOther
 
-    #   Remove cactus and fern records for which allometries are lacking
+    ##  Assign total sampled area for each individual based on growthForm
+    #--> palm tree and large tree fern individuals sampled throughout plot like trees.
     vst_agb_final_other <- vst_agb_final_other %>%
-      dplyr::filter(.data$growthForm != "cactus" & .data$growthForm != "fern")
+      dplyr::mutate(sampledArea_m2 = dplyr::case_when(.data$growthForm %in% c("palm tree", "large tree fern") ~
+                                                        .data$totalSampledAreaTrees,
+                                                      TRUE ~ .data$totalSampledAreaOther))
 
   } #   end non-woody conditional
 
 
 
-  #### Calculate biomass for vst_apparentindividual table ####
+  ### Estimate woody biomass: Calculate biomass for individuals in vst_apparentindividual table ####
 
   ##  Read in taxonID from vst_mappingandtagging table
   #   Create working data frame from vst_mappingandtagging table
