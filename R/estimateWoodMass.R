@@ -510,70 +510,70 @@ estimateWoodMass = function(inputDataList,
   ### Estimate woody biomass: Calculate biomass for individuals in vst_apparentindividual table ####
 
   ##  Read in taxonID from vst_mappingandtagging table
-  #   Create working data frame from vst_mappingandtagging table
-  map <- vst_mappingandtagging
-
   #   Retain most recent record from vst_mappingandtagging
   map <- map[order(map$date),]
   map <- map[!duplicated(map$individualID, fromLast = TRUE), ]
 
   #   Find unique taxonIDs
   taxonID_df <- map %>%
-    dplyr::select("taxonID",
-                  "scientificName",
-                  "family",
-                  "genus") %>%
-    unique()
+    dplyr::distinct(.data$taxonID,
+                    .data$scientificName,
+                    .data$family,
+                    .data$genus)
 
-  vst_taxonIDs <- taxonID_df$taxonID
+  vst_taxonIDs <- sort(taxonID_df$taxonID)
 
   map <- map %>%
     dplyr::select("individualID",
                   "taxonID")
 
-  #   Create working data frame from vst_apparentindividual table
-  appInd <- vst_apparentindividual
 
-  #   remove apparentIndividual records without necessary perplot data
+
+  ### Prepare and clean vst_apparentindividual data
+
+  ##  Remove apparentIndividual records without necessary perplot data
     appInd$plot_eventID <- paste0(appInd$plotID, "_", appInd$eventID)
 
     appInd <- appInd %>%
       dplyr::filter(appInd$plot_eventID %in% plot_eventID_list)
 
 
-  message("Assembling allometric equation parameters ..... ")
+  ##  Temporary fix of some eventIDs until fixes are made to portal data
+  # appInd$month <- as.numeric(substr(appInd$date, 6, 7))
 
-  #   Temporary fix of some eventIDs until fixes are made to portal data
-  appInd$month <- as.numeric(substr(appInd$date, 6, 7))
+  # appInd$eventID <- ifelse(as.numeric(substr(appInd$date, 1, 4)) == 2019 &
+  #                            as.numeric(substr(appInd$eventID, 10, 13)) == 2017 & appInd$siteID == "WREF",
+  #                          "vst_WREF_2019",
+  #                          appInd$eventID)
+  #--> Portal data fixed as of 2025-06-30
 
-  appInd$eventID <- ifelse(as.numeric(substr(appInd$date, 1, 4)) == 2019 & as.numeric(substr(appInd$eventID, 10, 13)) == 2017 &
-                             appInd$siteID == "WREF",
-                           "vst_WREF_2019",
-                           appInd$eventID)
+  # appInd$eventID <- ifelse(as.numeric(substr(appInd$date, 1, 4)) == 2018 & as.numeric(substr(appInd$eventID, 10, 13)) == 2016 &
+  #                            appInd$siteID == "UKFS",
+  #                          "vst_UKFS_2018",
+  #                          appInd$eventID)
+  #--> Portal data fixed as of 2025-06-30
 
-  appInd$eventID <- ifelse(as.numeric(substr(appInd$date, 1, 4)) == 2018 & as.numeric(substr(appInd$eventID, 10, 13)) == 2016 &
-                             appInd$siteID == "UKFS",
-                           "vst_UKFS_2018",
-                           appInd$eventID)
+  # appInd$eventID <- ifelse(as.numeric(substr(appInd$date, 1, 4)) == 2018 & appInd$month >= 7 &
+  #                            as.numeric(substr(appInd$eventID, 10, 13)) == 2017 & appInd$siteID == "RMNP" ,
+  #                          "vst_RMNP_2018",
+  #                          appInd$eventID)
+  #--> Portal data fixed as of 2025-06-30
 
-  appInd$eventID <- ifelse(as.numeric(substr(appInd$date, 1, 4)) == 2018 & appInd$month >= 7 &
-                             as.numeric(substr(appInd$eventID, 10, 13)) == 2017 & appInd$siteID == "RMNP" ,
-                           "vst_RMNP_2018",
-                           appInd$eventID)
+  # appInd$eventID <- ifelse(as.numeric(substr(appInd$date, 1, 4)) == 2018 & appInd$month >= 7 &
+  #                            as.numeric(substr(appInd$eventID, 10, 13)) == 2017 & appInd$siteID == "UNDE" ,
+  #                          "vst_UNDE_2018",
+  #                          appInd$eventID)
+  #--> Portal data fixed as of 2025-06-30
 
-  appInd$eventID <- ifelse(as.numeric(substr(appInd$date, 1, 4)) == 2018 & appInd$month >= 7 &
-                             as.numeric(substr(appInd$eventID, 10, 13)) == 2017 & appInd$siteID == "UNDE" ,
-                           "vst_UNDE_2018",
-                           appInd$eventID)
-
-  appInd$eventID <- ifelse(as.numeric(substr(appInd$date, 1, 4)) == 2017 & appInd$month == 12 &
-                             as.numeric(substr(appInd$eventID, 10, 13)) == 2018 & appInd$siteID == "GUAN" ,
-                           "vst_GUAN_2017",
-                           appInd$eventID)
-  appInd$month <- NULL
+  # appInd$eventID <- ifelse(as.numeric(substr(appInd$date, 1, 4)) == 2017 & appInd$month == 12 &
+  #                            as.numeric(substr(appInd$eventID, 10, 13)) == 2018 & appInd$siteID == "GUAN" ,
+  #                          "vst_GUAN_2017",
+  #                          appInd$eventID)
+  #--> Portal data fixed as of 2025-06-30
+  #appInd$month <- NULL
 
 
-  ##  Merge vst_apparentindividual table with map and perplot to obtain taxonID field and area fields
+  ##  Merge vst_apparentindividual table with map and perplot to obtain taxonID field and sampling area fields
   #   Add taxonID to appInd table
   appInd <- merge(appInd,
                   map,
