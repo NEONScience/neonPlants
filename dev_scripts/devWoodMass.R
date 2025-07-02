@@ -108,8 +108,172 @@ cibDF <- vst_agb_other %>%
                                 digits = 3))
 
 
+#   Equation format for Chojnacki 2014 (Table 5)
+log(agb) = b0 + b1 * log(stemDiameter)
 
-
-
+# Choj$allometry_ID <- NA
+#
+# Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "forest" & Choj$genus == "Abies" & Choj$spg_gcm3 < 0.35,
+#                             "C1",
+#                             Choj$allometry_ID)
+#
+# Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "forest" & Choj$genus == "Abies" & Choj$spg_gcm3 >= 0.35,
+#                             "C2",
+#                             Choj$allometry_ID)
+#
+# Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "forest" & Choj$family == "Cupressaceae" & Choj$spg_gcm3 <0.30,
+#                             "C3",
+#                             Choj$allometry_ID)
+#
+# Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "forest" & Choj$family == "Cupressaceae" &
+#                               Choj$spg_gcm3 >= 0.30 & Choj$spg_gcm3 < 0.40,
+#                             "C4",
+#                             Choj$allometry_ID)
+#
+# Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "forest" & Choj$family == "Cupressaceae" & Choj$spg_gcm3 >=0.40,
+#                             "C5",
+#                             Choj$allometry_ID)
+#
+# Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "forest" & Choj$genus == "Larix",
+#                             "C6",
+#                             Choj$allometry_ID)
+#
+# Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "forest" & Choj$genus == "Picea" & Choj$spg_gcm3 < 0.35,
+#                             "C7",
+#                             Choj$allometry_ID)
+#
+# Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "forest" & Choj$genus == "Picea" & Choj$spg_gcm3 >= 0.35,
+#                             "C8",
+#                             Choj$allometry_ID)
+#
+# Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "forest" & Choj$genus == "Pinus" & Choj$spg_gcm3 < 0.45,
+#                             "C9",
+#                             Choj$allometry_ID)
+#
+# Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "forest" & Choj$genus == "Pinus" & Choj$spg_gcm3 >= 0.45,
+#                             "C10",
+#                             Choj$allometry_ID)
+#
+# Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "forest" &
+#                               (Choj$genus == "Pseudotsuga" | Choj$genus == "Taxus" | Choj$genus == "Pseudotsuga"),
+#                             "C11",
+#                             Choj$allometry_ID)
+#
+# Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "forest" & Choj$genus == "Tsuga" & Choj$spg_gcm3 < 0.40,
+#                             "C12",
+#                             Choj$allometry_ID)
+#
+# Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "forest" & Choj$genus == "Tsuga" & Choj$spg_gcm3 >= 0.40,
+#                             "C13",
+#                             Choj$allometry_ID)
+#
+# Choj$allometry_ID <- ifelse(Choj$family == "Aceraceae" & Choj$spg_gcm3 < 0.50,
+#                             "H1",
+#                             Choj$allometry_ID)
+#
+# Choj$allometry_ID <- ifelse(Choj$family == "Aceraceae" & Choj$spg_gcm3 >= 0.50,
+#                             "H2",
+#                             Choj$allometry_ID)
+#
+# Choj$allometry_ID <- ifelse((is.na(Choj$allometry_ID) | Choj$allometry_ID == "") & Choj$family == "Betulaceae"
+#                             & Choj$spg_gcm3 < 0.40,
+#                             "H3",
+#                             Choj$allometry_ID)
+#
+# Choj$allometry_ID <- ifelse((is.na(Choj$allometry_ID) | Choj$allometry_ID == "") & Choj$family == "Betulaceae" &
+#                               Choj$spg_gcm3 >= 0.40 & Choj$spg_gcm3 < 0.50,
+#                             "H4",
+#                             Choj$allometry_ID)
+#
+# Choj$allometry_ID <- ifelse((is.na(Choj$allometry_ID) | Choj$allometry_ID == "") & Choj$family == "Betulaceae" &
+#                               Choj$spg_gcm3 >= 0.50 & Choj$spg_gcm3 < 0.60,
+#                             "H5",
+#                             Choj$allometry_ID)
+#
+# Choj$allometry_ID <- ifelse((is.na(Choj$allometry_ID) | Choj$allometry_ID == "") & Choj$family == "Betulaceae" &
+#                               Choj$spg_gcm3 >= 0.60,
+#                             "H6",
+#                             Choj$allometry_ID)
+#
+# Choj$allometry_ID <- ifelse((Choj$family == "Cornaceae" | Choj$family == "Ericaceae" | Choj$family == "Lauraceae" |
+#                                Choj$family == "Platanaceae" | Choj$family == "Rosaceae" | Choj$family == "Ulmaceae"),
+#                             "H7",
+#                             Choj$allometry_ID)
+#
+# Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "forest" & Choj$genus == "Carya",
+#                             "H8",
+#                             Choj$allometry_ID)
+#
+# Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "forest" & (Choj$family == "Fabaceae" | Choj$family == "Juglandaceae") &
+#                               Choj$genus != "Carya",
+#                             "H9",
+#                             Choj$allometry_ID)
+#
+# Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "forest" & Choj$family == "Fagaceae" & Choj$decid_vs_ever == "decid",
+#                             "H10",
+#                             Choj$allometry_ID)
+#
+# Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "forest" & Choj$family == "Fagaceae" & Choj$decid_vs_ever == "ever",
+#                             "H11",
+#                             Choj$allometry_ID)
+#
+# Choj$allometry_ID <- ifelse(Choj$family == "Hamamelidaceae",
+#                             "H12",
+#                             Choj$allometry_ID)
+#
+# Choj$allometry_ID <- ifelse((Choj$family == "Hippocastanaceae" | Choj$family == "Tiliaceae"),
+#                             "H13",
+#                             Choj$allometry_ID)
+#
+# Choj$allometry_ID <- ifelse(Choj$family == "Magnoliaceae",
+#                             "H14",
+#                             Choj$allometry_ID)
+#
+# Choj$allometry_ID <- ifelse((is.na(Choj$allometry_ID) | Choj$allometry_ID == "") & Choj$family == "Oleaceae" &
+#                               Choj$spg_gcm3 < 0.55,
+#                             "H15",
+#                             Choj$allometry_ID)
+#
+# Choj$allometry_ID <- ifelse((is.na(Choj$allometry_ID) | Choj$allometry_ID == "") & Choj$family == "Oleaceae" &
+#                               Choj$spg_gcm3 >= 0.55,
+#                             "H16",
+#                             Choj$allometry_ID)
+#
+# Choj$allometry_ID <- ifelse((is.na(Choj$allometry_ID) | Choj$allometry_ID == "") & Choj$family == "Salicaceae" &
+#                               Choj$spg_gcm3 < 0.35,
+#                             "H17",
+#                             Choj$allometry_ID)
+#
+# Choj$allometry_ID <- ifelse((is.na(Choj$allometry_ID) | Choj$allometry_ID == "") & Choj$family == "Salicaceae" &
+#                               Choj$spg_gcm3 >= 0.35,
+#                             "H18",
+#                             Choj$allometry_ID)
+#
+# Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "woodland" & Choj$family == "Cupressaceae",
+#                             "W1",
+#                             Choj$allometry_ID)
+#
+# Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "woodland" & (Choj$family == "Fabaceae" | Choj$family == "Rosaceae"),
+#                             "W2",
+#                             Choj$allometry_ID)
+#
+# Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "woodland" & Choj$family == "Fagaceae",
+#                             "W3",
+#                             Choj$allometry_ID)
+#
+# Choj$allometry_ID <- ifelse(Choj$woodland_vs_forest == "woodland" & Choj$family == "Pinaceae",
+#                             "W4",
+#                             Choj$allometry_ID)
+#
+# #   Arbitrarily picked C9 (forest) over C10 (forest spg_gcm3>=0.45) or W4 (woodland)
+# Choj$allometry_ID <- ifelse(Choj$taxonID == "PINACE",
+#                             "C9",
+#                             Choj$allometry_ID)
+#
+# #   Arbitrarily picked H9 (forest) over W2 (woodland)
+# Choj$allometry_ID <- ifelse(Choj$taxonID == "FABACE",
+#                             "H9",
+#                             Choj$allometry_ID)
+#
 
 
