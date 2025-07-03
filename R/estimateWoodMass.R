@@ -754,23 +754,20 @@ estimateWoodMass = function(inputDataList,
                    by = "taxonID",
                    all.x = TRUE)
 
-  #   Manually assign 'tropical' status for a subset of taxonIDs
-  vst_agb$tropical <- ifelse((vst_agb$taxonID == "2PLANT" | vst_agb$taxonID == "2PLANT-H" | vst_agb$taxonID == "ANAL12" |
-                                vst_agb$taxonID == "BOURR" | vst_agb$taxonID == "BUMI6" | vst_agb$taxonID == "CONVOL" |
-                                vst_agb$taxonID == "CROSS" | vst_agb$taxonID == "FABACE" | vst_agb$taxonID == "JACQU" |
-                                vst_agb$taxonID == "JACQU2" | vst_agb$taxonID == "COPRO" | vst_agb$taxonID == "HYDRAN") &
-                               (vst_agb$siteID == "GUAN" | vst_agb$siteID == "PUUM" | vst_agb$siteID == "LAJA"),
-                             "tropical",
-                             vst_agb$tropical)
+  #   Manually assign 'tropical' and 'temperate' status for a subset of taxonIDs
+  vst_agb <- vst_agb %>%
+    dplyr::mutate(tropical = dplyr::case_when(.data$siteID %in% c("GUAN", "LAJA", "PUUM") &
+                                                .data$taxonID %in% c("2PLANT", "2PLANT-H", "ANAL12", "BOURR", "BUMI6",
+                                                                     "CONVOL", "CROSS", "FABACE", "JACQU", "JACQU2",
+                                                                     "COPRO", "HYDRAN") ~ "tropical",
+                                              TRUE ~ .data$tropical))
 
-  #   Manually assign 'temperate' status for a subset of taxonIDs
-  vst_agb$tropical <- ifelse((vst_agb$taxonID == "AMAR5" | vst_agb$taxonID == "CELTI" | vst_agb$taxonID == "DAWR2" |
-                                vst_agb$taxonID == "LIJA" | vst_agb$taxonID == "MEAZ" | vst_agb$taxonID == "OPUNT" |
-                                vst_agb$taxonID == "RHUS" | vst_agb$taxonID == "SAMBU" | vst_agb$taxonID == "SMSM" |
-                                vst_agb$taxonID == "SYMPL2" | vst_agb$taxonID == "VITIS") &
-                               (vst_agb$siteID != "GUAN" & vst_agb$siteID != "PUUM" & vst_agb$siteID != "LAJA"),
-                             "temperate",
-                             vst_agb$tropical)
+  vst_agb <- vst_agb %>%
+    dplyr::mutate(tropical = dplyr::case_when(!.data$siteID %in% c("GUAN", "LAJA", "PUUM") &
+                                                .data$taxonID %in% c("AMAR5", "CELTI", "DAWR2", "LIJA", "MEAZ", "OPUNT",
+                                                                     "RHUS", "SAMBU", "SMSM", "SYMPL2", "VITIS")
+                                              ~ "temperate",
+                                              TRUE ~ .data$tropical))
 
   #   Assign specific gravity data type
   vst_agb$spg_gcm3 <- as.numeric(vst_agb$spg_gcm3)
@@ -781,34 +778,50 @@ estimateWoodMass = function(inputDataList,
                                      vst_agb$spg_gcm3,
                                      vst_agb$spg_gcm3)
 
-    # If growthForm is missing for a record but is available from another instance of the same individualID then populate.
-    # There are many dead and downed individuals that are missing growthForm, and without a growthForm and area this leaves out some instances of mortality
-  growth_form_lookup <- vst_agb %>% dplyr::select("individualID", "growthForm", "date") %>%
-    dplyr::filter(!is.na(growthForm)) %>%
-    dplyr::arrange("individualID", dplyr::desc(date)) %>%
-     dplyr::distinct(.data$individualID, .keep_all = TRUE) %>%
-     dplyr::select(-"date")
+  ##  If growthForm is missing for a record but is available from another instance of the same individualID then populate.
+  #-->  There are many dead and downed individuals that are missing growthForm, and without a growthForm and area this leaves out some instances of mortality
 
-  vst_agb <- dplyr::left_join(vst_agb, growth_form_lookup, by = "individualID", suffix = c("", ".lookup")) %>%
-    dplyr::mutate(growthForm = dplyr::if_else(is.na(.data$growthForm), .data$growthForm.lookup, .data$growthForm)) %>%
+  #   Create growthForm look-up table: Retain most recent 'growthForm' by individualID
+  growth_form_lookup <- vst_agb %>%
+    dplyr::select("individualID",
+                  "growthForm",
+                  "date") %>%
+    dplyr::filter(!is.na(.data$growthForm)) %>%
+    dplyr::arrange(.data$individualID,
+                   dplyr::desc(.data$date)) %>%
+    dplyr::distinct(.data$individualID,
+                    .keep_all = TRUE) %>%
+    dplyr::select(-"date")
+
+  #   Assign last known growthForm if growthForm is NA
+  vst_agb <- dplyr::left_join(vst_agb,
+                              growth_form_lookup,
+                              by = "individualID",
+                              suffix = c("", ".lookup")) %>%
+    dplyr::mutate(growthForm = dplyr::if_else(is.na(.data$growthForm),
+                                              .data$growthForm.lookup,
+                                              .data$growthForm)) %>%
     dplyr::select(-"growthForm.lookup")
 
-  #   Assign growthForm == "unknown" when value is NA
+  #   Assign growthForm == "unknown" when value is still NA
   vst_agb$growthForm <- dplyr::if_else(is.na(vst_agb$growthForm),
                                        "unknown",
                                        vst_agb$growthForm,
                                        vst_agb$growthForm)
 
-  #   Select columns to remove unneeded data, and simplify values of 'plantStatus2'
+  #   Select columns to remove unneeded data, and add simplified 'plantStatus2' values
   vst_agb <- vst_agb %>%
-    dplyr::select("taxonID",
+    dplyr::select("domainID",
+                  "siteID",
+                  "plotID",
+                  "taxonID",
+                  "family",
+                  "genus",
                   "scientificName",
                   "individualID",
                   "indEvent",
                   "eventID",
                   "date",
-                  "siteID",
-                  "plotID",
                   "growthForm",
                   "nlcdClass",
                   "totalSampledAreaTrees",
@@ -829,28 +842,20 @@ estimateWoodMass = function(inputDataList,
                   "maxDiameter",
                   "spg_gcm3",
                   "nativeStatus",
-                  "tropical",
-                  "family",
-                  "genus")
+                  "tropical") %>%
+    dplyr::mutate(plantStatus2 = dplyr::case_when(.data$plantStatus %in% head(standingLiveDead, -2) ~ "Live",
+                                                  TRUE ~ "Dead_or_Lost"),
+                  .after = "plantStatus")
 
-  vst_agb$plantStatus2 <- ifelse(vst_agb$plantStatus %in% c("Live",
-                                                            "Live, disease damaged",
-                                                            "Live, insect damaged",
-                                                            "Live,  other damage",
-                                                            "Live, physically damaged",
-                                                            "Live, broken bole"),
-                                 "Live",
-                                 "Dead_or_Lost")
-
-  #   Negative ninetyCrownDiameter is meaningless and generates NAN warnings in some allometric equations
-  vst_agb$ninetyCrownDiameter <- dplyr::if_else(vst_agb$ninetyCrownDiameter < 0 ,
+  #   Correct negative ninetyCrownDiameter: Meaningless and generates NAN warnings in some allometric equations
+  vst_agb$ninetyCrownDiameter <- dplyr::if_else(vst_agb$ninetyCrownDiameter < 0,
                                                 NA,
                                                 vst_agb$ninetyCrownDiameter)
 
 
-  #   Combine basal area of shrubs belonging to same individualID and calculate round diameter equivalant from that
+  ##  Combine basal area of shrubs belonging to same individualID and calculate round diameter equivalent
   nonShrub <- vst_agb %>%
-    dplyr::filter( (.data$growthForm != "single shrub" & .data$growthForm != "small shrub") | is.na(.data$growthForm) )
+    dplyr::filter((.data$growthForm != "single shrub" & .data$growthForm != "small shrub") | is.na(.data$growthForm))
 
   shrub <- vst_agb %>%
     dplyr::filter(.data$growthForm == "single shrub" | .data$growthForm == "small shrub")
@@ -860,49 +865,68 @@ estimateWoodMass = function(inputDataList,
 
   #   Group multiple stems belonging to same individualID, sum basal area, and take the mean of the other quantitative values
   shrub <- shrub %>%
-    dplyr::group_by(.data$taxonID,
-                   .data$scientificName,
-                   .data$individualID,
-                   .data$indEvent,
-                   .data$eventID,
-                   .data$date,
-                   .data$siteID,
-                   .data$plotID,
-                   .data$growthForm,
-                   .data$nlcdClass,
-                   .data$totalSampledAreaTrees,
-                   .data$totalSampledAreaShrubSapling,
-                   .data$totalSampledAreaLiana,
-                   .data$plantStatus,
-                   .data$allometry_ID,
-                   .data$b0,
-                   .data$b1,
-                   .data$minDiameter,
-                   .data$maxDiameter,
-                   .data$spg_gcm3,
-                   .data$nativeStatus,
-                   .data$tropical,
-                   .data$family,
-                   .data$genus,
-                   .data$plantStatus2) %>%
-    dplyr::summarise(basalArea = sum(.data$basalArea, na.rm = TRUE),
-                     basalAreaDBH = sum(.data$basalAreaDBH, na.rm = TRUE),
-                     height = mean(.data$height, na.rm = TRUE) ,
-                     maxCrownDiameter = mean(.data$maxCrownDiameter, na.rm = TRUE),
-                     ninetyCrownDiameter = mean(.data$ninetyCrownDiameter, na.rm = TRUE),
-                     measurementHeight = mean(.data$measurementHeight, na.rm = TRUE),
-                     basalStemDiameterMsrmntHeight = mean(.data$basalStemDiameterMsrmntHeight, na.rm = TRUE),
-                    .groups = "drop")
+    dplyr::group_by(.data$domainID,
+                    .data$siteID,
+                    .data$plotID,
+                    .data$taxonID,
+                    .data$family,
+                    .data$genus,
+                    .data$scientificName,
+                    .data$individualID,
+                    .data$indEvent,
+                    .data$eventID,
+                    .data$date,
+                    .data$growthForm,
+                    .data$nlcdClass,
+                    .data$totalSampledAreaTrees,
+                    .data$totalSampledAreaShrubSapling,
+                    .data$totalSampledAreaLiana,
+                    .data$plantStatus,
+                    .data$plantStatus2,
+                    .data$allometry_ID,
+                    .data$b0,
+                    .data$b1,
+                    .data$minDiameter,
+                    .data$maxDiameter,
+                    .data$spg_gcm3,
+                    .data$nativeStatus,
+                    .data$tropical) %>%
+    dplyr::summarise(basalArea = ifelse(!all(is.na(.data$basalArea)),
+                                        round(sum(.data$basalArea, na.rm = TRUE), digits = 2),
+                                        NA),
+                     basalAreaDBH = ifelse(!all(is.na(.data$basalAreaDBH)),
+                                           round(sum(.data$basalAreaDBH, na.rm = TRUE), digits = 2),
+                                           NA),
+                     height = ifelse(!all(is.na(.data$height)),
+                                     max(.data$height, na.rm = TRUE),
+                                     NA),
+                     maxCrownDiameter = ifelse(!all(is.na(.data$maxCrownDiameter)),
+                                               max(.data$maxCrownDiameter, na.rm = TRUE),
+                                               NA),
+                     ninetyCrownDiameter = ifelse(!all(is.na(.data$ninetyCrownDiameter)),
+                                                  max(.data$ninetyCrownDiameter, na.rm = TRUE),
+                                                  NA),
+                     measurementHeight = ifelse(!all(is.na(.data$measurementHeight)),
+                                                round(mean(.data$measurementHeight, na.rm = TRUE), digits = 0),
+                                                NA),
+                     basalStemDiameterMsrmntHeight = ifelse(!all(is.na(.data$basalStemDiameterMsrmntHeight)),
+                                                round(mean(.data$basalStemDiameterMsrmntHeight, na.rm = TRUE), digits = 0),
+                                                NA),
+                     .groups = "drop") %>%
 
-  #   Calculate round diameter equivalent of the the combined stems belonging to the same individualID
-  shrub$basalStemDiameter <- 2 * (sqrt(shrub$basalArea/pi))
+    #   Calculate round diameter equivalent of the combined stems belonging to the same individualID
+    dplyr::mutate(stemDiameter = round(2 * (sqrt(.data$basalAreaDBH / pi)), digits = 1),
+                  basalStemDiameter = round(2 * (sqrt(.data$basalArea / pi)), digits = 1),
+                  .before = "basalArea") %>%
 
-  #   Calculate round DBHdiameter equivalent of the the combined stems belonging to the same individualID
-  shrub$stemDiameter <- 2*(sqrt(shrub$basalAreaDBH/pi))
+    #   Remove unneeded columns
+    dplyr::select(-"basalArea",
+                  -"basalAreaDBH")
 
-  shrub$basalArea <- shrub$basalAreaDBH <- NULL
 
-  vst_agb <- rbind(nonShrub, shrub)
+  ##  Bind 'nonShrub' and 'shrub' together into simplified dataframe
+  vst_agb <- dplyr::bind_rows(nonShrub,
+                              shrub)
 
 
 

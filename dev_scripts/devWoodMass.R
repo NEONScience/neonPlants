@@ -276,4 +276,34 @@ log(agb) = b0 + b1 * log(stemDiameter)
 #                             Choj$allometry_ID)
 #
 
+#   Check last known growthFom logic
+test <- dplyr::left_join(vst_agb,
+                         growth_form_lookup,
+                         by = "individualID",
+                         suffix = c("", ".lookup")) %>%
+  dplyr::mutate(newGrowthForm = dplyr::if_else(is.na(.data$growthForm),
+                                            .data$growthForm.lookup,
+                                            .data$growthForm),
+                .after = growthForm) %>%
+  dplyr::filter(is.na(growthForm))
 
+test <- vst_agb %>% dplyr::filter(is.na(growthForm))
+
+
+test <- dplyr::left_join(vst_agb,
+                            growth_form_lookup,
+                            by = "individualID",
+                            suffix = c("", ".lookup")) %>%
+  dplyr::mutate(growthForm = dplyr::if_else(is.na(.data$growthForm),
+                                            .data$growthForm.lookup,
+                                            .data$growthForm)) %>%
+  dplyr::select(-"growthForm.lookup")
+
+
+nonWoodyRecords <- neonUtilities::loadByProduct(dpID = "DP1.10098.001",
+                                                tabl = "vst_non-woody",
+                                                check.size = FALSE,
+                                                token = Sys.getenv("NEON_TOKEN"))
+nonWoodyRecords <- nonWoodyRecords$`vst_non-woody`
+
+temp <- dplyr::filter(nonWoodyRecords, plantStatus == "Live, other damage")

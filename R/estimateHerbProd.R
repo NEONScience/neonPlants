@@ -6,7 +6,7 @@
 #'
 #' @description Estimate above-ground herbaceous productivity using NEON Herbaceous Clip Harvest data tables (DP1.10023.001).
 #'
-#' @details Input data should be a list of herbaceous biomass (DP1.10023.001) data frames downloaded via the neonUtilities::loadByProduct() function. The companion scaleHerbMass() function is called internally, and outputs from this function are used to estimate herbaceous productivity.
+#' @details Input data should be a list of herbaceous biomass (DP1.10023.001) data frames downloaded via the neonUtilities::loadByProduct() function, data tables downloaded from the NEON Data Portal, or input tables with an equivalent structure and representing the same site x month combinations. The companion scaleHerbMass() function is called internally, and outputs from this function are used to estimate herbaceous productivity.
 #'
 #' Where herbaceous plants are not subject to grazing management and exclosures are not in use, the estimate of herbaceous ANPP is simply the standing biomass of the last bout of the season.
 #'
@@ -15,6 +15,12 @@
 #' Note that the Science Design only supports calculating consumption at the site level. The clip harvests within exclosures are not close enough to ambient clip harvests to support plot-level consumption estimates.
 #'
 #' @param inputDataList An R list object produced by the neonUtilities::loadByProduct() function for the NEON Herbaceous Clip Harvest data product. [list]
+#'
+#' @param inputBout The 'hbp_perbout' table for the site x month combination(s) of interest
+#' (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
+#'
+#' @param inputMass The 'hbp_massdata' table for the site x month combination(s) of interest
+#' (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
 #'
 #' @param plotSubset The options are "all" (all Tower and Distributed plots), the default of "tower" (all plots in the Tower airshed but no Distributed plots), and "distributed" (all Distributed plots, which are sampled on a 5-year interval and are spatially representative of the NLCD classes at a site). [character]
 #'
@@ -44,6 +50,8 @@
 #' @export estimateHerbProd
 
 estimateHerbProd = function(inputDataList,
+                            inputBout = NA,
+                            inputMass = NA,
                             plotSubset = "tower") {
 
   options(dplyr.summarise.inform = FALSE)
@@ -67,6 +75,8 @@ estimateHerbProd = function(inputDataList,
 
   ### Generate scaleHerbMass outputs
   scaleHerbMassOutput <- neonPlants::scaleHerbMass(inputDataList = inputDataList,
+                                                   inputBout = inputBout,
+                                                   inputMass = inputMass,
                                                    plotSubset = plotSubset)
 
   #   Unlist outputs

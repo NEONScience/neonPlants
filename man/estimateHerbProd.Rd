@@ -4,10 +4,21 @@
 \alias{estimateHerbProd}
 \title{Estimate ANPP (Above-ground Net Primary Productivity) contributed by herbaceous vegetation}
 \usage{
-estimateHerbProd(inputDataList, plotSubset = "tower")
+estimateHerbProd(
+  inputDataList,
+  inputBout = NA,
+  inputMass = NA,
+  plotSubset = "tower"
+)
 }
 \arguments{
 \item{inputDataList}{An R list object produced by the neonUtilities::loadByProduct() function for the NEON Herbaceous Clip Harvest data product. \link{list}}
+
+\item{inputBout}{The 'hbp_perbout' table for the site x month combination(s) of interest
+(defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
+
+\item{inputMass}{The 'hbp_massdata' table for the site x month combination(s) of interest
+(defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 
 \item{plotSubset}{The options are "all" (all Tower and Distributed plots), the default of "tower" (all plots in the Tower airshed but no Distributed plots), and "distributed" (all Distributed plots, which are sampled on a 5-year interval and are spatially representative of the NLCD classes at a site). \link{character}}
 }
