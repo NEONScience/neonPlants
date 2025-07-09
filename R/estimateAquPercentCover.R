@@ -15,7 +15,7 @@
 #' - \eqn{N_i} is the number of observed points in a transect that match class type “i” (i.e., a particular taxonID or substrate)
 #' - \eqn{N_t} is the total number of points observed in the transect
 #'
-#' Note: This calculation can generate percent cover values >100% if there is vertical stacking of plants.
+#' Note: This calculation can generate percent cover values >100% if there is vertical stacking of plants, or values <100% if 'targetTaxaPresent' is unknown.
 #'
 #' @param inputDataList A list object comprised of Aquatic Plant, Bryophyte, Lichen, and Macroalgae Point Count tables (DP1.20072.001) downloaded using the neonUtilities::loadByProduct() function. If list input is provided, the table input arguments must all be NA; similarly, if list input is missing, table inputs must be provided. [list]
 #'
@@ -29,11 +29,11 @@
 #' 
 #' @param barPlots If TRUE, will produce a list of plots, one for each site/date in the data provided.
 #' 
-#' @return Two tables are produced containing point count summary data. The first "percentCover" table contains estimated percent cover for each observed species and/or substrate class on aquatic plant transects. This table includes a 'type' column indicating whether the estimate corresponds to a taxonID or a substrate class, and a 'substrateOrTaxonID' column which provides the corresponding identifier. 
+#' @return Two tables are produced containing point count summary data. The first "percentCover" table contains estimated percent cover for each observed species and/or substrate class on aquatic plant transects. This table includes a 'type' column indicating whether the estimate corresponds to a taxon or substrate class, and a 'substrateOrTaxonID' column which provides the corresponding taxonID or substrate identifier. 
 #' 
 #' The second "transectMetrics" table contains summary information including the length, habitatType, and total number of points sampled at each transect. 
 #' 
-#' If barPlots = TRUE, a list containing plots of the data will also be produced. 
+#' If barPlots = TRUE, a list containing plots for each site x date combination will also be produced. 
 #'
 #' @references
 #' License: GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007
@@ -92,28 +92,8 @@ estimateAquPercentCover <- function(inputDataList,
   joinPointCounts <- joinPointCounts %>% dplyr::filter(is.na(.data$samplingImpractical))
   
   ### Calculate Percent Cover ####
-  
-  #  filter to only observed points:
-  # joinPointCounts <- joinPointCounts %>% filter(targetTaxaPresent == "Y")
-  
-  # Calculate percent cover of plants/macroalgae/etc
-  # percent_cover <- joinPointCounts %>%
-  #   dplyr::group_by(.data$namedLocation, .data$collectDate) %>%
-  #   dplyr::mutate(total_points = dplyr::n()) %>%
-  #   # dplyr::filter(targetTaxaPresent == 'Y') %>% 
-  #   dplyr::group_by(.data$namedLocation, .data$collectDate, .data$acceptedTaxonID, .data$scientificName) %>%
-  #   dplyr::reframe(
-  #     tax_count = dplyr::n(),
-  #     total_points = dplyr::first(total_points),
-  #     percent_cover = round( (100 * tax_count / total_points), 2)
-  #   )
-  
 
-  # Calculate total number of sampling points per group (siteID + collectDate)
-  # total_points_df <- joinPointCounts %>%
-  #   dplyr::group_by(.data$siteID, .data$collectDate) %>%
-  #   dplyr::summarise(total_points = dplyr::n(), .groups = "drop")
-  
+  # Calculate total number of sampling points per transect
   total_points_df <- joinPointCounts %>%
     dplyr::distinct(.data$siteID, .data$namedLocation, .data$collectDate, .data$pointNumber) %>%
     dplyr::group_by(.data$siteID, .data$namedLocation, .data$collectDate) %>%
@@ -147,7 +127,6 @@ estimateAquPercentCover <- function(inputDataList,
     dplyr::select("siteID", "collectDate", "namedLocation", "type", "substrateOrTaxonID",  "percent_cover") #"scientificName",
   
   # Combine results
-  # cover_substrate$scientificName <- NA_character_
   percent_cover <- dplyr::bind_rows(cover_substrate, cover_taxon) %>% 
     dplyr::arrange(.data$collectDate, .data$namedLocation)
   
