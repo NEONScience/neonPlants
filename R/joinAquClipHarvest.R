@@ -330,6 +330,14 @@ joinAquClipHarvest <- function(inputDataList,
         -"sampleCode"
       )
     
+    #   Columns conditionally replaced with taxProc data
+    join1_cols <- c(
+      "division", "class", "order", "family",
+      "genus", "section", "specificEpithet",
+      "scientificNameAuthorship", "identificationQualifier", "identificationReferences",
+      "taxonRank", "identifiedBy", "identifiedDate"
+    )
+    
     #   Update expert taxonomist identifications
     apJoin1 <- apBio %>%
       dplyr::left_join(
@@ -339,33 +347,26 @@ joinAquClipHarvest <- function(inputDataList,
         relationship = "many-to-many"
       ) %>%
       dplyr::mutate(
-        identifiedDate = dplyr::case_when(
-          !is.na(.data$taxonID_taxProc) ~ .data$identifiedDate_taxProc,
-          TRUE ~ .data$identifiedDate_bio
-        ),
         
         sampleCondition = dplyr::case_when(
-          !is.na(.data$sampleCondition_bio) &
-            !is.na(.data$sampleCondition_taxProc) ~ paste0(
-              "biomass ",
-              .data$sampleCondition_bio,
-              " | taxonProcessed ",
-              .data$sampleCondition_taxProc
-            ),!is.na(.data$sampleCondition_bio) &
-            is.na(.data$sampleCondition_taxProc) ~ paste0("biomass ", .data$sampleCondition_bio),
-          is.na(.data$sampleCondition_bio) &
-            !is.na(.data$sampleCondition_taxProc) ~ paste0("taxonProcessed ", .data$sampleCondition_taxProc),
+          !is.na(.data$sampleCondition_bio) & !is.na(.data$sampleCondition_taxProc) ~ 
+            paste0("biomass ", .data$sampleCondition_bio," | taxonProcessed ", .data$sampleCondition_taxProc),
+          !is.na(.data$sampleCondition_bio) & is.na(.data$sampleCondition_taxProc) ~ 
+            paste0("biomass ", .data$sampleCondition_bio),
+          is.na(.data$sampleCondition_bio) & !is.na(.data$sampleCondition_taxProc) ~ 
+            paste0("taxonProcessed ", .data$sampleCondition_taxProc),
           TRUE ~ NA
         ),
         
         taxonIDSourceTable = dplyr::case_when(
           !is.na(.data$taxonID_taxProc) ~ "apl_taxonomyProcessed",
-          is.na(.data$taxonID_taxProc) &
-            !is.na(.data$taxonID_bio) ~ "apl_biomass",
+          is.na(.data$taxonID_taxProc) & !is.na(.data$taxonID_bio) ~ "apl_biomass",
           TRUE ~ NA
         ),
         
-        tempTaxonID = dplyr::if_else(!is.na(.data$taxonID_taxProc), .data$taxonID_taxProc, .data$taxonID_bio),
+        tempTaxonID = dplyr::if_else(
+          !is.na(.data$taxonID_taxProc), .data$taxonID_taxProc, .data$taxonID_bio
+        ),
         
         scientificName = dplyr::if_else(
           !is.na(.data$taxonID_taxProc),
@@ -374,91 +375,47 @@ joinAquClipHarvest <- function(inputDataList,
         ),
         
         identificationHistoryID = dplyr::case_when(
-          !is.na(.data$identificationHistoryID_bio) &
-            !is.na(.data$identificationHistoryID_taxProc) ~ paste0(
-              .data$identificationHistoryID_bio,
-              " | ",
-              .data$identificationHistoryID_taxProc
-            ),
-          is.na(.data$identificationHistoryID_taxProc) &
-            !is.na(.data$identificationHistoryID_bio) ~ .data$identificationHistoryID_bio,!is.na(.data$identificationHistoryID_taxProc) &
-            is.na(.data$identificationHistoryID_bio) ~ .data$identificationHistoryID_taxProc,
+          !is.na(.data$identificationHistoryID_bio) & !is.na(.data$identificationHistoryID_taxProc) ~
+            paste0(.data$identificationHistoryID_bio," | ",.data$identificationHistoryID_taxProc),
+          is.na(.data$identificationHistoryID_taxProc) & !is.na(.data$identificationHistoryID_bio) ~
+            .data$identificationHistoryID_bio,
+          !is.na(.data$identificationHistoryID_taxProc) & is.na(.data$identificationHistoryID_bio) ~
+            .data$identificationHistoryID_taxProc,
           TRUE ~ NA
         ),
         
         biomassDataQF = .data$dataQF_bio,
         taxProcessedDataQF = .data$dataQF_taxProc,
-        
         biomassPublicationDate = .data$publicationDate_bio,
         taxProcessedPublicationDate = .data$publicationDate_taxProc,
-        
         biomassRelease = .data$release_bio,
         taxProcessedRelease = .data$release_taxProc,
         
-        # phylum = dplyr::if_else(!is.na(taxonID_taxProc), phylum_taxProc, phylum_bio),
-        division = dplyr::if_else(!is.na(.data$taxonID_taxProc), .data$division_taxProc, .data$division_bio),
-        class = dplyr::if_else(!is.na(.data$taxonID_taxProc), .data$class_taxProc, .data$class_bio),
-        order = dplyr::if_else(!is.na(.data$taxonID_taxProc), .data$order_taxProc, .data$order_bio),
-        family = dplyr::if_else(!is.na(.data$taxonID_taxProc), .data$family_taxProc, .data$family_bio),
-        genus = dplyr::if_else(!is.na(.data$taxonID_taxProc), .data$genus_taxProc, .data$genus_bio),
-        section = dplyr::if_else(!is.na(.data$taxonID_taxProc), .data$section_taxProc, .data$section_bio),
-        specificEpithet = dplyr::if_else(
-          !is.na(.data$taxonID_taxProc),
-          .data$specificEpithet_taxProc,
-          .data$specificEpithet_bio
-        ),
-        # infraspecificEpithet = dplyr::if_else(!is.na(taxonID_taxProc), infraspecificEpithet_taxProc, infraspecificEpithet_bio),
-        # variety = dplyr::if_else(!is.na(taxonID_taxProc), variety_taxProc, variety_bio),
-        # form = dplyr::if_else(!is.na(taxonID_taxProc), form_taxProc, form_bio),
-        scientificNameAuthorship = dplyr::if_else(
-          !is.na(.data$taxonID_taxProc),
-          .data$scientificNameAuthorship_taxProc,
-          .data$scientificNameAuthorship_bio
-        ),
-        identificationQualifier = dplyr::if_else(
-          !is.na(.data$taxonID_taxProc),
-          .data$identificationQualifier_taxProc,
-          .data$identificationQualifier_bio
-        ),
-        identificationReferences = dplyr::if_else(
-          !is.na(.data$taxonID_taxProc),
-          .data$identificationReferences_taxProc,
-          .data$identificationReferences_bio
-        ),
-        taxonRank = dplyr::if_else(
-          !is.na(.data$taxonID_taxProc),
-          .data$taxonRank_taxProc,
-          .data$taxonRank_bio
-        ),
-        
         remarks = dplyr::case_when(
-          !is.na(.data$remarks_bio) &
-            !is.na(.data$remarks_taxProc) ~ paste0(
-              "biomass remarks - ",
-              .data$remarks_bio,
-              " | taxonProcessed remarks - ",
-              .data$remarks_taxProc
-            ),
-          is.na(.data$remarks_taxProc) &
-            !is.na(.data$remarks_bio) ~ paste0("biomass remarks - ", .data$remarks_bio),!is.na(.data$remarks_taxProc) &
-            is.na(.data$remarks_bio) ~ paste0("taxonProcessed remarks - ", .data$remarks_taxProc),
+          !is.na(.data$remarks_bio) & !is.na(.data$remarks_taxProc) ~ 
+            paste0( "biomass remarks - ", .data$remarks_bio, " | taxonProcessed remarks - ",  .data$remarks_taxProc),
+          is.na(.data$remarks_taxProc) & !is.na(.data$remarks_bio) ~ 
+            paste0("biomass remarks - ", .data$remarks_bio),
+          !is.na(.data$remarks_taxProc) & is.na(.data$remarks_bio) ~ 
+            paste0("taxonProcessed remarks - ", .data$remarks_taxProc),
           TRUE ~ NA
-        ),
-        
-        identifiedBy = dplyr::if_else(
-          !is.na(.data$taxonID_taxProc),
-          .data$identifiedBy_taxProc,
-          .data$identifiedBy_bio
-        ),
-        identifiedDate = dplyr::if_else(
-          !is.na(.data$identifiedDate_taxProc),
-          .data$identifiedDate_taxProc,
-          .data$identifiedDate_bio
         )
-        
-      ) %>%
-      dplyr::select(-dplyr::matches("_taxProc"),-dplyr::matches("_bio"),
-                    -"targetTaxaPresent", -"uid")
+      )
+    
+    for (col in join1_cols) {
+      taxProc_col <- paste0(col, "_taxProc")
+      bio_col <- paste0(col, "_bio")
+      apJoin1[[col]] <- dplyr::if_else(
+        !is.na(apJoin1$taxonID_taxProc),
+        if (taxProc_col %in% names(apJoin1)) apJoin1[[taxProc_col]] else NA_character_,
+        if (bio_col %in% names(apJoin1)) apJoin1[[bio_col]] else NA_character_
+      )
+    }
+    
+    apJoin1 <- apJoin1 %>%
+      dplyr::select(-"uid", -"targetTaxaPresent",
+                    -dplyr::matches("_taxProc"),-dplyr::matches("_bio"))
+  
     
   } else {
     message("No data joined from apl_taxonomyProcessed table.")
@@ -479,6 +436,10 @@ joinAquClipHarvest <- function(inputDataList,
              -"uid")
   }
   
+  
+  
+  
+  
   ### Join apJoin1 and apMorph tables ####
   
   #   Select needed columns from apMorph
@@ -492,9 +453,22 @@ joinAquClipHarvest <- function(inputDataList,
         "identificationQualifier",
         "identificationReferences",
         "identifiedBy",
-        # "identifiedDate",
-        "dataQF"
-      )
+        "morphospeciesResolvedDate",
+        # "phylum",
+        # "division",
+        # "class",
+        # "order",
+        # "family",
+        # "genus",
+        # "section",
+        # "specificEpithet",
+        # "infraspecificEpithet",
+        # "variety",
+        # "form",
+        # "taxonRank"
+        # "dataQF"
+      )%>% 
+      dplyr::rename(identifiedDate="morphospeciesResolvedDate")
     
     # Update morphospecies taxon identifications
     apJoin2 <- apJoin1 %>%
@@ -506,63 +480,82 @@ joinAquClipHarvest <- function(inputDataList,
       dplyr::left_join(apMorph,
                        by = "morphospeciesID",
                        suffix = c("_bio", "_morph")) %>%
-      # filter(!is.na(taxonID) & acceptedTaxonID %in% c('2PLANT', 'UNKALG')) %>%
       dplyr::mutate(
         taxonIDSourceTable = dplyr::if_else(
-          !is.na(.data$taxonID) &
-            .data$tempTaxonID %in% c('2PLANT', 'UNKALG'),
-          "apc_morphospecies",
-          .data$taxonIDSourceTable
-        ),
+          !is.na(.data$taxonID) & .data$tempTaxonID %in% c('2PLANT', 'UNKALG'),
+          "apc_morphospecies", .data$taxonIDSourceTable),
         acceptedTaxonID = dplyr::if_else(
-          !is.na(.data$taxonID) &
-            .data$tempTaxonID %in% c('2PLANT', 'UNKALG'),
-          .data$taxonID,
-          .data$tempTaxonID
-        ),
-        scientificName = dplyr::if_else(
-          !is.na(.data$taxonID) &
-            .data$tempTaxonID %in% c('2PLANT', 'UNKALG'),
-          .data$scientificName_morph,
-          .data$scientificName_bio
-        ),
-        identificationQualifier = dplyr::if_else(
-          !is.na(.data$taxonID) &
-            .data$tempTaxonID %in% c('2PLANT', 'UNKALG'),
-          .data$identificationQualifier_morph,
-          .data$identificationQualifier_bio
-        ),
-        identificationReferences = dplyr::if_else(
-          !is.na(.data$taxonID) &
-            .data$tempTaxonID %in% c('2PLANT', 'UNKALG'),
-          .data$identificationReferences_morph,
-          .data$identificationReferences_bio
-        ),
-        identifiedBy = dplyr::if_else(
-          !is.na(.data$taxonID) &
-            .data$tempTaxonID %in% c('2PLANT', 'UNKALG'),
-          .data$identifiedBy_morph,
-          .data$identifiedBy_bio
-        ),
-        identifiedDate = NA,
-        #not currently in pub table
+          !is.na(.data$taxonID) & .data$tempTaxonID %in% c('2PLANT', 'UNKALG'),
+          .data$taxonID, .data$tempTaxonID),
+        # scientificName = dplyr::if_else(
+        #   !is.na(.data$taxonID) &
+        #     .data$tempTaxonID %in% c('2PLANT', 'UNKALG'),
+        #   .data$scientificName_morph,
+        #   .data$scientificName_bio
+        # ),
+        # identificationQualifier = dplyr::if_else(
+        #   !is.na(.data$taxonID) &
+        #     .data$tempTaxonID %in% c('2PLANT', 'UNKALG'),
+        #   .data$identificationQualifier_morph,
+        #   .data$identificationQualifier_bio
+        # ),
+        # identificationReferences = dplyr::if_else(
+        #   !is.na(.data$taxonID) &
+        #     .data$tempTaxonID %in% c('2PLANT', 'UNKALG'),
+        #   .data$identificationReferences_morph,
+        #   .data$identificationReferences_bio
+        # ),
+        # identifiedBy = dplyr::if_else(
+        #   !is.na(.data$taxonID) &
+        #     .data$tempTaxonID %in% c('2PLANT', 'UNKALG'),
+        #   .data$identifiedBy_morph,
+        #   .data$identifiedBy_bio
+        # ),
+        # identifiedDate = NA,
+        # #not currently in pub table
         morphospeciesDataQF = .data$dataQF
         
-      ) %>%
-      dplyr::select(-"taxonID",
-                    -"tempTaxonID",
-                    -"dataQF",-dplyr::matches("_morph"),-dplyr::matches("_bio"))
+      )
+    
+    #   Columns conditionally replaced with morph data
+    join2_cols <- c(
+      "scientificName", "identificationQualifier", "identificationReferences",
+      "identifiedBy", "identifiedDate"
+      # , "phylum", "division", "class", "order",
+      # "family", "genus", "section", "specificEpithet", "infraspecificEpithet",
+      # "variety", "form", "taxonRank"
+    )
+    
+    for (col in join2_cols) {
+      morph_col <- paste0(col, "_morph")
+      bio_col <- paste0(col, "_bio")
+      apJoin2[[col]] <- dplyr::if_else(
+        !is.na(apJoin2$taxonID) & apJoin2$tempTaxonID %in% c("2PLANT", "UNKALG"),
+        if (morph_col %in% names(apJoin2)) apJoin2[[morph_col]] else NA_character_,
+        if (bio_col %in% names(apJoin2)) apJoin2[[bio_col]] else NA_character_
+      )
+    }
+    
+    apJoin2 <- apJoin2 %>%
+      dplyr::select(
+        -"taxonID", -"tempTaxonID", -"dataQF",
+        -dplyr::matches("_morph"),-dplyr::matches("_bio"))
+
+
   } else {
     message("No data joined from apc_morphospecies table.")
+    
     apJoin2 <- apJoin1 %>%
       dplyr::mutate(acceptedTaxonID = .data$tempTaxonID) %>%
       dplyr::select(-"tempTaxonID")
   }
   
   
+  
+  
+  
   ### Join apClip and apBio tables ####
   
-  #  Update morphospecies taxon identifications
   joinClipHarvest <- apClip %>%
     dplyr::select(
       -"benthicArea",
