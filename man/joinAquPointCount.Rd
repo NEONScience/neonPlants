@@ -42,9 +42,10 @@ If a single sample in 'apc_taxonomyProcessed' contains multiple macroalgae speci
 apc <- neonUtilities::loadByProduct(
 dpID = "DP1.20072.001",
 site = "all",
-startdate = "2018-07",
-enddate = "2018-08",
+startdate = "2018-03",
+enddate = "2018-05",
 tabl = "all",
+package = 'expanded',
 check.size = FALSE
 )
 

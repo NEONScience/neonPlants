@@ -2,7 +2,7 @@
 ### POC: Madaline Ritter, ritterm1@BattelleEcology.org
 
 
-### Read in test data
+### Read in test data ####
 testList <- readRDS(testthat::test_path("testdata", "joinAquPointCount_testData_202307.rds"))
 testPoint <- testList$apc_pointTransect
 testPerTax <- testList$apc_perTaxon
@@ -93,7 +93,7 @@ testthat::test_that(desc = "Output data frame row number table input", {
 
 
 
-### Test: Function generates data frame with expected dimensions using test data ####
+### Test: Generates expected data using test data ####
 ##  Test dataframe output 
 #   Check 'acceptedTaxonID' is pulled from apc_taxonomyProcessed if taxProc data exists
 testthat::test_that(desc = "Output data frame source: taxonomyProcessed", {
@@ -104,7 +104,7 @@ testthat::test_that(desc = "Output data frame source: taxonomyProcessed", {
 })
 
 
-#   Check 'acceptedTaxonID' is pulled from apc_morphospecies if identification is in morphospecies table
+#   Check 'acceptedTaxonID' is pulled from apc_morphospecies if identification is in morphospecies table and not apc_taxonomyProcessed
 testthat::test_that(desc = "Output data frame source: apc_morphospecies", {
   
   outDF <- joinAquPointCount(inputDataList = testList)

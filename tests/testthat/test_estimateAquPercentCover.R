@@ -52,10 +52,9 @@ testthat::test_that(desc = "Output type table input", {
 testthat::test_that(desc = "Output class list input", 
                     {
   desc = estimateAquPercentCover(inputDataList = testList)
-  
-  testthat::expect_s3_class(desc, class = "list")
-  testthat::expect_s3_class(desc[1], class = "data.frame")
-  testthat::expect_s3_class(desc[2], class = "data.frame")
+
+  testthat::expect_s3_class(desc[[1]], class = "data.frame")
+  testthat::expect_s3_class(desc[[2]], class = "data.frame")
 })
 
 #   Test table input
@@ -65,9 +64,8 @@ testthat::test_that(desc = "Output class table input", {
                                  inputPerTax = testPerTax,
                                  inputTaxProc = testTaxProc)
   
-  testthat::expect_s3_class(desc, class = "list")
-  testthat::expect_s3_class(desc[1], class = "data.frame")
-  testthat::expect_s3_class(desc[2], class = "data.frame")
+  testthat::expect_s3_class(desc[[1]], class = "data.frame")
+  testthat::expect_s3_class(desc[[2]], class = "data.frame")
 })
 
 
@@ -125,6 +123,77 @@ testthat::test_that(desc = "Output transectMetrics df dimensions list input", {
   testthat::expect_identical(object = ncol(out[[2]]),
                              expected = as.integer(8))
 })
+
+
+### Test: Generates expected data using test data ####
+##  Test percentCover output 
+#   Check sum of all percent_cover estimates
+testthat::test_that(desc = "Output data frame percent cover sum", {
+  
+  out = estimateAquPercentCover(inputDataList = testList)
+  
+  testthat::expect_identical(
+    object = sum(out$percentCover$percent_cover),
+    expected = 1970)
+})
+
+#   Check taxa percent_cover estimates
+testthat::test_that(desc = "Output data frame percent cover taxa sum", {
+  
+  out = estimateAquPercentCover(inputDataList = testList)
+  
+  testthat::expect_identical(
+    object = sum(out$percentCover$percent_cover[out$percentCover$type == 'taxon']),
+    expected = 260)
+})
+
+
+##  Test transectMetrics output 
+#   Check sum of all transectLengths
+testthat::test_that(desc = "Output data frame transect length sum", {
+  
+  out = estimateAquPercentCover(inputDataList = testList)
+  
+  testthat::expect_identical(
+    object = round(sum(out$transectMetrics$transectLength_m), 2),
+    expected = 105.57)
+})
+
+#   Check unique habitat types
+testthat::test_that(desc = "Output data frame unique habitat types", {
+  
+  out = estimateAquPercentCover(inputDataList = testList)
+  
+  testthat::expect_identical(
+    object = unique(out$transectMetrics$habitatType),
+    expected = c("riffle", "run", "pool"))
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

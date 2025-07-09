@@ -64,7 +64,7 @@ check.size = FALSE
 )
 
 #   Calculate percent cover for downloaded data
-df <- neonPlants::estimateAquPercentCover(
+list <- neonPlants::estimateAquPercentCover(
 inputDataList = apc,
 inputPoint = NA,
 inputPerTax = NA,
