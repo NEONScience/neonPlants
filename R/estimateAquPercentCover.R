@@ -151,7 +151,41 @@ estimateAquPercentCover <- function(inputDataList,
     
     # Create a unique ID for each siteID + collectDate
     percent_cover$boutID <- paste(percent_cover$siteID, substr(percent_cover$collectDate, 1, 10), sep = "_")
-
+    
+    # Simplify transectID and ensure consistent ordering
+    percent_cover$transectID <- stringr::str_extract(percent_cover$namedLocation, "(?<=transect\\.)\\w+")
+    percent_cover$transectID <- stringr::str_replace(percent_cover$transectID, "^0+", "") #strip leading zeros
+    
+    percent_cover <- percent_cover %>%
+      dplyr::mutate(
+        transectID = as.character(transectID),
+        transect_num = as.numeric(stringr::str_extract(transectID, "\\d+")),
+        transect_suffix = stringr::str_extract(transectID, "[a-zA-Z]*")
+      )
+    
+    ordered_ids <- percent_cover %>%
+      dplyr::distinct(transectID, transect_num, transect_suffix) %>%
+      dplyr::arrange(transect_num, transect_suffix) %>%
+      dplyr::pull(transectID)
+    
+    percent_cover <- percent_cover %>%
+      dplyr::mutate(transectID = factor(transectID, levels = ordered_ids))
+    
+    # Create custom order for plotting
+    substrate_ids <- percent_cover %>%
+      dplyr::filter(type == "substrate") %>%
+      dplyr::pull(substrateOrTaxonID) %>%
+      unique()
+    
+    taxon_ids <- percent_cover %>%
+      dplyr::filter(type == "taxon") %>%
+      dplyr::pull(substrateOrTaxonID) %>%
+      unique()
+    
+    stack_order <- c(substrate_ids, taxon_ids)
+    percent_cover$substrateOrTaxonID <- factor(percent_cover$substrateOrTaxonID, levels = stack_order)
+    
+    
     plot_ids <- unique(percent_cover$boutID)
   
     # Create a consistent color palette
@@ -176,19 +210,19 @@ estimateAquPercentCover <- function(inputDataList,
     
     # Plotting function
     plot_grid <- function(plot_id) {
-      ggplot2::ggplot(subset(percent_cover, boutID == plot_id),
-             ggplot2::aes(x = namedLocation, y = percent_cover, fill = substrateOrTaxonID)) +
-        ggplot2::geom_bar(stat = "identity", position = "stack") +
-        ggplot2::scale_fill_manual(values = color_palette) +  # Apply consistent colors
-        labs(
-          # title = paste("Percent Cover for", gsub("_", " on ", plot_id)),
-          title = gsub(" ", " on ", plot_id),
-          # x = "Named Location",
-          y = "Percent Cover",
-          fill = "Substrate/Taxon"
-        ) +
-        ggplot2::theme_minimal() +
-        ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
+      ggplotly(
+        ggplot2::ggplot(subset(percent_cover, boutID == plot_id),
+               ggplot2::aes(x = transectID, y = percent_cover, fill = substrateOrTaxonID)) +
+          ggplot2::geom_bar(stat = "identity", position = "stack") +
+          ggplot2::scale_fill_manual(values = color_palette) +  # Apply consistent colors
+          ggplot2::labs(
+            title = gsub(" ", " on ", plot_id),
+            x = "Transect Number",
+            y = "Percent Cover",
+            fill = "Substrate/Taxon"
+          ) +
+          ggplot2::theme_minimal()
+      )
     }
     
     plot_list <- lapply(plot_ids, plot_grid)
@@ -198,9 +232,9 @@ estimateAquPercentCover <- function(inputDataList,
     returnList$plot_list <- plot_list
 
     # Print all plots
-    # for (i in seq_along(df$plot_list)) {
-    #   if (!is.null(df$plot_list[[i]])) {
-    #     print(df$plot_list[[i]])
+    # for (i in seq_along(test$plot_list)) {
+    #   if (!is.null(test$plot_list[[i]])) {
+    #     print(test$plot_list[[i]])
     #   }
     # }
     
