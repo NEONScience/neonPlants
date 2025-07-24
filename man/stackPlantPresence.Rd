@@ -2,23 +2,32 @@
 % Please edit documentation in R/stackPlantPresence.R
 \name{stackPlantPresence}
 \alias{stackPlantPresence}
-\title{Stack NEON plant occurrence data}
+\title{Stack NEON Plant Presence and Percent Cover data}
 \usage{
-stackPlantPresence(divDataList = NA, totalSampledAreaFilter = NA_integer_)
+stackPlantPresence(
+  inputDataList,
+  input_1m2Data = NA,
+  input_10m2Data100m2Data = NA,
+  totalSampledAreaFilter = NA_integer_
+)
 }
 \arguments{
-\item{divDataList}{A list of data.frames from the NEON Plant presence and percent cover (DP1.10058.001) data product as returned from neonUtilities::loadByProduct(). This list must include data.frames with the names 'div_1m2Data' and 'div_10m2Data100m2Data'.}
+\item{inputDataList}{A list object comprised of NEON Plant Presence and Percent Cover tables (DP1.10058.001) downloaded with the neonUtilities::loadByProduct() function (defaults to required). If list input is provided, the table input arguments must all be NA; similarly, if list input is missing, table inputs must be provided for the 'input_1m2Data' and 'input_10m2Data100m2Data' arguments.\link{list}}
 
-\item{totalSampledAreaFilter}{(integer, options are NA, 1, 10, 100, 400) The plot size for which data are returned. Default (NA) will return data for all plot sizes in the dataset. If you select a plot size, the function will filter the data returned to the desired plot size.}
+\item{input_1m2Data}{The 'div_1m2Data' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
+
+\item{input_10m2Data100m2Data}{The 'div_10m2Data100m2Data' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
+
+\item{totalSampledAreaFilter}{The subplot or plot size for which data are returned (in meters squared). Default (NA) will return data for all subplot and plot sizes. If a valid filter integer is provided, the returned data are filtered to the desired subplot or plot size. Input options are NA, 1, 10, 100, 400. \link{integer}}
 }
 \value{
-This function returns a data frame
+A data frame that aggregates plant species lists across all subplots (or those subplots defined in 'totalSampledAreaFilter' argument) and for the entire plot where subplotID is '400' (see Data Product documentation for subplot description). The column 'totalSampledArea' is also created to reflect the size of the subplot or plot in square meters in which a given taxon was detected. Description of other columns can be found in the Data Product User Guide.
 }
 \description{
-Use this function to aggregate the occurrence data from the NEON Plant presence and percent cover (DP1.10058.001) data product to list the plant species present at each plot scale.
+Data inputs are NEON Plant Presence and Percent Cover data (DP1.10058.001) retrieved with the neonUtilities::loadByProduct() function (preferred), data downloaded from the NEON Data Portal, or input data tables with an equivalent structure and representing the same site x month combinations. The stackPlantPresence() function aggregates the occurrence data from the Plant Presence and Percent Cover data product to return all plant species present at the scale of each subplot sampled (1m2, 10m2, and 100m2) as well as the plot scale (400m2). In contrast, data downloaded from the NEON data portal report species in 10m2 and 100m2 subplots only if those species are not encountered in smaller-scale subplots, and a list of species present within the entire 400m2 scale plot is not provided.
 }
 \details{
-This function properly stacks occurrence records from the NEON Plant presence and percent cover, (DP1.10058.001) data product. Provide a list that includes data.frames named 'div_1m2Data' and 'div_10m2Data100m2Data' and this function will properly stack the occurrence data for each plot scale. If you only want to return a species list for one plot scale, use the totalSampledAreaFilter parameter to select the scale (1, 10, 100, or 400m). If totalSampledAreaFilter is NA (default), then the function will return a data.frame with the occurrence records for all plot scales, and you will need to filter the output to get species lists for each plot scale.
+Input data may be provided either as a list generated from the neonUtilities::laodByProduct() function or as individual tables. However, if both list and table inputs are provided at the same time the function will error.
 }
 \examples{
 \dontrun{
@@ -38,7 +47,7 @@ allDiv <- loadByProduct(
 
 # stack the data by sending the list returned by neonUtilities::loadByProduct
 data_stacked <- stackPlantPresence(
-  divDataList = allDiv)
+  inputDataList = allDiv)
 
 
 # send list of data using pipe
@@ -62,7 +71,7 @@ my_1m_data <- allDiv$div_1m2Data
 my_10_100m_data <- allDiv$div_10m2Data100m2Data
 
 data_stacked <- stackPlantPresence(
-  divDataList = list(
+  inputDataList = list(
     div_1m2Data = my_1m_data,
     div_10m2Data100m2Data = my_10_100m_data))
 
@@ -75,10 +84,11 @@ my_10_100m_data_SRER_43 <- my_10_100m_data \%>\%
   filter(namedLocation == "SRER_043.basePlot.div")
 
 data_stacked_SRER_43 <- stackPlantPresence(
-  divDataList = list(
+  inputDataList = list(
     div_1m2Data = my_1m_data_SRER_43,
     div_10m2Data100m2Data = my_10_100m_data_SRER_43))
 }
+
 }
 \references{
 License: GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007

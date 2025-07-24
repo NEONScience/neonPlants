@@ -1,5 +1,6 @@
 # load neonUtilities
-library (neonUtilities)
+library(neonUtilities)
+library(dplyr)
 
 # install dev version
 devtools::install_github("NEONScience/neonPlants@dev")
