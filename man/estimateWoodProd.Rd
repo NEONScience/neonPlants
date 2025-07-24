@@ -4,15 +4,41 @@
 \alias{estimateWoodProd}
 \title{Estimate ANPP (Aboveground Net Primary Productivity) contributed by woody vegetation}
 \usage{
-estimateWoodProd(inputDataList, siteID, plotSubset = "towerAnnualSubset")
+estimateWoodProd(
+  inputDataList,
+  inputIndividual = NA,
+  inputMapTag = NA,
+  inputNonWoody = NA,
+  inputPerPlot = NA,
+  siteID,
+  plotSubset = "towerAnnualSubset",
+  mortalityMissing = "filterMissing",
+  stemIncrementFlagged = "filterFlagged"
+)
 }
 \arguments{
-\item{inputDataList}{Specify a loaded R list object (e.g. estimateWoodMassOutputs) that was produced by the companion estimateWoodMass function (and subsequently filtered to two eventIDs if needed). \link{character}}
+\item{inputDataList}{A list object comprised of "Vegetation structure" tables (DP1.10098.001) downloaded using the neonUtilities::loadByProduct() function. If list input is provided, the table input arguments must all be NA; similarly, if list input is missing, table inputs must be provided for 'inputIndividual', 'inputMapTag', and 'inputPerPlot' arguments. \link{list}}
+
+\item{inputIndividual}{The 'vst_apparentindividual' table for the site x month combination(s) of interest
+(defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
+
+\item{inputMapTag}{The 'vst_mappingandtagging' table for the site x month combination(s) of interest
+(defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
+
+\item{inputNonWoody}{The 'vst_non-woody' table for the site x month combination(s) of interest
+(defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
+
+\item{inputPerPlot}{The 'vst_perplotperyear' table for the site x month combination(s) of interest
+(defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 
 \item{siteID}{Specify the four-letter siteID for a single NEON site (only one siteID is allowed). \link{character}}
 
 \item{plotSubset}{The available options for this function are the default of "towerAnnualSubset" (only the subset of tower plots that are sampled annually) or "towerAll" (all plots in the tower airshed but no distributed plots). \link{character}
 #'}
+
+\item{mortalityMissing}{Select how missing individuals are handled. Default is "filterMissing" that removes individualIDs with plantStatus NA at time 2, as well as filtering to remove from the vst_agb_kg table that is summarized to produce plot-level increment, with the individuals with plantStatus NA at time sent to "filtered" table. Alternate option is "retainMissing", which retains individuals with plantStatus NA at time 2 and assumes that they are dead and contributing to "mortality" table and increment. \link{character}}
+
+\item{stemIncrementFlagged}{Select how individuals implausibly large stem diameter increments from time 1 to time 2 are handled. Default is "filterFlagged" that removes individuals that are NA at time 1 but >= 3 cm stemDiameter increment (e.g., 9.9 + 3 = 12.9 for samplingInterval of 1 yr) at time 2, or that have an absolute stem diameter increment >= 3 from one live bout to a second live bout, with individuals sent to "filtered" table. Alternate option is "retainFlagged", which retains individuals and includes them in recruitment and vst_agb_kg tables regardless of stem diameter increment. \link{character}}
 }
 \value{
 A list that includes productivity summary data frames. Output tables include:
@@ -22,13 +48,22 @@ A list that includes productivity summary data frames. Output tables include:
 }
 }
 \description{
-Calculate annual productivity of woody vegetation (and "non-woody perennial" vegetation, if included in inputDataList) using inputs from the companion estimateWoodMass() function.
+Calculate annual productivity of woody vegetation.
+
+Data inputs are "Vegetation structure" data (DP1.10098.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input tables with an equivalent structure and representing the same site x month combinations.
+
+Data should be from just one site, and exactly two temporal eventIDs.
 }
 \details{
-An input data list of woody biomass dataframes needs to be created by the companion estimateWoodMass() function and filtered to two eventIDs if needed. This input list object is read in and aboveground net primary productivity (ANPP) is calculated for woody vegetation from NEON "Vegetation structure" (DP1.10098.001) data.
-The stand-level approach (approach 2) is used from Clark DA, S Brown, DW Kicklighter, JQ Chambers, JR Thomlinson, and J Ni. 2001. Measuring Net Primary Production in Forests: Concepts and Field Methods. Ecological Applications 11:356-370.
-Woody productivity is only calculated for trees with growthForm of "single bole tree" or "multi-bole tree". Therefore, in estimateWoodMass function, specify growthForm "tree".
+The input data is passed to the companion estimateWoodMass() function to create biomass summaries, and then aboveground productivity is calculated for woody vegetation.
+
+The stand-level approach to calculating productivity (approach 2) is used from Clark DA, S Brown, DW Kicklighter, JQ Chambers, JR Thomlinson, and J Ni. 2001. Measuring Net Primary Production in Forests: Concepts and Field Methods. Ecological Applications 11:356-370.
+
+Woody productivity is only calculated for trees with growthForm of "single bole tree" or "multi-bole tree".
+
 NEON has an extensive data QA/QC process, but users should be aware that these productivity estimates are very sensitive to any residual errors and so the data should be examined carefully
+
+Input data can be filtered by 'plotSubset' if output for only certain types of plots or sampling intervals is desired. Input data are combined with allometric equation parameters and taxon specific characteristics, and biomass is estimated for each individual using allometric equations. Generalized allometric equations are applied first and are replaced by taxon-specific equations if available. Only the set of growth forms selected via the growthForm parameter are included in outputs. The non-woody "cactus" and "ferns" growthForms are not currently included. Biomass is summarized on an areal basis at the hierarchical level of the plot and site.
 }
 \examples{
 \dontrun{
@@ -39,12 +74,7 @@ package = "basic",
 check.size = FALSE
 )
 
-# Use estimateWoodMass to generate output list that is to be used as input to estimateWoodProd
-estimateWoodMassOutputs <- estimateWoodMass(inputDataList = VstDat)
-
-
-# example with arguments at default values
-estimateWoodProdOutputs <- estimateWoodProd(inputDataList = estimateWoodMassOutputs)
+estimateWoodProdOutputs <- estimateWoodProd(inputDataList = VstDat, siteID = "LENO")
 
 
 }

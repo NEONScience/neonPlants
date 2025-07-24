@@ -422,6 +422,7 @@ estimateWoodMass = function(inputDataList,
                       .data$taxonID,
                       .data$scientificName,
                       .data$individualID,
+                      .data$plantStatus,
                       .data$plantStatus2,
                       .data$growthForm,
                       .data$year) %>%
@@ -1239,30 +1240,11 @@ estimateWoodMass = function(inputDataList,
 
   vst_agb$year <- as.numeric(substr(vst_agb$eventID, 10, 13))
 
-  ##  Retain only those records with unambiguous live or dead plantStatus values
+  ##  Retain only those records with non-missing plantStatus values
   vst_agb <- vst_agb %>%
-    dplyr::filter(!is.na(.data$plantStatus) & .data$plantStatus != "No longer qualifies" & .data$plantStatus != "Removed" &
-                    .data$plantStatus != "Lost, fate unknown" & .data$plantStatus != "Lost, tag damaged" &
-                    .data$plantStatus != "Lost, herbivory" & .data$plantStatus != "Lost, burned" &
-                    .data$plantStatus != "Lost, presumed dead")
+    dplyr::filter(!is.na(.data$plantStatus))
 
-  ##  Set aside individuals that are dead but have no mass, for use in productivity function mortality calculations
-   vst_deadNoMass <- vst_agb %>%
-    dplyr::filter(is.na(.data$agb) & .data$plantStatus2 == "Dead_or_Lost")
-
-   if(nrow(vst_deadNoMass) > 0){
-   vst_deadNoMass  <- merge(vst_deadNoMass, perplot, by = c("plot_eventID", "eventID", "plotID", "year","nlcdClass"), all.x = TRUE)
-
-   vst_deadNoMass <- vst_deadNoMass %>% dplyr::select("plot_eventID", "eventID", "siteID", "plotID", "taxonID", "scientificName", "family",
-                                               "genus", "individualID", "plantStatus2", "growthForm", "year", "nlcdClass", "plotType", "eventType")
-
-   vst_deadNoMass$sampledAreaM2 <- vst_deadNoMass$agb_kg <- NA
-   }
-
-  ##  Aggregate woody biomass data by individualID within 'year'
-  #   Remove records with NA biomass estimate to avoid assigning to zero due to group_by() output
-  vst_agb <- vst_agb %>%
-    dplyr::filter(!is.na(.data$agb))
+  vst_agb$area <- pi * (vst_agb$stemDiameter/2)^2
 
   #   Aggregate woody biomass data by 'individualID', 'plantStatus', and 'year': Assumes that multiple instances of same individualID are true multiple boles and not accidental duplicates. Output is used for both annual biomass summaries and NPP calculations for specified consecutive years.
   vst_agb_final <- vst_agb %>%
@@ -1275,12 +1257,17 @@ estimateWoodMass = function(inputDataList,
                     .data$family,
                     .data$genus,
                     .data$individualID,
+                    .data$plantStatus,
                     .data$plantStatus2,
                     .data$growthForm,
                     .data$year) %>%
-    dplyr::summarise(agb = sum(.data$agb, na.rm = TRUE),
+    dplyr::summarise(agb = if (all(is.na(.data$agb))) NA_real_ else agb = sum(.data$agb, na.rm = TRUE),
+                     area = if (all(is.na(.data$area))) NA_real_ else area = sum(.data$area, na.rm = TRUE),
+                     height = if (all(is.na(.data$height))) NA_real_ else height = mean(.data$height, na.rm = TRUE),
                      .groups = "drop")
 
+  vst_agb_final$stemDiameter <- ((vst_agb_final$area/pi)^0.5)*2 # after summing areas, convert them back to stemDiameter
+  vst_agb_final$area <- NULL
 
   ##  Join AGB data with sampled areas from per plot input: Prep step for plot- and site-level biomass calculations
   vst_agb_final  <- merge(vst_agb_final,
@@ -1308,7 +1295,7 @@ estimateWoodMass = function(inputDataList,
   ### Combine AGB for vst_apparentindividual (vst_agb_Mg_final) and vst_nonWoody (vst_agb_Mg_other)
 
   if (methods::is(vst_nonWoody, class = "data.frame" )) {
-       vst_agb_final_other$family <- vst_agb_final_other$genus <- NA
+       vst_agb_final_other$family <- vst_agb_final_other$genus <- vst_agb_final_other$stemDiameter <- vst_agb_final_other$height <- NA
        vst_agb_kg <- rbind(vst_agb_final, vst_agb_final_other)
   } else {
     vst_agb_kg <- vst_agb_final
@@ -1350,7 +1337,7 @@ estimateWoodMass = function(inputDataList,
     ############ Scale biomass per area and convert to Mg / ha ######################
   #   Remove records that cannot be scaled to a per area basis
   vst_agb_Mgha <- vst_agb_kg %>%
-    dplyr::filter(!is.na(.data$sampledAreaM2) & .data$sampledAreaM2 > 0 )
+    dplyr::filter(!is.na(.data$sampledAreaM2) & .data$sampledAreaM2 > 0 & !is.na(.data$agb_kg))
 
   #   Create "Mg/ha" biomass estimate for each record; used in downstream plot- and site-level biomass estimation
   vst_agb_Mgha$agb_Mgha <- round(vst_agb_Mgha$agb_kg * 0.001 * (10000/vst_agb_Mgha$sampledAreaM2),
@@ -1534,7 +1521,6 @@ estimateWoodMass = function(inputDataList,
   output.list <- list(vst_agb_kg = vst_agb_kg,
                       vst_plot_w_0s = vst_plot_w_0s,
                       vst_agb_zeros = vst_agb_zeros,
-                      vst_deadNoMass = vst_deadNoMass,
                       vst_site = vst_site)
 
   return(output.list)

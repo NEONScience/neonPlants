@@ -148,7 +148,7 @@ scaleHerbMass = function(inputDataList,
 
 
   ### Aggregate the herbaceous data ####
-  
+
   ##  Prepare 'inputBout' data frame
   #   Reduce 'hbp_perbout' columns to subset needed for join
   inputBout <- inputBout %>%
@@ -287,8 +287,7 @@ scaleHerbMass = function(inputDataList,
                     .after = "peak") %>%
     dplyr::relocate("year",
                     .before = "collectDate") %>%
-    dplyr::select(-"siteID2",
-                  -"bout") %>%
+    dplyr::select(-"siteID2") %>%
     dplyr::mutate(year = as.numeric(.data$year)) %>%
     dplyr::arrange(.data$domainID,
                    .data$siteID,

@@ -51,7 +51,7 @@ testthat::test_that(desc = "Output class hbp_site", {
 testthat::test_that(desc = "Output data frame column number 'hbp_agb'", {
 
   testthat::expect_identical(object = ncol(scaleHerbMassOutputs$hbp_agb),
-                             expected = as.integer(24))
+                             expected = as.integer(25))
 })
 
 #   Check expected column number of per plot output
