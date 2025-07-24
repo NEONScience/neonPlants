@@ -490,6 +490,7 @@ estimateWoodProd = function(inputDataList,
 
   ### CALCULATE BIOMASS INCREMENT (Clark et al. 2001 approach 2 - stand level productivity calculation) ####
 
+  if(stemIncrementFlagged == "filterFlagged"){
   diameter_inc <- vst_agb_kg %>% dplyr::filter(.data$plantStatus2 == "Live") %>%
       dplyr::select("plot_eventID",
                     "domainID",
@@ -538,7 +539,7 @@ estimateWoodProd = function(inputDataList,
     stemIncrementFlags <- merge(stemIncrementFlags, incrementFlagsSimple, by = "individualID", all.x =TRUE)
      vst_agb_kg <- vst_agb_kg %>% dplyr::filter(!.data$individualID %in% incrementFlaglist ) # important: removes missing individualIDs from increment calculations
     }
-
+  }
 
   ############ Scale biomass per area and convert to Mg / ha ######################
   #   Remove records that cannot be scaled to a per area basis
