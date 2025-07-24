@@ -101,50 +101,64 @@ estimateWoodProd = function(inputDataList,
     growthForm = "tree"
    )
 
+  vst_plot_Mgha <- estimateWoodMassOutputs$vst_plot_w_0s
+#  vst_plot_Mgha <- estimateWoodMassOutputs$vst_plot_Mgha
   vst_agb_kg <- estimateWoodMassOutputs$vst_agb_kg
+#  vst_agb_kg <- dplyr::bind_rows(vst_agb_kg, missing)
 
-  vst_plot_w_0s <- estimateWoodMassOutputs$vst_plot_w_0s
+   vst_agb_kg$simplePlantStatus <- dplyr::if_else(vst_agb_kg$plantStatus %in% c("Live",
+                                                                                  "Live, disease damaged",
+                                                                                  "Live, insect damaged",
+                                                                                  "Live,  other damage",
+                                                                                  "Live, physically damaged",
+                                                                                  "Live, broken bole"),
+                                                 "Live",
+                                                 "Dead_or_Lost",
+                                                 "Live")
+
+
+
 
 
   # used later when calling estimateWoodMass for recruitment
   map_input <- vst_agb_kg
   map_input$date <- "2000-01-01" # placeholder, not needed since don't have duplicates to sort by date here
 
-  domainID_df <- unique(vst_plot_w_0s %>% dplyr::select("siteID", "domainID")) # domainID needs to be in vst_agb_kg
+  domainID_df <- unique(vst_plot_Mgha %>% dplyr::select("siteID", "domainID")) # domainID needs to be in vst_agb_kg
   vst_agb_kg <- merge(vst_agb_kg, domainID_df, by = "siteID", all.x = T)
 
 
   # filter by eventType based on plotSubset argument
   if(plotSubset == "towerAll") {
     message(glue::glue("Since plotSubset 'towerAll' was selected, input data has been filtered to just those plots in the tower airshed."))
-      vst_plot_w_0s <- vst_plot_w_0s %>%
+      vst_plot_Mgha <- vst_plot_Mgha %>%
         dplyr::filter(.data$plotType == "tower")
 
       vst_agb_kg <- vst_agb_kg %>%
-        dplyr::filter(.data$plot_eventID %in% vst_plot_w_0s$plot_eventID)
+        dplyr::filter(.data$plot_eventID %in% vst_plot_Mgha$plot_eventID)
     }
 
   if(plotSubset == "towerAnnualSubset") {
     message(glue::glue("Since plotSubset 'towerAll' was selected, input data has been filtered to just those sampling bouts when all tower plots were sampled."))
-      vst_plot_w_0s <- vst_plot_w_0s %>%
+      vst_plot_Mgha <- vst_plot_Mgha %>%
         dplyr::filter(grepl("owerSubset", .data$eventType))
 
       vst_agb_kg <- vst_agb_kg %>%
-        dplyr::filter(.data$plot_eventID %in% vst_plot_w_0s$plot_eventID)
+        dplyr::filter(.data$plot_eventID %in% vst_plot_Mgha$plot_eventID)
     }
 
     ### Error if not a single site of data after filtering to the siteID in the siteID argument
 
-    vst_plot_w_0s <- vst_plot_w_0s[vst_plot_w_0s$siteID == siteID, ]
+    vst_plot_Mgha <- vst_plot_Mgha[vst_plot_Mgha$siteID == siteID, ]
 
 
     vst_agb_kg <- vst_agb_kg %>%
-        dplyr::filter(.data$plot_eventID %in% vst_plot_w_0s$plot_eventID)
+        dplyr::filter(.data$plot_eventID %in% vst_plot_Mgha$plot_eventID)
 
-    sites_in_input <- unique(vst_plot_w_0s$siteID)
+    sites_in_input <- unique(vst_plot_Mgha$siteID)
 
     if (length(sites_in_input) >1) {
-    stop(glue::glue("Only one siteID is allowed in filtered dataset. Current filtered dataset has data from: {unique(vst_plot_w_0s$siteID)}"))
+    stop(glue::glue("Only one siteID is allowed in filtered dataset. Current filtered dataset has data from: {unique(vst_plot_Mgha$siteID)}"))
     }
 
     if(length(sites_in_input) == 0) {
@@ -153,38 +167,38 @@ estimateWoodProd = function(inputDataList,
 
 
     ### Error if not 2 years of data
-  years_in_input <- unique(sort(vst_plot_w_0s$year))
+  years_in_input <- unique(sort(vst_plot_Mgha$year))
   year1 <- min(as.numeric(years_in_input))
   year2 <- max(as.numeric(years_in_input))
 
     if (length(years_in_input) < 2) {
-    stop(glue::glue("Two years of data are needed to calculate woody productivity. Current filtered dataset only has woody biomass data from: {unique(vst_plot_w_0s$year)}"))
+    stop(glue::glue("Two years of data are needed to calculate woody productivity. Current filtered dataset only has woody biomass data from: {unique(vst_plot_Mgha$year)}"))
     }
 
     if (length(years_in_input) > 2) {
-     stop(glue::glue("This function expects there to be data from only two eventID years after filtering based on plotSubset. The current filtered dataset has woody biomass data from: {paste(unique(vst_plot_w_0s$eventID), collapse = ', ')}"))
+     stop(glue::glue("This function expects there to be data from only two eventID years after filtering based on plotSubset. The current filtered dataset has woody biomass data from: {paste(unique(vst_plot_Mgha$eventID), collapse = ', ')}"))
     }
 
   samplingInterval <- abs(diff(years_in_input))
 
-  # filter to plots with exactly 2 years in vst_plot_w_0s and provide warning if there was < 2 years or > 2 years
-  vst_plot_w_0s <- vst_plot_w_0s %>%
+  # filter to plots with exactly 2 years in vst_plot_Mgha and provide warning if there was < 2 years or > 2 years
+  vst_plot_Mgha <- vst_plot_Mgha %>%
     dplyr::group_by(.data$plotID) %>%
     dplyr::mutate(yr_count = dplyr::n_distinct(.data$year) )
 
-  lt_2_yr <-  vst_plot_w_0s %>% dplyr::filter(.data$yr_count < 2) %>% dplyr::pull("plotID") %>% unique() %>% as.character()
-  gt_2_yr <-  vst_plot_w_0s %>% dplyr::filter(.data$yr_count > 2) %>% dplyr::pull("plotID") %>% unique() %>% as.character()
-  desired_2_yr <-  vst_plot_w_0s %>% dplyr::filter(.data$yr_count == 2)  %>% dplyr::pull("plotID") %>% unique() %>% as.character()
+  lt_2_yr <-  vst_plot_Mgha %>% dplyr::filter(.data$yr_count < 2) %>% dplyr::pull("plotID") %>% unique() %>% as.character()
+  gt_2_yr <-  vst_plot_Mgha %>% dplyr::filter(.data$yr_count > 2) %>% dplyr::pull("plotID") %>% unique() %>% as.character()
+  desired_2_yr <-  vst_plot_Mgha %>% dplyr::filter(.data$yr_count == 2)  %>% dplyr::pull("plotID") %>% unique() %>% as.character()
 
-  vst_plot_w_0s <- vst_plot_w_0s %>%
+  vst_plot_Mgha <- vst_plot_Mgha %>%
     dplyr::filter(.data$yr_count == 2)
 
     if (length(lt_2_yr) > 0) {
-    message(glue::glue("Exactly 2 years of data are needed to calculate woody productivity using this function. The following plots have data from less than two years and have been removed from vst_plot_w_0s: {paste(unique(lt_2_yr), collapse = ', ')}"))
+    message(glue::glue("Exactly 2 years of data are needed to calculate woody productivity using this function. The following plots have data from less than two years and have been removed from vst_plot_Mgha: {paste(unique(lt_2_yr), collapse = ', ')}"))
     }
 
     if (length(gt_2_yr) > 0) {
-    message(glue::glue("Exactly 2 years of data are needed to calculate woody productivity using this function. The following plots have data from more than two years and have been removed from vst_plot_w_0s: {paste(unique(gt_2_yr), collapse = ', ')}"))
+    message(glue::glue("Exactly 2 years of data are needed to calculate woody productivity using this function. The following plots have data from more than two years and have been removed from vst_plot_Mgha: {paste(unique(gt_2_yr), collapse = ', ')}"))
     }
 
   # filter to plots with exactly 2 years in vst_agb_kg and provide warning if there was < 2 years or > 2 years
@@ -212,10 +226,10 @@ estimateWoodProd = function(inputDataList,
 
 
   ### Identify plotIDs and associated plotType in the dataset
-  plotType_df <- unique(vst_plot_w_0s %>% dplyr::select("plotID", "plotType"))
+  plotType_df <- unique(vst_plot_Mgha %>% dplyr::select("plotID", "plotType"))
 
   ##  Identify all plot by eventID combos in the filtered vst_plot_w_os dataframe
-  plot_eventID_list <- unique(vst_plot_w_0s$plot_eventID)
+  plot_eventID_list <- unique(vst_plot_Mgha$plot_eventID)
 
 
   ### CALCULATE MORTALITY
@@ -235,7 +249,7 @@ estimateWoodProd = function(inputDataList,
                                  digits = 4)
 
 
-    ##  Categorize individualIDs based on their changes (or not) in plantStatus2
+    ##  Categorize individualIDs based on their changes (or not) in simplePlantStatus
     input_to_transitions <- vst_agb_kg %>%
       dplyr::select("plot_eventID",
                     "domainID",
@@ -244,15 +258,15 @@ estimateWoodProd = function(inputDataList,
                     "sampledAreaM2",
                     "individualID",
                     "taxonID",
-                    "plantStatus2",
+                    "simplePlantStatus",
                     "year")
 
-    #   Retain records unique with respect to individualID, taxonID, year, plantStatus2; don't need to worry about multi-bole smaller individuals because 'estimateWoodMass()' function combines mass for boles in output.
+    #   Retain records unique with respect to individualID, taxonID, year, simplePlantStatus; don't need to worry about multi-bole smaller individuals because 'estimateWoodMass()' function combines mass for boles in output.
     input_to_transitions <- input_to_transitions %>%
       dplyr::distinct(.data$individualID,
                       .data$taxonID,
                       .data$year,
-                      .data$plantStatus2,
+                      .data$simplePlantStatus,
                       .keep_all = TRUE)
 
     input_to_transitions <- input_to_transitions[order(input_to_transitions$year),]
@@ -266,7 +280,7 @@ estimateWoodProd = function(inputDataList,
                                       id_cols = c("domainID", "siteID", "plotID", "individualID", "taxonID", "sampledAreaM2"),
                                       names_from = "year",
                                       names_prefix = "status_",
-                                      values_from = "plantStatus2",
+                                      values_from = "simplePlantStatus",
                                       values_fn = list
                                       )
 
@@ -371,7 +385,7 @@ estimateWoodProd = function(inputDataList,
        dplyr::filter(!is.na(.data$mortality_Mgha)) %>%
        dplyr::rename("eventID1" = "eventID", "biomassWhenLive_kg" = "agb_kg") %>%
        dplyr::mutate(eventID2 = paste0("vst_",.data$siteID,"_",year2)) %>%
-       dplyr::select(-"plot_eventID", -"agb_Mgha", -"plantStatus2") %>%
+       dplyr::select(-"plot_eventID", -"agb_Mgha", -"simplePlantStatus") %>%
        dplyr::relocate("plotID", .after = "siteID") %>%
        dplyr::relocate("eventID1", .after = "plotID") %>%
        dplyr::relocate("eventID2", .after = "eventID1") %>%
@@ -424,7 +438,7 @@ estimateWoodProd = function(inputDataList,
   recruitment_input$growthForm <- "multi-bole tree" # required in order to call estimateWoodMass, which doesn't distinguish between single and multi bole trees
 
   # produce dataframe with structure required to be passed successfully as vst_perplotperyear to estimateWoodMass function
-  perplot_input <- vst_plot_w_0s
+  perplot_input <- vst_plot_Mgha
   perplot_input$date <- "2000-01-01" # placeholder, not needed since don't have duplicates to sort by date here
   perplot_input$samplingImpractical <- "OK"
   perplot_input$year <- NULL
@@ -491,7 +505,7 @@ estimateWoodProd = function(inputDataList,
   ### CALCULATE BIOMASS INCREMENT (Clark et al. 2001 approach 2 - stand level productivity calculation) ####
 
   if(stemIncrementFlagged == "filterFlagged"){
-  diameter_inc <- vst_agb_kg %>% dplyr::filter(.data$plantStatus2 == "Live") %>%
+  diameter_inc <- vst_agb_kg %>% dplyr::filter(.data$simplePlantStatus == "Live") %>%
       dplyr::select("plot_eventID",
                     "domainID",
                     "siteID",
@@ -500,7 +514,7 @@ estimateWoodProd = function(inputDataList,
                     "stemDiameter",
                     "year")
 
-    #   Retain records unique with respect to individualID, taxonID, year, plantStatus2; don't need to worry about multi-bole smaller individuals because 'estimateWoodMass()' function combines mass for boles in output.
+    #   Retain records unique with respect to individualID, taxonID, year, simplePlantStatus; don't need to worry about multi-bole smaller individuals because 'estimateWoodMass()' function combines mass for boles in output.
     diameter_inc <- diameter_inc %>%
       dplyr::distinct(.data$individualID,
                       .data$year,
@@ -580,7 +594,7 @@ estimateWoodProd = function(inputDataList,
 
   ### Generate plot-level biomass summary ####
 
-  #   Sum biomass per unit area for each plot x year x plantStatus2 x nlcdClass x taxonID combo (aggegate across individualIDs)
+  #   Sum biomass per unit area for each plot x year x simplePlantStatus x nlcdClass x taxonID combo (aggegate across individualIDs)
   vst_plot_summary <- vst_agb_Mgha %>%
     dplyr::group_by(.data$plot_eventID,
                     .data$siteID,
@@ -592,7 +606,7 @@ estimateWoodProd = function(inputDataList,
                     .data$nlcdClass,
                     .data$taxonID,
                     .data$growthForm,
-                    .data$plantStatus2,
+                    .data$simplePlantStatus,
                     .data$year) %>%
     dplyr::summarise(agb_Mgha = sum(.data$agb_Mgha, na.rm = TRUE),
                      .groups = "drop")
@@ -601,8 +615,8 @@ estimateWoodProd = function(inputDataList,
   vst_plot_wide <- tidyr::pivot_wider(vst_plot_summary,
                                       id_cols = c("siteID", "plot_eventID", "eventID", "plotID",  "sampledAreaM2", "eventType",
                                                   "plotType", "nlcdClass", "taxonID", "growthForm", "year"),
-                                      names_from = "plantStatus2",
-                                      names_glue = "{plantStatus2}_Mgha",
+                                      names_from = "simplePlantStatus",
+                                      names_glue = "{simplePlantStatus}_Mgha",
                                       values_from = "agb_Mgha")
   if (!"Dead_or_Lost_Mgha" %in% names(vst_plot_wide)) {
     vst_plot_wide$Dead_or_Lost_Mgha <- NA
@@ -619,16 +633,16 @@ estimateWoodProd = function(inputDataList,
   vst_agb_zeros_plot <- vst_agb_zeros
 
   if (nrow(vst_agb_zeros_plot) > 0) {
-    perplot_meta_for_missing <- unique(vst_plot_w_0s %>% dplyr::select("plotID", "eventID", "eventType", "nlcdClass"))
+    perplot_meta_for_missing <- unique(vst_plot_Mgha %>% dplyr::select("plotID", "eventID", "eventType", "nlcdClass"))
     vst_agb_zeros_plot <- merge(vst_agb_zeros_plot, perplot_meta_for_missing, by = c("plotID", "eventID"), all.x = T)
     vst_agb_zeros_plot$taxonID <-  vst_agb_zeros_plot$growthForm <- vst_agb_zeros_plot$sampledAreaM2 <- NA # placeholders to allow rbind without errors
     vst_agb_zeros_plot$Dead_or_Lost_Mgha <- vst_agb_zeros_plot$Live_Mgha <- 0
 
   #   Add rows for plots with zero biomass to plots with AGB
-  vst_plot_w_0s <- rbind(vst_plot_wide,
+  vst_plot_Mgha <- rbind(vst_plot_wide,
                          vst_agb_zeros_plot)
   } else {
-     vst_plot_w_0s <- vst_plot_wide
+     vst_plot_Mgha <- vst_plot_wide
   }
 
   priority_plots <- priority_plots # force load from data table
@@ -637,18 +651,18 @@ estimateWoodProd = function(inputDataList,
                   "specificModuleSamplingPriority")
 
   #   Add 'specificModuleSamplingPriority' column to output
-  vst_plot_w_0s <- merge(vst_plot_w_0s,
+  vst_plot_Mgha <- merge(vst_plot_Mgha,
                          priority_plots_add,
                          by = c("plotID"),
                          all.x = TRUE)
 
   #   Retain AGB estimates for records with values for both live and dead biomass
-  vst_plot_w_0s <- vst_plot_w_0s %>%
+  vst_plot_Mgha <- vst_plot_Mgha %>%
     dplyr::filter(!is.na(.data$Live_Mgha) & !is.na(.data$Dead_or_Lost_Mgha))
 
 
   #   Some taxonIDs are represented in multiple growthForms (e.g., sapling and single bole tree): This sums the growthForms
-  vst_agb_Live <- vst_plot_w_0s %>%
+  vst_agb_Live <- vst_plot_Mgha %>%
     dplyr::group_by(.data$siteID,
                     .data$plotID,
                     .data$plotType,
