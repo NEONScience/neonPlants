@@ -1,3 +1,17 @@
+### Function testing: Odd TREE output from 2018 with eventIDs
+inputDataList <- neonUtilities::loadByProduct(dpID = "DP1.10023.001",
+                                              site = "TREE",
+                                              startdate = "2018-01",
+                                              enddate = "2018-12",
+                                              check.size = FALSE,
+                                              token = Sys.getenv("NEON_TOKEN"))
+
+#--> Appears that scaleHerbMass does not handle plots with targetTaxaPresent == "N" properly
+
+
+
+
+### Function testing: Odd DCFS and KONZ output
 hbpTest <- neonUtilities::loadByProduct(dpID = "DP1.10023.001",
                                         site = c("DCFS", "KONZ", "SJER"),
                                         startdate = "2021-09",
