@@ -193,6 +193,7 @@ scaleHerbMass = function(inputDataList,
 
 
   ##  Join tables and calculate mass per area
+  #--> Use full_join to bring in perbout records with tTP == "N"?
   hbp <- dplyr::right_join(inputBout,
                            inputMass,
                            by = "sampleID") %>%
@@ -237,7 +238,27 @@ scaleHerbMass = function(inputDataList,
                                              "peak"),
                                  names_from = "herbGroup",
                                  names_glue = "{herbGroup}_gm2",
-                                 values_from = "dryMass_gm2") %>%
+                                 values_from = "dryMass_gm2")
+
+  #   Add columns if missing
+  herbGroups <- c("AllHerbaceousPlants_gm2",
+                  "CoolSeasonGraminoids_gm2",
+                  "WarmSeasonGraminoids_gm2",
+                  "WoodyStemmedPlants_gm2",
+                  "NFixingPlants_gm2",
+                  "AnnualAndPerennialForbs_gm2")
+
+  for (i in 1:length(herbGroups)) {
+
+    if (!herbGroups[i] %in% names(hbp_wide)) {
+
+      hbp_wide[, herbGroups[i]] <- NA
+
+    }
+  }
+
+  #   Relocate "AllHerbaceousPlants_gm2"
+  hbp_wide <- hbp_wide %>%
     dplyr::relocate("AllHerbaceousPlants_gm2",
                     .after = "peak")
 
@@ -254,9 +275,6 @@ scaleHerbMass = function(inputDataList,
                 hbp_peak_biomass_sum_groups,
                 by = "sampleID",
                 all.x = TRUE)
-
-  if(!"AllHerbaceousPlants_gm2" %in% names(hbp2)) {hbp2[["AllHerbaceousPlants_gm2"]] <- NA}
-
 
   hbp2$AllHerbaceousPlants_gm2 <- ifelse(is.na(hbp2$AllHerbaceousPlants_gm2),
                                          hbp2$dryMassSum,
