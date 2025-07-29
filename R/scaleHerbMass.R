@@ -164,6 +164,7 @@ scaleHerbMass = function(inputDataList,
                   "plotManagement",
                   "collectDate",
                   "eventID",
+                  "targetTaxaPresent",
                   "sampleID",
                   "clipArea",
                   "exclosure")
