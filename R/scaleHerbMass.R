@@ -23,9 +23,9 @@
 #' @param plotSubset The options are the default of "all" (all Tower and Distributed plots), "tower" (all plots in the Tower airshed but no Distributed plots), and "distributed" (all Distributed plots, which are sampled on a 5-year interval and are spatially representative of the NLCD classes at a site, and no Tower plots). [character]
 #'
 #' @return A list that includes biomass summary data at multiple scales. Output tables include:
-#'   * hbp_agb - Summarizes above-ground herbaceous biomass for each sampleID in the input data ("g/m2").
-#'   * hbp_plot - Summarizes above-ground herbaceous biomass for each plot by year combination (both "g/m2" and "Mg/ha").
-#'   * hbp_site - Summarizes above-ground herbaceous biomass for each site by year combination (both "g/m2" and "Mg/ha").
+#'   * hbp_agb - Summarizes above-ground herbaceous biomass for each sampled clip strip in the input data ("g/m2").
+#'   * hbp_plot - Summarizes above-ground herbaceous peak standing biomass for each plot by year combination (both "g/m2" and "Mg/ha").
+#'   * hbp_site - Summarizes above-ground herbaceous peak standing biomass for each site by year combination (both "g/m2" and "Mg/ha").
 #'
 #' @examples
 #' \dontrun{
