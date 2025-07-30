@@ -1,8 +1,8 @@
 ### Function testing: Odd TREE output from 2018 with eventIDs
 inputDataList <- neonUtilities::loadByProduct(dpID = "DP1.10023.001",
-                                              site = c("SJER", "TREE"),
+                                              site = c("BLAN", "KONZ", "SJER", "SRER", "TEAK", "TREE"),
                                               startdate = "2018-01",
-                                              enddate = "2019-08",
+                                              enddate = "2019-12",
                                               check.size = FALSE,
                                               token = Sys.getenv("NEON_TOKEN"))
 
@@ -11,6 +11,8 @@ inputDataList <- neonUtilities::loadByProduct(dpID = "DP1.10023.001",
 #   Identify all sites where grazing exclosures have been deployed
 hbpAll <- neonUtilities::loadByProduct(dpID = "DP1.10023.001",
                                        site = "all",
+                                       enddate = "2019-12",
+                                       tabl = "hbp_perbout",
                                        check.size = FALSE,
                                        token = Sys.getenv("NEON_TOKEN"))
 
