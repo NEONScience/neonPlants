@@ -244,32 +244,6 @@ scaleHerbMass = function(inputDataList,
                                                TRUE ~ .data$herbGroup))
 
 
-  ##  Identify peak biomass bouts at grazed sites
-  #   Define list of sites with grazing management where exclosures are deployed; list developed by counting 'perbout' records with exclosure == "Y" across sites. Sites that trialed exclosures for a while are not included (e.g., SRER, TEAK)
-  grazedSites <- c("LAJA", "KONZ", "DCFS", "NOGP", "WOOD", "CPER", "CLBJ", "OAES", "MOAB", "SJER")
-
-  #   Remove records at sites not in 'grazedSites' with exclosure == "Y"; these sites never produced high-quality consumption data.
-  hbp <- hbp %>%
-    dplyr::filter(.data$siteID %in% grazedSites |
-                    (!.data$siteID %in% grazedSites & (.data$exclosure == "N" | is.na(.data$exclosure))))
-
-  #   Assign bouts at grazed sites to "atPeak" and "offPeak" by counting unique values of growthForm observed for the bout
-  peakEvents <- hbp %>%
-    dplyr::filter(.data$siteID %in% grazedSites,
-                  !is.na(.data$herbGroup)) %>%
-    dplyr::group_by(.data$domainID,
-                    .data$siteID,
-                    .data$eventID) %>%
-    dplyr::summarise(countHerbGroup = length(unique(.data$herbGroup)),
-                     .groups = "drop") %>%
-    dplyr::filter(.data$countHerbGroup > 1)
-
-  hbp <- hbp %>%
-    dplyr::mutate(peak = dplyr::case_when(.data$siteID %in% grazedSites & .data$eventID %in% peakEvents$eventID ~ "atPeak",
-                                          .data$siteID %in% grazedSites & !.data$eventID %in% peakEvents$eventID ~ "offPeak",
-                                          TRUE ~ "atPeak"))
-
-
   ##  Transpose herbGroup rows into separate columns to create one row per clipID
   hbp_wide <- tidyr::pivot_wider(data = hbp,
                                  id_cols = c("domainID",
@@ -287,8 +261,7 @@ scaleHerbMass = function(inputDataList,
                                              "targetTaxaPresent",
                                              "sampleID",
                                              "clipArea",
-                                             "exclosure",
-                                             "peak"),
+                                             "exclosure"),
                                  names_from = "herbGroup",
                                  names_glue = "{herbGroup}_gm2",
                                  values_from = "dryMass_gm2") %>%
@@ -298,25 +271,25 @@ scaleHerbMass = function(inputDataList,
 
 
   ##  Add columns for missing herbGroups; can occur when a small number of sites are used and not all herbGroups present at sites (especially crops).
-  herbGroups <- c("AllHerbaceousPlants_gm2",
-                  "AnnualAndPerennialForbs_gm2",
-                  "CoolSeasonGraminoids_gm2",
-                  "NFixingPlants_gm2",
-                  "WarmSeasonGraminoids_gm2",
-                  "WoodyStemmedPlants_gm2",
-                  "Corn_gm2",
-                  "Barley_gm2",
-                  "Millet_gm2",
-                  "OrchardGrass_gm2",
-                  "Soybean_gm2",
-                  "Sorghum_gm2",
-                  "Wheat_gm2")
+  allHerbGroups <- c("AllHerbaceousPlants_gm2",
+                     "AnnualAndPerennialForbs_gm2",
+                     "CoolSeasonGraminoids_gm2",
+                     "NFixingPlants_gm2",
+                     "WarmSeasonGraminoids_gm2",
+                     "WoodyStemmedPlants_gm2",
+                     "Corn_gm2",
+                     "Barley_gm2",
+                     "Millet_gm2",
+                     "OrchardGrass_gm2",
+                     "Soybean_gm2",
+                     "Sorghum_gm2",
+                     "Wheat_gm2")
 
-  for (i in 1:length(herbGroups)) {
+  for (i in 1:length(allHerbGroups)) {
 
-    if (!herbGroups[i] %in% names(hbp_wide)) {
+    if (!allHerbGroups[i] %in% names(hbp_wide)) {
 
-      hbp_wide[, herbGroups[i]] <- NA
+      hbp_wide[, allHerbGroups[i]] <- NA
 
     }
   }
@@ -325,12 +298,12 @@ scaleHerbMass = function(inputDataList,
   ##  Relocate 'sampleID' and 'AllHerbaceousPlants_gm2'
   hbp_wide <- hbp_wide %>%
     dplyr::relocate("sampleID",
-                    .after = "peak") %>%
+                    .after = "exclosure") %>%
     dplyr::relocate("AllHerbaceousPlants_gm2",
                     .after = "sampleID")
 
 
-  ##  Calculate "AllHerbaceousPlants" biomass for "atPeak" sampling events
+  ##  Calculate "AllHerbaceousPlants" biomass for sampling events sorted to herbGroup
   hbp_wide <- hbp_wide %>%
     dplyr::mutate(AllHerbaceousPlants_gm2 = dplyr::case_when(is.na(.data$AllHerbaceousPlants_gm2) ~
                                                                rowSums(dplyr::across("CoolSeasonGraminoids_gm2":"Wheat_gm2"),
@@ -360,6 +333,10 @@ scaleHerbMass = function(inputDataList,
                   Soybean_gm2 = as.numeric(.data$Soybean_gm2),
                   Sorghum_gm2 = as.numeric(.data$Sorghum_gm2),
                   Wheat_gm2 = as.numeric(.data$Wheat_gm2))
+
+
+  ##  Remove exclosure == "Y" records from sites where exclosures were trialed but abandoned
+  #--> Return to this because API not working and cannot identify sites
 
 
 

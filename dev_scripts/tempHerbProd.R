@@ -13,7 +13,7 @@ hbpAll <- neonUtilities::loadByProduct(dpID = "DP1.10023.001",
                                        site = "all",
                                        enddate = "2019-12",
                                        tabl = "hbp_perbout",
-                                       check.size = FALSE,
+                                       check.size = TRUE,
                                        token = Sys.getenv("NEON_TOKEN"))
 
 hbpAllBout <- hbpAll$hbp_perbout
@@ -141,3 +141,29 @@ temp1 <- eventConsum %>%
 #   stop(glue::glue("At least 2 years of data are needed to calculate productivity (more when the plot sampling interval is longer than annual). Input dataset only has biomass data from: {unique(hbp_plot$year)}"))
 #
 # }
+
+
+##  Identify peak biomass bouts at grazed sites --> re-insert a version of this into plot-level section?
+#   Define list of sites with grazing management where exclosures are deployed; list developed by counting 'perbout' records with exclosure == "Y" across sites. Sites that trialed exclosures for a while are not included (e.g., SRER, TEAK)
+grazedSites <- c("LAJA", "KONZ", "DCFS", "NOGP", "WOOD", "CPER", "CLBJ", "OAES", "MOAB", "SJER")
+
+#   Remove records at sites not in 'grazedSites' with exclosure == "Y"; these sites never produced high-quality consumption data.
+hbp <- hbp %>%
+  dplyr::filter(.data$siteID %in% grazedSites |
+                  (!.data$siteID %in% grazedSites & (.data$exclosure == "N" | is.na(.data$exclosure))))
+
+#   Assign bouts at grazed sites to "atPeak" and "offPeak" by counting unique values of growthForm observed for the bout
+peakEvents <- hbp %>%
+  dplyr::filter(.data$siteID %in% grazedSites,
+                !is.na(.data$herbGroup)) %>%
+  dplyr::group_by(.data$domainID,
+                  .data$siteID,
+                  .data$eventID) %>%
+  dplyr::summarise(countHerbGroup = length(unique(.data$herbGroup)),
+                   .groups = "drop") %>%
+  dplyr::filter(.data$countHerbGroup > 1)
+
+hbp <- hbp %>%
+  dplyr::mutate(peak = dplyr::case_when(.data$siteID %in% grazedSites & .data$eventID %in% peakEvents$eventID ~ "atPeak",
+                                        .data$siteID %in% grazedSites & !.data$eventID %in% peakEvents$eventID ~ "offPeak",
+                                        TRUE ~ "atPeak"))
