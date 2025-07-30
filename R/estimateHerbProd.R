@@ -16,7 +16,7 @@
 #'
 #' @param inputDataList An R list object produced by the neonUtilities::loadByProduct() function for the NEON Herbaceous Clip Harvest data product. [list]
 #'
-#' @param plotSubset The options are "all" (all Tower and Distributed plots), the default of "tower" (all plots in the Tower airshed but no Distributed plots), and "distributed" (all Distributed plots, which are sampled on a 5-year interval and are spatially representative of the NLCD classes at a site). [character]
+#' @param plotSubset The options are the default "all" (all Tower and Distributed plots), "tower" (all plots in the Tower airshed but no Distributed plots), and "distributed" (all Distributed plots, which are sampled on a 5-year interval and are spatially representative of the NLCD classes at a site, and no Tower plots). [character]
 #'
 #' @return A list that includes productivity summary data frames. Output tables include:
 #'   * herb_ANPP_site - Summarizes herbaceous ANPP for each site x year combination ("Mg/ha/yr" and "g/m2/yr").
@@ -37,14 +37,14 @@
 #'
 #' # example specifying many non-default arguments
 #' df <-estimateHerbProd(inputDataList = HbpDat,
-#' plotSubset = "all")
+#' plotSubset = "tower")
 #'
 #' }
 #'
 #' @export estimateHerbProd
 
 estimateHerbProd = function(inputDataList,
-                            plotSubset = "tower") {
+                            plotSubset = "all") {
 
   options(dplyr.summarise.inform = FALSE)
 
@@ -93,20 +93,6 @@ estimateHerbProd = function(inputDataList,
 
 
 
-  ### Error: Stop if not at least 2 years of data ####
-  #   Define 'start' and 'end' years for productivity interval
-  start <- min(hbp_plot$year)
-  end  <- max(hbp_plot$year)
-
-  #   Check for valid interval
-  if (as.numeric(end) - as.numeric(start) < 1) {
-
-    stop(glue::glue("At least 2 years of data are needed to calculate productivity (more when the plot sampling interval is longer than annual). Input dataset only has biomass data from: {unique(hbp_plot$year)}"))
-
-  }
-
-
-
   ### Prepare plot-level data for downstream calculations ####
   #   Filter input data using user-supplied 'plotSubset' argument; insurance step since scaleHerbMass() output should already only be produced for user-selected option
   if (plotSubset %in% c("distributed", "tower")) {
@@ -149,12 +135,13 @@ estimateHerbProd = function(inputDataList,
                         values_to = "agb_gm2")
 
   #   Populate exclosure == "N" if value is NA
-  hbp_agb_long$exclosure <- dplyr::if_else(is.na(hbp_agb_long$exclosure),
-                                           "N", hbp_agb_long$exclosure,
-                                           hbp_agb_long$exclosure)
+  #--> Skipping this for now, not sure if needed?
+  # hbp_agb_long$exclosure <- dplyr::if_else(is.na(hbp_agb_long$exclosure),
+  #                                          "N", hbp_agb_long$exclosure,
+  #                                          hbp_agb_long$exclosure)
 
-  #   Remove duplicates based on primary keys
-  hbp_agb_long <- hbp_agb_long[!duplicated(paste0(hbp_agb_long$sampleID,
+  #   Remove duplicates based on primary keys; cannot use 'sampleID' because it is NA for records with targetTaxaPresent == "N"
+  hbp_agb_long <- hbp_agb_long[!duplicated(paste0(hbp_agb_long$clipID,
                                                   hbp_agb_long$eventID,
                                                   hbp_agb_long$herbGroup),
                                            fromLast = TRUE), ]
@@ -171,57 +158,53 @@ estimateHerbProd = function(inputDataList,
                   "sampleID",
                   "nlcdClass",
                   "plotType",
-                  "year",
+                  "plotManagement",
                   "collectDate",
+                  "year",
                   "eventID",
+                  "targetTaxaPresent",
+                  "exclosure",
                   "peak",
                   "herbGroup",
-                  "exclosure",
                   "agb_gm2") %>%
-
-    #   SJER eventID correct: Update 'year' to correctly group eventIDs in Mediterranean growing season
-    dplyr::mutate(collectDate = as.Date(.data$collectDate),
-                  year = dplyr::case_when(.data$siteID == "SJER" &
-                                            .data$collectDate < as.Date(glue::glue("{.data$year}-07-15")) ~
-                                            (.data$year - 1),
-                                          TRUE ~ .data$year)) %>%
 
     #   Create 'plot-year' variable for subsequent ID of Tower plots likely managed for grazing
     dplyr::mutate(plotYear = paste(.data$plotID, .data$year, sep = "-"),
                   .before = "plotID")
 
 
-  ##  Identify grazed sites using exclosure == Y
-  grazed_sites <- hbp_agb %>%
-    dplyr::select("siteID",
-                  "exclosure") %>%
-    dplyr::filter(.data$exclosure == "Y")
-
-  grazed_sites <- sort(unique(as.character(grazed_sites$siteID)))
+  # ##  Identify grazed sites in the dataset using exclosure == Y
+  # grazed_sites <- hbp_agb %>%
+  #   dplyr::select("siteID",
+  #                 "exclosure") %>%
+  #   dplyr::filter(.data$exclosure == "Y")
+  #
+  # grazed_sites <- sort(unique(as.character(grazed_sites$siteID)))
+  #--> Likely not helpful to identify grazed sites, since grazing may not occur at all Tower plots within a site.
 
 
 
   ### Standard sites: Determine latest standing ambient biomass within a 'year' for each herbGroup ####
   #-->  This is productivity for sites/plots with no grazing exclosures.
 
-  ### Obtain final standing mass for sites with no grazing management; also bring in Distributed plots at grazed sites and Tower plots at grazed sites that are not actively managed for grazing (i.e., only a portion of the Tower plots have cows and exclosures).
+  ### Obtain final standing mass for sites with no grazing management; also bring in Distributed plots at grazed sites and Tower plots at grazed sites that are not actively managed for grazing (i.e., only a portion of the Tower plots have cows and exclosures). For plots NOT managed for grazing (i.e., no exclosure == "Y" records) but that WERE clipped every grazed bout, cannot identify peak biomass as latest eventID --> use peak == "atPeak" instead.
 
   ##  For each plot-year combination, determine whether an exclosure was deployed in that year; if "Y", the plot-year is assumed to be under grazing management. Plots managed for grazing in a given year do not contribute to "standard" site-level productivity estimates and instead are put through the "consumption" workflow.
 
   #   Create list of unique Tower 'plot-year' combinations
-  thePlotYears <- sort(unique(hbp_agb_long$plotYear[hbp_agb_long$plotType == "tower"]))
+  towerPlotYears <- sort(unique(hbp_agb_long$plotYear[hbp_agb_long$plotType == "tower"]))
 
-  #   Identify grazed 'plot-year' combinations
-  if (length(thePlotYears) > 0) {
+  #   Identify grazed Tower 'plot-year' combinations
+  if (length(towerPlotYears) > 0) {
 
     grazedPlotYears <- c()
 
-    for (i in 1:length(thePlotYears)) {
+    for (i in 1:length(towerPlotYears)) {
 
       tempDF <- hbp_agb_long %>%
-        dplyr::filter(.data$plotYear == thePlotYears[i])
+        dplyr::filter(.data$plotYear == towerPlotYears[i])
 
-      if ("Y" %in% tempDF$exclosure) {grazedPlotYears <- c(grazedPlotYears, thePlotYears[i])}
+      if ("Y" %in% tempDF$exclosure) {grazedPlotYears <- c(grazedPlotYears, towerPlotYears[i])}
 
     }
 
@@ -231,7 +214,7 @@ estimateHerbProd = function(inputDataList,
 
     grazedPlotYears <- c()
 
-  } # End length(thePlotYears) conditional
+  } # End length(towerPlotYears) conditional
 
 
 
@@ -257,9 +240,14 @@ estimateHerbProd = function(inputDataList,
     dplyr::arrange(.data$eventID) %>%
     dplyr::slice_tail()
 
-  #   Further filter to latest "standard" eventID --> should be redundant with filtering above unless Tower plot was accidentally clipped twice and never had an exclosure in it for entire 'plot' x 'year' combination
+  #   Further filter to latest "standard" eventID --> should be redundant with filtering above unless Tower plot was clipped more than once and never had an exclosure in it for entire 'plot' x 'year' combination
+  test <- standardFinalMass %>%
+    dplyr::filter(!.data$eventID %in% standardLatestEvents$eventID)
+
   standardFinalMass <- standardFinalMass %>%
     dplyr::filter(.data$eventID %in% standardLatestEvents$eventID)
+  #--> This doesn't quite work right for plots that don't have exclosure but are sampled for all the grazed bouts anyway (happened at SJER in 2017)...
+
 
   #   Create site-level ANPP estimates for "standard" sites/plots
   if (nrow(standardFinalMass) > 0) {

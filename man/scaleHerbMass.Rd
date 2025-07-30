@@ -8,7 +8,7 @@ scaleHerbMass(
   inputDataList,
   inputBout = NA,
   inputMass = NA,
-  plotSubset = "tower"
+  plotSubset = "all"
 )
 }
 \arguments{
@@ -20,7 +20,7 @@ scaleHerbMass(
 \item{inputMass}{The 'hbp_massdata' table for the site x month combination(s) of interest
 (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 
-\item{plotSubset}{The options are "all" (all tower and distributed plots), the default of "tower" (all plots in the tower airshed but no distributed plots), and "distributed" (all distributed plots, which are sampled on a 5-year interval and are spatially representative of the NLCD classes at a site). \link{character}}
+\item{plotSubset}{The options are the default of "all" (all Tower and Distributed plots), "tower" (all plots in the Tower airshed but no Distributed plots), and "distributed" (all Distributed plots, which are sampled on a 5-year interval and are spatially representative of the NLCD classes at a site, and no Tower plots). \link{character}}
 }
 \value{
 A list that includes biomass summary data at multiple scales. Output tables include:
@@ -57,6 +57,6 @@ inputMass = NA
 
 }
 \author{
-Samuel M Simkin \email{ssimkin@battelleecology.org} \cr
 Courtney Meier \email{cmeier@BattelleEcology.org} \cr
+Samuel M Simkin \email{ssimkin@battelleecology.org} \cr
 }

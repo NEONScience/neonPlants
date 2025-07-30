@@ -9,7 +9,7 @@ estimateHerbProd(inputDataList, plotSubset = "tower")
 \arguments{
 \item{inputDataList}{An R list object produced by the neonUtilities::loadByProduct() function for the NEON Herbaceous Clip Harvest data product. \link{list}}
 
-\item{plotSubset}{The options are "all" (all Tower and Distributed plots), the default of "tower" (all plots in the Tower airshed but no Distributed plots), and "distributed" (all Distributed plots, which are sampled on a 5-year interval and are spatially representative of the NLCD classes at a site). \link{character}}
+\item{plotSubset}{The options are the default "all" (all Tower and Distributed plots), "tower" (all plots in the Tower airshed but no Distributed plots), and "distributed" (all Distributed plots, which are sampled on a 5-year interval and are spatially representative of the NLCD classes at a site, and no Tower plots). \link{character}}
 }
 \value{
 A list that includes productivity summary data frames. Output tables include:
