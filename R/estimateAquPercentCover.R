@@ -57,8 +57,9 @@
 #' inputPerTax = NA,
 #' inputTaxProc = NA,
 #' inputMorph = NA,
-#' barPlots = F
+#' barPlots = FALSE
 #' )
+#'
 #' }
 #' @export estimateAquPercentCover 
 

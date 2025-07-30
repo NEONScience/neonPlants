@@ -466,7 +466,7 @@ joinAquClipHarvest <- function(inputDataList,
         # "variety",
         # "form",
         # "taxonRank"
-        # "dataQF"
+        "dataQF"
       )%>% 
       dplyr::rename(identifiedDate="morphospeciesResolvedDate")
     
