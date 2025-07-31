@@ -21,7 +21,7 @@ estimateMass(
   includeDilution = TRUE,
   includeFragInTotal = FALSE,
   plotSubset = "towerAll",
-  growthForm = "all"
+  growthFormSubset = "all"
 )
 }
 \arguments{
@@ -57,7 +57,7 @@ estimateMass(
 
 \item{plotSubset}{Applicable if dataProducts includes "Vst" or "Hbp". The options are "all" (all tower and distributed plots), the default of "towerAll" (all plots in the tower airshed but no distributed plots), "towerAnnualSubset" (only the subset of tower plots that are sampled annually), and "distributed" (all distributed plots, which are sampled in 5-yr bouts and are spatially representative of the NLCD classes at at site). \link{character}}
 
-\item{growthForm}{Applicable if dataProducts includes "Vst". Select which growth forms to analyse. The options are "tree" (sbt, mbt) for trees with a dbh > 10 cm and the default of "all", which includes the large trees, and also small trees (smt, sap), shrubs (sis, sms), liana (lia), palms (plm, ptr, spm), tree ferns (ltf, stf, tfn), ocotillo (oco), yucca (yuc), and xerophyllum (xer).  Consult the Vegetation Structure Quick Start Guide and/or the Data Product User Guide for more growth form information. \link{character}}
+\item{growthFormSubset}{Applicable if dataProducts includes "Vst". Select which Vst growth forms to include. The options are "tree" (sbt, mbt) for trees with a dbh > 10 cm and the default of "all", which includes the large trees, and also small trees (smt, sap), shrubs (sis, sms), liana (lia), palms (plm, ptr, spm), tree ferns (ltf, stf, tfn), ocotillo (oco), yucca (yuc), and xerophyllum (xer).  Consult the Vegetation Structure Quick Start Guide and/or the Data Product User Guide for more growth form information. \link{character}}
 }
 \value{
 A site-level summary dataframe named "biomass_site" with biomass from the selected NEON data products (megagrams per hectare). In addition, more granular data summaries are returned for each of the selected input data products. More detail is provided for product-specific data frames in the documentation associated wiht contributing functions - i.e., estimateWoodMass(), scaleHerbMass(), and scaleRootMass().
@@ -73,17 +73,17 @@ A site-level summary of NEON biomass from the selected NEON data products is pro
 
 #  Example with arguments at default values
 estimateMassOutputs <- estimateMass(
-dataProducts = c("Vst","Hbp","Bbc"), 
-inputDataListVst = VstDat, 
+dataProducts = c("Vst","Hbp","Bbc"),
+inputDataListVst = VstDat,
 inputDataListHbp = HbpDat
 )
 
 #  Example specifying several non-default arguments
 estimateMassOutputs <- estimateMass(
-dataProducts = c("Vst","Hbp"), 
-inputDataListVst = VstDat, 
+dataProducts = c("Vst","Hbp"),
+inputDataListVst = VstDat,
 inputDataListHbp = NA,
-growthForm = "tree"
+growthFormSubset = "tree"
 )
 }
 

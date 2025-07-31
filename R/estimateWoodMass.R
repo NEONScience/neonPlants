@@ -663,6 +663,10 @@ plot_eventID_partial <- perPlot %>%
 
     } # end nrow(vst_agb_other) conditional
 
+  } else {
+
+    vst_agb_final_other <- data.frame()
+
   } #   end non-woody conditional
 
 
