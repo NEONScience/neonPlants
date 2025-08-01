@@ -40,7 +40,7 @@
 #'#'
 #' @param mortalityMissing Select how missing individuals are handled. Default is "filterMissing" that removes individualIDs with plantStatus NA at time 2, as well as filtering to remove from the vst_agb_kg table that is summarized to produce plot-level increment, with the individuals with plantStatus NA at time sent to "filtered" table. Alternate option is "retainMissing", which retains individuals with plantStatus NA at time 2 and assumes that they are dead and contributing to "mortality" table and increment. [character]
 #'
-#' @param stemIncrementFlagged Select how individuals implausibly large stem diameter increments from time 1 to time 2 are handled. Default is "filterFlagged" that removes individuals that are NA at time 1 but >= 3 cm stemDiameter increment (e.g., 9.9 + 3 = 12.9 for samplingInterval of 1 yr) at time 2, or that have an absolute stem diameter increment >= 3 from one live bout to a second live bout, with individuals sent to "filtered" table. Alternate option is "retainFlagged", which retains individuals and includes them in recruitment and vst_agb_kg tables regardless of stem diameter increment. [character]
+#' @param stemIncrementFlagged Select how individuals with implausibly large stem diameter increments from time 1 to time 2 are handled. Default is "filterFlagged" that removes individuals with >= 3 cm absolute stemDiameter increment (including for recruited individuals, for which inferred initial diameter is 9.9 cm dia + 3 cm dia = 12.9 cm dia), with individuals sent to "filtered" table. Alternate option is "retainFlagged", which retains individuals and includes them in recruitment and vst_agb_kg tables regardless of stem diameter increment. [character]
 #'
 #' @return A list that includes productivity summary data frames. Output tables include:
 #'   * vst_ANPP_plot - Summarizes woody ANPP for each plot x year combination ("Mg/ha/yr").
@@ -98,34 +98,30 @@ estimateWoodProd = function(inputDataList,
   estimateWoodMassOutputs <- estimateWoodMass(
     inputDataList = inputDataList,
     plotSubset = plotSubset,
-    growthForm = "tree"
+    growthFormSubset = "tree"
    )
 
-  vst_plot_Mgha <- estimateWoodMassOutputs$vst_plot_w_0s
-#  vst_plot_Mgha <- estimateWoodMassOutputs$vst_plot_Mgha
+  vst_plot_Mgha <- estimateWoodMassOutputs$vst_plot_Mgha
   vst_agb_kg <- estimateWoodMassOutputs$vst_agb_kg
-#  vst_agb_kg <- dplyr::bind_rows(vst_agb_kg, missing)
+  vst_missing <- estimateWoodMassOutputs$vst_missing
 
-   vst_agb_kg$simplePlantStatus <- dplyr::if_else(vst_agb_kg$plantStatus %in% c("Live",
-                                                                                  "Live, disease damaged",
-                                                                                  "Live, insect damaged",
-                                                                                  "Live,  other damage",
-                                                                                  "Live, physically damaged",
-                                                                                  "Live, broken bole"),
-                                                 "Live",
-                                                 "Dead_or_Lost",
-                                                 "Live")
+    liveList <- c("Live",
+                "Live, insect damaged",
+                "Live, disease damaged",
+                "Live, physically damaged",
+                "Live, other damage",
+                "Live, broken bole",
+                "No longer qualifies")
 
+    vst_missing <- vst_missing %>%
+      dplyr::mutate(simplePlantStatus = dplyr::case_when(.data$plantStatus %in% liveList ~ "live",
+                                                         TRUE ~ "dead"))
 
-
-
+  vst_agb_kg <- dplyr::bind_rows(vst_agb_kg, vst_missing)
 
   # used later when calling estimateWoodMass for recruitment
   map_input <- vst_agb_kg
   map_input$date <- "2000-01-01" # placeholder, not needed since don't have duplicates to sort by date here
-
-  domainID_df <- unique(vst_plot_Mgha %>% dplyr::select("siteID", "domainID")) # domainID needs to be in vst_agb_kg
-  vst_agb_kg <- merge(vst_agb_kg, domainID_df, by = "siteID", all.x = T)
 
 
   # filter by eventType based on plotSubset argument
@@ -139,7 +135,7 @@ estimateWoodProd = function(inputDataList,
     }
 
   if(plotSubset == "towerAnnualSubset") {
-    message(glue::glue("Since plotSubset 'towerAll' was selected, input data has been filtered to just those sampling bouts when all tower plots were sampled."))
+    message(glue::glue("Since plotSubset 'towerAnnualSubset' was selected, input data has been filtered to just those sampling bouts when all tower plots were sampled."))
       vst_plot_Mgha <- vst_plot_Mgha %>%
         dplyr::filter(grepl("owerSubset", .data$eventType))
 
@@ -148,9 +144,7 @@ estimateWoodProd = function(inputDataList,
     }
 
     ### Error if not a single site of data after filtering to the siteID in the siteID argument
-
     vst_plot_Mgha <- vst_plot_Mgha[vst_plot_Mgha$siteID == siteID, ]
-
 
     vst_agb_kg <- vst_agb_kg %>%
         dplyr::filter(.data$plot_eventID %in% vst_plot_Mgha$plot_eventID)
@@ -166,7 +160,7 @@ estimateWoodProd = function(inputDataList,
     }
 
 
-    ### Error if not 2 years of data
+  ### Error if not 2 years of data
   years_in_input <- unique(sort(vst_plot_Mgha$year))
   year1 <- min(as.numeric(years_in_input))
   year2 <- max(as.numeric(years_in_input))
@@ -181,7 +175,7 @@ estimateWoodProd = function(inputDataList,
 
   samplingInterval <- abs(diff(years_in_input))
 
-  # filter to plots with exactly 2 years in vst_plot_Mgha and provide warning if there was < 2 years or > 2 years
+  # filter vst_plot_Mgha to plots with exactly 2 years in vst_plot_Mgha and provide warning if there was < 2 years or > 2 years
   vst_plot_Mgha <- vst_plot_Mgha %>%
     dplyr::group_by(.data$plotID) %>%
     dplyr::mutate(yr_count = dplyr::n_distinct(.data$year) )
@@ -201,12 +195,6 @@ estimateWoodProd = function(inputDataList,
     message(glue::glue("Exactly 2 years of data are needed to calculate woody productivity using this function. The following plots have data from more than two years and have been removed from vst_plot_Mgha: {paste(unique(gt_2_yr), collapse = ', ')}"))
     }
 
-  # filter to plots with exactly 2 years in vst_agb_kg and provide warning if there was < 2 years or > 2 years
-  agb_only_1_yr <-  vst_agb_kg %>% dplyr::filter(!.data$plotID %in% desired_2_yr) %>%
-    dplyr::group_by(.data$plotID) %>%
-    dplyr::mutate(yr_count = dplyr::n_distinct(.data$year) ) %>%
-    dplyr::filter(.data$yr_count < 2) %>%
-    dplyr::pull("plotID") %>% unique() %>% as.character()
   agb_gt_2_yr <-  vst_agb_kg %>% dplyr::filter(!.data$plotID %in% desired_2_yr) %>%
     dplyr::group_by(.data$plotID) %>%
     dplyr::mutate(yr_count = dplyr::n_distinct(.data$year) ) %>%
@@ -215,21 +203,21 @@ estimateWoodProd = function(inputDataList,
 
   vst_agb_kg <- vst_agb_kg %>% dplyr::filter(.data$plotID %in% desired_2_yr)
 
-
-    if (length(agb_only_1_yr) > 0) {
-    message(glue::glue("Exactly 2 years of data are needed to calculate woody productivity using this function. The following plots have data from less than two years and have been removed from vst_agb_kg: {paste(unique(agb_only_1_yr), collapse = ', ')}"))
-    }
-
     if (length(agb_gt_2_yr) > 0) {
-    message(glue::glue("Exactly 2 years of data are needed to calculate woody productivity using this function. The following plots have data from more than two years and have been removed from vst_agb_kg: {paste(unique(agb_gt_2_yr), collapse = ', ')}"))
+    message(glue::glue("No more than 2 years of vst_agb_kg data can be provided as inputs to this function. The following plots have data from more than two years and have been removed from vst_agb_kg: {paste(unique(agb_gt_2_yr), collapse = ', ')}"))
     }
 
 
   ### Identify plotIDs and associated plotType in the dataset
   plotType_df <- unique(vst_plot_Mgha %>% dplyr::select("plotID", "plotType"))
 
-  ##  Identify all plot by eventID combos in the filtered vst_plot_w_os dataframe
-  plot_eventID_list <- unique(vst_plot_Mgha$plot_eventID)
+  ##  Identify plot by eventID combos in the vst_plot_Mgha dataframe
+    plot_eventID_list <- vst_plot_Mgha %>%
+    dplyr::filter(is.na(.data$dataCollected) | .data$dataCollected != "dendrometerOnly") %>%
+    dplyr::distinct(.data$plot_eventID)
+
+    plot_eventID_list <- plot_eventID_list$plot_eventID
+
 
 
   ### CALCULATE MORTALITY
@@ -245,7 +233,7 @@ estimateWoodProd = function(inputDataList,
   if (nrow(vst_agb_kg) > 0) {
 
     #   convert kg to Mg/ha
-    vst_agb_kg$agb_Mgha <- round(vst_agb_kg$agb_kg * 0.001 * (10000/vst_agb_kg$sampledAreaM2),
+    vst_agb_kg$agb_Mgha <- round(vst_agb_kg$agb_kg * 0.001 * (10000/vst_agb_kg$sampledArea_m2),
                                  digits = 4)
 
 
@@ -255,13 +243,13 @@ estimateWoodProd = function(inputDataList,
                     "domainID",
                     "siteID",
                     "plotID",
-                    "sampledAreaM2",
+                    "sampledArea_m2",
                     "individualID",
                     "taxonID",
                     "simplePlantStatus",
                     "year")
 
-    #   Retain records unique with respect to individualID, taxonID, year, simplePlantStatus; don't need to worry about multi-bole smaller individuals because 'estimateWoodMass()' function combines mass for boles in output.
+    #   Retain records unique with respect to individualID, taxonID, year, simplePlantStatus
     input_to_transitions <- input_to_transitions %>%
       dplyr::distinct(.data$individualID,
                       .data$taxonID,
@@ -272,12 +260,12 @@ estimateWoodProd = function(inputDataList,
     input_to_transitions <- input_to_transitions[order(input_to_transitions$year),]
 
 
-    area_lookup <- input_to_transitions %>% dplyr::select("plotID","year","sampledAreaM2") %>% dplyr::filter(!is.na(.data$sampledAreaM2)) %>% unique()
-    input_to_transitions <- input_to_transitions %>% dplyr::select(-"sampledAreaM2")
-    input_to_transitions <- merge(input_to_transitions, area_lookup, by = c("plotID","year"), all.x=T) # add sampledAreaM2 to records where it is missing
+    area_lookup <- input_to_transitions %>% dplyr::select("plotID","year","sampledArea_m2") %>% dplyr::filter(!is.na(.data$sampledArea_m2)) %>% unique()
+    input_to_transitions <- input_to_transitions %>% dplyr::select(-"sampledArea_m2")
+    input_to_transitions <- merge(input_to_transitions, area_lookup, by = c("plotID","year"), all.x=T) # add sampledArea_m2 to records where it is missing
 
     transitions <- tidyr::pivot_wider(input_to_transitions,
-                                      id_cols = c("domainID", "siteID", "plotID", "individualID", "taxonID", "sampledAreaM2"),
+                                      id_cols = c("domainID", "siteID", "plotID", "individualID", "taxonID", "sampledArea_m2"),
                                       names_from = "year",
                                       names_prefix = "status_",
                                       values_from = "simplePlantStatus",
@@ -296,7 +284,6 @@ estimateWoodProd = function(inputDataList,
       transitions[[status_max_year]] <- NA
     }
 
-
     transitions <- as.data.frame(lapply(transitions, as.character)) # if there are >1 status values per group then the status column is a list; this converts to character
     transitions <- as.data.frame(lapply(transitions, function(x) { gsub('NULL', NA, x, fixed=TRUE)  })) # convert character NULL values to NA
 
@@ -305,56 +292,57 @@ estimateWoodProd = function(inputDataList,
         dplyr::across(
           .cols = dplyr::contains("status", ignore.case = TRUE),
           .fns = ~ {
-            ifelse(is.na(.x), NA, ifelse(grepl("Live", .x), "Live", "Dead_or_Lost")) # if at least one stem is Live, classify as Live
+            ifelse(is.na(.x), NA, ifelse(grepl("live", .x), "live", "dead")) # if at least one stem is live, classify as live
           }
         )
       )
 
 
-    #   Identify cases where individual was previously "live" and is currently "dead_or_lost"
-    for (i in 2:length(years_in_input)) {
-
-      column_name_prev <- paste0("status_", years_in_input[i-1])
-      column_name <- paste0("status_", years_in_input[i])
-      transitionType_column_name <- paste0("transitionType_", years_in_input[i])
+    #   Identify where change in individual's plantStatus indicates mortality or recruitment
+      column_name_prev <- paste0("status_", years_in_input[1])
+      column_name <- paste0("status_", years_in_input[2])
+      transitionType_column_name <- paste0("transitionType_", years_in_input[2])
 
       transitions <- transitions %>%
         dplyr::mutate(!!transitionType_column_name := dplyr::case_when(
-        ((!!sym(column_name)) == 'Dead_or_Lost' | is.na(!!sym(column_name)) ) & !!sym(column_name_prev) == 'Live' ~ 'mortality',
-        (!!sym(column_name)) == 'Live' & is.na(!!sym(column_name_prev) ) ~ 'recruitment',
+        ((!!sym(column_name)) == 'dead' | is.na(!!sym(column_name)) ) & !!sym(column_name_prev) == 'live' ~ 'mortality',
+        (!!sym(column_name)) == 'live' & is.na(!!sym(column_name_prev) ) ~ 'recruitment',
         ))
-     transitions$t2Missing <- ifelse(is.na(transitions[[column_name]]) & !is.na(transitions[[transitionType_column_name]]), "missing", NA)
-     mortality <- transitions %>% dplyr::filter(transitions[[transitionType_column_name]] == "mortality")
-    }
 
+    # identify when plantStatus is missing at time 2
+     transitions$t2Missing <- ifelse(is.na(transitions[[column_name]]) & !is.na(transitions[[transitionType_column_name]]), "missing", NA)
+
+    # select transitions that are of the type mortality
+     mortality <- transitions %>% dplyr::filter(transitions[[transitionType_column_name]] == "mortality")
+
+    # specify the value of year1, from which biomass values will be obtained
+    if(nrow(mortality) > 0) {
+    mortality$year <- year1
 
     #   Associate biomass data in 'vst_agb_kg' with mortality transition data
     mortality <- merge(vst_agb_kg,
-                       mortality %>% dplyr::select(-"sampledAreaM2", -"domainID"),
-                       by = c("plotID", "siteID", "individualID", "taxonID"),
+                       mortality %>% dplyr::select(-"sampledArea_m2", -"domainID"),
+                       by = c("plotID", "siteID", "individualID", "taxonID","year"),
                        all.y = TRUE)
 
-    ### if specified in mortalityMissin arg, ID individual(s) with status missing in time 2, filter them from mortality df, and filter same individualID(s) from vst_agb_kg
+    ### if specified in mortalityMissing arg, ID individual(s) with status missing in time 2, filter them from mortality df, and filter same individualID(s) from vst_agb_kg
+    missing <- data.frame() # initialize df
     if(mortalityMissing == "filterMissing"){
     missing <- mortality %>% dplyr::filter(.data$t2Missing == "missing") %>% dplyr::select(-"t2Missing") %>%
       dplyr::mutate(samplingInterval = samplingInterval, diameterIncrement = NA, diameterIncrementFlag = NA)
     missingIDlist <- unique(missing$individualID)
     mortality <- mortality %>% dplyr::filter(is.na(.data$t2Missing))
-    missing_totalCount <- missing %>%
-      dplyr::group_by(.data$plotID, .data$year) %>%
-      dplyr::summarise(filteredCount = dplyr::n())
     vst_agb_kg <- vst_agb_kg %>% dplyr::filter(!.data$individualID %in% missingIDlist) # important: removes missing individualIDs from increment calculations
     }
+    }
 
-    if(nrow(mortality) > 0) {
+    if(nrow(mortality) > 0) {  #re-check after filtering mortality to remove missing records)
     mortality$agb_Mgha <- ifelse(is.na(mortality$agb_Mgha), 0, mortality$agb_Mgha) # placeholders for year 2 (only need mass from year 1)
     mortality$mortality_Mgha <- NA
 
     #   If transitionType for a given year is "mortality" then assign a mortality value based on the biomass at the PREVIOUS year
-    for (i in 2:length(years_in_input)) {
-
-      year_previous <- years_in_input[i-1]
-      column_name <- paste0("transitionType_", years_in_input[i])
+      year_previous <- years_in_input[1]
+      column_name <- paste0("transitionType_", years_in_input[2])
 
       mortality <- mortality %>%
         dplyr::mutate(mortality_Mgha = dplyr::case_when(
@@ -362,13 +350,13 @@ estimateWoodProd = function(inputDataList,
           TRUE ~ .data$mortality_Mgha
         ))
 
-    }
      mortality$year1 <- as.numeric(mortality$year)
      mortality$year2 <- as.numeric(mortality$year + samplingInterval)
 
-    mortality$year <- as.numeric(mortality$year + samplingInterval) # for plot_mortality assign the live mass from year 1 as mortality mass in year 2
+    mortality$year <- as.numeric(mortality$year + samplingInterval)
 
-    plot_mortality <- mortality %>%
+   # sum mortality at the plot level
+        plot_mortality <- mortality %>%
       dplyr::group_by(.data$siteID,
                       .data$plotID,
                       .data$year) %>%
@@ -397,74 +385,82 @@ estimateWoodProd = function(inputDataList,
 
   ####  CALCULATE RECRUITMENT
 
-  # identify transitions that represent recruitment
 
-  transition_simple <- transitions %>% dplyr::select(-"domainID",-"siteID", -"plotID", -"taxonID", -"sampledAreaM2", -"t2Missing")
+  transition_simple <- transitions %>% dplyr::select(-"domainID",-"siteID", -"plotID", -"taxonID", -"sampledArea_m2", -"t2Missing")
   recruitment <- transition_simple  %>% dplyr::left_join(vst_agb_kg, by = c("individualID"))
-  recruitment_input <- transitions  %>%  dplyr::select("plotID", "individualID", "sampledAreaM2", dplyr::starts_with("transitionType_")) %>%
-                        tidyr::pivot_longer(cols = !c("plotID", "individualID", "sampledAreaM2"), names_to = "year", names_prefix = "transitionType_", values_to = "transition_type")
+  recruitment_input <- transitions  %>%  dplyr::select("plotID", "individualID", "sampledArea_m2", dplyr::starts_with("transitionType_")) %>%
+                        tidyr::pivot_longer(cols = !c("plotID", "individualID", "sampledArea_m2"), names_to = "year", names_prefix = "transitionType_", values_to = "transition_type")
+
+  # identify transitions that represent recruitment
   recruitment_input <-  recruitment_input %>% dplyr::filter(.data$transition_type == "recruitment") %>% dplyr::select("individualID", "year") %>%
       dplyr::mutate(year = as.numeric(.data$year))
   recruitment_ind <- unique(recruitment_input$individualID)
 
+  # calculate stemIncrement of recruiting individual and flag if appropriate
   recruitment <- recruitment %>% dplyr::filter(.data$individualID %in% recruitment_ind) %>%
                        dplyr::mutate(samplingInterval = samplingInterval,
                                      diameterIncrement = (.data$stemDiameter - 9.9)/samplingInterval,
                                      diameterIncrementFlag = ifelse(.data$diameterIncrement >= 3, "flagged", NA))
 
-  recruitmentPlots <- recruitment %>% dplyr::select("domainID","individualID","plotID","sampledAreaM2") %>% unique()
+  recruitmentPlots <- recruitment %>% dplyr::select("domainID","individualID","plotID","sampledArea_m2") %>% unique()
   recruitment_input <- recruitment_input %>% dplyr::left_join(recruitmentPlots, by = c("individualID"))
 
+  recruitmentFlags <- data.frame() # initialize df
+
+  # if stipulated in argument, set aside individuals flagged as having a stemIncrement >=3 and remove them from recruitment and vst_agb_kg dataframes
   if(stemIncrementFlagged == "filterFlagged"){
   recruitmentFlags <- recruitment %>% dplyr::filter(.data$diameterIncrementFlag == "flagged")
     recruitmentFlagsIDlist <- unique(recruitmentFlags$individualID)
   recruitment <- recruitment %>% dplyr::filter(.data$diameterIncrementFlag != "flagged" | is.na(.data$diameterIncrementFlag))
-  recruitmentFlags_totalCount <- recruitmentFlags %>%
-      dplyr::group_by(.data$plotID, .data$year) %>%
-      dplyr::summarise(filteredCount = dplyr::n())
+  recruitment_input <- recruitment_input %>% dplyr::filter(!.data$individualID %in% recruitmentFlagsIDlist )
   vst_agb_kg <- vst_agb_kg %>% dplyr::filter(!.data$individualID %in% recruitmentFlagsIDlist ) # important: removes individualIDs with implausible diameter increment from increment calculations
  }
 
   if(nrow(recruitment_input) >0 ) {
-  # produce dataframe with structure required to be passed successfully as vst_apparentindividual to estimateWoodMass function
-  recruitment_input$stemDiameter <- 10
+  # modify dataframe structure so it can be passed to estimateWoodMass function with the minimum fields required in vst_apparentindividual
+  recruitment_input$stemDiameter <- 10 # this is the diameter threshold at which trees begin to be recorded
   recruitment_input$basalStemDiameter <- recruitment_input$height <- recruitment_input$measurementHeight <- recruitment_input$basalStemDiameterMsrmntHeight <-
            recruitment_input$maxCrownDiameter <- recruitment_input$ninetyCrownDiameter <- NA
-  recruitment_input$plantStatus <- "Live" # we are only looking at individuals that were Live in most recent year so this is appropriate
+  recruitment_input$plantStatus <- "Live" # we are only looking at individuals that were live in most recent year so this is appropriate
   recruitment_input$date <- "2000-01-01" # placeholder, not needed since don't have duplicates to sort by date here
   recruitment_input$eventID <- paste0("vst_", substr(recruitment_input$individualID, 14, 17), "_", recruitment_input$year) # recreate eventID
   recruitment_input$siteID <- substr(recruitment_input$individualID, 14, 17)
+  recruitment_input$year <- NULL
   # if recruitment were to be extended to other growthForms the following line would NOT be appropriate
   recruitment_input$growthForm <- "multi-bole tree" # required in order to call estimateWoodMass, which doesn't distinguish between single and multi bole trees
+  recruitment_input$uid <- recruitment_input$namedLocation <- recruitment_input$dendrometerInstallationDate <- recruitment_input$initialGapMeasurementDate <- recruitment_input$initialBandStemDiameter <- recruitment_input$initialDendrometerGap <-
+    recruitment_input$dendrometerHeight <- recruitment_input$dendrometerGap <- recruitment_input$dendrometerCondition <- recruitment_input$bandStemDiameter <- recruitment_input$publicationDate <- recruitment_input$measuredBy <-
+    recruitment_input$recordedBy <- recruitment_input$dataEntryRecordID <- recruitment_input$release <- recruitment_input$dataQF <- recruitment_input$subplotID <- NA # placeholders, estimateWoodMass function removes them
 
-  # produce dataframe with structure required to be passed successfully as vst_perplotperyear to estimateWoodMass function
+  # modify dataframe structure so it can be passed to estimateWoodMass function with the minimum fields required in vst_perplotperyear
   perplot_input <- vst_plot_Mgha
   perplot_input$date <- "2000-01-01" # placeholder, not needed since don't have duplicates to sort by date here
   perplot_input$samplingImpractical <- "OK"
   perplot_input$year <- NULL
-  # if recruitment were to be extended to other growthForms the following two lines would NOT be appropriate
-  perplot_input$totalSampledAreaShrubSapling <- perplot_input$totalSampledAreaLiana <- perplot_input$totalSampledAreaFerns <- perplot_input$totalSampledAreaOther <- NA
-  perplot_input$totalSampledAreaTrees <- perplot_input$sampledAreaM2 # we already know sampledAreaM2, but this is workaround to allow estimateWoodMass to recalculate it
+
+  # if recruitment were to be extended to other growthForms the following line would have to account for that
+  perplot_input$totalSampledAreaShrubSapling <- perplot_input$totalSampledAreaLiana <- perplot_input$totalSampledAreaFerns <- perplot_input$totalSampledAreaOther <- perplot_input$totalSampledAreaTrees <- NA
 
   # bind required dataframes together for input to estimateWoodMass function
   recruitment_list <- list(vst_apparentindividual = recruitment_input,
                       vst_mappingandtagging = map_input,
-                      vst_perplotperyear = perplot_input) # , 'vst_non-woody' = vst_non_woody )
+                      vst_perplotperyear = perplot_input)
 
   # call estimateWoodMass function to estimate species-specific mass of recruiting individual within minimum diameter of 10 cm
   recruitment_output <- estimateWoodMass(inputDataList = recruitment_list,
                             plotSubset = plotSubset,
-                            growthForm = "tree")
+                            growthFormSubset = "tree")
 
   # add taxonID
   taxon_per_ID <- recruitment_output$vst_agb_kg %>% dplyr::select("individualID", "taxonID")
   recruitment_input_w_taxonID <- merge(recruitment_input, taxon_per_ID, by = "individualID")
+  recruitment_input_w_taxonID$year <- substr(recruitment_input_w_taxonID$eventID,10,13) # add year back
 
   # summarize number of stems per taxonID for each plot and year
   recruitment_count <-  recruitment_input_w_taxonID %>%
       dplyr::group_by(.data$plotID,
                       .data$year,
-                      .data$sampledAreaM2,
+                      .data$sampledArea_m2,
                       .data$taxonID) %>%
       dplyr::summarise(recruitment_count = dplyr::n(), .groups = "drop")
 
@@ -477,9 +473,9 @@ estimateWoodProd = function(inputDataList,
   recruitmentMass <- merge(recruitment_count, taxon_biomass, by = "taxonID")
 
   # multiply number of recruitment stems by taxon-specific biomass and then convert mass from kg to Mg/ha
-  recruitmentMass$sampledAreaM2 <- as.numeric(recruitmentMass$sampledAreaM2)
-  recruitmentMass$recruitment_Mgha <-  recruitmentMass$recruitment_count * recruitmentMass$agb_kg *  0.001 * (10000/recruitmentMass$sampledAreaM2)
-  recruitmentMass$sampledAreaM2 <- recruitmentMass$recruitment_count <- recruitmentMass$agb_kg <- NULL
+  recruitmentMass$sampledArea_m2 <- as.numeric(recruitmentMass$sampledArea_m2)
+  recruitmentMass$recruitment_Mgha <-  recruitmentMass$recruitment_count * recruitmentMass$agb_kg *  0.001 * (10000/recruitmentMass$sampledArea_m2)
+  recruitmentMass$sampledArea_m2 <- recruitmentMass$recruitment_count <- recruitmentMass$agb_kg <- NULL
 
   # multiply number of recruitment stems by taxon-specific biomass and then convert mass from kg to Mg/ha
   plot_recruitment <- recruitmentMass %>%
@@ -488,6 +484,7 @@ estimateWoodProd = function(inputDataList,
     dplyr::ungroup()
   plot_recruitment$recruitment_Mghayr <- round(plot_recruitment$recruitment_Mgha /samplingInterval, digits = 3)
 
+   recruitment_input$year <- substr(recruitment_input$eventID,10,13) # add year back
     recruitment_totalCount <-  recruitment_input %>%
       dplyr::group_by(.data$plotID,
                       .data$year) %>%
@@ -495,7 +492,7 @@ estimateWoodProd = function(inputDataList,
   plot_recruitment <- merge(plot_recruitment, recruitment_totalCount, by = c("plotID", "year"), all.x=TRUE)
 
     } else {
-  plot_recruitment <- vst_increment_long %>% dplyr::select("plotID", "year")
+  plot_recruitment <- vst_plot_Mgha %>% dplyr::select("plotID", "year")
   plot_recruitment$recruitment_Mgha <- plot_recruitment$recruitment_Mghayr <- 0
   plot_recruitment$recruitmentCount <- 0
     }
@@ -504,8 +501,11 @@ estimateWoodProd = function(inputDataList,
 
   ### CALCULATE BIOMASS INCREMENT (Clark et al. 2001 approach 2 - stand level productivity calculation) ####
 
+  stemIncrementFlags <- data.frame() # initialize df
+
+  # if stipulated in argument, flag and handle records with implausible stem diameter increment
   if(stemIncrementFlagged == "filterFlagged"){
-  diameter_inc <- vst_agb_kg %>% dplyr::filter(.data$simplePlantStatus == "Live") %>%
+  diameter_inc <- vst_agb_kg %>% dplyr::filter(.data$simplePlantStatus == "live") %>%
       dplyr::select("plot_eventID",
                     "domainID",
                     "siteID",
@@ -514,7 +514,7 @@ estimateWoodProd = function(inputDataList,
                     "stemDiameter",
                     "year")
 
-    #   Retain records unique with respect to individualID, taxonID, year, simplePlantStatus; don't need to worry about multi-bole smaller individuals because 'estimateWoodMass()' function combines mass for boles in output.
+    #   Retain records unique with respect to individualID and year
     diameter_inc <- diameter_inc %>%
       dplyr::distinct(.data$individualID,
                       .data$year,
@@ -537,6 +537,7 @@ estimateWoodProd = function(inputDataList,
       diameter_wide$stemDiameter_2 <- NA
     }
 
+    # calculate stemDiameter increment and flag if applicable
     diameter_wide$samplingInterval <- samplingInterval
     diameter_wide$diameterIncrement <- abs(as.numeric(diameter_wide$stemDiameter_2) - as.numeric(diameter_wide$stemDiameter_1))/samplingInterval
     diameter_wide$diameterIncrementFlag <- ifelse(diameter_wide$diameterIncrement > 3, "flagged", NA)
@@ -551,17 +552,17 @@ estimateWoodProd = function(inputDataList,
     stemIncrementFlags <- vst_agb_kg %>% dplyr::filter(.data$individualID %in% incrementFlaglist )
     stemIncrementFlags <- merge(stemIncrementFlags, transition_simple, by = "individualID", all.x =TRUE)
     stemIncrementFlags <- merge(stemIncrementFlags, incrementFlagsSimple, by = "individualID", all.x =TRUE)
-     vst_agb_kg <- vst_agb_kg %>% dplyr::filter(!.data$individualID %in% incrementFlaglist ) # important: removes missing individualIDs from increment calculations
+     vst_agb_kg <- vst_agb_kg %>% dplyr::filter(!.data$individualID %in% incrementFlaglist ) # important: removes flagged individualIDs from increment calculations
     }
   }
 
   ############ Scale biomass per area and convert to Mg / ha ######################
   #   Remove records that cannot be scaled to a per area basis
   vst_agb_Mgha <- vst_agb_kg %>%
-    dplyr::filter(!is.na(.data$sampledAreaM2) & .data$sampledAreaM2 > 0 & !is.na(.data$agb_kg))
+    dplyr::filter(!is.na(.data$sampledArea_m2) & .data$sampledArea_m2 > 0 & !is.na(.data$agb_kg))
 
   #   Create "Mg/ha" biomass estimate for each record; used in downstream plot- and site-level biomass estimation
-  vst_agb_Mgha$agb_Mgha <- round(vst_agb_Mgha$agb_kg * 0.001 * (10000/vst_agb_Mgha$sampledAreaM2),
+  vst_agb_Mgha$agb_Mgha <- round(vst_agb_Mgha$agb_kg * 0.001 * (10000/vst_agb_Mgha$sampledArea_m2),
                                   digits = 4)
 
 
@@ -600,12 +601,10 @@ estimateWoodProd = function(inputDataList,
                     .data$siteID,
                     .data$eventID,
                     .data$plotID,
-                    .data$sampledAreaM2,
+                    .data$sampledArea_m2,
                     .data$eventType,
                     .data$plotType,
                     .data$nlcdClass,
-                    .data$taxonID,
-                    .data$growthForm,
                     .data$simplePlantStatus,
                     .data$year) %>%
     dplyr::summarise(agb_Mgha = sum(.data$agb_Mgha, na.rm = TRUE),
@@ -613,20 +612,20 @@ estimateWoodProd = function(inputDataList,
 
   #   Within a given year, transpose live and dead AGB into separate columns
   vst_plot_wide <- tidyr::pivot_wider(vst_plot_summary,
-                                      id_cols = c("siteID", "plot_eventID", "eventID", "plotID",  "sampledAreaM2", "eventType",
-                                                  "plotType", "nlcdClass", "taxonID", "growthForm", "year"),
+                                      id_cols = c("siteID", "plot_eventID", "eventID", "plotID",  "sampledArea_m2", "eventType",
+                                                  "plotType", "nlcdClass", "year"),
                                       names_from = "simplePlantStatus",
                                       names_glue = "{simplePlantStatus}_Mgha",
                                       values_from = "agb_Mgha")
-  if (!"Dead_or_Lost_Mgha" %in% names(vst_plot_wide)) {
-    vst_plot_wide$Dead_or_Lost_Mgha <- NA
+  if (!"dead_Mgha" %in% names(vst_plot_wide)) {
+    vst_plot_wide$dead_Mgha <- NA
   }
 
 
   #   Assumption: Replace NAs created during transpose with zeroes; assume both live and dead were sampled in a plot
 
-  vst_plot_wide$Dead_or_Lost_Mgha[is.na(vst_plot_wide$Dead_or_Lost_Mgha)] <- 0
-  vst_plot_wide$Live_Mgha[is.na(vst_plot_wide$Live_Mgha)] <- 0
+  vst_plot_wide$dead_Mgha[is.na(vst_plot_wide$dead_Mgha)] <- 0
+  vst_plot_wide$live_Mgha[is.na(vst_plot_wide$live_Mgha)] <- 0
 
 
   #   Assign zero AGB values to plots with zero biomass
@@ -635,11 +634,10 @@ estimateWoodProd = function(inputDataList,
   if (nrow(vst_agb_zeros_plot) > 0) {
     perplot_meta_for_missing <- unique(vst_plot_Mgha %>% dplyr::select("plotID", "eventID", "eventType", "nlcdClass"))
     vst_agb_zeros_plot <- merge(vst_agb_zeros_plot, perplot_meta_for_missing, by = c("plotID", "eventID"), all.x = T)
-    vst_agb_zeros_plot$taxonID <-  vst_agb_zeros_plot$growthForm <- vst_agb_zeros_plot$sampledAreaM2 <- NA # placeholders to allow rbind without errors
-    vst_agb_zeros_plot$Dead_or_Lost_Mgha <- vst_agb_zeros_plot$Live_Mgha <- 0
+    vst_agb_zeros_plot$dead_Mgha <- vst_agb_zeros_plot$live_Mgha <- 0
 
   #   Add rows for plots with zero biomass to plots with AGB
-  vst_plot_Mgha <- rbind(vst_plot_wide,
+  vst_plot_Mgha <- dplyr::bind_rows(vst_plot_wide,
                          vst_agb_zeros_plot)
   } else {
      vst_plot_Mgha <- vst_plot_wide
@@ -648,17 +646,13 @@ estimateWoodProd = function(inputDataList,
   priority_plots <- priority_plots # force load from data table
   priority_plots_add <- priority_plots %>%
   dplyr::select("plotID",
-                  "specificModuleSamplingPriority")
+                  "specificModuleSamplingPriority") %>% unique()
 
   #   Add 'specificModuleSamplingPriority' column to output
   vst_plot_Mgha <- merge(vst_plot_Mgha,
                          priority_plots_add,
                          by = c("plotID"),
                          all.x = TRUE)
-
-  #   Retain AGB estimates for records with values for both live and dead biomass
-  vst_plot_Mgha <- vst_plot_Mgha %>%
-    dplyr::filter(!is.na(.data$Live_Mgha) & !is.na(.data$Dead_or_Lost_Mgha))
 
 
   #   Some taxonIDs are represented in multiple growthForms (e.g., sapling and single bole tree): This sums the growthForms
@@ -670,11 +664,8 @@ estimateWoodProd = function(inputDataList,
                     .data$eventID,
                     .data$year,
                     .data$plot_eventID
-#                    , .data$nlcdClass
-#                    , .data$taxonID
                     ) %>%
-    dplyr::summarise(Mgha_live = sum(.data$Live_Mgha, na.rm = TRUE),
-#                     Dead_or_Lost_Mgha = sum(.data$Dead_or_Lost_Mgha, na.rm = TRUE),
+    dplyr::summarise(Mgha_live = sum(.data$live_Mgha, na.rm = TRUE),
                      .groups = "drop")
 
   vst_agb_Live <- vst_agb_Live[order(vst_agb_Live$year),]
@@ -688,14 +679,11 @@ estimateWoodProd = function(inputDataList,
                                       values_from = "Mgha_live")
 
   #   Calculate plot-level increment
-  for (i in 2:length(years_in_input)) {
-    column_name_prev <- paste0("Mgha_", years_in_input[i - 1])
-    column_name <- paste0("Mgha_", years_in_input[i])
-    increment_column_name <- paste0("Mgha_increment_", years_in_input[i])
+    column_name_prev <- paste0("Mgha_", years_in_input[1])
+    column_name <- paste0("Mgha_", years_in_input[2])
+    increment_column_name <- paste0("Mgha_increment_", years_in_input[2])
     vst_increment <- vst_increment %>%
       dplyr::mutate(!!increment_column_name := (!!sym(column_name)) - !!sym(column_name_prev))
-
-  } # end 'for' loop
 
 
   vst_increment_long <- vst_increment %>%
@@ -723,23 +711,20 @@ estimateWoodProd = function(inputDataList,
     }
   }
 
-  # Filter to only those dataframe(s) that exist and are data frames
-  existing_dfs <- lapply(filtered_df_names, function(name) {
+  # Filter to only those filtered dataframe(s) that exist
+  filter_dfs <- lapply(filtered_df_names, function(name) {
     if (exists(name) && is.data.frame(get(name))) get(name) else NULL
   })
 
-  # Remove NULLs
-  existing_dfs <- Filter(Negate(is.null), existing_dfs)
-
 
   # Remove NULLs
-  existing_dfs <- Filter(Negate(is.null), existing_dfs)
+  filter_dfs <- Filter(Negate(is.null), filter_dfs)
 
   # Bind rows if any data frames exist
-  if (length(existing_dfs) > 0) {
-    filtered <- dplyr::bind_rows(existing_dfs)
+  if (length(filter_dfs) > 0) {
+    filtered <- dplyr::bind_rows(filter_dfs)
     filtered_totalCount <- filtered %>%
-      dplyr::group_by(.data$plotID, .data$year) %>%
+      dplyr::group_by(.data$plotID) %>%
       dplyr::summarise(filteredCount = dplyr::n())
   } else {
   filtered <- data.frame()
@@ -780,7 +765,7 @@ estimateWoodProd = function(inputDataList,
   if(nrow(filtered) > 0){
   vst_ANPP_plot <- merge(vst_ANPP_plot,
                                   filtered_totalCount,
-                                  by = c("plotID", "year"),
+                                  by = c("plotID"),
                                   all.x = TRUE)
   }
   if (!"filteredCount" %in% names(vst_ANPP_plot)) {
@@ -789,8 +774,10 @@ estimateWoodProd = function(inputDataList,
   vst_ANPP_plot$filteredCount <- ifelse(is.na(vst_ANPP_plot$filteredCount), 0, vst_ANPP_plot$filteredCount)
   }
 
+  vst_ANPP_plot$samplingInterval <- samplingInterval
   vst_ANPP_plot <- vst_ANPP_plot %>%
-       dplyr::relocate("filteredCount", .after = "plotType") %>%
+       dplyr::relocate("samplingInterval", .after = "plotType") %>%
+       dplyr::relocate("filteredCount", .after = "samplingInterval") %>%
        dplyr::relocate("mortalityCount", .after = "filteredCount") %>%
        dplyr::relocate("recruitmentCount", .after = "mortalityCount")
 
@@ -804,13 +791,11 @@ estimateWoodProd = function(inputDataList,
 
 
 
-
-
   #   Sum increment plus mortality and subtract recruitment to get woody ANPP by plotID x year
   vst_ANPP_plot$woodANPP_Mghayr <- round(vst_ANPP_plot$increment_Mghayr + vst_ANPP_plot$mortality_Mghayr - vst_ANPP_plot$recruitment_Mghayr,
                                              digits = 3)
 
-  # remove fields not adjusted forsamplingInterval
+  # remove fields not adjusted for samplingInterval
   vst_ANPP_plot$increment_Mgha <- vst_ANPP_plot$mortality_Mgha <- vst_ANPP_plot$recruitment_Mgha <- NULL
 
 
@@ -850,7 +835,7 @@ estimateWoodProd = function(inputDataList,
 
   #   Estimate ANPP at site level using plot data
   vst_ANPP_site <- vst_ANPP_plot %>%
-    dplyr::group_by(.data$siteID, .data$year) %>%
+    dplyr::group_by(.data$siteID, .data$year, .data$samplingInterval) %>%
     dplyr::summarise(woodPlotNum = dplyr::n(),
                      woodANPPSD_Mghayr = round(stats::sd(.data$woodANPP_Mghayr, na.rm = TRUE),
                                                digits = 2),
@@ -873,6 +858,3 @@ estimateWoodProd = function(inputDataList,
   return(output.list)
 
 }
-
-
-
