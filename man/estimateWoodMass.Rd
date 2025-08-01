@@ -10,12 +10,12 @@ estimateWoodMass(
   inputMapTag = NA,
   inputNonWoody = NA,
   inputPerPlot = NA,
-  plotSubset = "all",
-  growthFormSubset = "all"
+  plotSubset = "towerAll",
+  growthForm = "all"
 )
 }
 \arguments{
-\item{inputDataList}{A list object comprised of "Vegetation structure" tables (DP1.10098.001) downloaded using the neonUtilities::loadByProduct() function. It is optional to include the "vst_non-woody" table in the list. If list input is provided, the table input arguments must all be NA; similarly, if list input is missing, table inputs must be provided for the 'inputIndividual', 'inputMapTag', and 'inputPerPlot' arguments.  \link{list}}
+\item{inputDataList}{A list object comprised of "Vegetation structure" tables (DP1.10098.001) downloaded using the neonUtilities::loadByProduct() function. If list input is provided, the table input arguments must all be NA; similarly, if list input is missing, table inputs must be provided for 'inputIndividual', 'inputMapTag', and 'inputPerPlot' arguments. \link{list}}
 
 \item{inputIndividual}{The 'vst_apparentindividual' table for the site x month combination(s) of interest
 (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
@@ -23,56 +23,55 @@ estimateWoodMass(
 \item{inputMapTag}{The 'vst_mappingandtagging' table for the site x month combination(s) of interest
 (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 
-\item{inputNonWoody}{(Optional) The 'vst_non-woody' table for the site x month combination(s) of interest
+\item{inputNonWoody}{The 'vst_non-woody' table for the site x month combination(s) of interest
 (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 
 \item{inputPerPlot}{The 'vst_perplotperyear' table for the site x month combination(s) of interest
 (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 
-\item{plotSubset}{The options are the default of "all" (all Tower and Distributed plots), "towerAll" (all plots in the Tower airshed but no Distributed plots), "towerAnnualSubset" (the subset of n=5 Tower plots that are sampled annually), and "distributed" (all Distributed plots, which are sampled at 5-yr intervals and are spatially representative of the NLCD classes at a site). \link{character}}
+\item{plotSubset}{The options are "all" (all Tower and Distributed plots), the default of "towerAll" (all plots in the Tower airshed but no Distributed plots), "towerAnnualSubset" (the subset of Tower plots that are sampled annually), and "distributed" (all Distributed plots, which are sampled at 5-yr intervals and are spatially representative of the NLCD classes at at site). \link{character}}
 
-\item{growthFormSubset}{Select Vegetation Structure growth forms for biomass estimation. The options are "tree", which enables biomass estimation only for single- and multi-bole trees, palm trees, and large tree ferns with a DBH ≥ 10 cm, and the default of "all", which includes "tree" individuals, and also small trees, single shrubs, small shrubs, lianas, small palms, small tree ferns, ocotillo, and xerophyllum individuals. Consult the Vegetation Structure Quick Start Guide and/or the Data Product User Guide for more growth form information. \link{character}}
+\item{growthForm}{Select which Vegetation Structure growth forms to analyse. The options are "tree" (sbt, mbt) for trees with a dbh > 10 cm, and the default of "all", which includes the large trees, and also small trees (smt, sap), shrubs (sis, sms), liana (lia), palms (plm, ptr, spm), tree ferns (ltf, stf, tfn), ocotillo (oco), yucca (yuc), and xerophyllum (xer).  Consult the Vegetation Structure Quick Start Guide and/or the Data Product User Guide for more growth form information. \link{character}}
 }
 \value{
-A list that includes individual-level biomass, plot-level summary biomass, site-level summary biomass, and a table of individuals for which biomass could not be estimated for various reasons. Output tables include:
+A list that includes biomass summary data frames and a helper data frame needed by companion productivity functions - e.g., the estimateProd() function. Output tables include:
 \itemize{
-\item vst_agb_kg - Above-ground live and dead standing woody biomass reported for each individual ("kg").
-\item vst_missing - Individuals with 'plantStatus' values of "removed", "lost" of some type, "no longer qualifies", and "downed", and also those individuals for which an allometry was missing or for which an above-ground biomass estimate is missing for some other reason.
-\item vst_plot_Mgha - Summary of above-ground total, live, and dead standing woody biomass for each plotID x eventID combination ("Mg/ha"). If argument growthFormSubset == "tree", plots with smaller woody biomass but no trees will have zero biomass in this data frame.
-\item vst_site_Mgha - Summary of above-ground total, live, and dead standing woody biomass for each siteID x year combination in the data ("Mg/ha").
+\item vst_agb_kg - Summarizes above-ground live and dead woody biomass for each individual ("kg").
+\item vst_plot_w_0s - Summarizes above-ground live and dead woody biomass for each taxonID x growthForm x eventID combination for each plot ("Mg/ha").
+\item vst_agb_zeros - Helper output for productivity estimation that contains plot x year combinations with biomass of zero.
+\item vst_site - Summarizes above-ground live and dead woody biomass for each site x year combination in the data. ("Mg/ha").
 }
 }
 \description{
-Allometric equations are used to estimate above-ground biomass for woody individuals reported in the NEON "Vegetation structure" data product (DP1.10098.001). Results are summarized as mass per unit area at scales of the plotID and siteID. Biomass outputs can be used in the neonPlants estimateMass() and estimateWoodProd() functions.
+Use allometric equations to estimate above-ground biomass for woody (and "non-woody perennial", if selected) individuals and summarise results as mass per unit area for siteID, plotID, and taxonID. Biomass outputs can be used in the neonPlants estimateMass() function, and the estimateWoodProd() and estimateProd() productivity functions.
 
 Data inputs are "Vegetation structure" data (DP1.10098.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input tables with an equivalent structure and representing the same site x month combinations.
 }
 \details{
-Input data can be filtered via the 'plotSubset' argument if output for only certain types of plots or sampling intervals is desired. Input data are combined with taxon specific characteristics (e.g., wood density), and biomass is estimated for each individual using allometric equations. Taxon-specific equations are applied if available, and generalized allometries are used otherwise. The 'growthFormSubset' argument enables biomass estimation only for "tree" individuals (i.e., woody individuals with DBH ≥ 10 cm) or for "all" growth forms excluding "cactus", "ferns", and "yucca". Biomass is summarized on an areal basis at the hierarchical level of the plotID and siteID.
+Input data can be filtered by 'plotSubset' if output for only certain types of plots or sampling intervals is desired. Input data are combined with allometric equation parameters and taxon specific characteristics, and biomass is estimated for each individual using allometric equations. Generalized allometric equations are applied first and are replaced by taxon-specific equations if available. Only the set of growth forms selected via the growthForm parameter are included in outputs. The non-woody "cactus" and "ferns" growthForms are not currently included. Biomass is summarized on an areal basis at the hierarchical level of the plot and site.
 }
 \examples{
 \dontrun{
-#  Obtain NEON Vegetation structure data
-vstDF <- neonUtilities::loadByProduct(
-dpID = "DP1.10098.001",
+# Obtain NEON Vegetation structure
+VstDat <- neonUtilities::loadByProduct(
+dpID="DP1.10098.001",
 package = "basic",
 check.size = FALSE
 )
 
-#  Example with arguments at default values
-df <- estimateWoodMass(inputDataList = vstDF)
+# example with arguments at default values
+estimateWoodMassOutputs <- estimateWoodMass(inputDataList = VstDat)
 
-#  Example specifying non-default arguments for 'plotSubset' and 'growthFormSubset'
-df <- estimateWoodMass(
-inputDataList = vstDF,
+# example specifying several non-default arguments
+estimateWoodMassOutputs <- estimateWoodMass(
+inputDataList = VstDat,
 plotSubset = "towerAnnualSubset",
-growthFormSubset = "tree"
+growthForm = "tree"
 )
 
 }
 
 }
 \author{
-Samuel M Simkin \email{ssimkin@BattelleEcology.org} \cr
-Courtney Meier \email{cmeier@BattelleEcology.org} \cr
+Samuel M Simkin \email{ssimkin@battelleecology.org} \cr
 }
