@@ -34,12 +34,12 @@ testthat::test_that(desc = "Output class", {
 
 testthat::test_that(desc = "Output data frame column number", {
   testthat::expect_identical(object = ncol(estimateWoodProdOutputs$vst_ANPP_plot),
-                             expected = as.integer(12))
+                             expected = as.integer(13))
 })
 
 testthat::test_that(desc = "Output data frame column number", {
   testthat::expect_identical(object = ncol(estimateWoodProdOutputs$vst_ANPP_site),
-                             expected = as.integer(5))
+                             expected = as.integer(6))
 })
 
 
@@ -62,13 +62,13 @@ testthat::test_that(desc = "Output data frame row number", {
 testthat::test_that(desc = "Output vst_ANPP_plot value as expected", {
   test <- estimateWoodProd(inputDataList = VstDat, plotSubset = "towerAll", siteID = "LENO")
   testthat::expect_equal(object = test$vst_ANPP_plot$woodANPP_Mghayr[1],
-                         expected = 4.895)
+                         expected = 5.193)
 })
 
 ### Test: Generate error if output vst_ANPP_site value not as expected
 testthat::test_that(desc = "Output vst_ANPP_site value as expected", {
   test <- estimateWoodProd(inputDataList = VstDat, plotSubset = "towerAll", siteID = "LENO")
   testthat::expect_equal(object = test$vst_ANPP_site$woodANPPMean_Mghayr[1],
-                         expected = 4.895)
+                         expected = 5.193)
 })
 
