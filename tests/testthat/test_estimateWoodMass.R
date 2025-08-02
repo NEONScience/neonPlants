@@ -1,49 +1,52 @@
-# estimateWoodMass function tests
-# Samuel M Simkin (2024-12-15)  ssimkin@battelleecology.org
+### Tests for neonPlants::estimateWoodMass function ####
+#   Samuel M Simkin; ssimkin@BattelleEcology.org
+#   Courtney Meier; cmeier@BattelleEcology.org
 
 
 
-### Read in test data
-
+### Read in test data ####
 VstDat <- readRDS(testthat::test_path("testdata", "VstDat.rds"))
 
-estimateWoodMassOutputs <- estimateWoodMass(inputDataList = VstDat, growthForm = "all")
+#   Generate function outputsDF with argument defaults
+outputsDF <- estimateWoodMass(inputDataList = VstDat)
 
-### Test: Function generates expected output type
+
+
+### Test: Function generates expected output type ####
 testthat::test_that(desc = "Output type", {
   testthat::expect_type(object = estimateWoodMass(inputDataList = VstDat),
                         type = "list")
 })
 
 
-### Test: Function generates expected output class
+### Test: Function generates expected output class ####
 testthat::test_that(desc = "Output class vst_agb_kg", {
-  testthat::expect_s3_class(object = estimateWoodMassOutputs$vst_agb_kg,
+  testthat::expect_s3_class(object = outputsDF$vst_agb_kg,
                             class = "data.frame")
 })
 
-testthat::test_that(desc = "Output class vst_plot_w_0s", {
-  testthat::expect_s3_class(object = estimateWoodMassOutputs$vst_plot_w_0s,
+testthat::test_that(desc = "Output class vst_missing", {
+  testthat::expect_s3_class(object = outputsDF$vst_missing,
                             class = "data.frame")
 })
 
-testthat::test_that(desc = "Output class vst_agb_zeros", {
-  testthat::expect_s3_class(object = estimateWoodMassOutputs$vst_agb_zeros,
+testthat::test_that(desc = "Output class vst_plot_Mgha", {
+  testthat::expect_s3_class(object = outputsDF$vst_plot_Mgha,
                             class = "data.frame")
 })
 
-testthat::test_that(desc = "Output class vst_site", {
-  testthat::expect_s3_class(object = estimateWoodMassOutputs$vst_site,
+testthat::test_that(desc = "Output class vst_site_Mgha", {
+  testthat::expect_s3_class(object = outputsDF$vst_site_Mgha,
                             class = "data.frame")
 })
 
 
 
-### Test: Function generates data frame with expected dimensions using test data
-#   Check expected column number of data frame
+### Test: Function generates data frames with expected dimensions using test data #### --> begin again here
+#   Check expected column number of data frames
 testthat::test_that(desc = "Output data frame column number", {
   testthat::expect_identical(object = ncol(estimateWoodMassOutputs$vst_agb_kg),
-                             expected = as.integer(20))
+                             expected = as.integer(17))
 })
 
 testthat::test_that(desc = "Output data frame column number", {
@@ -61,18 +64,15 @@ testthat::test_that(desc = "Output data frame column number", {
                              expected = as.integer(7))
 })
 
-
-
-
-#   Check expected row number of data frame
+#   Check expected row number of data frames
 testthat::test_that(desc = "Output data frame row number", {
   testthat::expect_identical(object = nrow(estimateWoodMassOutputs$vst_agb_kg),
-                             expected = as.integer(1640))
+                             expected = as.integer(1347))
 })
 
 testthat::test_that(desc = "Output data frame row number", {
   testthat::expect_identical(object = nrow(estimateWoodMassOutputs$vst_plot_w_0s),
-                             expected = as.integer(132))
+                             expected = as.integer(129))
 })
 
 testthat::test_that(desc = "Output data frame row number", {
@@ -88,6 +88,8 @@ testthat::test_that(desc = "Output data frame row number", {
 
 
 ### Tests: Generate expected errors for 'inputDataList' ####
+#--> add tests for incorrect input arguments
+
 #   Test 'inputDataList' is a list
 testthat::test_that(desc = "Argument 'inputDataList' is list object", {
   testthat::expect_error(object = estimateWoodMass(inputDataList = VstDat$vst_apparentindividual), # test whether function stops if supplied with a dataframe instead of list
@@ -167,7 +169,7 @@ testthat::test_that(desc = "Table 'vst_perplotperyear' missing data", {
 ### Test: Generate error if output vst_agb_kg value not as expected
 testthat::test_that(desc = "Output vst_agb_kg value as expected", {
   test <- estimateWoodMass(inputDataList = VstDat)
-  testthat::expect_equal(object = test$vst_agb_kg$agb_kg[1083],
+  testthat::expect_equal(object = test$vst_agb_kg$agb_kg[889],
                          expected = 1274.513)
 })
 
@@ -175,7 +177,7 @@ testthat::test_that(desc = "Output vst_agb_kg value as expected", {
 ### Test: Generate error if output vst_plot_w_0s value not as expected
 testthat::test_that(desc = "Output vst_plot_w_0s value as expected", {
   test <- estimateWoodMass(inputDataList = VstDat)
-  testthat::expect_equal(object = test$vst_plot_w_0s$Live_Mgha[86],
+  testthat::expect_equal(object = test$vst_plot_w_0s$Live_Mgha[85],
                          expected = 10.3588)
 })
 
