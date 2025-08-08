@@ -80,25 +80,25 @@ estimateAquPercentCover <- function(inputDataList,
     joinPointCounts <- neonPlants::joinAquPointCount(inputDataList = inputDataList)
     # joinPointCounts <- joinAquPointCount(inputDataList = apc)
     
-  
+    
   } else {
     
     joinPointCounts <- neonPlants::joinAquPointCount(inputPoint = inputPoint,
-                                  inputPerTax = inputPerTax,
-                                  inputTaxProc = inputTaxProc,
-                                  inputMorph = inputMorph)
+                                                     inputPerTax = inputPerTax,
+                                                     inputTaxProc = inputTaxProc,
+                                                     inputMorph = inputMorph)
   }
   
   ### Remove SI Records ####
   joinPointCounts <- joinPointCounts %>% dplyr::filter(is.na(.data$samplingImpractical))
   
   ### Calculate Percent Cover ####
-
+  
   # Calculate total number of sampling points per transect
   total_points_df <- joinPointCounts %>%
     dplyr::distinct(.data$siteID, .data$namedLocation, .data$collectDate, .data$pointNumber) %>%
     dplyr::group_by(.data$siteID, .data$namedLocation, .data$collectDate) %>%
-    dplyr::summarise(total_points = dplyr::n(), .groups = "drop")
+    dplyr::summarise(totalPoints = dplyr::n(), .groups = "drop")
   
   
   # Percent cover by substrate
@@ -108,7 +108,7 @@ estimateAquPercentCover <- function(inputDataList,
     dplyr::summarise(count = dplyr::n(), .groups = "drop") %>%
     dplyr::left_join(total_points_df, by = c("siteID", "namedLocation", "collectDate")) %>%
     dplyr::mutate(
-      percent_cover = round(100 * .data$count / .data$total_points, 2),
+      percent_cover = round(100 * .data$count / .data$totalPoints, 2),
       type = "substrate",
       substrateOrTaxonID = .data$substrate
     ) %>%
@@ -116,14 +116,23 @@ estimateAquPercentCover <- function(inputDataList,
   
   # Percent cover by taxon
   cover_taxon <- joinPointCounts %>%
-    dplyr::filter(.data$targetTaxaPresent == "Y") %>%
-    dplyr::group_by(.data$siteID, .data$collectDate, .data$namedLocation, .data$acceptedTaxonID) %>% #, .data$scientificName
+    dplyr::filter(.data$targetTaxaPresent != "N") %>% # "Y" and "U"
+    dplyr::group_by(.data$siteID, .data$collectDate, .data$namedLocation, .data$acceptedTaxonID, .data$aquaticPlantType, .data$targetTaxaPresent) %>% #, .data$scientificName
     dplyr::summarise(count = dplyr::n(), .groups = "drop") %>%
     dplyr::left_join(total_points_df, by = c("siteID", "namedLocation", "collectDate")) %>%
     dplyr::mutate(
-      percent_cover = round(100 * .data$count / .data$total_points, 2),
-      type = "taxon",
-      substrateOrTaxonID = .data$acceptedTaxonID
+      percent_cover = round(100 * .data$count / .data$totalPoints, 2),
+      # type = "taxon",
+      type = aquaticPlantType,
+      substrateOrTaxonID = .data$acceptedTaxonID,
+      type = case_when(
+        targetTaxaPresent == 'U' & is.na(type) ~ 'unknown',
+        TRUE ~ type
+      ),
+      substrateOrTaxonID = case_when(
+        type == 'unknown' ~ 'UNKNOWN',
+        TRUE ~ substrateOrTaxonID
+      )
     ) %>%
     dplyr::select("siteID", "collectDate", "namedLocation", "type", "substrateOrTaxonID",  "percent_cover") #"scientificName",
   
@@ -134,15 +143,19 @@ estimateAquPercentCover <- function(inputDataList,
   
   
   ### Calculate Transect metrics ####
-  transect_metrics <- joinPointCounts %>%
-    dplyr::distinct(.data$domainID, .data$siteID, .data$namedLocation, .data$collectDate, .data$boutNumber, .data$habitatType, .data$pointNumber, .data$transectDistance) %>%
-    dplyr::group_by(.data$domainID, .data$siteID, .data$namedLocation, .data$collectDate, .data$boutNumber, .data$habitatType) %>%
-    dplyr::summarise(transectMax = max(.data$transectDistance),
-                     transectMin = min(.data$transectDistance),
-                     total_points = dplyr::n(),.groups = "drop") %>%
-    dplyr::mutate(transectLength_m = .data$transectMax - .data$transectMin) %>%
-    dplyr::select("domainID", "siteID", "namedLocation", "collectDate", "boutNumber", "habitatType", "transectLength_m", "total_points")
   
+  transect_metrics <- joinPointCounts %>%
+    dplyr::distinct(.data$domainID, .data$siteID, .data$namedLocation, .data$collectDate, .data$boutNumber, .data$habitatType, .data$pointNumber, .data$transectDistance, .data$targetTaxaPresent) %>%
+    dplyr::group_by(.data$domainID, .data$siteID, .data$namedLocation, .data$collectDate, .data$boutNumber, .data$habitatType) %>%
+    dplyr::summarise(
+      transectMax = max(.data$transectDistance),
+      transectMin = min(.data$transectDistance),
+      totalPoints = dplyr::n(),
+      pointsWithTaxaPresent = sum(.data$targetTaxaPresent == "Y"),
+      .groups = "drop"
+    ) %>%
+    dplyr::mutate(transectLength_m = .data$transectMax - .data$transectMin) %>%
+    dplyr::select("domainID", "siteID", "namedLocation", "collectDate", "boutNumber", "habitatType", "transectLength_m", "totalPoints", "pointsWithTaxaPresent")
   
   returnList <- list(percentCover=percent_cover, transectMetrics=transect_metrics)
   
@@ -174,12 +187,12 @@ estimateAquPercentCover <- function(inputDataList,
     
     # Create custom order for plotting
     substrate_ids <- percent_cover %>%
-      dplyr::filter(type == "substrate") %>%
+      dplyr::filter(type == "substrate" | type == 'unknown') %>%
       dplyr::pull(substrateOrTaxonID) %>%
       unique()
     
     taxon_ids <- percent_cover %>%
-      dplyr::filter(type == "taxon") %>%
+      dplyr::filter(type == "macroalgae" | type == "plant") %>%
       dplyr::pull(substrateOrTaxonID) %>%
       unique()
     

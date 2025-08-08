@@ -407,8 +407,8 @@ joinAquClipHarvest <- function(inputDataList,
       bio_col <- paste0(col, "_bio")
       apJoin1[[col]] <- dplyr::if_else(
         !is.na(apJoin1$taxonID_taxProc),
-        if (taxProc_col %in% names(apJoin1)) apJoin1[[taxProc_col]] else NA_character_,
-        if (bio_col %in% names(apJoin1)) apJoin1[[bio_col]] else NA_character_
+        if (taxProc_col %in% names(apJoin1)) apJoin1[[taxProc_col]] else NA,
+        if (bio_col %in% names(apJoin1)) apJoin1[[bio_col]] else NA
       )
     }
     
@@ -531,8 +531,8 @@ joinAquClipHarvest <- function(inputDataList,
       bio_col <- paste0(col, "_bio")
       apJoin2[[col]] <- dplyr::if_else(
         !is.na(apJoin2$taxonID) & apJoin2$tempTaxonID %in% c("2PLANT", "UNKALG"),
-        if (morph_col %in% names(apJoin2)) apJoin2[[morph_col]] else NA_character_,
-        if (bio_col %in% names(apJoin2)) apJoin2[[bio_col]] else NA_character_
+        if (morph_col %in% names(apJoin2)) apJoin2[[morph_col]] else NA,
+        if (bio_col %in% names(apJoin2)) apJoin2[[bio_col]] else NA
       )
     }
     
