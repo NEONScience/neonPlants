@@ -549,7 +549,8 @@ joinAquPointCount <- function(inputDataList,
           !is.na(.data$remarks_point) ~ paste0("pointTransect remarks - ", .data$remarks_point),
         TRUE ~ NA
       )
-    )
+    ) %>% 
+    dplyr::select(-"remarks_perTax", -"remarks_point")
   
   return(joinPointCounts)
   
