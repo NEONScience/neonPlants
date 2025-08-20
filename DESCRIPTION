@@ -47,4 +47,7 @@ Imports:
     magrittr,
     rlang,
     stringr,
-    tidyr
+    tidyr,
+    RColorBrewer,
+    ggplot2,
+    plotly
