@@ -402,8 +402,8 @@ joinAquPointCount <- function(inputDataList,
       perTax_col <- paste0(col, "_perTax")
       apJoin1[[col]] <- dplyr::if_else(
         !is.na(apJoin1$taxonID_taxProc),
-        if (taxProc_col %in% names(apJoin1)) apJoin1[[taxProc_col]] else NA_character_,
-        if (perTax_col %in% names(apJoin1)) apJoin1[[perTax_col]] else NA_character_
+        if (taxProc_col %in% names(apJoin1)) as.character(apJoin1[[taxProc_col]]) else NA_character_,
+        if (perTax_col %in% names(apJoin1)) as.character(apJoin1[[perTax_col]]) else NA_character_
       )
     }
     
@@ -497,8 +497,8 @@ joinAquPointCount <- function(inputDataList,
       perTax_col <- paste0(col, "_perTax")
       apJoin2[[col]] <- dplyr::if_else(
         !is.na(apJoin2$taxonID) & apJoin2$tempTaxonID %in% c("2PLANT", "UNKALG"),
-        if (morph_col %in% names(apJoin2)) apJoin2[[morph_col]] else NA_character_,
-        if (perTax_col %in% names(apJoin2)) apJoin2[[perTax_col]] else NA_character_
+        if (morph_col %in% names(apJoin2)) as.character(apJoin2[[morph_col]]) else NA_character_,
+        if (perTax_col %in% names(apJoin2)) as.character(apJoin2[[perTax_col]]) else NA_character_
       )
     }
     
