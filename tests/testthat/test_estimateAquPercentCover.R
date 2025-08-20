@@ -19,7 +19,7 @@
 # ap$variables_20072 <- NULL
 # 
 # saveRDS(ap, "C:/Users/ritterm1/Documents/GitHub/a_neonPackages/neonPlants/tests/testthat/testdata/estimateAquPercentCover_testData_D04_202306.rds")
-
+# testList <- readRDS("C:/Users/ritterm1/Documents/GitHub/a_neonPackages/neonPlants/tests/testthat/testdata/estimateAquPercentCover_testData_D04_202306.rds")
 
 ### Read in test data ####
 testList <- readRDS(testthat::test_path("testdata", "estimateAquPercentCover_testData_D04_202306.rds"))
@@ -77,7 +77,7 @@ testthat::test_that(desc = "Output percentCover df dimensions list input", {
   out = estimateAquPercentCover(inputDataList = testList)
   
   testthat::expect_identical(object = nrow(out[[1]]),
-                             expected = as.integer(106))
+                             expected = as.integer(109))
   
   testthat::expect_identical(object = ncol(out[[1]]),
                              expected = as.integer(6))
@@ -92,7 +92,7 @@ testthat::test_that(desc = "Output transectMetrics df dimensions list input", {
                              expected = as.integer(20))
   
   testthat::expect_identical(object = ncol(out[[2]]),
-                             expected = as.integer(8))
+                             expected = as.integer(9))
 })
 
 ##  Test table inputs
@@ -104,7 +104,7 @@ testthat::test_that(desc = "Output percentCover df dimensions list input", {
                                 inputTaxProc = testTaxProc)
   
   testthat::expect_identical(object = nrow(out[[1]]),
-                             expected = as.integer(106))
+                             expected = as.integer(109))
   
   testthat::expect_identical(object = ncol(out[[1]]),
                              expected = as.integer(6))
@@ -121,7 +121,7 @@ testthat::test_that(desc = "Output transectMetrics df dimensions list input", {
                              expected = as.integer(20))
   
   testthat::expect_identical(object = ncol(out[[2]]),
-                             expected = as.integer(8))
+                             expected = as.integer(9))
 })
 
 
@@ -134,7 +134,7 @@ testthat::test_that(desc = "Output data frame percent cover sum", {
   
   testthat::expect_identical(
     object = sum(out$percentCover$percent_cover),
-    expected = 1970)
+    expected = 2050)
 })
 
 #   Check taxa percent_cover estimates
@@ -143,8 +143,16 @@ testthat::test_that(desc = "Output data frame percent cover taxa sum", {
   out = estimateAquPercentCover(inputDataList = testList)
   
   testthat::expect_identical(
-    object = sum(out$percentCover$percent_cover[out$percentCover$type == 'taxon']),
-    expected = 260)
+    object = sum(out$percentCover$percent_cover[out$percentCover$type == 'macroalgae']),
+    expected = 200)
+  
+  testthat::expect_identical(
+    object = sum(out$percentCover$percent_cover[out$percentCover$type == 'plant']),
+    expected = 60)
+  
+  testthat::expect_identical(
+    object = sum(out$percentCover$percent_cover[out$percentCover$type == 'unknown']),
+    expected = 80)
 })
 
 
