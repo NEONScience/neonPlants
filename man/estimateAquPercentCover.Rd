@@ -27,11 +27,11 @@ estimateAquPercentCover(
 \item{barPlots}{If TRUE, will produce a list of plots, one for each site/date in the data provided.}
 }
 \value{
-Two tables are produced containing point count summary data. The first "percentCover" table contains estimated percent cover for each observed species and/or substrate class on aquatic plant transects. This table includes a 'type' column indicating whether the estimate corresponds to a taxonID or a substrate class, and a 'substrateOrTaxonID' column which provides the corresponding identifier.
+Two tables are produced containing point count summary data. The first "percentCover" table contains estimated percent cover for each observed species and/or substrate class on aquatic plant transects. This table includes a 'type' column indicating whether the estimate corresponds to a taxon or substrate class, and a 'substrateOrTaxonID' column which provides the corresponding taxonID or substrate identifier.
 
 The second "transectMetrics" table contains summary information including the length, habitatType, and total number of points sampled at each transect.
 
-If barPlots = TRUE, a list containing plots of the data will also be produced.
+If barPlots = TRUE, a list containing plots for each site x date combination will also be produced.
 }
 \description{
 Data inputs are NEON Aquatic Plant, Bryophyte, Lichen, and Macroalgae Point Counts in Wadeable Streams (DP1.20072.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input data tables with an equivalent structure and representing the same site x month combinations. The estimateAquPercentCover() function joins taxonomy information across point count tables and aggregates occurrence data to estimate percent cover at the transect level.
@@ -49,7 +49,7 @@ Where:
 \item \eqn{N_t} is the total number of points observed in the transect
 }
 
-Note: This calculation can generate percent cover values >100\% if there is vertical stacking of plants.
+Note: This calculation can generate percent cover values >100\% if there is vertical stacking of plants, or values <100\% if 'targetTaxaPresent' is unknown.
 }
 \examples{
 \dontrun{
@@ -70,8 +70,9 @@ inputPoint = NA,
 inputPerTax = NA,
 inputTaxProc = NA,
 inputMorph = NA,
-barPlots = F
+barPlots = FALSE
 )
+
 }
 }
 \references{

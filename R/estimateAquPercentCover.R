@@ -123,15 +123,15 @@ estimateAquPercentCover <- function(inputDataList,
     dplyr::mutate(
       percent_cover = round(100 * .data$count / .data$totalPoints, 2),
       # type = "taxon",
-      type = aquaticPlantType,
+      type = .data$aquaticPlantType,
       substrateOrTaxonID = .data$acceptedTaxonID,
-      type = case_when(
+      type = dplyr::case_when(
         targetTaxaPresent == 'U' & is.na(type) ~ 'unknown',
         TRUE ~ type
       ),
-      substrateOrTaxonID = case_when(
+      substrateOrTaxonID = dplyr::case_when(
         type == 'unknown' ~ 'UNKNOWN',
-        TRUE ~ substrateOrTaxonID
+        TRUE ~ .data$substrateOrTaxonID
       )
     ) %>%
     dplyr::select("siteID", "collectDate", "namedLocation", "type", "substrateOrTaxonID",  "percent_cover") #"scientificName",
@@ -172,28 +172,28 @@ estimateAquPercentCover <- function(inputDataList,
     
     percent_cover <- percent_cover %>%
       dplyr::mutate(
-        transectID = as.character(transectID),
-        transect_num = as.numeric(stringr::str_extract(transectID, "\\d+")),
-        transect_suffix = stringr::str_extract(transectID, "[a-zA-Z]*")
+        transectID = as.character(.data$transectID),
+        transect_num = as.numeric(stringr::str_extract(.data$transectID, "\\d+")),
+        transect_suffix = stringr::str_extract(.data$transectID, "[a-zA-Z]*")
       )
     
     ordered_ids <- percent_cover %>%
-      dplyr::distinct(transectID, transect_num, transect_suffix) %>%
-      dplyr::arrange(transect_num, transect_suffix) %>%
-      dplyr::pull(transectID)
+      dplyr::distinct(.data$transectID, .data$transect_num, .data$transect_suffix) %>%
+      dplyr::arrange(.data$transect_num, .data$transect_suffix) %>%
+      dplyr::pull(.data$transectID)
     
     percent_cover <- percent_cover %>%
-      dplyr::mutate(transectID = factor(transectID, levels = ordered_ids))
+      dplyr::mutate(transectID = factor(.data$transectID, levels = ordered_ids))
     
     # Create custom order for plotting
     substrate_ids <- percent_cover %>%
-      dplyr::filter(type == "substrate" | type == 'unknown') %>%
-      dplyr::pull(substrateOrTaxonID) %>%
+      dplyr::filter(.data$type == "substrate" | .data$type == 'unknown') %>%
+      dplyr::pull(.data$substrateOrTaxonID) %>%
       unique()
     
     taxon_ids <- percent_cover %>%
-      dplyr::filter(type == "macroalgae" | type == "plant") %>%
-      dplyr::pull(substrateOrTaxonID) %>%
+      dplyr::filter(.data$type == "macroalgae" | .data$type == "plant") %>%
+      dplyr::pull(.data$substrateOrTaxonID) %>%
       unique()
     
     stack_order <- c(substrate_ids, taxon_ids)
@@ -224,9 +224,9 @@ estimateAquPercentCover <- function(inputDataList,
     
     # Plotting function
     plot_grid <- function(plot_id) {
-      ggplotly(
-        ggplot2::ggplot(subset(percent_cover, boutID == plot_id),
-               ggplot2::aes(x = transectID, y = percent_cover, fill = substrateOrTaxonID)) +
+      plotly::ggplotly(
+        ggplot2::ggplot(subset(percent_cover, 'boutID' == plot_id),
+               ggplot2::aes(x = 'transectID', y = percent_cover, fill = 'substrateOrTaxonID')) +
           ggplot2::geom_bar(stat = "identity", position = "stack") +
           ggplot2::scale_fill_manual(values = color_palette) +  # Apply consistent colors
           ggplot2::labs(

@@ -62,6 +62,7 @@ joinAquClipHarvest <- function(inputDataList,
   
   ### Verify user-supplied inputDataList object contains correct data if not NA
   if (!missing(inputDataList)) {
+    
     #   Check that input is a list
     if (!inherits(inputDataList, "list")) {
       stop(
@@ -141,29 +142,11 @@ joinAquClipHarvest <- function(inputDataList,
   ### Verify 'apBio' table contains required data
   #   Check for required columns
   bioExpCols <- c(
-    "sampleID",
-    "taxonID",
-    "scientificName",
-    "morphospeciesID",
-    "identifiedDate",
-    "sampleCondition",
-    "identificationHistoryID",
-    "dataQF",
-    "publicationDate",
-    "release",
-    "division",
-    "class",
-    "order",
-    "family",
-    "genus",
-    "section",
-    "specificEpithet",
-    "scientificNameAuthorship",
-    "identificationQualifier",
-    "identificationReferences",
-    "remarks",
-    "identifiedBy",
-    "uid"
+    "sampleID", "taxonID", "scientificName", "morphospeciesID", "identifiedDate",
+    "sampleCondition", "identificationHistoryID", "dataQF", "publicationDate",
+    "release", "division", "class", "order", "family", "genus",  "section",
+    "specificEpithet", "scientificNameAuthorship", "identificationQualifier",
+    "identificationReferences", "remarks", "identifiedBy", "uid"
   )
   
   
@@ -187,18 +170,8 @@ joinAquClipHarvest <- function(inputDataList,
   ### Verify 'apClip' table contains required data
   #   Check for required columns
   clipExpCols <- c(
-    "namedLocation",
-    "eventID",
-    "boutNumber",
-    "fieldID",
-    "benthicArea",
-    "domainID",
-    "siteID",
-    "startDate",
-    "collectDate",
-    "fieldIDCode",
-    "recordedBy",
-    "remarks"
+    "namedLocation", "eventID", "boutNumber", "fieldID", "benthicArea", "domainID",
+    "siteID", "startDate", "collectDate", "fieldIDCode", "recordedBy", "remarks"
   )
   
   if (length(setdiff(clipExpCols, colnames(apClip))) > 0) {
@@ -228,33 +201,12 @@ joinAquClipHarvest <- function(inputDataList,
   
   ### Verify 'apTaxProc' table contains required data if data exists
   taxProcExpCols <- c(
-    "sampleID",
-    "taxonID",
-    "identifiedDate",
-    "sampleCondition",
-    "identificationHistoryID",
-    "dataQF",
-    "publicationDate",
-    "release",
-    "division",
-    "class",
-    "order",
-    "family",
-    "genus",
-    "section",
-    "specificEpithet",
-    "scientificNameAuthorship",
-    "identificationQualifier",
-    "identificationReferences",
-    "remarks",
-    "identifiedBy",
-    "morphospeciesID",
-    "uid",
-    "domainID",
-    "siteID",
-    "namedLocation",
-    "collectDate",
-    "sampleCode"
+    "sampleID", "taxonID", "identifiedDate", "sampleCondition", 
+    "identificationHistoryID", "dataQF", "publicationDate", "release", 
+    "division", "class", "order", "family", "genus", "section", "specificEpithet",
+    "scientificNameAuthorship", "identificationQualifier", 
+    "identificationReferences", "remarks", "identifiedBy", "morphospeciesID", 
+    "uid", "domainID", "siteID", "namedLocation", "collectDate", "sampleCode"
   )
   
   #   Check for data
@@ -282,13 +234,8 @@ joinAquClipHarvest <- function(inputDataList,
   
   ### Verify 'apMorph' table contains required data if data exists
   morphExpCols <- c(
-    "morphospeciesID",
-    "taxonID",
-    "scientificName",
-    "identificationQualifier",
-    "identificationReferences",
-    "identifiedBy",
-    "dataQF"
+    "morphospeciesID", "taxonID", "scientificName", "identificationQualifier",
+    "identificationReferences", "identifiedBy", "dataQF"
   )
   
   
@@ -317,7 +264,7 @@ joinAquClipHarvest <- function(inputDataList,
   ### Join apBio and apTaxProc tables using sampleID ####
   
   if (is.data.frame(apTaxProc) && nrow(apTaxProc) > 0) {
-    # message("Join taxonomyProcessed taxonomic identifications.")
+    
     #   Select needed columns from apTaxProc
     apTaxProc <- apTaxProc %>%
       dplyr::select(
@@ -328,7 +275,8 @@ joinAquClipHarvest <- function(inputDataList,
         -"collectDate",
         -"morphospeciesID",
         -"sampleCode"
-      )
+      ) #%>% 
+      # dplyr::mutate(identifiedDate = as.character(identifiedDate)) #biomass identifiedDate is character, not date
     
     #   Columns conditionally replaced with taxProc data
     join1_cols <- c(
@@ -402,16 +350,24 @@ joinAquClipHarvest <- function(inputDataList,
         )
       )
     
+    # for (col in join1_cols) {
+    #   taxProc_col <- paste0(col, "_taxProc")
+    #   bio_col <- paste0(col, "_bio")
+    #   apJoin1[[col]] <- dplyr::if_else(
+    #     !is.na(apJoin1$taxonID_taxProc),
+    #     if (taxProc_col %in% names(apJoin1)) apJoin1[[taxProc_col]] else NA_character_,
+    #     if (bio_col %in% names(apJoin1)) apJoin1[[bio_col]] else NA_character_
+    #   )
+    # }
     for (col in join1_cols) {
       taxProc_col <- paste0(col, "_taxProc")
       bio_col <- paste0(col, "_bio")
       apJoin1[[col]] <- dplyr::if_else(
         !is.na(apJoin1$taxonID_taxProc),
-        if (taxProc_col %in% names(apJoin1)) apJoin1[[taxProc_col]] else NA,
-        if (bio_col %in% names(apJoin1)) apJoin1[[bio_col]] else NA
+        if (taxProc_col %in% names(apJoin1)) as.character(apJoin1[[taxProc_col]]) else NA_character_,
+        if (bio_col %in% names(apJoin1)) as.character(apJoin1[[bio_col]]) else NA_character_
       )
     }
-    
     apJoin1 <- apJoin1 %>%
       dplyr::select(-"uid", -"targetTaxaPresent",
                     -dplyr::matches("_taxProc"),-dplyr::matches("_bio"))
@@ -447,80 +403,42 @@ joinAquClipHarvest <- function(inputDataList,
     # message("Join morphospecies taxonomic identifications.")
     apMorph <- apMorph %>%
       dplyr::select(
-        "taxonID",
-        "scientificName",
-        "morphospeciesID",
-        "identificationQualifier",
-        "identificationReferences",
-        "identifiedBy",
-        "morphospeciesResolvedDate",
-        # "phylum",
-        # "division",
-        # "class",
-        # "order",
-        # "family",
-        # "genus",
-        # "section",
-        # "specificEpithet",
-        # "infraspecificEpithet",
-        # "variety",
-        # "form",
-        # "taxonRank"
+        "taxonID", "scientificName", "morphospeciesID", "identificationQualifier",
+        "identificationReferences", "identifiedBy", "morphospeciesResolvedDate",
+        ## Uncomment next two lines once morph table has been updated
+        # "phylum", "division", "class", "order", "family", "genus", "section", 
+        # "specificEpithet", "infraspecificEpithet", "variety", "form", "taxonRank",
         "dataQF"
       )%>% 
       dplyr::rename(identifiedDate="morphospeciesResolvedDate")
     
     # Update morphospecies taxon identifications
     apJoin2 <- apJoin1 %>%
-      dplyr::mutate(morphospeciesID = dplyr::if_else(
-        !is.na(.data$morphospeciesID),
-        paste0(.data$morphospeciesID, ".", substr(.data$collectDate, 1, 4)),
-        .data$morphospeciesID
-      )) %>%
-      dplyr::left_join(apMorph,
-                       by = "morphospeciesID",
-                       suffix = c("_bio", "_morph")) %>%
+      dplyr::mutate(
+        morphospeciesID = dplyr::if_else(
+          !is.na(.data$morphospeciesID),
+          paste0(.data$morphospeciesID, ".", substr(.data$collectDate, 1, 4)),
+          .data$morphospeciesID
+        )
+      ) %>%
+      dplyr::left_join(apMorph, by="morphospeciesID", suffix=c("_bio","_morph")) %>%
       dplyr::mutate(
         taxonIDSourceTable = dplyr::if_else(
           !is.na(.data$taxonID) & .data$tempTaxonID %in% c('2PLANT', 'UNKALG'),
           "apc_morphospecies", .data$taxonIDSourceTable),
+        
         acceptedTaxonID = dplyr::if_else(
           !is.na(.data$taxonID) & .data$tempTaxonID %in% c('2PLANT', 'UNKALG'),
           .data$taxonID, .data$tempTaxonID),
-        # scientificName = dplyr::if_else(
-        #   !is.na(.data$taxonID) &
-        #     .data$tempTaxonID %in% c('2PLANT', 'UNKALG'),
-        #   .data$scientificName_morph,
-        #   .data$scientificName_bio
-        # ),
-        # identificationQualifier = dplyr::if_else(
-        #   !is.na(.data$taxonID) &
-        #     .data$tempTaxonID %in% c('2PLANT', 'UNKALG'),
-        #   .data$identificationQualifier_morph,
-        #   .data$identificationQualifier_bio
-        # ),
-        # identificationReferences = dplyr::if_else(
-        #   !is.na(.data$taxonID) &
-        #     .data$tempTaxonID %in% c('2PLANT', 'UNKALG'),
-        #   .data$identificationReferences_morph,
-        #   .data$identificationReferences_bio
-        # ),
-        # identifiedBy = dplyr::if_else(
-        #   !is.na(.data$taxonID) &
-        #     .data$tempTaxonID %in% c('2PLANT', 'UNKALG'),
-        #   .data$identifiedBy_morph,
-        #   .data$identifiedBy_bio
-        # ),
-        # identifiedDate = NA,
-        # #not currently in pub table
-        morphospeciesDataQF = .data$dataQF
         
+        morphospeciesDataQF = .data$dataQF
       )
     
     #   Columns conditionally replaced with morph data
     join2_cols <- c(
       "scientificName", "identificationQualifier", "identificationReferences",
       "identifiedBy", "identifiedDate"
+      ## Uncomment next two lines once morph table has been updated
       # , "phylum", "division", "class", "order",
       # "family", "genus", "section", "specificEpithet", "infraspecificEpithet",
       # "variety", "form", "taxonRank"
@@ -531,8 +449,8 @@ joinAquClipHarvest <- function(inputDataList,
       bio_col <- paste0(col, "_bio")
       apJoin2[[col]] <- dplyr::if_else(
         !is.na(apJoin2$taxonID) & apJoin2$tempTaxonID %in% c("2PLANT", "UNKALG"),
-        if (morph_col %in% names(apJoin2)) apJoin2[[morph_col]] else NA,
-        if (bio_col %in% names(apJoin2)) apJoin2[[bio_col]] else NA
+        if (morph_col %in% names(apJoin2)) as.character(apJoin2[[morph_col]]) else NA_character_,
+        if (bio_col %in% names(apJoin2)) as.character(apJoin2[[bio_col]]) else NA_character_
       )
     }
     
@@ -558,13 +476,8 @@ joinAquClipHarvest <- function(inputDataList,
   
   joinClipHarvest <- apClip %>%
     dplyr::select(
-      -"benthicArea",
-      -"namedLocation",
-      -"domainID",
-      -"siteID",
-      -"startDate",
-      -"collectDate",
-      -"fieldIDCode"
+      -"benthicArea", -"namedLocation", -"domainID", -"siteID",
+      -"startDate", -"collectDate", -"fieldIDCode"
     ) %>%
     dplyr::left_join(apJoin2, by = "fieldID", suffix = c("_clip", "_bio")) %>%
     dplyr::mutate(
