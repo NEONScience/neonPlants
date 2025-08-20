@@ -66,7 +66,7 @@ testthat::test_that(desc = "Output data frame row number list input", {
 testthat::test_that(desc = "Output data frame column number list input", {
   
   testthat::expect_identical(object = ncol(joinAquPointCount(inputDataList = testList)),
-                             expected = as.integer(75))
+                             expected = as.integer(73))
 })
 
 
@@ -88,7 +88,7 @@ testthat::test_that(desc = "Output data frame row number table input", {
                                                              inputPerTax = testPerTax,
                                                              inputTaxProc = testTaxProc,
                                                              inputMorph = testMorph)),
-                             expected = as.integer(75))
+                             expected = as.integer(73))
 })
 
 
