@@ -349,12 +349,12 @@ joinAquPointCount <- function(inputDataList,
             !is.na(.data$sampleCondition_taxProc) ~ paste0(
               "perTaxon ",
               .data$sampleCondition_perTax,
-              " | taxonProcessed ",
+              " | taxProcessed ",
               .data$sampleCondition_taxProc
             ),!is.na(.data$sampleCondition_perTax) &
             is.na(.data$sampleCondition_taxProc) ~ paste0("perTaxon ", .data$sampleCondition_perTax),
           is.na(.data$sampleCondition_perTax) &
-            !is.na(.data$sampleCondition_taxProc) ~ paste0("taxonProcessed ", .data$sampleCondition_taxProc),
+            !is.na(.data$sampleCondition_taxProc) ~ paste0("taxProcessed ", .data$sampleCondition_taxProc),
           TRUE ~ NA
         ),
         taxonIDSourceTable = dplyr::case_when(
@@ -388,11 +388,11 @@ joinAquPointCount <- function(inputDataList,
         perTaxonRelease = .data$release_perTax,
         remarks = dplyr::case_when(
           !is.na(.data$remarks_perTax) & !is.na(.data$remarks_taxProc) ~ paste0(
-              "perTaxon remarks - ", .data$remarks_perTax, " | taxonProcessed remarks - ",.data$remarks_taxProc
+              "perTaxon remarks - ", .data$remarks_perTax, " | taxProcessed remarks - ",.data$remarks_taxProc
               ),
           is.na(.data$remarks_taxProc) &
             !is.na(.data$remarks_perTax) ~ paste0("perTaxon remarks - ", .data$remarks_perTax),!is.na(.data$remarks_taxProc) &
-            is.na(.data$remarks_perTax) ~ paste0("taxonProcessed remarks - ", .data$remarks_taxProc),
+            is.na(.data$remarks_perTax) ~ paste0("taxProcessed remarks - ", .data$remarks_taxProc),
           TRUE ~ NA
         )
       ) 
@@ -523,7 +523,10 @@ joinAquPointCount <- function(inputDataList,
   ### Join apPoint and apPerTax tables ####
   
   joinPointCounts <- apPoint %>%
-    dplyr::rename(pointPublicationDate = "publicationDate") %>% 
+    dplyr::rename(
+      pointPublicationDate = "publicationDate",
+      pointDataQF = "dataQF"
+      ) %>% 
     dplyr::left_join(
       apJoin2,
       by = c(
@@ -552,14 +555,21 @@ joinAquPointCount <- function(inputDataList,
       )    ) %>% 
     dplyr::select(-"remarks_perTax", -"remarks_point")
   
-  ###  Correct data types for date fields ####
-  joinPointCounts$collectDate <- as.POSIXct(joinPointCounts$collectDate, 
-                                            format = "%Y-%m-%dT%H:%MZ", tz = "UTC")
-  joinPointCounts$pointPublicationDate <- as.POSIXct(joinPointCounts$pointPublicationDate, 
-                                                     format = "%Y-%m-%dT%H:%MZ", tz = "UTC")
-  joinPointCounts$perTaxonPublicationDate <- as.POSIXct(joinPointCounts$perTaxonPublicationDate, 
-                                                        format = "%Y-%m-%dT%H:%MZ", tz = "UTC")
+  ###  Re-format date columns ####
   joinPointCounts$identifiedDate <- as.Date(joinPointCounts$identifiedDate)
+  
+  joinPointCounts$collectDate <- as.POSIXct(joinPointCounts$collectDate, 
+    format = "%Y-%m-%dT%H:%MZ", tz = "UTC")
+  
+  joinPointCounts$pointPublicationDate <- as.POSIXct(joinPointCounts$pointPublicationDate, 
+    format = "%Y%m%dT%H%M%SZ", tz = "UTC")
+  
+  joinPointCounts$perTaxonPublicationDate <- as.POSIXct(joinPointCounts$perTaxonPublicationDate, 
+    format = "%Y%m%dT%H%M%SZ", tz = "UTC")
+  
+  joinPointCounts$taxProcessedPublicationDate <- as.POSIXct(joinPointCounts$taxProcessedPublicationDate, 
+    format = "%Y%m%dT%H%M%SZ", tz = "UTC")
+
   
   return(joinPointCounts)
   
