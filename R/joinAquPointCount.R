@@ -523,6 +523,7 @@ joinAquPointCount <- function(inputDataList,
   ### Join apPoint and apPerTax tables ####
   
   joinPointCounts <- apPoint %>%
+    dplyr::rename(pointPublicationDate = "publicationDate") %>% 
     dplyr::left_join(
       apJoin2,
       by = c(
@@ -548,9 +549,17 @@ joinAquPointCount <- function(inputDataList,
         is.na(.data$remarks_perTax) &
           !is.na(.data$remarks_point) ~ paste0("pointTransect remarks - ", .data$remarks_point),
         TRUE ~ NA
-      )
-    ) %>% 
+      )    ) %>% 
     dplyr::select(-"remarks_perTax", -"remarks_point")
+  
+  ###  Correct data types for date fields ####
+  joinPointCounts$collectDate <- as.POSIXct(joinPointCounts$collectDate, 
+                                            format = "%Y-%m-%dT%H:%MZ", tz = "UTC")
+  joinPointCounts$pointPublicationDate <- as.POSIXct(joinPointCounts$pointPublicationDate, 
+                                                     format = "%Y-%m-%dT%H:%MZ", tz = "UTC")
+  joinPointCounts$perTaxonPublicationDate <- as.POSIXct(joinPointCounts$perTaxonPublicationDate, 
+                                                        format = "%Y-%m-%dT%H:%MZ", tz = "UTC")
+  joinPointCounts$identifiedDate <- as.Date(joinPointCounts$identifiedDate)
   
   return(joinPointCounts)
   

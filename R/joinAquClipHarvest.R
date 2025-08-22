@@ -511,6 +511,18 @@ joinAquClipHarvest <- function(inputDataList,
   ###  Filter out bout 1 and 3 data ####
   joinClipHarvest <- joinClipHarvest %>% dplyr::filter(.data$boutNumber == '2')
   
+  ###  Correct data types for date fields ####
+  joinClipHarvest$collectDate <- as.POSIXct(joinClipHarvest$collectDate, 
+                                            format = "%Y-%m-%dT%H:%MZ", tz = "UTC")
+  joinClipHarvest$processingDate <- as.Date(joinClipHarvest$processingDate)
+  joinClipHarvest$startDate <- as.POSIXct(joinClipHarvest$startDate,
+                                          format = "%Y-%m-%dT%H:%MZ", tz = "UTC")
+  joinClipHarvest$biomassPublicationDate <- as.POSIXct(joinClipHarvest$biomassPublicationDate,  format = "%Y-%m-%dT%H:%MZ", tz = "UTC")
+  joinClipHarvest$taxProcessedPublicationDate <- as.POSIXct(joinClipHarvest$taxProcessedPublicationDate,  format = "%Y-%m-%dT%H:%MZ", tz = "UTC")
+  joinClipHarvest$identifiedDate <- as.Date(joinClipHarvest$identifiedDate)
+  joinClipHarvest$clipPublicationDate <- as.POSIXct(joinClipHarvest$clipPublicationDate,  format = "%Y-%m-%dT%H:%MZ", tz = "UTC")
+  
+  
   return(joinClipHarvest)
   
 } #function closer
