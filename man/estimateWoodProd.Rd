@@ -2,14 +2,14 @@
 % Please edit documentation in R/estimateWoodProd.R
 \name{estimateWoodProd}
 \alias{estimateWoodProd}
-\title{Estimate ANPP (Aboveground Net Primary Productivity) contributed by woody vegetation}
+\title{Estimate ANPP (Aboveground Net Primary Productivity) contributed by trees}
 \usage{
 estimateWoodProd(
   inputDataList,
   inputIndividual = NA,
   inputMapTag = NA,
-  inputNonWoody = NA,
   inputPerPlot = NA,
+  inputNonWoody = NA,
   siteID,
   plotSubset = "towerAnnualSubset",
   mortalityMissing = "filterMissing",
@@ -25,10 +25,10 @@ estimateWoodProd(
 \item{inputMapTag}{The 'vst_mappingandtagging' table for the site x month combination(s) of interest
 (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 
-\item{inputNonWoody}{The 'vst_non-woody' table for the site x month combination(s) of interest
+\item{inputPerPlot}{The 'vst_perplotperyear' table for the site x month combination(s) of interest
 (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 
-\item{inputPerPlot}{The 'vst_perplotperyear' table for the site x month combination(s) of interest
+\item{inputNonWoody}{The 'vst_non-woody' table for the site x month combination(s) of interest
 (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 
 \item{siteID}{Specify the four-letter siteID for a single NEON site (only one siteID is allowed). \link{character}}
@@ -45,25 +45,26 @@ A list that includes productivity summary data frames. Output tables include:
 \itemize{
 \item vst_ANPP_plot - Summarizes woody ANPP for each plot x year combination ("Mg/ha/yr").
 \item vst_ANPP_site - Summarizes woody ANPP for each site x year combination ("Mg/ha/yr").
+\item filtered - Individuals filtered from productivity calculations if mortalityMissing argument is "filterMissing" and/or stemIncrementFlag argument is "filterFlagged".
+\item mortality - Individuals that experienced mortality from time 1 to time 2.
+\item recruitment - Individuals that recruited between time 1 and and time 2.
 }
 }
 \description{
-Calculate annual productivity of woody vegetation.
+Calculate productivity of trees reported in the NEON "Vegetation structure" data product (DP1.10098.001). Results are summarized as mass per unit area per year at scales of the plotID and siteID.
 
 Data inputs are "Vegetation structure" data (DP1.10098.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input tables with an equivalent structure and representing the same site x month combinations.
 
-Data should be from just one site, and exactly two temporal eventIDs.
+Data should be from just one site, and the 'vst_apparentindividual' and 'vst_perplotperyear' tables should include exactly two temporal eventIDs. The 'vst_mappingandtagging' table should include all years of data from the year 2013 to the last year being analyzed.
 }
 \details{
-The input data is passed to the companion estimateWoodMass() function to create biomass summaries, and then aboveground productivity is calculated for woody vegetation.
+The input data is passed to the companion estimateWoodMass() function to create biomass summaries, and then aboveground productivity is calculated for trees. Input data is filtered  'plotSubset' if output for only certain types of plots or sampling intervals is desired. Productivity is summarized on an areal basis at the hierarchical level of the plot and site.
 
 The stand-level approach to calculating productivity (approach 2) is used from Clark DA, S Brown, DW Kicklighter, JQ Chambers, JR Thomlinson, and J Ni. 2001. Measuring Net Primary Production in Forests: Concepts and Field Methods. Ecological Applications 11:356-370.
 
 Woody productivity is only calculated for trees with growthForm of "single bole tree" or "multi-bole tree".
 
 NEON has an extensive data QA/QC process, but users should be aware that these productivity estimates are very sensitive to any residual errors and so the data should be examined carefully
-
-Input data can be filtered by 'plotSubset' if output for only certain types of plots or sampling intervals is desired. Input data are combined with allometric equation parameters and taxon specific characteristics, and biomass is estimated for each individual using allometric equations. Generalized allometric equations are applied first and are replaced by taxon-specific equations if available. Only the set of growth forms selected via the growthForm parameter are included in outputs. The non-woody "cactus" and "ferns" growthForms are not currently included. Biomass is summarized on an areal basis at the hierarchical level of the plot and site.
 }
 \examples{
 \dontrun{
@@ -75,7 +76,6 @@ check.size = FALSE
 )
 
 estimateWoodProdOutputs <- estimateWoodProd(inputDataList = VstDat, siteID = "LENO")
-
 
 }
 
