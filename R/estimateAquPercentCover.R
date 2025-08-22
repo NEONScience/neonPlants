@@ -225,8 +225,13 @@ estimateAquPercentCover <- function(inputDataList,
     # Plotting function
     plot_grid <- function(plot_id) {
       plotly::ggplotly(
-        ggplot2::ggplot(subset(percent_cover, boutID == plot_id),
-               ggplot2::aes(x = transectID, y = percent_cover, fill = substrateOrTaxonID)) +
+        ggplot2::ggplot(
+          # subset(percent_cover, .data$boutID == plot_id),
+          percent_cover[percent_cover$boutID == plot_id, ],
+          ggplot2::aes(
+            x = .data$transectID, 
+            y = .data$percent_cover, 
+            fill = .data$substrateOrTaxonID)) +
           ggplot2::geom_bar(stat = "identity", position = "stack") +
           ggplot2::scale_fill_manual(values = color_palette) +  # Apply consistent colors
           ggplot2::labs(
@@ -244,13 +249,6 @@ estimateAquPercentCover <- function(inputDataList,
     
     # Bind df and plots
     returnList$plot_list <- plot_list
-
-    # Print all plots
-    # for (i in seq_along(test$plot_list)) {
-    #   if (!is.null(test$plot_list[[i]])) {
-    #     print(test$plot_list[[i]])
-    #   }
-    # }
     
   }
   
