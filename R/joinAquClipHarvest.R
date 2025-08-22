@@ -298,11 +298,11 @@ joinAquClipHarvest <- function(inputDataList,
         
         sampleCondition = dplyr::case_when(
           !is.na(.data$sampleCondition_bio) & !is.na(.data$sampleCondition_taxProc) ~ 
-            paste0("biomass ", .data$sampleCondition_bio," | taxonProcessed ", .data$sampleCondition_taxProc),
+            paste0("biomass ", .data$sampleCondition_bio," | taxProcessed ", .data$sampleCondition_taxProc),
           !is.na(.data$sampleCondition_bio) & is.na(.data$sampleCondition_taxProc) ~ 
             paste0("biomass ", .data$sampleCondition_bio),
           is.na(.data$sampleCondition_bio) & !is.na(.data$sampleCondition_taxProc) ~ 
-            paste0("taxonProcessed ", .data$sampleCondition_taxProc),
+            paste0("taxProcessed ", .data$sampleCondition_taxProc),
           TRUE ~ NA
         ),
         
@@ -341,24 +341,15 @@ joinAquClipHarvest <- function(inputDataList,
         
         remarks = dplyr::case_when(
           !is.na(.data$remarks_bio) & !is.na(.data$remarks_taxProc) ~ 
-            paste0( "biomass remarks - ", .data$remarks_bio, " | taxonProcessed remarks - ",  .data$remarks_taxProc),
+            paste0( "biomass remarks - ", .data$remarks_bio, " | taxProcessed remarks - ",  .data$remarks_taxProc),
           is.na(.data$remarks_taxProc) & !is.na(.data$remarks_bio) ~ 
             paste0("biomass remarks - ", .data$remarks_bio),
           !is.na(.data$remarks_taxProc) & is.na(.data$remarks_bio) ~ 
-            paste0("taxonProcessed remarks - ", .data$remarks_taxProc),
+            paste0("taxProcessed remarks - ", .data$remarks_taxProc),
           TRUE ~ NA
         )
       )
     
-    # for (col in join1_cols) {
-    #   taxProc_col <- paste0(col, "_taxProc")
-    #   bio_col <- paste0(col, "_bio")
-    #   apJoin1[[col]] <- dplyr::if_else(
-    #     !is.na(apJoin1$taxonID_taxProc),
-    #     if (taxProc_col %in% names(apJoin1)) apJoin1[[taxProc_col]] else NA_character_,
-    #     if (bio_col %in% names(apJoin1)) apJoin1[[bio_col]] else NA_character_
-    #   )
-    # }
     for (col in join1_cols) {
       taxProc_col <- paste0(col, "_taxProc")
       bio_col <- paste0(col, "_bio")
@@ -525,12 +516,13 @@ joinAquClipHarvest <- function(inputDataList,
   joinClipHarvest$biomassPublicationDate <- as.POSIXct(joinClipHarvest$biomassPublicationDate,
     format = "%Y%m%dT%H%M%SZ", tz = "UTC")
   
-  joinClipHarvest$taxProcessedPublicationDate <- as.POSIXct(joinClipHarvest$taxProcessedPublicationDate,
-    format = "%Y%m%dT%H%M%SZ", tz = "UTC")
-  
   joinClipHarvest$clipPublicationDate <- as.POSIXct(joinClipHarvest$clipPublicationDate,
     format = "%Y%m%dT%H%M%SZ", tz = "UTC")
   
+  if (is.data.frame(apTaxProc) && nrow(apTaxProc) > 0){
+    joinClipHarvest$taxProcessedPublicationDate <- as.POSIXct(joinClipHarvest$taxProcessedPublicationDate,
+                                                              format = "%Y%m%dT%H%M%SZ", tz = "UTC")
+  }
   
   return(joinClipHarvest)
   

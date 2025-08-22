@@ -525,6 +525,7 @@ joinAquPointCount <- function(inputDataList,
   joinPointCounts <- apPoint %>%
     dplyr::rename(
       pointPublicationDate = "publicationDate",
+      pointRelease = "release",
       pointDataQF = "dataQF"
       ) %>% 
     dplyr::left_join(
@@ -552,8 +553,9 @@ joinAquPointCount <- function(inputDataList,
         is.na(.data$remarks_perTax) &
           !is.na(.data$remarks_point) ~ paste0("pointTransect remarks - ", .data$remarks_point),
         TRUE ~ NA
-      )    ) %>% 
+      )) %>% 
     dplyr::select(-"remarks_perTax", -"remarks_point")
+  
   
   ###  Re-format date columns ####
   joinPointCounts$identifiedDate <- as.Date(joinPointCounts$identifiedDate)
@@ -567,8 +569,10 @@ joinAquPointCount <- function(inputDataList,
   joinPointCounts$perTaxonPublicationDate <- as.POSIXct(joinPointCounts$perTaxonPublicationDate, 
     format = "%Y%m%dT%H%M%SZ", tz = "UTC")
   
-  joinPointCounts$taxProcessedPublicationDate <- as.POSIXct(joinPointCounts$taxProcessedPublicationDate, 
-    format = "%Y%m%dT%H%M%SZ", tz = "UTC")
+  if (is.data.frame(apTaxProc) && nrow(apTaxProc) > 0) {
+    joinPointCounts$taxProcessedPublicationDate <- as.POSIXct(joinPointCounts$taxProcessedPublicationDate, 
+      format = "%Y%m%dT%H%M%SZ", tz = "UTC")
+  }
 
   
   return(joinPointCounts)
