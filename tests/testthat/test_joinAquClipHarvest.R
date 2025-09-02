@@ -59,7 +59,7 @@ testthat::test_that(desc = "Output class table input", {
 testthat::test_that(desc = "Output data frame row number list input", {
   
   testthat::expect_identical(object = nrow(joinAquClipHarvest(inputDataList = testList)),
-                             expected = as.integer(324))
+                             expected = as.integer(9))
 })
 
 
@@ -79,7 +79,7 @@ testthat::test_that(desc = "Output data frame row number table input", {
                                                               inputClip = testClip,
                                                               inputTaxProc = testTaxProc,
                                                               inputMorph = testMorph)),
-                             expected = as.integer(324))
+                             expected = as.integer(9))
 })
 
 #   Check expected column number of output
@@ -100,8 +100,10 @@ testthat::test_that(desc = "Output data frame row number table input", {
 testthat::test_that(desc = "Output data frame source: taxonomyProcessed", {
   
   outDF <- joinAquClipHarvest(inputDataList = testList)
-  testthat::expect_identical(object = unique(outDF$taxonIDSourceTable[which(outDF$sampleID == 'PRLA.20230703.AP1.P6')]),
+  testthat::expect_identical(object = unique(outDF$taxonIDSourceTable[which(outDF$sampleID == 'BLUE.20230717.MACROALGAE1.Q8')]),
                              expected = "apl_taxonomyProcessed")
+  testthat::expect_identical(object = unique(outDF$acceptedTaxonID[which(outDF$sampleID == 'BLUE.20230717.MACROALGAE1.Q8')]),
+                             expected = "NEONDREX309000")
 })
 
 
@@ -111,10 +113,13 @@ testthat::test_that(desc = "Output data frame source: apc_morphospecies", {
   outDF <- joinAquClipHarvest(inputDataList = testList)
   testthat::expect_identical(object = unique(outDF$taxonIDSourceTable[which(outDF$sampleID == 'BLUE.20230717.AP1.Q2')]),
                              expected = "apc_morphospecies")
-  
-  
   testthat::expect_identical(object = unique(outDF$acceptedTaxonID[which(outDF$sampleID == 'BLUE.20230717.AP1.Q2')]),
                              expected = "LURE2")
+  
+  testthat::expect_identical(object = unique(outDF$taxonIDSourceTable[which(outDF$sampleID == 'FLNT.20230724.AP2.P3')]),
+                             expected = "apc_morphospecies")
+  testthat::expect_identical(object = unique(outDF$acceptedTaxonID[which(outDF$sampleID == 'FLNT.20230724.AP2.P3')]),
+                             expected = "SEAP")
 })
 
 
@@ -122,11 +127,25 @@ testthat::test_that(desc = "Output data frame source: apc_morphospecies", {
 testthat::test_that(desc = "Output data frame source: biomass", {
   
   outDF <- joinAquClipHarvest(inputDataList = testList)
-  testthat::expect_identical(object = unique(outDF$taxonIDSourceTable[which(outDF$sampleID == 'CRAM.20230720.AP1.P2')]),
+  testthat::expect_identical(object = unique(outDF$taxonIDSourceTable[which(outDF$sampleID == 'FLNT.20230724.MACROALGAE1.P1')]),
                              expected = "apl_biomass")
+  testthat::expect_identical(object = unique(outDF$acceptedTaxonID[which(outDF$sampleID == 'FLNT.20230724.MACROALGAE1.P1')]),
+                             expected = "UNKALG")
   
-  testthat::expect_identical(object = unique(outDF$acceptedTaxonID[which(outDF$sampleID == 'CRAM.20230720.AP1.P2')]),
-                             expected = "DRADA")
+  testthat::expect_identical(object = unique(outDF$taxonIDSourceTable[which(outDF$sampleID == 'TOOK.20230726.AP3.P6')]),
+                             expected = "apl_biomass")
+  testthat::expect_identical(object = unique(outDF$acceptedTaxonID[which(outDF$sampleID == 'TOOK.20230726.AP3.P6')]),
+                             expected = "UNKALG")
+  
+  testthat::expect_identical(object = unique(outDF$taxonIDSourceTable[which(outDF$sampleID == 'BLUE.20230717.AP3.Q2')]),
+                             expected = "apl_biomass")
+  testthat::expect_identical(object = unique(outDF$acceptedTaxonID[which(outDF$sampleID == 'BLUE.20230717.AP3.Q2')]),
+                             expected = "RIFL4")
+  
+  testthat::expect_identical(object = unique(outDF$taxonIDSourceTable[which(outDF$sampleID == 'BLUE.20230717.AP2.Q2')]),
+                             expected = "apl_biomass")
+  testthat::expect_identical(object = unique(outDF$acceptedTaxonID[which(outDF$sampleID == 'BLUE.20230717.AP2.Q2')]),
+                             expected = "LERI6")
 })
 
 

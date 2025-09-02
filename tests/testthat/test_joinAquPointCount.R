@@ -4,6 +4,7 @@
 
 ### Read in test data ####
 testList <- readRDS(testthat::test_path("testdata", "joinAquPointCount_testData_202307.rds"))
+
 testPoint <- testList$apc_pointTransect
 testPerTax <- testList$apc_perTaxon
 testTaxProc <- testList$apc_taxonomyProcessed
@@ -58,7 +59,7 @@ testthat::test_that(desc = "Output class table input", {
 testthat::test_that(desc = "Output data frame row number list input", {
   
   testthat::expect_identical(object = nrow(joinAquPointCount(inputDataList = testList)),
-                             expected = as.integer(3114))
+                             expected = as.integer(145))
 })
 
 
@@ -78,7 +79,7 @@ testthat::test_that(desc = "Output data frame row number table input", {
                                                              inputPerTax = testPerTax,
                                                              inputTaxProc = testTaxProc,
                                                              inputMorph = testMorph)),
-                             expected = as.integer(3114))
+                             expected = as.integer(145))
 })
 
 #   Check expected column number of output
@@ -95,12 +96,39 @@ testthat::test_that(desc = "Output data frame row number table input", {
 
 ### Test: Generates expected data using test data ####
 ##  Test dataframe output 
-#   Check 'acceptedTaxonID' is pulled from apc_taxonomyProcessed if taxProc data exists
+#   Check 'acceptedTaxonID' is pulled from apc_perTaxon if identification is not in morphospecies or taxProcessed tables
 testthat::test_that(desc = "Output data frame source: taxonomyProcessed", {
   
   outDF <- joinAquPointCount(inputDataList = testList)
-  testthat::expect_identical(object = unique(outDF$taxonIDSourceTable[which(outDF$uid == '1bc5392f-a567-4b6d-83b4-55ca74457ecd')]),
+  testthat::expect_identical(object = unique(outDF$taxonIDSourceTable[which(outDF$sampleID == 'HOPB.20230727.AP2.1.T1')]),
+                             expected = "apc_perTaxon")
+  testthat::expect_identical(object = unique(outDF$acceptedTaxonID[which(outDF$sampleID == 'HOPB.20230727.AP2.1.T1')]),
+                             expected = "PLLE3")
+  
+  testthat::expect_identical(object = unique(outDF$taxonIDSourceTable[which(outDF$sampleID == 'POSE.20230718.AP16.1.T7')]),
+                             expected = "apc_perTaxon")
+  testthat::expect_identical(object = unique(outDF$acceptedTaxonID[which(outDF$sampleID == 'POSE.20230718.AP16.1.T7')]),
+                             expected = "2PLANT")
+})
+
+#   Check 'acceptedTaxonID' is pulled from apc_taxonomyProcessed when expertTaxonomyRequired = 'Y'
+testthat::test_that(desc = "Output data frame source: taxonomyProcessed", {
+  
+  outDF <- joinAquPointCount(inputDataList = testList)
+  testthat::expect_identical(object = unique(outDF$taxonIDSourceTable[which(outDF$sampleID == 'KING.20230719.MACROALGAE17.T5')]),
                              expected = "apc_taxonomyProcessed")
+  testthat::expect_identical(object = unique(outDF$acceptedTaxonID[which(outDF$sampleID == 'KING.20230719.MACROALGAE17.T5')]),
+                             expected = c("NEONDREX1220001", "NEONDREX444000"))
+  
+  testthat::expect_identical(object = unique(outDF$taxonIDSourceTable[which(outDF$sampleID == 'WLOU.20230703.AP19.1.T7')]),
+                             expected = "apc_taxonomyProcessed")
+  testthat::expect_identical(object = unique(outDF$acceptedTaxonID[which(outDF$sampleID == 'WLOU.20230703.AP19.1.T7')]),
+                             expected = "HYOC5")
+  
+  testthat::expect_identical(object = unique(outDF$taxonIDSourceTable[which(outDF$sampleID == 'REDB.20230719.AP19.1.T4')]),
+                             expected = "apc_taxonomyProcessed")
+  testthat::expect_identical(object = unique(outDF$acceptedTaxonID[which(outDF$sampleID == 'REDB.20230719.AP19.1.T4')]),
+                             expected = "EQAR")
 })
 
 
@@ -108,24 +136,11 @@ testthat::test_that(desc = "Output data frame source: taxonomyProcessed", {
 testthat::test_that(desc = "Output data frame source: apc_morphospecies", {
   
   outDF <- joinAquPointCount(inputDataList = testList)
-  testthat::expect_identical(object = unique(outDF$taxonIDSourceTable[which(outDF$sampleID == 'KING.20230719.AP1.1.T1')]),
+  testthat::expect_identical(object = unique(outDF$taxonIDSourceTable[which(outDF$sampleID == 'KING.20230719.AP11.1.T1')]),
                              expected = "apc_morphospecies")
 
-
-  testthat::expect_identical(object = unique(outDF$acceptedTaxonID[which(outDF$sampleID == 'KING.20230719.AP1.1.T1')]),
+  testthat::expect_identical(object = unique(outDF$acceptedTaxonID[which(outDF$sampleID == 'KING.20230719.AP11.1.T1')]),
                              expected = "NAOF")
-})
-
-
-#   Check 'acceptedTaxonID' is pulled from apc_perTaxon if identification is not in morphospecies or taxProcessed tables
-testthat::test_that(desc = "Output data frame source: perTaxon", {
-  
-  outDF <- joinAquPointCount(inputDataList = testList)
-  testthat::expect_identical(object = unique(outDF$taxonIDSourceTable[which(outDF$sampleID == 'POSE.20230718.AP16.1.T7')]),
-                             expected = "apc_perTaxon")
-  
-  testthat::expect_identical(object = unique(outDF$acceptedTaxonID[which(outDF$sampleID == 'POSE.20230718.AP16.1.T7')]),
-                             expected = "2PLANT")
 })
 
 
@@ -229,6 +244,3 @@ testthat::test_that(desc = "Table 'inputMorph' missing column", {
                                                     inputPerTax = testPerTax),
                          regexp = "Required columns missing from 'inputMorph': taxonID")
 })
-
-
-
