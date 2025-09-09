@@ -10,6 +10,8 @@
 #' 
 #' In the joined output table, the 'acceptedTaxonID' and associated taxonomic fields are populated from the first available identification in the following order: 'apl_taxonomyProcessed', 'apl_biomass', or 'apc_morphospecies'. For samples identified both in the field and by an expert taxonomist, the expert identification is retained in the output. A new field, 'taxonIDSourceTable', is included in the output and indicates the source table for each sample's identification.
 #' 
+#' A single sampleID in 'apl_biomass' may correspond to more than one taxa in 'apl_taxonomyProcessed'. When tables are joined, the taxon with the greatest 'algalParameterValue' in 'apl_taxonomyProcessed' will be listed as the 'acceptedTaxonID' and a new field, 'additionalTaxa', is included in the output and includes all other taxa associated with the sampleID. If more than one taxon shares the same max 'algalParameterValue', the first row in the input table is returned as the 'acceptedTaxonID'. Detailed taxonomic information for any additionalTaxa, including algalParameterValues, can be found in the input apl_taxonomyProcessed table.
+#' 
 #' @param inputDataList A list object comprised of Aquatic Plant Bryophyte Macroalgae Clip Harvest tables (DP1.20066.001) downloaded using the neonUtilities::loadByProduct() function. If list input is provided, the table input arguments must all be NA; similarly, if list input is missing, table inputs must be provided. [list]
 #'
 #' @param inputBio The 'apl_biomass' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
@@ -49,7 +51,6 @@
 #' }
 #' 
 #' @export joinAquClipHarvest
-
 
 
 joinAquClipHarvest <- function(inputDataList,
@@ -275,8 +276,23 @@ joinAquClipHarvest <- function(inputDataList,
         -"collectDate",
         -"morphospeciesID",
         -"sampleCode"
-      ) #%>% 
+      ) %>%
+      dplyr::mutate(algalParameterValue = as.numeric(algalParameterValue))
       # dplyr::mutate(identifiedDate = as.character(identifiedDate)) #biomass identifiedDate is character, not date
+    
+    #   Preprocess apTaxProc to determine primary/additional taxa per sampleID
+    apTaxProc_main <- apTaxProc %>%
+      group_by(sampleID) %>%
+      slice_max(order_by = algalParameterValue, n = 1, with_ties = FALSE) %>% #select first row if max algalParameterValue is shared between more than one sampleID
+      ungroup()
+    
+    apTaxProc_additional <- apTaxProc %>%
+      group_by(sampleID) %>%
+      arrange(desc(algalParameterValue)) %>%
+      summarise(additionalTaxa = if(length(taxonID) > 1) paste(taxonID[-1], collapse = "|") else NA_character_)
+    
+    apTaxProc_main <- apTaxProc_main %>%
+      left_join(apTaxProc_additional, by = "sampleID")
     
     #   Columns conditionally replaced with taxProc data
     join1_cols <- c(
@@ -289,10 +305,10 @@ joinAquClipHarvest <- function(inputDataList,
     #   Update expert taxonomist identifications
     apJoin1 <- apBio %>%
       dplyr::left_join(
-        apTaxProc,
+        apTaxProc_main,
         by = "sampleID",
-        suffix = c("_bio", "_taxProc"),
-        relationship = "many-to-many"
+        suffix = c("_bio", "_taxProc")#,
+        # relationship = "many-to-many"
       ) %>%
       dplyr::mutate(
         
