@@ -35,6 +35,8 @@ Input data may be provided either as a list or as individual tables. However, if
 Only data from bout 2 (midsummer sampling) is returned in the joined output table, as other bouts do not include taxonomy data. If the input does not include any bout 2 data, the function will error out.
 
 In the joined output table, the 'acceptedTaxonID' and associated taxonomic fields are populated from the first available identification in the following order: 'apl_taxonomyProcessed', 'apl_biomass', or 'apc_morphospecies'. For samples identified both in the field and by an expert taxonomist, the expert identification is retained in the output. A new field, 'taxonIDSourceTable', is included in the output and indicates the source table for each sample's identification.
+
+A single sampleID in 'apl_biomass' may correspond to more than one taxa in 'apl_taxonomyProcessed'. When tables are joined, the taxon with the greatest 'algalParameterValue' in 'apl_taxonomyProcessed' will be listed as the 'acceptedTaxonID' and a new field, 'additionalTaxa', is included in the output and includes all other taxa associated with the sampleID. If more than one taxon shares the same max 'algalParameterValue', the first row in the input table is returned as the 'acceptedTaxonID'. Detailed taxonomic information for any additionalTaxa, including algalParameterValues, can be found in the input apl_taxonomyProcessed table.
 }
 \examples{
 \dontrun{

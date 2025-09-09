@@ -67,7 +67,7 @@ testthat::test_that(desc = "Output data frame row number list input", {
 testthat::test_that(desc = "Output data frame column number list input", {
   
   testthat::expect_identical(object = ncol(joinAquClipHarvest(inputDataList = testList)),
-                             expected = as.integer(103))
+                             expected = as.integer(104))
 })
 
 
@@ -89,7 +89,7 @@ testthat::test_that(desc = "Output data frame row number table input", {
                                                               inputClip = testClip,
                                                               inputTaxProc = testTaxProc,
                                                               inputMorph = testMorph)),
-                             expected = as.integer(103))
+                             expected = as.integer(104))
 })
 
 
@@ -133,9 +133,9 @@ testthat::test_that(desc = "Output data frame source: biomass", {
                              expected = "UNKALG")
   
   testthat::expect_identical(object = unique(outDF$taxonIDSourceTable[which(outDF$sampleID == 'TOOK.20230726.AP3.P6')]),
-                             expected = "apl_biomass")
+                             expected = "apl_taxonomyProcessed")
   testthat::expect_identical(object = unique(outDF$acceptedTaxonID[which(outDF$sampleID == 'TOOK.20230726.AP3.P6')]),
-                             expected = "UNKALG")
+                             expected = "NEONDREX1220001")
   
   testthat::expect_identical(object = unique(outDF$taxonIDSourceTable[which(outDF$sampleID == 'BLUE.20230717.AP3.Q2')]),
                              expected = "apl_biomass")
@@ -146,6 +146,55 @@ testthat::test_that(desc = "Output data frame source: biomass", {
                              expected = "apl_biomass")
   testthat::expect_identical(object = unique(outDF$acceptedTaxonID[which(outDF$sampleID == 'BLUE.20230717.AP2.Q2')]),
                              expected = "LERI6")
+})
+
+
+### Test: Function generates data frame with correct taxonomic IDs using test data ####
+##  Test dataframe output 
+#   Check tax info is correct when sampleID has >1 taxonID in apl_taxonomyProcessed and max algalParameterValue is unique
+testthat::test_that(desc = "Output taxonomy correct: multiple taxa per sampleID, single max algalParamValue", {
+  
+  outDF <- joinAquClipHarvest(inputDataList = testList)
+  
+  testthat::expect_identical(object = unique(outDF$acceptedTaxonID[which(outDF$sampleID == 'TOOK.20230726.AP3.P6')]),
+                             expected = "NEONDREX1220001")
+  testthat::expect_identical(object = unique(outDF$acceptedTaxonID[which(outDF$sampleID == 'BLUE.20230717.MACROALGAE1.Q8')]),
+                             expected = "NEONDREX309000")
+  
+  testthat::expect_identical(object = unique(outDF$additionalTaxa[which(outDF$sampleID == 'TOOK.20230726.AP3.P6')]),
+                             expected = "NEONDREX885004|AUDSP|NEONDREX920001|NITELLASP")
+  testthat::expect_identical(object = unique(outDF$additionalTaxa[which(outDF$sampleID == 'BLUE.20230717.MACROALGAE1.Q8')]),
+                             expected = NA_character_)
+  
+})
+
+#   Check tax info is correct when sampleID has >1 taxonID in apl_taxonomyProcessed and max algalParameterValue is unique
+testthat::test_that(desc = "Output additional taxa correct: multiple taxa per sampleID, many max algalParamValue", {
+
+  #   modify test data
+  testList2 <- testList
+  testList2$apl_taxonomyProcessed <- testList2$apl_taxonomyProcessed %>% dplyr::filter(algalParameterValue != 5)
+  outDF <- joinAquClipHarvest(inputDataList = testList2)
+  
+  testthat::expect_identical(object = unique(outDF$acceptedTaxonID[which(outDF$sampleID == 'TOOK.20230726.AP3.P6')]),
+                             expected = "NEONDREX885004")
+
+  testthat::expect_identical(object = unique(outDF$additionalTaxa[which(outDF$sampleID == 'TOOK.20230726.AP3.P6')]),
+                             expected = "AUDSP|NEONDREX920001|NITELLASP")
+})
+
+
+#   Check 'acceptedTaxonID' is empty when only 1 taxonID exists per sampleID in apl_taxonomyProcessed
+testthat::test_that(desc = "Output additional taxa correct: single taxon per sampleID", {
+  
+  #   modify test data
+  testList3 <- testList
+  testList3$apl_taxonomyProcessed <- testList3$apl_taxonomyProcessed %>% dplyr::filter(siteID == 'BLUE')
+  outDF <- joinAquClipHarvest(inputDataList = testList3)
+  
+  testthat::expect_identical(object = unique(outDF$additionalTaxa),
+                            expected = NA_character_)
+
 })
 
 

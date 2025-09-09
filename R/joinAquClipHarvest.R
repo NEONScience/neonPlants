@@ -277,23 +277,23 @@ joinAquClipHarvest <- function(inputDataList,
         -"morphospeciesID",
         -"sampleCode"
       ) %>%
-      dplyr::mutate(algalParameterValue = as.numeric(algalParameterValue))
+      dplyr::mutate(algalParameterValue = as.numeric(.data$algalParameterValue))
       # dplyr::mutate(identifiedDate = as.character(identifiedDate)) #biomass identifiedDate is character, not date
     
-    #   Preprocess apTaxProc to determine primary/additional taxa per sampleID
+    #   Preprocess apTaxProc to determine primary taxa per sampleID
     apTaxProc_main <- apTaxProc %>%
-      group_by(sampleID) %>%
-      slice_max(order_by = algalParameterValue, n = 1, with_ties = FALSE) %>% #select first row if max algalParameterValue is shared between more than one sampleID
-      ungroup()
+      dplyr::group_by(.data$sampleID) %>%
+      dplyr::slice_max(order_by = .data$algalParameterValue, n = 1, with_ties = FALSE) %>% #select first row if max algalParameterValue is shared between more than one sampleID
+      dplyr::ungroup()
     
     apTaxProc_additional <- apTaxProc %>%
-      group_by(sampleID) %>%
-      arrange(desc(algalParameterValue)) %>%
-      summarise(additionalTaxa = if(length(taxonID) > 1) paste(taxonID[-1], collapse = "|") else NA_character_)
-    
-    apTaxProc_main <- apTaxProc_main %>%
-      left_join(apTaxProc_additional, by = "sampleID")
-    
+      dplyr::group_by(.data$sampleID) %>%
+      dplyr::arrange(dplyr::desc(.data$algalParameterValue)) %>%
+      dplyr::summarise(additionalTaxa = if(length(.data$taxonID) > 1) paste(.data$taxonID[-1], collapse = "|") else NA_character_)
+      
+      apTaxProc_main <- apTaxProc_main %>%
+        dplyr::left_join(apTaxProc_additional, by = "sampleID")
+  
     #   Columns conditionally replaced with taxProc data
     join1_cols <- c(
       "division", "class", "order", "family",
