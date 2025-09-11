@@ -2,7 +2,7 @@
 % Please edit documentation in R/joinAquClipHarvest.R
 \name{joinAquClipHarvest}
 \alias{joinAquClipHarvest}
-\title{Join NEON aquatic plant clip harvest data into a single table with merged taxonomic identifications}
+\title{Join taxonomic identifications in NEON aquatic plant clip harvest data to field and biomass tables}
 \usage{
 joinAquClipHarvest(
   inputDataList,
@@ -24,19 +24,19 @@ joinAquClipHarvest(
 \item{inputMorph}{The 'apc_morphospecies' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 }
 \value{
-A table containing bout 2 clip harvest data with all associated taxonomic information for each apl_clipHarvest record where targetTaxaPresent = 'Y' and an identification has been published..
+Two tables are produced containing joined clip harvest data. The first "joinedBiomass" table contains one row per sampleID in 'apl_biomass'. A single sampleID in 'apl_biomass' may correspond to more than one taxa in 'apl_taxonomyProcessed'. When tables are joined, the taxon with the greatest 'algalParameterValue' in 'apl_taxonomyProcessed' will be listed as the 'acceptedTaxonID' and a new field, 'additionalTaxa', appears in the output and includes all other taxa associated with the sampleID. If more than one taxon shares the same max 'algalParameterValue', the first row in the input table is returned as the 'acceptedTaxonID'. Detailed taxonomic information for any additionalTaxa can be found in the input 'apl_taxonomyProcessed' table.
+
+The second "fieldTaxonomy" table joins taxonomic identifications across tables to 'apl_clipHarvest' by field ID. Joining may result in one or many unique rows per sampleID.
 }
 \description{
-Join the 'apl_clipHarvest', 'apl_biomass', 'apl_taxonomyProcessed' and 'apc_morphospecies' tables to generate a single table that contains clip harvest data with taxonomic identifications for each sampleID. Data inputs are NEON Aquatic Plant Bryophyte Macroalgae Clip Harvest (DP1.20066.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input data tables with an equivalent structure and representing the same site x month combinations.
+Join the 'apl_clipHarvest', 'apl_biomass', 'apl_taxonomyProcessed' and 'apc_morphospecies' tables to generate two joined output tables that contain clip harvest data with merged taxonomic identifications. Data inputs are NEON Aquatic Plant Bryophyte Macroalgae Clip Harvest (DP1.20066.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input data tables with an equivalent structure and representing the same site x month combinations.
 }
 \details{
 Input data may be provided either as a list or as individual tables. However, if both list and table inputs are provided at the same time the function will error out. For table joining to be successful, inputs must contain data from the same site x month combination(s) for all tables.
 
-Only data from bout 2 (midsummer sampling) is returned in the joined output table, as other bouts do not include taxonomy data. If the input does not include any bout 2 data, the function will error out.
+Only data from bout 2 (midsummer sampling) is returned in the joined output tables, as other bouts do not include taxonomy data. If the input does not include any bout 2 data, the function will error out.
 
-In the joined output table, the 'acceptedTaxonID' and associated taxonomic fields are populated from the first available identification in the following order: 'apl_taxonomyProcessed', 'apl_biomass', or 'apc_morphospecies'. For samples identified both in the field and by an expert taxonomist, the expert identification is retained in the output. A new field, 'taxonIDSourceTable', is included in the output and indicates the source table for each sample's identification.
-
-A single sampleID in 'apl_biomass' may correspond to more than one taxa in 'apl_taxonomyProcessed'. When tables are joined, the taxon with the greatest 'algalParameterValue' in 'apl_taxonomyProcessed' will be listed as the 'acceptedTaxonID' and a new field, 'additionalTaxa', is included in the output and includes all other taxa associated with the sampleID. If more than one taxon shares the same max 'algalParameterValue', the first row in the input table is returned as the 'acceptedTaxonID'. Detailed taxonomic information for any additionalTaxa, including algalParameterValues, can be found in the input apl_taxonomyProcessed table.
+In the joined output tables, the 'acceptedTaxonID' and associated taxonomic fields are populated from the first available identification in the following order: 'apl_taxonomyProcessed', 'apl_biomass', or 'apc_morphospecies'. For samples identified both in the field and by an expert taxonomist, the expert identification is retained in the output. A new field, 'taxonIDSourceTable', is included in the output and indicates the source table for each sample's identification.
 }
 \examples{
 \dontrun{
@@ -51,7 +51,7 @@ check.size = FALSE
 )
 
 #   Join downloaded clip harvest data
-df <- neonPlants::joinAquClipHarvest(
+list <- neonPlants::joinAquClipHarvest(
 inputDataList = apl,
 inputBio = NA,
 inputClip = NA,

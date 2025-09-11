@@ -37,37 +37,50 @@ testthat::test_that(desc = "Output type table input", {
 #   Test list input
 testthat::test_that(desc = "Output class list input", {
   
-  testthat::expect_s3_class(object = joinAquClipHarvest(inputDataList = testList),
-                            class = "data.frame")
+  desc = joinAquClipHarvest(inputDataList = testList)
+
+  testthat::expect_s3_class(desc[[1]], class = "data.frame")
+  testthat::expect_s3_class(desc[[2]], class = "data.frame")
 })
 
 #   Test table input
 testthat::test_that(desc = "Output class table input", {
   
-  testthat::expect_s3_class(object = joinAquClipHarvest(inputBio = testBio,
-                                                        inputClip = testClip,
-                                                        inputTaxProc = testTaxProc,
-                                                        inputMorph = testMorph),
-                            class = "data.frame")
+  desc = joinAquClipHarvest(inputBio = testBio,
+                            inputClip = testClip,
+                            inputTaxProc = testTaxProc,
+                            inputMorph = testMorph)
+  
+  testthat::expect_s3_class(desc[[1]], class = "data.frame")
+  testthat::expect_s3_class(desc[[2]], class = "data.frame")
 })
 
 
 
-### Test: Function generates data frame with expected dimensions using test data ####
+### Test: Function generates data frames with expected dimensions using test data ####
 ##  Test list input
 #   Check expected row number of output
 testthat::test_that(desc = "Output data frame row number list input", {
   
-  testthat::expect_identical(object = nrow(joinAquClipHarvest(inputDataList = testList)),
-                             expected = as.integer(9))
+  out <- joinAquClipHarvest(inputDataList = testList)
+  
+  testthat::expect_identical(object = nrow(out$joinedBiomass),
+                             expected = as.integer(7))
+  testthat::expect_identical(object = nrow(out$fieldTaxonomy),
+                             expected = as.integer(13))
 })
 
 
 #   Check expected column number of output
 testthat::test_that(desc = "Output data frame column number list input", {
   
-  testthat::expect_identical(object = ncol(joinAquClipHarvest(inputDataList = testList)),
+  out <- joinAquClipHarvest(inputDataList = testList)
+  
+  testthat::expect_identical(object = ncol(out$joinedBiomass),
                              expected = as.integer(104))
+  
+  testthat::expect_identical(object = ncol(out$fieldTaxonomy),
+                             expected = as.integer(76))
 })
 
 
@@ -75,34 +88,44 @@ testthat::test_that(desc = "Output data frame column number list input", {
 #   Check expected row number of output
 testthat::test_that(desc = "Output data frame row number table input", {
   
-  testthat::expect_identical(object = nrow(joinAquClipHarvest(inputBio = testBio,
-                                                              inputClip = testClip,
-                                                              inputTaxProc = testTaxProc,
-                                                              inputMorph = testMorph)),
-                             expected = as.integer(9))
+  out <- joinAquClipHarvest(inputBio = testBio,
+                            inputClip = testClip,
+                            inputTaxProc = testTaxProc,
+                            inputMorph = testMorph)
+  
+  testthat::expect_identical(object = nrow(out$joinedBiomass),
+                             expected = as.integer(7))
+  testthat::expect_identical(object = nrow(out$fieldTaxonomy),
+                             expected = as.integer(13))
 })
 
 #   Check expected column number of output
 testthat::test_that(desc = "Output data frame row number table input", {
   
-  testthat::expect_identical(object = ncol(joinAquClipHarvest(inputBio = testBio,
-                                                              inputClip = testClip,
-                                                              inputTaxProc = testTaxProc,
-                                                              inputMorph = testMorph)),
+  out <- joinAquClipHarvest(inputBio = testBio,
+                            inputClip = testClip,
+                            inputTaxProc = testTaxProc,
+                            inputMorph = testMorph)
+  
+  testthat::expect_identical(object = ncol(out$joinedBiomass),
                              expected = as.integer(104))
+  
+  testthat::expect_identical(object = ncol(out$fieldTaxonomy),
+                             expected = as.integer(76))
 })
 
 
 
-### Test: Function generates data frame with expected dimensions using test data ####
+### Test: Function joins biomass data correctly using test data ####
 ##  Test dataframe output 
 #   Check 'acceptedTaxonID' is pulled from apc_taxonomyProcessed if taxProc data exists
 testthat::test_that(desc = "Output data frame source: taxonomyProcessed", {
   
-  outDF <- joinAquClipHarvest(inputDataList = testList)
-  testthat::expect_identical(object = unique(outDF$taxonIDSourceTable[which(outDF$sampleID == 'BLUE.20230717.MACROALGAE1.Q8')]),
+  out <- joinAquClipHarvest(inputDataList = testList)
+  
+  testthat::expect_identical(object = unique(out$joinedBiomass$taxonIDSourceTable[which(out$joinedBiomass$sampleID == 'BLUE.20230717.MACROALGAE1.Q8')]),
                              expected = "apl_taxonomyProcessed")
-  testthat::expect_identical(object = unique(outDF$acceptedTaxonID[which(outDF$sampleID == 'BLUE.20230717.MACROALGAE1.Q8')]),
+  testthat::expect_identical(object = unique(out$joinedBiomass$acceptedTaxonID[which(out$joinedBiomass$sampleID == 'BLUE.20230717.MACROALGAE1.Q8')]),
                              expected = "NEONDREX309000")
 })
 
@@ -110,15 +133,16 @@ testthat::test_that(desc = "Output data frame source: taxonomyProcessed", {
 #   Check 'acceptedTaxonID' is pulled from apc_morphospecies if identification is in morphospecies table
 testthat::test_that(desc = "Output data frame source: apc_morphospecies", {
   
-  outDF <- joinAquClipHarvest(inputDataList = testList)
-  testthat::expect_identical(object = unique(outDF$taxonIDSourceTable[which(outDF$sampleID == 'BLUE.20230717.AP1.Q2')]),
+  out <- joinAquClipHarvest(inputDataList = testList)
+  
+  testthat::expect_identical(object = unique(out$joinedBiomass$taxonIDSourceTable[which(out$joinedBiomass$sampleID == 'BLUE.20230717.AP1.Q2')]),
                              expected = "apc_morphospecies")
-  testthat::expect_identical(object = unique(outDF$acceptedTaxonID[which(outDF$sampleID == 'BLUE.20230717.AP1.Q2')]),
+  testthat::expect_identical(object = unique(out$joinedBiomass$acceptedTaxonID[which(out$joinedBiomass$sampleID == 'BLUE.20230717.AP1.Q2')]),
                              expected = "LURE2")
   
-  testthat::expect_identical(object = unique(outDF$taxonIDSourceTable[which(outDF$sampleID == 'FLNT.20230724.AP2.P3')]),
+  testthat::expect_identical(object = unique(out$joinedBiomass$taxonIDSourceTable[which(out$joinedBiomass$sampleID == 'FLNT.20230724.AP2.P3')]),
                              expected = "apc_morphospecies")
-  testthat::expect_identical(object = unique(outDF$acceptedTaxonID[which(outDF$sampleID == 'FLNT.20230724.AP2.P3')]),
+  testthat::expect_identical(object = unique(out$joinedBiomass$acceptedTaxonID[which(out$joinedBiomass$sampleID == 'FLNT.20230724.AP2.P3')]),
                              expected = "SEAP")
 })
 
@@ -126,44 +150,45 @@ testthat::test_that(desc = "Output data frame source: apc_morphospecies", {
 #   Check 'acceptedTaxonID' is pulled from apl_biomass if identification is not in morphospecies or taxProcessed tables
 testthat::test_that(desc = "Output data frame source: biomass", {
   
-  outDF <- joinAquClipHarvest(inputDataList = testList)
-  testthat::expect_identical(object = unique(outDF$taxonIDSourceTable[which(outDF$sampleID == 'FLNT.20230724.MACROALGAE1.P1')]),
+  out <- joinAquClipHarvest(inputDataList = testList)
+  testthat::expect_identical(object = unique(out$joinedBiomass$taxonIDSourceTable[which(out$joinedBiomass$sampleID == 'FLNT.20230724.MACROALGAE1.P1')]),
                              expected = "apl_biomass")
-  testthat::expect_identical(object = unique(outDF$acceptedTaxonID[which(outDF$sampleID == 'FLNT.20230724.MACROALGAE1.P1')]),
+  testthat::expect_identical(object = unique(out$joinedBiomass$acceptedTaxonID[which(out$joinedBiomass$sampleID == 'FLNT.20230724.MACROALGAE1.P1')]),
                              expected = "UNKALG")
   
-  testthat::expect_identical(object = unique(outDF$taxonIDSourceTable[which(outDF$sampleID == 'TOOK.20230726.AP3.P6')]),
+  testthat::expect_identical(object = unique(out$joinedBiomass$taxonIDSourceTable[which(out$joinedBiomass$sampleID == 'TOOK.20230726.AP3.P6')]),
                              expected = "apl_taxonomyProcessed")
-  testthat::expect_identical(object = unique(outDF$acceptedTaxonID[which(outDF$sampleID == 'TOOK.20230726.AP3.P6')]),
+  testthat::expect_identical(object = unique(out$joinedBiomass$acceptedTaxonID[which(out$joinedBiomass$sampleID == 'TOOK.20230726.AP3.P6')]),
                              expected = "NEONDREX1220001")
   
-  testthat::expect_identical(object = unique(outDF$taxonIDSourceTable[which(outDF$sampleID == 'BLUE.20230717.AP3.Q2')]),
+  testthat::expect_identical(object = unique(out$joinedBiomass$taxonIDSourceTable[which(out$joinedBiomass$sampleID == 'BLUE.20230717.AP3.Q2')]),
                              expected = "apl_biomass")
-  testthat::expect_identical(object = unique(outDF$acceptedTaxonID[which(outDF$sampleID == 'BLUE.20230717.AP3.Q2')]),
+  testthat::expect_identical(object = unique(out$joinedBiomass$acceptedTaxonID[which(out$joinedBiomass$sampleID == 'BLUE.20230717.AP3.Q2')]),
                              expected = "RIFL4")
   
-  testthat::expect_identical(object = unique(outDF$taxonIDSourceTable[which(outDF$sampleID == 'BLUE.20230717.AP2.Q2')]),
+  testthat::expect_identical(object = unique(out$joinedBiomass$taxonIDSourceTable[which(out$joinedBiomass$sampleID == 'BLUE.20230717.AP2.Q2')]),
                              expected = "apl_biomass")
-  testthat::expect_identical(object = unique(outDF$acceptedTaxonID[which(outDF$sampleID == 'BLUE.20230717.AP2.Q2')]),
+  testthat::expect_identical(object = unique(out$joinedBiomass$acceptedTaxonID[which(out$joinedBiomass$sampleID == 'BLUE.20230717.AP2.Q2')]),
                              expected = "LERI6")
 })
 
 
-### Test: Function generates data frame with correct taxonomic IDs using test data ####
+
+### Test: Generate joinedBiomass dataframe with correct taxonomic IDs ####
 ##  Test dataframe output 
 #   Check tax info is correct when sampleID has >1 taxonID in apl_taxonomyProcessed and max algalParameterValue is unique
 testthat::test_that(desc = "Output taxonomy correct: multiple taxa per sampleID, single max algalParamValue", {
   
-  outDF <- joinAquClipHarvest(inputDataList = testList)
+  out <- joinAquClipHarvest(inputDataList = testList)
   
-  testthat::expect_identical(object = unique(outDF$acceptedTaxonID[which(outDF$sampleID == 'TOOK.20230726.AP3.P6')]),
+  testthat::expect_identical(object = unique(out$joinedBiomass$acceptedTaxonID[which(out$joinedBiomass$sampleID == 'TOOK.20230726.AP3.P6')]),
                              expected = "NEONDREX1220001")
-  testthat::expect_identical(object = unique(outDF$acceptedTaxonID[which(outDF$sampleID == 'BLUE.20230717.MACROALGAE1.Q8')]),
+  testthat::expect_identical(object = unique(out$joinedBiomass$acceptedTaxonID[which(out$joinedBiomass$sampleID == 'BLUE.20230717.MACROALGAE1.Q8')]),
                              expected = "NEONDREX309000")
   
-  testthat::expect_identical(object = unique(outDF$additionalTaxa[which(outDF$sampleID == 'TOOK.20230726.AP3.P6')]),
+  testthat::expect_identical(object = unique(out$joinedBiomass$additionalTaxa[which(out$joinedBiomass$sampleID == 'TOOK.20230726.AP3.P6')]),
                              expected = "NEONDREX885004|AUDSP|NEONDREX920001|NITELLASP")
-  testthat::expect_identical(object = unique(outDF$additionalTaxa[which(outDF$sampleID == 'BLUE.20230717.MACROALGAE1.Q8')]),
+  testthat::expect_identical(object = unique(out$joinedBiomass$additionalTaxa[which(out$joinedBiomass$sampleID == 'BLUE.20230717.MACROALGAE1.Q8')]),
                              expected = NA_character_)
   
 })
@@ -174,12 +199,12 @@ testthat::test_that(desc = "Output additional taxa correct: multiple taxa per sa
   #   modify test data
   testList2 <- testList
   testList2$apl_taxonomyProcessed <- testList2$apl_taxonomyProcessed %>% dplyr::filter(algalParameterValue != 5)
-  outDF <- joinAquClipHarvest(inputDataList = testList2)
+  out <- joinAquClipHarvest(inputDataList = testList2)
   
-  testthat::expect_identical(object = unique(outDF$acceptedTaxonID[which(outDF$sampleID == 'TOOK.20230726.AP3.P6')]),
+  testthat::expect_identical(object = unique(out$joinedBiomass$acceptedTaxonID[which(out$joinedBiomass$sampleID == 'TOOK.20230726.AP3.P6')]),
                              expected = "NEONDREX885004")
 
-  testthat::expect_identical(object = unique(outDF$additionalTaxa[which(outDF$sampleID == 'TOOK.20230726.AP3.P6')]),
+  testthat::expect_identical(object = unique(out$joinedBiomass$additionalTaxa[which(out$joinedBiomass$sampleID == 'TOOK.20230726.AP3.P6')]),
                              expected = "AUDSP|NEONDREX920001|NITELLASP")
 })
 
@@ -190,11 +215,39 @@ testthat::test_that(desc = "Output additional taxa correct: single taxon per sam
   #   modify test data
   testList3 <- testList
   testList3$apl_taxonomyProcessed <- testList3$apl_taxonomyProcessed %>% dplyr::filter(siteID == 'BLUE')
-  outDF <- joinAquClipHarvest(inputDataList = testList3)
+  out <- joinAquClipHarvest(inputDataList = testList3)
   
-  testthat::expect_identical(object = unique(outDF$additionalTaxa),
+  testthat::expect_identical(object = unique(out$joinedBiomass$additionalTaxa),
                             expected = NA_character_)
 
+})
+
+
+
+### Test: Generate fieldTaxonomy dataframe with correct taxonomic IDs ####
+##  Test dataframe output 
+#   Check each fieldID has correct number of associated taxa
+testthat::test_that(desc = "Output fieldTaxonomy: multiple rows per fieldID", {
+  
+  out <- joinAquClipHarvest(inputDataList = testList)
+  
+  testthat::expect_identical(object = as.numeric(sum(out$fieldTaxonomy$fieldID == 'BLUE.20230717.QUADRAT.Q2', na.rm = TRUE)),
+                             expected = 3)
+  testthat::expect_identical(object = as.numeric(sum(out$fieldTaxonomy$fieldID == 'TOOK.20230726.RAKE.P6', na.rm = TRUE)),
+                             expected = 5)
+  
+})
+
+#   Check each fieldID has correct joined taxonIDs
+testthat::test_that(desc = "Output fieldTaxonomy: correct taxa per fieldID", {
+  
+  out <- joinAquClipHarvest(inputDataList = testList)
+  
+  testthat::expect_identical(object = unique(out$fieldTaxonomy$acceptedTaxonID[which(out$fieldTaxonomy$fieldID == 'BLUE.20230717.QUADRAT.Q2')]),
+                             expected = c("RIFL4", "LERI6", "LURE2"))
+  testthat::expect_identical(object = unique(out$fieldTaxonomy$acceptedTaxonID[which(out$fieldTaxonomy$fieldID == 'TOOK.20230726.RAKE.P6')]),
+                             expected = c("NEONDREX1220001", "NEONDREX885004", "AUDSP", "NEONDREX920001", "NITELLASP"))
+  
 })
 
 
@@ -297,6 +350,17 @@ testthat::test_that(desc = "Table 'inputMorph' missing column", {
                                                      inputBio = testBio,
                                                      inputClip = testClip),
                          regexp = "Required columns missing from 'inputMorph': taxonID")
+})
+
+
+### Test: Generate expected message when apl_taxProcessed isn't provided (works for inputDataList or inputMorph source) ####
+# Test when inputMorph lacks required column
+testthat::test_that(desc = "Message: expert tax data not provided", {
+  
+  testthat::expect_message(object = joinAquClipHarvest(inputMorph = testMorph,
+                                                      inputBio = testBio,
+                                                      inputClip = testClip),
+                         regexp = "Output tables do not include identifications from the expert taxonomists.")
 })
 
 

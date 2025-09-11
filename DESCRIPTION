@@ -48,6 +48,7 @@ Imports:
     rlang,
     stringr,
     tidyr,
+    tidyselect,
     RColorBrewer,
     ggplot2,
     plotly
