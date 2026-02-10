@@ -172,18 +172,41 @@ estimatePheTransByTag <- function(inputDataList = NULL,
     tags <- inputTags
   }
 
-  #check for duplicate tags
+  # resolve duplicate tags
   if(any(duplicated(tags$individualID))) {
-    stop(paste("duplicate records present for", unique(tags$individualID[duplicated(tags$individualID)]),
-               "please resolve before running estimatePheTrans"))
+    dups <- unique(tags$individualID[duplicated(tags$individualID)])
+    dropuid <- character()
+    dedup <- try({
+      tagdup <- tags[union(which(duplicated(tags$individualID)),
+                           which(duplicated(tags$individualID, fromLast=TRUE))),]
+      for(i in unique(tagdup$individualID)) {
+        tagdupi <- tagdup[which(tagdup$individualID==i),]
+        dropuid <- c(dropuid, tagdupi$uid[which(tagdupi$editedDate!=max(tagdupi$editedDate))])
+      }
+    }, silent=TRUE)
+    if(inherits(dedup, "try-error")) {
+      stop(paste("Duplicate records found for individual(s)", paste(dups, collapse=", "),
+                 "in phe_perindividual. Attempted to resolve by retaining most recently edited records; resolution failed. Check data carefully and if possible, remove duplicates by keeping records with most recent editedDate."))
+    }
+    if(length(dropuid)==0) {
+      stop(paste("Duplicate records found for individual(s)", paste(dups, collapse=", "),
+                 "in phe_perindividual. Attempted to resolve by retaining most recently edited records; resolution failed. Check data carefully and if possible, remove duplicates by keeping records with most recent editedDate."))
+    } else {
+      tags <- tags[-which(tags$uid %in% dropuid),]
+      message(paste("Duplicate records found for individual(s)", paste(dups, collapse=", "),
+                    "in phe_perindividual. Duplicates were resolved by retaining the record with the most recent editedDate."))
+    }
   }
 
   # Print data range for input data set
-  print(paste("Observation date range:", min(obs$date), "to", max(obs$date)))
+  message(paste("Observation date range:", min(obs$date), "to", max(obs$date)))
 
 
   # Format transition output dataframe
   step_one <- obs %>%
+    
+    # order by date of observation
+    dplyr::arrange(.data$date) %>%
     
     # extract year from date
     dplyr::mutate(year = substr(.data$date, 1,4)) %>%
