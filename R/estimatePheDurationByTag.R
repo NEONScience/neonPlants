@@ -76,6 +76,12 @@ estimatePheDurationByTag <- function(inputDataList = NULL,
                    duration = .data$doyTransition[.data$transitionType == 'end'] - .data$doyTransition[.data$transitionType == 'onset'],
                    precisionDuration = sum(.data$precisionDays), 
                    transitionType = 'duration')
+  
+  if(any(lubridate::year(out$dateTransitionStart) != lubridate::year(out$dateTransitionEnd))) {
+    ind <- which(lubridate::year(out$dateTransitionStart) != lubridate::year(out$dateTransitionEnd))
+    out[ind,]$duration <- as.numeric(base::difftime(out[ind,]$dateTransitionEnd, 
+                                                    out[ind,]$dateTransitionStart, units="days"))
+  }
 
   return(out)
 }
