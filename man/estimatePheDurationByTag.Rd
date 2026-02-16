@@ -27,7 +27,7 @@ The time series created by the neonPlants::estimatePheTransByTag() function is u
 \item duration - difference in days from the onset day of year to the transition end
 \item transitionType - indicator that output is for phenophase duration
 \item precisionDuration - sum of precisionDays for estimated oneset and end
-\item nth transition - a count of onset events per individualID, phenophase name, within a given calendar year
+\item nthTransition - count of onset events per individualID, phenophase name, within a given calendar year
 }
 }
 \description{

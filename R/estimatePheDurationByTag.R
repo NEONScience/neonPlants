@@ -22,7 +22,7 @@
 #'  * duration - difference in days from the onset day of year to the transition end
 #'  * transitionType - indicator that output is for phenophase duration
 #'  * precisionDuration - sum of precisionDays for estimated oneset and end
-#'  * nth transition - a count of onset events per individualID, phenophase name, within a given calendar year
+#'  * nthTransition - count of onset events per individualID, phenophase name, within a given calendar year
 #'
 #' @references
 #' License: GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007
@@ -58,10 +58,11 @@ estimatePheDurationByTag <- function(inputDataList = NULL,
   
   trans <- estimatePheTransByTag(inputDataList = inputDataList,
                                  inputStatus = inputStatus,
-                                 inputTags = inputTags)
-
+                                 inputTags = inputTags,
+                                 began = TRUE)
+  
   out <- trans %>%
-    dplyr::group_by(.data$year, 
+    dplyr::group_by(.data$yearPhenophaseBegan, 
                     .data$siteID, 
                     .data$individualID, 
                     .data$taxonID, 
@@ -69,19 +70,14 @@ estimatePheDurationByTag <- function(inputDataList = NULL,
                     .data$phenophaseName, 
                     .data$nthTransition) %>%
 
-    dplyr::reframe(dateTransitionStart = min(.data$dateTransition),
-                   doyTransitionStart = min(.data$doyTransition),
-                   dateTransitionEnd = max(.data$dateTransition), 
-                   doyTransitionEnd = max(.data$doyTransition),
-                   duration = .data$doyTransition[.data$transitionType == 'end'] - .data$doyTransition[.data$transitionType == 'onset'],
+    dplyr::reframe(dateTransitionStart = .data$dateTransition[.data$transitionType == 'onset'],
+                   doyTransitionStart = lubridate::yday(.data$dateTransition[.data$transitionType == 'onset']),
+                   dateTransitionEnd = .data$dateTransition[.data$transitionType == 'end'], 
+                   doyTransitionEnd = lubridate::yday(.data$dateTransition[.data$transitionType == 'end']),
+                   duration = as.numeric(lubridate::date(.data$dateTransition[.data$transitionType == 'end']) - 
+                                         lubridate::date(.data$dateTransition[.data$transitionType == 'onset'])),
                    precisionDuration = sum(.data$precisionDays), 
                    transitionType = 'duration')
   
-  if(any(lubridate::year(out$dateTransitionStart) != lubridate::year(out$dateTransitionEnd))) {
-    ind <- which(lubridate::year(out$dateTransitionStart) != lubridate::year(out$dateTransitionEnd))
-    out[ind,]$duration <- as.numeric(base::difftime(out[ind,]$dateTransitionEnd, 
-                                                    out[ind,]$dateTransitionStart, units="days"))
-  }
-
   return(out)
 }

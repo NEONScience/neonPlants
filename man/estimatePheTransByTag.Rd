@@ -7,7 +7,8 @@
 estimatePheTransByTag(
   inputDataList = NULL,
   inputStatus = NULL,
-  inputTags = NULL
+  inputTags = NULL,
+  began = FALSE
 )
 }
 \arguments{
@@ -16,6 +17,8 @@ estimatePheTransByTag(
 \item{inputStatus}{A data frame with phenological observation data, either the "phe_statusintensity" table or equivalent. \link{data.frame}}
 
 \item{inputTags}{A data frame with taxon data for individuals present in the inputStatus dataframe, either the "phe_perindividual" table or equivalent. \link{data.frame}}
+
+\item{began}{Should transition count be based on the calendar year at the time of transition, or the year the phenophase began? Defaults to FALSE, base the count on calendar year. \link{logical}}
 }
 \value{
 A data frame containing a time series for each phenophase reported for each individual in the data set, including identified  transition dates for beginning and end of a given phenophase, as well as explanatory metrics about that estimate for the time frame provided in the input data frame. Calculated values include:
