@@ -48,5 +48,6 @@ Imports:
     methods,
     rlang,
     stringr,
-    tidyr
+    tidyr,
+    lubridate
 LazyData: true

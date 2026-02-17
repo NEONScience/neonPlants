@@ -150,7 +150,8 @@ testthat::test_that("Data contain duplicates", {
   testthat::expect_error(estimatePheTransByTag(inputStatus = testStatus,
                                                inputTags = rbind(testTags[1,], 
                                                                  testTags)),
-                         regexp = "duplicate records present for NEON.PLA.D07.GRSM.06049 please resolve before running estimatePheTrans")
+                         regexp = "Duplicate records found for individual(s) NEON.PLA.D07.GRSM.06049 in phe_perindividual. Attempted to resolve by retaining most recently edited records; resolution failed. Check data carefully and if possible, remove duplicates by keeping records with most recent editedDate.",
+                         fixed=TRUE)
   
 })
 
