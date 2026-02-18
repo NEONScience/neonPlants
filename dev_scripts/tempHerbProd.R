@@ -8,21 +8,44 @@ inputDataList <- neonUtilities::loadByProduct(dpID = "DP1.10023.001",
 
 #--> Appears that scaleHerbMass does not handle plots with targetTaxaPresent == "N" properly
 
-#   Identify all sites where grazing exclosures have been deployed
+
+
+### Identify all sites where grazing exclosures have been deployed; need to identify sites where
+### exclosures were deployed and trialed but were not successful (e.g., SRER)
 hbpAll <- neonUtilities::loadByProduct(dpID = "DP1.10023.001",
                                        site = "all",
-                                       enddate = "2019-12",
+                                       enddate = "2024-12",
                                        tabl = "hbp_perbout",
-                                       check.size = TRUE,
+                                       check.size = FALSE,
                                        token = Sys.getenv("NEON_TOKEN"))
 
 hbpAllBout <- hbpAll$hbp_perbout
 
-hbpAllGrazed <- hbpAllBout %>%
-  dplyr::filter(exclosure == "Y") %>%
+#   Add 'year' column to aid with summarizing exclosure presence/absence
+hbpAllBout <- hbpAllBout %>%
+  dplyr::mutate(year = lubridate::year(.data$collectDate),
+                .after = "collectDate")
+
+#   Summarize exclosure history by siteID and year; remove NA 'exclosure' for now
+grazeSummary <- hbpAllBout %>%
+  dplyr::filter(!is.na(exclosure),
+                plotType == "tower") %>%
   dplyr::group_by(domainID,
-                  siteID) %>%
-  dplyr::summarise(count = n())
+                  siteID,
+                  year,
+                  exclosure) %>%
+  dplyr::summarise(count = n(),
+                   .groups = "drop") %>%
+  tidyr::pivot_wider(names_from = "exclosure",
+                     values_from = "count")
+
+#-->  SERC, JERC, OSBS, TREE, UKFS, JORN, SRER, TEAK all should be hardcoded to have
+#--> exclosure=Y filtered out
+
+
+
+
+
 
 
 

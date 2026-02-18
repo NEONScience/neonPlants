@@ -33,14 +33,14 @@
     <node id="n1">
       <data key="d6">
         <y:ShapeNode>
-          <y:Geometry height="152.0" width="228.0" x="93.0" y="272.0"/>
+          <y:Geometry height="203.0" width="291.0" x="61.5" y="272.0"/>
           <y:Fill color="#FFCC00" transparent="false"/>
           <y:BorderStyle color="#000000" raised="false" type="line" width="1.0"/>
-          <y:NodeLabel alignment="left" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="117.0625" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="197.013671875" x="15.4931640625" xml:space="preserve" y="17.46875">Plot-level output
+          <y:NodeLabel alignment="left" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="117.0625" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="271.744140625" x="9.6279296875" xml:space="preserve" y="42.96875">Plot-level output
 - Peak HBP AGB per plotID x year
 - One row per plot, columns for
    herbGroups
-- Peak mass within 'year' comes
+- Grazed plots: Peak mass within 'year' comes
    from eventID with peak mass,
    (not per plot).
 - Per plot peak mass for crops<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
@@ -75,17 +75,18 @@
           <y:Geometry height="304.0" width="386.0" x="508.0" y="242.0"/>
           <y:Fill color="#E8EEF7" color2="#B7C9E3" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
-          <y:NodeLabel alignment="left" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="258.390625" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="232.6328125" x="76.68359375" xml:space="preserve" y="22.8046875">Peak biomass: Crop sites
+          <y:NodeLabel alignment="left" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="272.5234375" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="232.6328125" x="76.68359375" xml:space="preserve" y="15.73828125">Peak biomass: Crop sites
 - Handle mix of crop and non-crop
    plots
 
 For the Ag plots in the mix:
-- Option 1: Assign "peak" on per 
+- Option 1 (yes): Assign "peak" on per 
    plot basis (peak mass across all plots
    may be a mix of harvest dates).
-- Option 2 (yes): Choose crop with 
+- Option 2: Choose crop with 
    greatest mass as "peak". Not all plots
    may be planted with this crop.
+   --&gt; unclear how to implement
 
 For non-Ag plots in the mix:
 - Option 1: Latest bout in year
@@ -99,14 +100,21 @@ Plots with tTP = "No" --&gt; 0 biomass<y:LabelModel><y:SmartNodeLabelModel dista
     <node id="n4">
       <data key="d6">
         <y:GenericNode configuration="com.yworks.flowchart.annotation">
-          <y:Geometry height="178.0" width="291.0" x="996.0" y="85.0"/>
+          <y:Geometry height="272.0" width="291.0" x="1016.0" y="-13.5"/>
           <y:Fill color="#E8EEF7" color2="#B7C9E3" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
-          <y:NodeLabel alignment="left" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="145.328125" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="214.498046875" x="38.2509765625" xml:space="preserve" y="16.3359375">Ignore exclosures at sites
+          <y:NodeLabel alignment="left" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="244.2578125" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="214.498046875" x="38.2509765625" xml:space="preserve" y="13.87109375">Ignore exclosures at sites
 where we are not confident
 exclosure data are meaningful
---&gt; SRER, TEAK, a few others
-       (hardcode these)
+--&gt; SERC (2014, n=1)
+--&gt; JERC (2014, n=1)
+--&gt; OSBS (2019, n=1)
+--&gt; TREE (2020, n=1)
+--&gt; UKFS (2017, n=1)
+--&gt; JORN (2017, n=1)
+--&gt; SRER (2017, 2018; n&gt;20)
+--&gt; TEAK (2019, 2021)
+(hardcode these)
 
 For on-again-off-again sites
 like D11:
@@ -150,6 +158,53 @@ grazing and no crops (e.g. SRER):
         </y:ShapeNode>
       </data>
     </node>
+    <node id="n7">
+      <data key="d5"/>
+      <data key="d6">
+        <y:GenericNode configuration="com.yworks.flowchart.process">
+          <y:Geometry height="110.0" width="272.0" x="136.0" y="938.5"/>
+          <y:Fill color="#E8EEF7" color2="#B7C9E3" transparent="false"/>
+          <y:BorderStyle color="#000000" type="line" width="1.0"/>
+          <y:NodeLabel alignment="left" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="74.6640625" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="235.708984375" x="18.1455078125" xml:space="preserve" y="17.66796875">Within each year (special year for SJER):
+ID plots with crops
+ID grazed plots
+ID plots w/ &gt; 1 sorted bout, not grazed
+ID "standard" plots, 1 sorted bout<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
+        </y:GenericNode>
+      </data>
+    </node>
+    <node id="n8">
+      <data key="d5"/>
+      <data key="d6">
+        <y:GenericNode configuration="com.yworks.flowchart.process">
+          <y:Geometry height="81.0" width="228.0" x="136.0" y="824.3333333333335"/>
+          <y:Fill color="#E8EEF7" color2="#B7C9E3" transparent="false"/>
+          <y:BorderStyle color="#000000" type="line" width="1.0"/>
+          <y:NodeLabel alignment="left" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="60.53125" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="135.0390625" x="46.48046875" xml:space="preserve" y="10.234375">Remove exclosure=Y
+data from sites where
+exclosures don't make
+sense<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
+        </y:GenericNode>
+      </data>
+    </node>
+    <node id="n9">
+      <data key="d5"/>
+      <data key="d6">
+        <y:GenericNode configuration="com.yworks.flowchart.process">
+          <y:Geometry height="75.0" width="207.0" x="461.7323232323233" y="824.3333333333335"/>
+          <y:Fill color="#E8EEF7" color2="#B7C9E3" transparent="false"/>
+          <y:BorderStyle color="#000000" type="line" width="1.0"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" hasText="false" height="4.0" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="4.0" x="101.5" y="35.5">
+            <y:LabelModel>
+              <y:SmartNodeLabelModel distance="4.0"/>
+            </y:LabelModel>
+            <y:ModelParameter>
+              <y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/>
+            </y:ModelParameter>
+          </y:NodeLabel>
+        </y:GenericNode>
+      </data>
+    </node>
     <edge id="e0" source="n1" target="n0">
       <data key="d10">
         <y:PolyLineEdge>
@@ -191,6 +246,17 @@ grazing and no crops (e.g. SRER):
       </data>
     </edge>
     <edge id="e4" source="n5" target="n1">
+      <data key="d10">
+        <y:PolyLineEdge>
+          <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
+          <y:LineStyle color="#000000" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e5" source="n8" target="n7">
+      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
