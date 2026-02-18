@@ -195,3 +195,32 @@ testthat::test_that(desc = "Table 'div_10m2Data100m2Data' missing data", {
                          regexp = "Table 'input_10m2Data100m2Data' has no data.")
 })
 
+# Test that raw and processed data contain matching taxa
+pppc <- stackPlantPresence(testList)
+taxa1m2 <- test_div_1m2Data$taxonID[-which(is.na(test_div_1m2Data$taxonID))]
+testthat::test_that(desc="Same taxa are present in raw and processed data", {
+  testthat::expect_true(object = all(length(setdiff(unique(pppc$taxonID),
+                                                    unique(c(taxa1m2, 
+                                                             test_div_10m2Data100m2Data$taxonID))))==0,
+                                     length(setdiff(unique(c(taxa1m2, 
+                                                             test_div_10m2Data100m2Data$taxonID)),
+                                                    unique(pppc$taxonID)))==0))
+})
+
+# Test that each larger area is a superset of the smaller areas
+testthat::test_that(desc="Taxa in 10m2 contain all taxa in 1m2 plots", {
+  testthat::expect_length(object = setdiff(unique(pppc$taxonID[which(pppc$totalSampledArea==1)]), 
+                                           unique(pppc$taxonID[which(pppc$totalSampledArea==10)])),
+  n=0)
+})
+testthat::test_that(desc="Taxa in 100m2 contain all taxa in 10m2 plots", {
+  testthat::expect_length(object = setdiff(unique(pppc$taxonID[which(pppc$totalSampledArea==10)]), 
+                                           unique(pppc$taxonID[which(pppc$totalSampledArea==100)])),
+                          n=0)
+})
+testthat::test_that(desc="Taxa in 400m2 contain all taxa in 100m2 plots", {
+  testthat::expect_length(object = setdiff(unique(pppc$taxonID[which(pppc$totalSampledArea==100)]), 
+                                           unique(pppc$taxonID[which(pppc$totalSampledArea==400)])),
+                          n=0)
+})
+
