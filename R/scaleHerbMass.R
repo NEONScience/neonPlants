@@ -112,7 +112,7 @@ scaleHerbMass = function(inputDataList,
 
   ### Verify 'inputBout' table contains required data
   #   Check for required columns
-  boutExpCols <- c("domainID", "siteID", "plotID", "plotType", "nlcdClass", "eventID", "clipArea", "exclosure", "samplingImpractical", "targetTaxaPresent")
+  boutExpCols <- c("domainID", "siteID", "plotID", "subplotID", "clipID", "nlcdClass", "plotType", "plotSize", "plotManagement", "collectDate", "eventID", "samplingImpractical", "targetTaxaPresent", "sampleID", "clipArea", "exclosure")
 
   if (length(setdiff(boutExpCols, colnames(inputBout))) > 0) {
     stop(glue::glue("Required columns missing from 'inputBout':", '{paste(setdiff(boutExpCols, colnames(inputBout)), collapse = ", ")}',
@@ -120,7 +120,7 @@ scaleHerbMass = function(inputDataList,
   }
 
   #   Check for data
-  if (nrow(inputBout) == 0) {
+  if (!nrow(inputBout)) {
     stop(glue::glue("Table 'inputBout' has no data."))
   }
 
@@ -136,7 +136,7 @@ scaleHerbMass = function(inputDataList,
   }
 
   #   Check for data
-  if (nrow(inputMass) == 0) {
+  if (!nrow(inputMass)) {
     stop(glue::glue("Table 'inputMass' has no data."))
   }
 
@@ -152,7 +152,16 @@ scaleHerbMass = function(inputDataList,
   ### Prepare input data frame from 'inputBout' and 'inputMass ####
 
   ### Prepare 'inputBout' data frame
-  #   Reduce 'hbp_perbout' columns to subset needed for join
+
+  ##  Remove exclosure == "Y" records at sites where exclosures were trialed by not used (SRER, TEAK) and where
+  ##  exclosure == "Y" was mistakenly selected
+  exclosureFilter <- c("SERC", "JERC", "OSBS", "TREE", "UKFS", "JORN", "SRER", "TEAK")
+
+  inputBout <- inputBout %>%
+    dplyr::filter(!(siteID %in% exclosureFilter & exclosure == "Y") | is.na(exclosure))
+
+
+  ##  Reduce 'hbp_perbout' columns to subset needed for join
   inputBout <- inputBout %>%
     dplyr::select("domainID",
                   "siteID",
@@ -165,12 +174,14 @@ scaleHerbMass = function(inputDataList,
                   "plotManagement",
                   "collectDate",
                   "eventID",
+                  "samplingImpractical",
                   "targetTaxaPresent",
                   "sampleID",
                   "clipArea",
                   "exclosure")
 
-  #   Set date data type and create 'year' column for grouping output at plot and site scales across data products; 'year' is updated at SJER due to Mediterranean growing season spanning a calendar year.
+
+  ##  Set date data type and create 'year' column for grouping output at plot and site scales across data products; 'year' is updated at SJER due to Mediterranean growing season spanning a calendar year.
   inputBout <- inputBout %>%
     dplyr::mutate(year = as.numeric(stringr::str_extract(string = .data$eventID,
                                                          pattern = "20[0-9]{2}")),
@@ -208,7 +219,7 @@ scaleHerbMass = function(inputDataList,
   }
 
 
-  ##  Calculate the average of any 'qaDryMass' replicates or duplicates within 'herbGroup', scale 'dryMass' to "g/m2", and remove spaces and hyphens from 'herbGroup' values
+  ##  Calculate the average of any 'qaDryMass' replicates or duplicates within 'herbGroup', scale 'dryMass' to "g/m2" and assign a 0 when tTP = N, and remove spaces and hyphens from 'herbGroup' values
   hbp <- hbp %>%
     dplyr::group_by(.data$domainID,
                     .data$siteID,
@@ -222,6 +233,7 @@ scaleHerbMass = function(inputDataList,
                     .data$collectDate,
                     .data$year,
                     .data$eventID,
+                    .data$samplingImpractical,
                     .data$targetTaxaPresent,
                     .data$sampleID,
                     .data$clipArea,
@@ -231,8 +243,11 @@ scaleHerbMass = function(inputDataList,
     dplyr::summarise(dryMass = dplyr::case_when(all(is.na(.data$dryMass)) ~ NA,
                                                 TRUE ~ mean(.data$dryMass, na.rm = TRUE)),
                      .groups = "drop") %>%
-    dplyr::mutate(dryMass_gm2 = round(.data$dryMass / .data$clipArea,
-                                      digits = 2)) %>%
+
+    dplyr::mutate(dryMass_gm2 = dplyr::case_when(.data$targetTaxaPresent == "N" ~ 0,
+                                                 TRUE ~ round(.data$dryMass / .data$clipArea,
+                                                              digits = 2))) %>%
+
     dplyr::mutate(herbGroup = dplyr::case_when(.data$herbGroup == "All herbaceous plants" ~ "AllHerbaceousPlants",
                                                .data$herbGroup == "Cool Season Graminoids" ~ "CoolSeasonGraminoids",
                                                .data$herbGroup == "Woody-stemmed Plants" ~ "WoodyStemmedPlants",
@@ -242,6 +257,8 @@ scaleHerbMass = function(inputDataList,
                                                .data$herbGroup == "Annual and Perennial Forbs" ~ "AnnualAndPerennialForbs",
                                                .data$herbGroup == "Orchard Grass" ~ "OrchardGrass",
                                                TRUE ~ .data$herbGroup))
+
+  #--> begin again here: Want to identify sampleIDs that contain crops at this point before the table pivots wider
 
 
   ##  Transpose herbGroup rows into separate columns to create one row per clipID
@@ -335,8 +352,6 @@ scaleHerbMass = function(inputDataList,
                   Wheat_gm2 = as.numeric(.data$Wheat_gm2))
 
 
-  ##  Remove exclosure == "Y" records from sites where exclosures were trialed but abandoned
-  #--> Return to this because API not working and cannot identify sites
 
 
 

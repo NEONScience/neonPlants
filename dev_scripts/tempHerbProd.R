@@ -1,12 +1,14 @@
 ### Function testing: Odd TREE output from 2018 with eventIDs
 inputDataList <- neonUtilities::loadByProduct(dpID = "DP1.10023.001",
-                                              site = c("BLAN", "KONZ", "SJER", "SRER", "TEAK", "TREE"),
+                                              site = c("BLAN", "CLBJ", "CPER", "KONZ", "OSBS", "SJER", "SRER", "TEAK", "TREE"),
                                               startdate = "2018-01",
                                               enddate = "2019-12",
                                               check.size = FALSE,
                                               token = Sys.getenv("NEON_TOKEN"))
+inputBout <- inputDataList$hbp_perbout
+inputMass <- inputDataList$hbp_massdata
 
-#--> Appears that scaleHerbMass does not handle plots with targetTaxaPresent == "N" properly
+
 
 
 
@@ -44,6 +46,13 @@ grazeSummary <- hbpAllBout %>%
 
 
 
+
+### Example: Retain all rows in a group when a row within the group matches a filter criterion;
+### useful to identify plots that are grazed but that intermittently have exclosures (due to
+### damage) or to identify plots planted with crops for part of the year.
+result <- df %>%
+  group_by(group) %>%
+  filter(any(value > 4))
 
 
 
