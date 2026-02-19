@@ -194,3 +194,18 @@ testthat::test_that(desc = "Table 'inputChem' missing data", {
   
 })
 
+#   Test that there are no chemistry data for any dead roots
+rctest <- joinRootChem(inputMass = testMass,
+             inputPool = testPool,
+             inputChem = testChem)
+testthat::test_that(desc = "Test that there are no carbon data for any dead roots", {
+  testthat::expect_true(object = all(is.na(rctest$carbonPercent[which(rctest$rootStatus=="dead")])))
+})
+testthat::test_that(desc = "Test that there are no 15N data for any dead roots", {
+  testthat::expect_true(object = all(is.na(rctest$d15N[which(rctest$rootStatus=="dead")])))
+})
+
+#   Test that all samples are accounted for
+testthat::test_that(desc = "Test that all samples from original chemistry data are in output", {
+  testthat::expect_true(object = all(testChem$cnSampleID %in% rctest$cnSampleID))
+})

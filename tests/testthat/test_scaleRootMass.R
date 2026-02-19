@@ -190,6 +190,22 @@ testthat::test_that(desc = "Output 'coreRootMass.totalDryMass' with includeFragI
   
 })
 
+#   Test that plot mass is close to mean of core mass, and site mass is close to mean of plot mass
+rmtest <- scaleRootMass(testList)
+testthat::test_that(desc = "Test that plot mass is close to mean of core mass", {
+  testthat::expect_equal(object = mean(rmtest$coreRootMass$totalMass_gm3
+                                      [which(rmtest$coreRootMass$plotID=="DEJU_047")]),
+                         expected = mean(rmtest$plotRootMass$totalMass_gm3
+                                         [which(rmtest$plotRootMass$plotID=="DEJU_047")]),
+                         tolerance=0.5)
+  
+})
+testthat::test_that(desc = "Test that site mass is close to mean of plot mass", {
+  testthat::expect_equal(object = mean(rmtest$plotRootMass$totalMass_gm3),
+                         expected = rmtest$siteRootMass$rootMassMean_gm3,
+                         tolerance=0.5)
+  
+})
 
 
 ### Test: Generate expected error when 'inputDataList' is not a list
