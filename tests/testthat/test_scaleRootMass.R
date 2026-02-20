@@ -6,23 +6,24 @@ testList <- readRDS(testthat::test_path("testdata", "rootdatalist-201807.RDS"))
 testCore <- testList$bbc_percore
 testMass <- testList$bbc_rootmass
 testDilution <- testList$bbc_dilution
-
+rmtest <- scaleRootMass(testList)
+rmtestti <- scaleRootMass(inputCore = testCore,
+                          inputMass = testMass,
+                          inputDilution = testDilution)
 
 
 ### Test: Function generates expected output type
 #   Test list input
 testthat::test_that(desc = "Output type list input", {
 
-  testthat::expect_type(object = scaleRootMass(inputDataList = testList),
+  testthat::expect_type(object = rmtest,
                         type = "list")
 })
 
 #   Test table input
 testthat::test_that(desc = "Output type table input", {
   
-  testthat::expect_type(object = scaleRootMass(inputCore = testCore,
-                                               inputMass = testMass,
-                                               inputDilution = testDilution),
+  testthat::expect_type(object = rmtestti,
                         type = "list")
 })
 
@@ -32,7 +33,7 @@ testthat::test_that(desc = "Output type table input", {
 #   Test list input
 testthat::test_that(desc = "Output class list input", {
   
-  temp <- scaleRootMass(inputDataList = testList)
+  temp <- rmtest
 
   testthat::expect_s3_class(object = temp$coreRootMass,
                             class = "data.frame")
@@ -46,9 +47,7 @@ testthat::test_that(desc = "Output class list input", {
 #   Test table input
 testthat::test_that(desc = "Output class table input", {
   
-  temp <- scaleRootMass(inputCore = testCore,
-                        inputMass = testMass,
-                        inputDilution = testDilution)
+  temp <- rmtestti
   
   testthat::expect_s3_class(object = temp$coreRootMass,
                             class = "data.frame")
@@ -191,7 +190,6 @@ testthat::test_that(desc = "Output 'coreRootMass.totalDryMass' with includeFragI
 })
 
 #   Test that plot mass is close to mean of core mass, and site mass is close to mean of plot mass
-rmtest <- scaleRootMass(testList)
 testthat::test_that(desc = "Test that plot mass is close to mean of core mass", {
   testthat::expect_equal(object = mean(rmtest$coreRootMass$totalMass_gm3
                                       [which(rmtest$coreRootMass$plotID=="DEJU_047")]),

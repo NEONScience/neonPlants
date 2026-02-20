@@ -5,14 +5,16 @@
 testList <- readRDS(testthat::test_path("testdata", "stackPlantPresence_testData.rds"))
 test_div_1m2Data <- testList$div_1m2Data
 test_div_10m2Data100m2Data <- testList$div_10m2Data100m2Data
-
+pppc <- stackPlantPresence(testList)
+pppcti <- stackPlantPresence(input_1m2Data = test_div_1m2Data,
+                             input_10m2Data100m2Data = test_div_10m2Data100m2Data)
 
 
 ### Test: Function generates expected output type
 #   Test list input
 testthat::test_that(desc = "Output type list input", {
   
-  testthat::expect_type(object = stackPlantPresence(inputDataList = testList),
+  testthat::expect_type(object = pppc,
                         type = "list")
   
 })
@@ -20,8 +22,7 @@ testthat::test_that(desc = "Output type list input", {
 #   Test table input
 testthat::test_that(desc = "Output type table input", {
   
-  testthat::expect_type(object = stackPlantPresence(input_1m2Data = test_div_1m2Data,
-                                                    input_10m2Data100m2Data = test_div_10m2Data100m2Data),
+  testthat::expect_type(object = pppcti,
                         type = "list")
 })
 
@@ -31,15 +32,14 @@ testthat::test_that(desc = "Output type table input", {
 #   Test list input
 testthat::test_that(desc = "Output class list input", {
   
-  testthat::expect_s3_class(object = stackPlantPresence(inputDataList = testList),
+  testthat::expect_s3_class(object = pppc,
                             class = "data.frame")
 })
 
 #   Test table input
 testthat::test_that(desc = "Output class table input", {
   
-  testthat::expect_s3_class(object = stackPlantPresence(input_1m2Data = test_div_1m2Data,
-                                                        input_10m2Data100m2Data = test_div_10m2Data100m2Data),
+  testthat::expect_s3_class(object = pppcti,
                             class = "data.frame")
 })
 
@@ -80,7 +80,7 @@ testthat::test_that(desc = "subplotID contains only the expected values", {
 #   Check expected row number of output
 testthat::test_that(desc = "Output data frame row number list input", {
   
-  testthat::expect_identical(object = nrow(stackPlantPresence(inputDataList = testList)),
+  testthat::expect_identical(object = nrow(pppc),
                              expected = as.integer(320))
 })
 
@@ -88,7 +88,7 @@ testthat::test_that(desc = "Output data frame row number list input", {
 #   Check expected column number of output
 testthat::test_that(desc = "Output data frame column number list input", {
   
-  testthat::expect_identical(object = ncol(stackPlantPresence(inputDataList = testList)),
+  testthat::expect_identical(object = ncol(pppc),
                              expected = as.integer(29))
 })
 
@@ -97,16 +97,14 @@ testthat::test_that(desc = "Output data frame column number list input", {
 #   Check expected row number of output
 testthat::test_that(desc = "Output data frame row number table input", {
   
-  testthat::expect_identical(object = nrow(stackPlantPresence(input_1m2Data = test_div_1m2Data,
-                                                              input_10m2Data100m2Data = test_div_10m2Data100m2Data)),
+  testthat::expect_identical(object = nrow(pppcti),
                              expected = as.integer(320))
 })
 
 #   Check expected column number of output
 testthat::test_that(desc = "Output data frame row number table input", {
   
-  testthat::expect_identical(object = ncol(stackPlantPresence(input_1m2Data = test_div_1m2Data,
-                                                              input_10m2Data100m2Data = test_div_10m2Data100m2Data)),
+  testthat::expect_identical(object = ncol(pppcti),
                              expected = as.integer(29))
 })
 
@@ -196,7 +194,6 @@ testthat::test_that(desc = "Table 'div_10m2Data100m2Data' missing data", {
 })
 
 # Test that raw and processed data contain matching taxa
-pppc <- stackPlantPresence(testList)
 taxa1m2 <- test_div_1m2Data$taxonID[-which(is.na(test_div_1m2Data$taxonID))]
 testthat::test_that(desc="Same taxa are present in raw and processed data", {
   testthat::expect_true(object = all(length(setdiff(unique(pppc$taxonID),
