@@ -5,11 +5,11 @@
 
 VstDat <- readRDS(testthat::test_path("testdata", "VstDat.rds"))
 
-estimateWoodProdOutputs <- estimateWoodProd(inputDataList = VstDat, plotSubset = "towerAnnualSubset", siteID = "WREF")
+estimateWoodProdOutputs <- estimateWoodProd(inputDataList = VstDat, plotSubset = "towerAll", siteID = "MOAB")
 
 ### Test: Function generates expected output type
 testthat::test_that(desc = "Output type", {
-  testthat::expect_type(object = estimateWoodProd(inputDataList = VstDat, plotSubset = "towerAnnualSubset", siteID = "WREF"),
+  testthat::expect_type(object = estimateWoodProd(inputDataList = VstDat, plotSubset = "towerAll", siteID = "MOAB"),
                         type = "list")
 })
 
@@ -59,15 +59,15 @@ testthat::test_that(desc = "Output data frame row number", {
 
 ### Test: Generate error if output vst_ANPP_plot value not as expected
 testthat::test_that(desc = "Output vst_ANPP_plot value as expected", {
-  test <- estimateWoodProd(inputDataList = VstDat, plotSubset = "towerAnnualSubset", siteID = "WREF")
-  testthat::expect_equal(object = test$vst_ANPP_plot$woodANPP_Mghayr[1],
-                         expected = 2.73)
+  test <- estimateWoodProd(inputDataList = VstDat, plotSubset = "towerAll", siteID = "MOAB")
+  testthat::expect_equal(object = test$vst_ANPP_plot$woodANPP_Mghayr[2],
+                         expected = 0)
 })
 
 ### Test: Generate error if output vst_ANPP_site value not as expected
 testthat::test_that(desc = "Output vst_ANPP_site value as expected", {
-  test <- estimateWoodProd(inputDataList = VstDat, plotSubset = "towerAnnualSubset", siteID = "WREF")
+  test <- estimateWoodProd(inputDataList = VstDat, plotSubset = "towerAll", siteID = "MOAB")
   testthat::expect_equal(object = test$vst_ANPP_site$woodANPPMean_Mghayr[1],
-                         expected = 2.73)
+                         expected = 0)
 })
 

@@ -1,24 +1,22 @@
 ##############################################################################################
-#' @title Estimate ANPP (Aboveground Net Primary Productivity) contributed by woody vegetation
+#' @title Estimate ANPP (Aboveground Net Primary Productivity) contributed by trees
 
 #' @author
 #' Samuel M Simkin \email{ssimkin@battelleecology.org} \cr
 
-#' @description Calculate annual productivity of woody vegetation.
+#' @description Calculate productivity of trees reported in the NEON "Vegetation structure" data product (DP1.10098.001). Results are summarized as mass per unit area per year at scales of the plotID and siteID.
 #'
 #' Data inputs are "Vegetation structure" data (DP1.10098.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input tables with an equivalent structure and representing the same site x month combinations.
 #'
-#' Data should be from just one site, and exactly two temporal eventIDs.
+#' Data should be from just one site, and the 'vst_apparentindividual' and 'vst_perplotperyear' tables should include exactly two temporal eventIDs. The 'vst_mappingandtagging' table should include all years of data from the year 2013 to the last year being analyzed.
 #'
-#' @details The input data is passed to the companion estimateWoodMass() function to create biomass summaries, and then aboveground productivity is calculated for woody vegetation.
+#' @details The input data is passed to the companion estimateWoodMass() function to create biomass summaries, and then aboveground productivity is calculated for trees. Input data is filtered  'plotSubset' if output for only certain types of plots or sampling intervals is desired. Productivity is summarized on an areal basis at the hierarchical level of the plot and site.
 #'
 #' The stand-level approach to calculating productivity (approach 2) is used from Clark DA, S Brown, DW Kicklighter, JQ Chambers, JR Thomlinson, and J Ni. 2001. Measuring Net Primary Production in Forests: Concepts and Field Methods. Ecological Applications 11:356-370.
 #'
 #' Woody productivity is only calculated for trees with growthForm of "single bole tree" or "multi-bole tree".
 #'
 #' NEON has an extensive data QA/QC process, but users should be aware that these productivity estimates are very sensitive to any residual errors and so the data should be examined carefully
-#'
-#' @details Input data can be filtered by 'plotSubset' if output for only certain types of plots or sampling intervals is desired. Input data are combined with allometric equation parameters and taxon specific characteristics, and biomass is estimated for each individual using allometric equations. Generalized allometric equations are applied first and are replaced by taxon-specific equations if available. Only the set of growth forms selected via the growthForm parameter are included in outputs. The non-woody "cactus" and "ferns" growthForms are not currently included. Biomass is summarized on an areal basis at the hierarchical level of the plot and site.
 #'
 #' @param inputDataList A list object comprised of "Vegetation structure" tables (DP1.10098.001) downloaded using the neonUtilities::loadByProduct() function. If list input is provided, the table input arguments must all be NA; similarly, if list input is missing, table inputs must be provided for 'inputIndividual', 'inputMapTag', and 'inputPerPlot' arguments. [list]
 #'
@@ -45,7 +43,9 @@
 #' @return A list that includes productivity summary data frames. Output tables include:
 #'   * vst_ANPP_plot - Summarizes woody ANPP for each plot x year combination ("Mg/ha/yr").
 #'   * vst_ANPP_site - Summarizes woody ANPP for each site x year combination ("Mg/ha/yr").
-#'
+#'   * filtered - Individuals filtered from productivity calculations if mortalityMissing argument is "filterMissing" and/or stemIncrementFlag argument is "filterFlagged".
+#'   * mortality - Individuals that experienced mortality from time 1 to time 2.
+#'   * recruitment - Individuals that recruited between time 1 and and time 2.
 #'
 #' @examples
 #' \dontrun{
@@ -58,7 +58,6 @@
 #'
 #' estimateWoodProdOutputs <- estimateWoodProd(inputDataList = VstDat, siteID = "LENO")
 #'
-#'
 #' }
 #'
 #' @export estimateWoodProd
@@ -66,14 +65,15 @@
 estimateWoodProd = function(inputDataList,
                             inputIndividual = NA,
                             inputMapTag = NA,
-                            inputNonWoody = NA,
                             inputPerPlot = NA,
+                            inputNonWoody = NA,
                             siteID,
                             plotSubset = "towerAnnualSubset",
                             mortalityMissing = "filterMissing",
                             stemIncrementFlagged = "filterFlagged") {
 
   options(dplyr.summarise.inform = FALSE)
+
 
   ### Check that input arguments meet assumptions ####
 
@@ -101,7 +101,10 @@ estimateWoodProd = function(inputDataList,
     growthFormSubset = "tree"
    )
 
-  vst_plot_Mgha <- estimateWoodMassOutputs$vst_plot_Mgha
+  # Make sure that dendrometerOnly plots were removed
+  vst_plot_Mgha <- estimateWoodMassOutputs$vst_plot_Mgha %>%
+    dplyr::filter(is.na(.data$dataCollected) | .data$dataCollected != "dendrometerOnly")
+
   vst_agb_kg <- estimateWoodMassOutputs$vst_agb_kg
   vst_missing <- estimateWoodMassOutputs$vst_missing
 
@@ -219,7 +222,6 @@ estimateWoodProd = function(inputDataList,
     plot_eventID_list <- plot_eventID_list$plot_eventID
 
 
-
   ### CALCULATE MORTALITY
 
   # Create placeholder 'plot_mortality' dataframe: gets overwritten later if there is any mortality
@@ -229,6 +231,12 @@ estimateWoodProd = function(inputDataList,
                                  year = character(),
                                  mortality_Mghayr = numeric(),
                                  mortality_Mghayr = numeric())
+
+  # clear old dataframes, if they exist
+  transitions <- data.frame() # initialize df
+  mortality <- data.frame() # initialize df
+  missing <- data.frame() # initialize df
+
 
   if (nrow(vst_agb_kg) > 0) {
 
@@ -380,12 +388,17 @@ estimateWoodProd = function(inputDataList,
        dplyr::relocate("year1", .after = "eventID2") %>%
        dplyr::relocate("year2", .after = "year1")   }
 
- }
+  }
 
 
   ####  CALCULATE RECRUITMENT
 
+  plot_recruitment <- data.frame() # initialize df
+  recruitmentFlags <- data.frame() # initialize df
+  recruitment <- data.frame() # initialize df
 
+
+  if (nrow(vst_agb_kg) > 0) {
   transition_simple <- transitions %>% dplyr::select(-"domainID",-"siteID", -"plotID", -"taxonID", -"sampledArea_m2", -"t2Missing")
   recruitment <- transition_simple  %>% dplyr::left_join(vst_agb_kg, by = c("individualID"))
   recruitment_input <- transitions  %>%  dplyr::select("plotID", "individualID", "sampledArea_m2", dplyr::starts_with("transitionType_")) %>%
@@ -496,13 +509,17 @@ estimateWoodProd = function(inputDataList,
   plot_recruitment$recruitment_Mgha <- plot_recruitment$recruitment_Mghayr <- 0
   plot_recruitment$recruitmentCount <- 0
     }
-
+}
 
 
   ### CALCULATE BIOMASS INCREMENT (Clark et al. 2001 approach 2 - stand level productivity calculation) ####
 
   stemIncrementFlags <- data.frame() # initialize df
 
+  if (exists("diameter_inc")) {rm(diameter_inc)}
+  if (exists("diameter_wide")) {rm(diameter_wide)}
+
+  if (nrow(vst_agb_kg) > 0) {
   # if stipulated in argument, flag and handle records with implausible stem diameter increment
   if(stemIncrementFlagged == "filterFlagged"){
   diameter_inc <- vst_agb_kg %>% dplyr::filter(.data$simplePlantStatus == "live") %>%
@@ -555,8 +572,15 @@ estimateWoodProd = function(inputDataList,
      vst_agb_kg <- vst_agb_kg %>% dplyr::filter(!.data$individualID %in% incrementFlaglist ) # important: removes flagged individualIDs from increment calculations
     }
   }
+  }
 
-  ############ Scale biomass per area and convert to Mg / ha ######################
+  ############ Generate plot-level biomass summary #####################
+
+
+  if (exists("vst_agb_zeros")) rm(vst_agb_zeros)
+
+  # Scale biomass per area and convert to Mg / ha
+  if (nrow(vst_agb_kg) > 0) {
   #   Remove records that cannot be scaled to a per area basis
   vst_agb_Mgha <- vst_agb_kg %>%
     dplyr::filter(!is.na(.data$sampledArea_m2) & .data$sampledArea_m2 > 0 & !is.na(.data$agb_kg))
@@ -565,14 +589,46 @@ estimateWoodProd = function(inputDataList,
   vst_agb_Mgha$agb_Mgha <- round(vst_agb_Mgha$agb_kg * 0.001 * (10000/vst_agb_Mgha$sampledArea_m2),
                                   digits = 4)
 
+  #   Sum biomass per unit area for each plot x year x simplePlantStatus x nlcdClass combo (aggegate across individualIDs)
+  vst_plot_summary <- vst_agb_Mgha %>%
+    dplyr::group_by(.data$plot_eventID,
+                    .data$siteID,
+                    .data$eventID,
+                    .data$plotID,
+                    .data$sampledArea_m2,
+                    .data$eventType,
+                    .data$plotType,
+                    .data$nlcdClass,
+                    .data$simplePlantStatus,
+                    .data$year) %>%
+    dplyr::summarise(agb_Mgha = sum(.data$agb_Mgha, na.rm = TRUE),
+                     .groups = "drop")
 
-  ##  Create list of plot x eventIDs from vst_apparentindividaul data; later diff against what is reported in perplot data
+  #   Within a given year, transpose live and dead AGB into separate columns
+  vst_plot_wide <- tidyr::pivot_wider(vst_plot_summary,
+                                      id_cols = c("siteID", "plot_eventID", "eventID", "plotID",  "sampledArea_m2", "eventType",
+                                                  "plotType", "nlcdClass", "year"),
+                                      names_from = "simplePlantStatus",
+                                      names_glue = "{simplePlantStatus}_Mgha",
+                                      values_from = "agb_Mgha")
+  if (!"dead_Mgha" %in% names(vst_plot_wide)) {
+    vst_plot_wide$dead_Mgha <- NA
+  }
+
+  #   Assumption: Replace NAs created during transpose with zeroes; assume both live and dead were sampled in a plot
+
+  vst_plot_wide$dead_Mgha[is.na(vst_plot_wide$dead_Mgha)] <- 0
+  vst_plot_wide$live_Mgha[is.na(vst_plot_wide$live_Mgha)] <- 0
+
+    ##  Create list of plot x eventIDs from vst_apparentindividaul data; later diff against what is reported in perplot data
   agb_ind_eventID_list <- unique(vst_agb_Mgha$plot_eventID)
-
 
   ##  Identify plot by eventID combos that don't have biomass values
   vst_agb_zeros <- base::setdiff(plot_eventID_list, agb_ind_eventID_list)
+  } else {vst_agb_zeros <- plot_eventID_list}
 
+  #   Assign zero AGB values to plots with zero biomass
+  if (length(vst_agb_zeros) > 0) {
   vst_agb_zeros <- as.data.frame(vst_agb_zeros)
 
   vst_agb_zeros <- dplyr::rename(vst_agb_zeros,
@@ -590,7 +646,6 @@ estimateWoodProd = function(inputDataList,
                          plotType_df,
                          by = "plotID",
                          all.x = TRUE)
-
 
 
   ### Generate plot-level biomass summary ####
@@ -627,11 +682,7 @@ estimateWoodProd = function(inputDataList,
   vst_plot_wide$dead_Mgha[is.na(vst_plot_wide$dead_Mgha)] <- 0
   vst_plot_wide$live_Mgha[is.na(vst_plot_wide$live_Mgha)] <- 0
 
-
   #   Assign zero AGB values to plots with zero biomass
-  vst_agb_zeros_plot <- vst_agb_zeros
-
-  if (nrow(vst_agb_zeros_plot) > 0) {
     perplot_meta_for_missing <- unique(vst_plot_Mgha %>% dplyr::select("plotID", "eventID", "eventType", "nlcdClass"))
     vst_agb_zeros_plot <- merge(vst_agb_zeros_plot, perplot_meta_for_missing, by = c("plotID", "eventID"), all.x = T)
     vst_agb_zeros_plot$dead_Mgha <- vst_agb_zeros_plot$live_Mgha <- 0
@@ -642,6 +693,15 @@ estimateWoodProd = function(inputDataList,
   } else {
      vst_plot_Mgha <- vst_plot_wide
   }
+
+  # Bind rows for plots with biomass (if applicable) to plots with zero biomass (if applicable)
+  vst_plot_Mgha <- c("vst_plot_wide", "vst_agb_zeros") %>%
+  lapply(function(x) {
+    if (exists(x) && is.data.frame(get(x)) && nrow(get(x)) > 0) get(x)
+  }) %>%
+  (\(x) Filter(Negate(is.null), x))() %>%
+  dplyr::bind_rows()
+
 
   priority_plots <- priority_plots # force load from data table
   priority_plots_add <- priority_plots %>%
@@ -715,7 +775,6 @@ estimateWoodProd = function(inputDataList,
   filter_dfs <- lapply(filtered_df_names, function(name) {
     if (exists(name) && is.data.frame(get(name))) get(name) else NULL
   })
-
 
   # Remove NULLs
   filter_dfs <- Filter(Negate(is.null), filter_dfs)
