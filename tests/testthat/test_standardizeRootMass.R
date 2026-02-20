@@ -4,14 +4,15 @@
 ### Read in test data
 testList <- readRDS(testthat::test_path("testdata", "rootdatalist-201807.RDS"))
 testMass <- testList$bbc_rootmass
-
+testrs <- standardizeRootMass(inputDataList = testList)
+testrsti <- standardizeRootMass(inputMass = testMass)
 
 
 ### Test: Function generates expected output type
 #   Test list input
 testthat::test_that(desc = "Output type list input", {
 
-  testthat::expect_type(object = standardizeRootMass(inputDataList = testList),
+  testthat::expect_type(object = testrs,
                         type = "list")
 
 })
@@ -19,7 +20,7 @@ testthat::test_that(desc = "Output type list input", {
 #   Test table input
 testthat::test_that(desc = "Output type table input", {
   
-  testthat::expect_type(object = standardizeRootMass(inputMass = testMass),
+  testthat::expect_type(object = testrsti,
                         type = "list")
 })
 
@@ -29,7 +30,7 @@ testthat::test_that(desc = "Output type table input", {
 #   Test list input
 testthat::test_that(desc = "Output class list input", {
 
-  testthat::expect_s3_class(object = standardizeRootMass(inputDataList = testList),
+  testthat::expect_s3_class(object = testrs,
                             class = "data.frame")
 
 })
@@ -37,7 +38,7 @@ testthat::test_that(desc = "Output class list input", {
 #   Test table input
 testthat::test_that(desc = "Output class table input", {
   
-  testthat::expect_s3_class(object = standardizeRootMass(inputMass = testMass),
+  testthat::expect_s3_class(object = testrsti,
                             class = "data.frame")
 })
 
@@ -47,14 +48,14 @@ testthat::test_that(desc = "Output class table input", {
 #   Check expected row number of data frame
 testthat::test_that(desc = "Output data frame row number", {
 
-  testthat::expect_identical(object = nrow(standardizeRootMass(inputDataList = testList)),
+  testthat::expect_identical(object = nrow(testrs),
                              expected = as.integer(159))
 })
 
 #   Check expected column number of data frame
 testthat::test_that(desc = "Output data frame column number", {
 
-  testthat::expect_identical(object = ncol(standardizeRootMass(inputDataList = testList)),
+  testthat::expect_identical(object = ncol(testrs),
                              expected = as.integer(10))
 })
 
