@@ -44,6 +44,29 @@ grazeSummary <- hbpAllBout %>%
 #-->  SERC, JERC, OSBS, TREE, UKFS, JORN, SRER, TEAK all should be hardcoded to have
 #--> exclosure=Y filtered out
 
+#   More detailed look at both SRER and TEAK to determine which bouts should be discarded
+grazeDetails <- hbpAllBout %>%
+  dplyr::filter(!is.na(exclosure),
+                plotType == "tower",
+                siteID %in% c("SRER", "TEAK")) %>%
+  dplyr::group_by(domainID,
+                  siteID,
+                  year,
+                  eventID,
+                  exclosure) %>%
+  dplyr::summarise(count = n(),
+                   .groups = "drop") %>%
+  tidyr::pivot_wider(names_from = "exclosure",
+                     values_from = "count")
+
+#--> At TEAK, a handful of bouts where only one plot was sampled when exclosure == "Y"; remove all data from these bouts
+
+teakRemove <- grazeDetails %>%
+  dplyr::filter(siteID == "TEAK",
+                N < 3)
+
+teakRemove <- c("HBP.2019.TEAK.02.TOWER", "HBP.2019.TEAK.03.TOWER", "HBP.2019.TEAK.04.TOWER", "HBP.2021.TEAK.23.TOWER", "HBP.2021.TEAK.27.TOWER", "HBP.2021.TEAK.35.TOWER", "HBP.2021.TEAK.43.TOWER")
+
 
 
 
