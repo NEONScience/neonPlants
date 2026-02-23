@@ -419,6 +419,9 @@ scaleHerbMass = function(inputDataList,
 
   ##  Step 1: Identify records in all 'siteID x year' combinations that supported grazing
   grazedSiteYearDF <- hbp_wide %>%
+    dplyr::mutate(siteYear = paste(.data$siteID, .data$year, sep = "-"),
+                  siteYearPlot = paste(.data$siteID, .data$year, .data$plotID, sep = "-"),
+                  .before = "plotID") %>%
     dplyr::group_by(.data$siteID,
                     .data$year) %>%
     dplyr::filter(any(.data$exclosure == "Y"))
@@ -523,22 +526,165 @@ scaleHerbMass = function(inputDataList,
                    .data$plotType,
                    .data$eventID,
                    .data$plotID)
-  #--> Consider removing columns: subplotID, clipID, targetTaxaPresent, sampleID, clipArea, exclosure as these are minimally relevant to plot-level peak biomass. Clean up of "NaN" will come later once grazed and cropped estimates are joined.
 
   rm(distStdDF, temp, towerStdDF)
 
 
 
+  ### Grazed sites: Identify peak biomass, accounting for the fact that some Tower plots at grazed sites are not grazed
 
-#---> Begin again here with finding peak biomass at grazed sites
-
-
-
-
-
+  ##  Distributed plots
+  distGrazedDF <- grazedSiteYearDF %>%
+    dplyr::filter(.data$plotType == "distributed")
 
 
+  ##  Tower plots
+  #   For each 'siteID x year', find plots that were grazed (exclosure == "Y") at some point in the year and plots that were never grazed in that year; assumes plots with an exclosure = Y clip were grazed for the entire year which may not be correct but it is not possible to tell when a plot with no exclosures goes in/out of grazing management within a year since exclosures can be damaged and the plot still grazed.
+  tempGrazed <- grazedSiteYearDF %>%
+    dplyr::filter(.data$plotType == "tower") %>%
+    dplyr::group_by(.data$siteYearPlot) %>%
+    dplyr::filter(any(.data$exclosure == "Y")) %>%
+    dplyr::ungroup()
 
+  #   For grazed plots at grazed sites, determine peak biomass eventID; filter out exclosure == "Y" as these clips are not relevant for understanding peak biomass
+  temp <- tempGrazed %>%
+    dplyr::filter(.data$exclosure != "Y") %>%
+    dplyr::group_by(.data$domainID,
+                    .data$siteID,
+                    .data$year,
+                    .data$eventID) %>%
+    dplyr::summarise(MeanBiomass_gm2 = mean(.data$AllHerbaceousPlants_gm2, na.rm = TRUE),
+                     count = n(),
+                     .groups = "drop")
+
+  temp <- temp %>%
+    dplyr::group_by(.data$domainID,
+                    .data$siteID,
+                    .data$year) %>%
+    dplyr::filter(MeanBiomass_gm2 == max(.data$MeanBiomass_gm2, na.rm = TRUE))
+
+  #   Find all Tower plots associated with peak biomass eventID, grazed or ungrazed
+  towerGrazedDF <- grazedSiteYearDF %>%
+    dplyr::filter(.data$plotType == "tower",
+                  .data$eventID %in% temp$eventID,
+                  .data$exclosure != "Y") %>%
+    dplyr::group_by(.data$domainID,
+                    .data$siteID,
+                    .data$year,
+                    .data$eventID,
+                    .data$plotID,
+                    .data$nlcdClass,
+                    .data$plotType,
+                    .data$plotSize,
+                    .data$plotManagement) %>%
+    dplyr::summarise(collectDate = min(.data$collectDate),
+                     AllHerbaceousPlants_gm2 = round(mean(.data$AllHerbaceousPlants_gm2, na.rm = TRUE),
+                                                     digits = 2),
+                     AnnualAndPerennialForbs_gm2 = round(mean(.data$AnnualAndPerennialForbs_gm2, na.rm = TRUE),
+                                                         digits = 2),
+                     CoolSeasonGraminoids_gm2 = round(mean(.data$CoolSeasonGraminoids_gm2, na.rm = TRUE),
+                                                      digits = 2),
+                     NFixingPlants_gm2 = round(mean(.data$NFixingPlants_gm2, na.rm = TRUE),
+                                               digits = 2),
+                     WarmSeasonGraminoids_gm2 = round(mean(.data$WarmSeasonGraminoids_gm2, na.rm = TRUE),
+                                                      digits = 2),
+                     WoodyStemmedPlants_gm2 = round(mean(.data$WoodyStemmedPlants_gm2, na.rm = TRUE),
+                                                    digits = 2),
+                     Barley_gm2 = round(mean(.data$Barley_gm2, na.rm = TRUE),
+                                        digits = 2),
+                     Corn_gm2 = round(mean(.data$Corn_gm2, na.rm = TRUE),
+                                      digits = 2),
+                     Millet_gm2 = round(mean(.data$Millet_gm2, na.rm = TRUE),
+                                        digits = 2),
+                     Oat_gm2 = round(mean(.data$Oat_gm2, na.rm = TRUE),
+                                     digits = 2),
+                     OrchardGrass_gm2 = round(mean(.data$OrchardGrass_gm2, na.rm = TRUE),
+                                              digits = 2),
+                     Rye_gm2 = round(mean(.data$Rye_gm2, na.rm = TRUE),
+                                     digits = 2),
+                     Sorghum_gm2 = round(mean(.data$Sorghum_gm2, na.rm = TRUE),
+                                         digits = 2),
+                     Soybean_gm2 = round(mean(.data$Soybean_gm2, na.rm = TRUE),
+                                         digits = 2),
+                     Sunflower_gm2 = round(mean(.data$Sunflower_gm2, na.rm = TRUE),
+                                           digits = 2),
+                     Wheat_gm2 = round(mean(.data$Wheat_gm2, na.rm = TRUE),
+                                       digits = 2),
+                     .groups = "drop")
+
+
+  ##  Create plot-level peak biomass data frame for "grazed" sites
+  grazedPlotPeakDF <- dplyr::full_join(distGrazedDF,
+                                       towerGrazedDF) %>%
+    dplyr::select(-"siteYear",
+                  -"siteYearPlot") %>%
+    dplyr::arrange(.data$domainID,
+                   .data$siteID,
+                   .data$year,
+                   .data$plotType,
+                   .data$eventID,
+                   .data$plotID)
+
+
+  ##  Create plot-level peak biomass for "wild" type plots at grazed sites that were not sampled in the same peak biomass eventID as the grazed plots; these plots reported separately.
+  #   Identify peak biomass bout for "wild" type plots at grazed sites
+
+  grazedWildDF <- grazedSiteYearDF %>%
+    dplyr::filter(.data$plotType == "tower",
+                  !.data$plotID %in% grazedPlotPeakDF$plotID,
+                  .data$exclosure != "Y")
+
+  temp <- grazedWildDF %>%
+    dplyr::group_by(.data$domainID,
+                    .data$siteID,
+                    .data$year,
+                    .data$eventID) %>%
+    dplyr::summarise(MeanBiomass_gm2 = mean(.data$AllHerbaceousPlants_gm2, na.rm = TRUE),
+                     count = n(),
+                     .groups = "drop")
+
+  temp <- temp %>%
+    dplyr::group_by(.data$domainID,
+                    .data$siteID,
+                    .data$year) %>%
+    dplyr::filter(MeanBiomass_gm2 == max(MeanBiomass_gm2, na.rm = TRUE))
+
+  #   Isolate records for "wild" type plots from peak biomass bout that is not the same as the peak grazed biomass bout
+  grazedWildDF <- grazedWildDF %>%
+    dplyr::filter(.data$eventID %in% temp$eventID) %>%
+    dplyr::select(-"siteYear",
+                  -"siteYearPlot") %>%
+    dplyr::arrange(.data$domainID,
+                   .data$siteID,
+                   .data$year,
+                   .data$eventID,
+                   .data$plotID)
+
+
+  ##  Grazed cleanup
+  rm(temp, distGrazedDF, towerGrazedDF, tempGrazed)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  #--> Consider removing columns: subplotID, clipID, targetTaxaPresent, sampleID, clipArea, exclosure as these are minimally relevant to plot-level peak biomass. Clean up of "NaN" will come later once grazed and cropped estimates are joined.
+
+
+  ### Original plot-level peak biomass logic: Remove once code above is completed ###############################
   ##  Calculate plot-level peak biomass
   hbp_plot <- hbp_wide %>%
 
