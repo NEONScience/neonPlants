@@ -4,7 +4,7 @@
 #' Courtney Meier \email{cmeier@BattelleEcology.org} \cr
 #' Samuel M Simkin \email{ssimkin@battelleecology.org} \cr
 #'
-#' @description Join NEON Herbaceous Clip Harvest data tables (DP1.10023.001) to calculate herbaceous biomass by functional group per unit area as well as total herbaceous biomass per unit area. Biomass outputs can be used in the neonPlants estimateMass() function, and the estimateHerbProd() productivity function.
+#' @description Join NEON Herbaceous Clip Harvest data tables (DP1.10023.001) to calculate herbaceous biomass by functional group per unit area, as well as total herbaceous biomass per unit area, at spatial scales of the sampling cell, plot, and site. Biomass outputs can be used with the estimateHerbProd() productivity function.
 #'
 #' Data inputs are "Herbaceous clip harvest" data (DP1.10023.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input tables with an equivalent structure and representing the same site x month combinations.
 #'
@@ -23,9 +23,11 @@
 #' @param plotSubset The options are the default of "all" (all Tower and Distributed plots), "tower" (all plots in the Tower airshed but no Distributed plots), and "distributed" (all Distributed plots, which are sampled on a 5-year interval and are spatially representative of the NLCD classes at a site, and no Tower plots). [character]
 #'
 #' @return A list that includes biomass summary data at multiple scales. Output tables include:
-#'   * hbp_agb - Summarizes above-ground herbaceous biomass for each sampled clip strip in the input data ("g/m2").
-#'   * hbp_plot - Summarizes above-ground herbaceous peak standing biomass for each plot by year combination (both "g/m2" and "Mg/ha").
-#'   * hbp_site - Summarizes above-ground herbaceous peak standing biomass for each site by year combination (both "g/m2" and "Mg/ha").
+#'   * hbp_agb - Above-ground herbaceous biomass for each sampled clip strip in the input data ("g/m2").
+#'   * hbp_plot - Plot-level above-ground herbaceous peak standing biomass for all sites not planted with crops in a given year (both "g/m2" and "Mg/ha").
+#'   * hbp_plot_extra - Above-ground herbaceous peak standing biomass for plots at grazed sites that were not subject to grazing management (i.e., the Tower plots at a grazed sites were not all managed for grazing) and with peak biomass occurring in a different eventID than the peak biomass eventID associated with the grazed plots (both "g/m2" and "Mg/ha").
+#'   * hbp_plot_crop - Above-ground herbaceous peak standing biomass for plots at sites planted with an agricultural crop in at least one plot in a given year (both "g/m2" and "Mg/ha"). Peak biomass is reported on a per plot basis and it is not assumed there is a single sampling eventID that represents "peak biomass".
+#'   * hbp_site - Above-ground herbaceous peak standing biomass for each site by year combination (both "g/m2" and "Mg/ha"). Output is derived from the single sampling eventID with the greatest biomass and does not include sites planted with agricultural crops. At grazed sites, the peak biomass estimate does not include those Tower plots not managed for grazing AND that achieve peak biomass in a different eventID than that identified for grazed plots.
 #'
 #' @examples
 #' \dontrun{
@@ -156,8 +158,7 @@ scaleHerbMass = function(inputDataList,
 
   ### Prepare 'inputBout' data frame
 
-  ##  Remove exclosure == "Y" records at sites where exclosures were trialed by not used (SRER) and where
-  ##  exclosure == "Y" was mistakenly selected
+  ##  Remove exclosure == "Y" records at sites where exclosures were trialed by not used (SRER) and where exclosure == "Y" was mistakenly selected
   exclosureFilter <- c("SERC", "JERC", "OSBS", "TREE", "UKFS", "JORN", "SRER", "TEAK")
 
   inputBout <- inputBout %>%
@@ -224,14 +225,9 @@ scaleHerbMass = function(inputDataList,
                                           "qaDryMass"),
                           by = "sampleID")
 
-  #   Find orphaned hbp_massdata records, remove from 'hbp'; mass data records are expected to be orphaned due to inputBout filtering above, but orphaned records may also exist in input data (though unlikely)
-  huerfanoDF <- hbp %>%
-    dplyr::filter(is.na(.data$plotID) & is.na(.data$eventID) & is.na(.data$collectDate))
-
+  #   Find orphaned hbp_massdata records, remove from 'hbp'; mass data records are expected to be orphaned at some sites due to inputBout filtering above, but orphaned records may also exist in input data (though unlikely)
   hbp <- hbp %>%
-    dplyr::filter(!.data$sampleID %in% huerfanoDF$sampleID)
-
-  rm(huerfanoDF)
+    dplyr::filter(!is.na(.data$plotID) & !is.na(.data$eventID) & !is.na(.data$collectDate))
 
 
   ##  Filter by user-supplied plotSubset
@@ -244,154 +240,163 @@ scaleHerbMass = function(inputDataList,
 
 
   ##  Calculate the average of any 'qaDryMass' replicates or duplicates within 'herbGroup', scale 'dryMass' to "g/m2" and assign a 0 when tTP = N, and remove spaces and hyphens from 'herbGroup' values
-  hbp <- hbp %>%
-    dplyr::group_by(.data$domainID,
-                    .data$siteID,
-                    .data$plotID,
-                    .data$subplotID,
-                    .data$clipID,
-                    .data$nlcdClass,
-                    .data$plotType,
-                    .data$plotSize,
-                    .data$plotManagement,
-                    .data$collectDate,
-                    .data$year,
-                    .data$eventID,
-                    .data$samplingImpractical,
-                    .data$targetTaxaPresent,
-                    .data$sampleID,
-                    .data$clipArea,
-                    .data$exclosure,
-                    .data$subsampleID,
-                    .data$herbGroup) %>%
-    dplyr::summarise(dryMass = dplyr::case_when(all(is.na(.data$dryMass)) ~ NA,
-                                                TRUE ~ mean(.data$dryMass, na.rm = TRUE)),
-                     .groups = "drop") %>%
 
-    dplyr::mutate(dryMass = dplyr::case_when(.data$targetTaxaPresent == "N" ~ 0,
-                                             TRUE ~ round(.data$dryMass, digits = 2)),
-                  dryMass_gm2 = dplyr::case_when(.data$targetTaxaPresent == "N" ~ 0,
-                                                 TRUE ~ round(.data$dryMass / .data$clipArea, digits = 2))) %>%
+  if (!nrow(hbp)) {
 
-    dplyr::mutate(herbGroup = dplyr::case_when(.data$herbGroup == "All herbaceous plants" ~ "AllHerbaceousPlants",
-                                               .data$herbGroup == "Cool Season Graminoids" ~ "CoolSeasonGraminoids",
-                                               .data$herbGroup == "Woody-stemmed Plants" ~ "WoodyStemmedPlants",
-                                               .data$herbGroup == "Warm Season Graminoids" ~ "WarmSeasonGraminoids",
-                                               .data$herbGroup == "Leguminous Forbs" ~ "NFixingPlants",
-                                               .data$herbGroup == "N-fixing Plants" ~ "NFixingPlants",
-                                               .data$herbGroup == "Annual and Perennial Forbs" ~ "AnnualAndPerennialForbs",
-                                               .data$herbGroup == "Orchard Grass" ~ "OrchardGrass",
-                                               TRUE ~ .data$herbGroup))
+    stop("No data available for specified 'plotSubset'")
 
+  } else {
 
-  ##  Identify sampleIDs containing crop functional groups; easiest to do here when only 'herbGroup' column to consider before the table pivots wider below.
-  #   Define all possible crop herbGroups
-  allCrops <- c("Barley",
-                "Corn",
-                "Millet",
-                "Oat",
-                "OrchardGrass",
-                "Rye",
-                "Sorghum",
-                "Soybean",
-                "Sunflower",
-                "Wheat")
+    hbp <- hbp %>%
+      dplyr::group_by(.data$domainID,
+                      .data$siteID,
+                      .data$plotID,
+                      .data$subplotID,
+                      .data$clipID,
+                      .data$nlcdClass,
+                      .data$plotType,
+                      .data$plotSize,
+                      .data$plotManagement,
+                      .data$collectDate,
+                      .data$year,
+                      .data$eventID,
+                      .data$samplingImpractical,
+                      .data$targetTaxaPresent,
+                      .data$sampleID,
+                      .data$clipArea,
+                      .data$exclosure,
+                      .data$subsampleID,
+                      .data$herbGroup) %>%
+      dplyr::summarise(dryMass = dplyr::case_when(all(is.na(.data$dryMass)) ~ NA,
+                                                  TRUE ~ mean(.data$dryMass, na.rm = TRUE)),
+                       .groups = "drop") %>%
 
-  #   Determine which sampleIDs contain crops; retain these in separate data frame to enable accurate plot-level peak biomass calculation; create 'siteYear' variable to identify all records in a site-year where cropping occurred (further down).
-  cropPlotsDF <- hbp %>%
-    dplyr::group_by(.data$domainID,
-                    .data$siteID,
-                    .data$plotID,
-                    .data$subplotID,
-                    .data$plotType,
-                    .data$plotManagement,
-                    .data$year,
-                    .data$eventID,
-                    .data$sampleID) %>%
-    dplyr::filter(any(.data$herbGroup %in% allCrops)) %>%
-    dplyr::mutate(siteYear = paste(.data$siteID, .data$year, sep = "-"),
-                  .before = "plotID")
+      dplyr::mutate(dryMass = dplyr::case_when(.data$targetTaxaPresent == "N" ~ 0,
+                                               TRUE ~ round(.data$dryMass, digits = 2)),
+                    dryMass_gm2 = dplyr::case_when(.data$targetTaxaPresent == "N" ~ 0,
+                                                   TRUE ~ round(.data$dryMass / .data$clipArea, digits = 2))) %>%
+
+      dplyr::mutate(herbGroup = dplyr::case_when(.data$herbGroup == "All herbaceous plants" ~ "TotalMass",
+                                                 .data$herbGroup == "Cool Season Graminoids" ~ "CoolSeasonGram",
+                                                 .data$herbGroup == "Woody-stemmed Plants" ~ "WoodyPlants",
+                                                 .data$herbGroup == "Warm Season Graminoids" ~ "WarmSeasonGram",
+                                                 .data$herbGroup == "Leguminous Forbs" ~ "NFixing",
+                                                 .data$herbGroup == "N-fixing Plants" ~ "NFixing",
+                                                 .data$herbGroup == "Annual and Perennial Forbs" ~ "Forbs",
+                                                 .data$herbGroup == "Orchard Grass" ~ "OrchardGrass",
+                                                 TRUE ~ .data$herbGroup))
 
 
-  ##  Transpose herbGroup rows into separate columns to create one row per clipID
-  clipDF <- tidyr::pivot_wider(data = hbp,
-                               id_cols = c("domainID",
-                                           "siteID",
-                                           "plotID",
-                                           "subplotID",
-                                           "clipID",
-                                           "nlcdClass",
-                                           "plotType",
-                                           "plotSize",
-                                           "plotManagement",
-                                           "collectDate",
-                                           "year",
-                                           "eventID",
-                                           "targetTaxaPresent",
-                                           "sampleID",
-                                           "clipArea",
-                                           "exclosure"),
-                               names_from = "herbGroup",
-                               names_glue = "{herbGroup}_gm2",
-                               values_from = "dryMass_gm2") %>%
-    dplyr::relocate("AllHerbaceousPlants_gm2",
-                    "NA_gm2",
-                    .after = "exclosure")
+    ##  Identify sampleIDs containing crop functional groups; easiest to do here when only 'herbGroup' column to consider before the table pivots wider below.
+    #   Define all possible crop herbGroups
+    allCrops <- c("Barley",
+                  "Corn",
+                  "Millet",
+                  "Oat",
+                  "OrchardGrass",
+                  "Rye",
+                  "Sorghum",
+                  "Soybean",
+                  "Sunflower",
+                  "Wheat")
+
+    #   Determine which sampleIDs contain crops; retain these in separate data frame to enable accurate plot-level peak biomass calculation; create 'siteYear' variable to identify all records in a site-year where cropping occurred (further down).
+    cropPlotsDF <- hbp %>%
+      dplyr::group_by(.data$domainID,
+                      .data$siteID,
+                      .data$plotID,
+                      .data$subplotID,
+                      .data$plotType,
+                      .data$plotManagement,
+                      .data$year,
+                      .data$eventID,
+                      .data$sampleID) %>%
+      dplyr::filter(any(.data$herbGroup %in% allCrops)) %>%
+      dplyr::mutate(siteYear = paste(.data$siteID, .data$year, sep = "-"),
+                    .before = "plotID")
 
 
-  ##  Add columns for missing herbGroups; can occur when a small number of sites are used and not all herbGroups present at sites (especially crops).
-  allHerbGroups <- c("AllHerbaceousPlants_gm2",
-                     "AnnualAndPerennialForbs_gm2",
-                     "CoolSeasonGraminoids_gm2",
-                     "NFixingPlants_gm2",
-                     "WarmSeasonGraminoids_gm2",
-                     "WoodyStemmedPlants_gm2",
-                     "Barley_gm2",
-                     "Corn_gm2",
-                     "Millet_gm2",
-                     "Oat_gm2",
-                     "OrchardGrass_gm2",
-                     "Rye_gm2",
-                     "Sorghum_gm2",
-                     "Soybean_gm2",
-                     "Sunflower_gm2",
-                     "Wheat_gm2")
+    ##  Transpose herbGroup rows into separate columns to create one row per clipID
+    clipDF <- tidyr::pivot_wider(data = hbp,
+                                 id_cols = c("domainID",
+                                             "siteID",
+                                             "plotID",
+                                             "subplotID",
+                                             "clipID",
+                                             "nlcdClass",
+                                             "plotType",
+                                             "plotSize",
+                                             "plotManagement",
+                                             "collectDate",
+                                             "year",
+                                             "eventID",
+                                             "targetTaxaPresent",
+                                             "sampleID",
+                                             "clipArea",
+                                             "exclosure"),
+                                 names_from = "herbGroup",
+                                 names_glue = "{herbGroup}_gm2",
+                                 values_from = "dryMass_gm2") %>%
+      dplyr::relocate("TotalMass_gm2",
+                      "NA_gm2",
+                      .after = "exclosure")
 
-  for (i in 1:length(allHerbGroups)) {
 
-    if (!allHerbGroups[i] %in% names(clipDF)) {
+    ##  Add columns for missing herbGroups; can occur when a small number of sites are used and not all herbGroups present at sites (especially crops).
+    allHerbGroups <- c("TotalMass_gm2",
+                       "Forbs_gm2",
+                       "CoolSeasonGram_gm2",
+                       "NFixing_gm2",
+                       "WarmSeasonGram_gm2",
+                       "WoodyPlants_gm2",
+                       "Barley_gm2",
+                       "Corn_gm2",
+                       "Millet_gm2",
+                       "Oat_gm2",
+                       "OrchardGrass_gm2",
+                       "Rye_gm2",
+                       "Sorghum_gm2",
+                       "Soybean_gm2",
+                       "Sunflower_gm2",
+                       "Wheat_gm2")
 
-      clipDF[, allHerbGroups[i]] <- NA
+    for (i in 1:length(allHerbGroups)) {
 
+      if (!allHerbGroups[i] %in% names(clipDF)) {
+
+        clipDF[, allHerbGroups[i]] <- NA
+
+      }
     }
-  }
 
 
-  ##  Calculate "AllHerbaceousPlants" biomass for sampling events sorted to herbGroup
-  clipDF <- clipDF %>%
-    dplyr::mutate(AllHerbaceousPlants_gm2 = dplyr::case_when(is.na(.data$AllHerbaceousPlants_gm2) ~
-                                                               rowSums(dplyr::across("NA_gm2":"Wheat_gm2"),
-                                                                       na.rm = TRUE),
-                                                             TRUE ~ .data$AllHerbaceousPlants_gm2)) %>%
-    dplyr::select(-"NA_gm2") %>%
-    dplyr::arrange(.data$domainID,
-                   .data$siteID,
-                   .data$year,
-                   .data$eventID,
-                   .data$plotID,
-                   .data$subplotID,
-                   .data$clipID)
+    ##  Calculate "TotalMass" biomass for sampling events sorted to herbGroup
+    clipDF <- clipDF %>%
+      dplyr::mutate(TotalMass_gm2 = dplyr::case_when(is.na(.data$TotalMass_gm2) ~
+                                                       rowSums(dplyr::across("NA_gm2":"Wheat_gm2"),
+                                                               na.rm = TRUE),
+                                                     TRUE ~ .data$TotalMass_gm2)) %>%
+      dplyr::select(-"NA_gm2") %>%
+      dplyr::arrange(.data$domainID,
+                     .data$siteID,
+                     .data$year,
+                     .data$eventID,
+                     .data$plotID,
+                     .data$subplotID,
+                     .data$clipID)
+
+  } #   End !nrow() conditional
 
 
 
   ### Cell-level output: Finalize data frame ####
   #   Assign data types to herbGroup_gm2 columns; can be "logi" if an herbGroup is absent from the dataset for selected sites
   clipDF <- clipDF %>%
-    dplyr::mutate(AnnualAndPerennialForbs_gm2 = as.numeric(.data$AnnualAndPerennialForbs_gm2),
-                  CoolSeasonGraminoids_gm2 = as.numeric(.data$CoolSeasonGraminoids_gm2),
-                  NFixingPlants_gm2 = as.numeric(.data$NFixingPlants_gm2),
-                  WarmSeasonGraminoids_gm2 = as.numeric(.data$WarmSeasonGraminoids_gm2),
-                  WoodyStemmedPlants_gm2 = as.numeric(.data$WoodyStemmedPlants_gm2),
+    dplyr::mutate(CoolSeasonGram_gm2 = as.numeric(.data$CoolSeasonGram_gm2),
+                  Forbs_gm2 = as.numeric(.data$Forbs_gm2),
+                  NFixing_gm2 = as.numeric(.data$NFixing_gm2),
+                  WarmSeasonGram_gm2 = as.numeric(.data$WarmSeasonGram_gm2),
+                  WoodyPlants_gm2 = as.numeric(.data$WoodyPlants_gm2),
                   Barley_gm2 = as.numeric(.data$Barley_gm2),
                   Corn_gm2 = as.numeric(.data$Corn_gm2),
                   Millet_gm2 = as.numeric(.data$Millet_gm2),
@@ -402,11 +407,17 @@ scaleHerbMass = function(inputDataList,
                   Soybean_gm2 = as.numeric(.data$Soybean_gm2),
                   Sunflower_gm2 = as.numeric(.data$Sunflower_gm2),
                   Wheat_gm2 = as.numeric(.data$Wheat_gm2)) %>%
-    dplyr::relocate("AnnualAndPerennialForbs_gm2",
-                    .after = "AllHerbaceousPlants_gm2") %>%
-    dplyr::relocate("Oat_gm2",
+    dplyr::relocate("Barley_gm2",
+                    "Corn_gm2",
+                    "Millet_gm2",
+                    "Oat_gm2",
                     "OrchardGrass_gm2",
-                    .after = "Millet_gm2")
+                    "Rye_gm2",
+                    "Sorghum_gm2",
+                    "Soybean_gm2",
+                    "Sunflower_gm2",
+                    "Wheat_gm2",
+                    .after = "WoodyPlants_gm2")
 
 
 
@@ -670,7 +681,7 @@ scaleHerbMass = function(inputDataList,
   #--> Note: Distibuted plots are sampled annually at Ag sites, so all Ag site plots are considered together.
 
   #   Calculate plot-level average per eventID to account for sites like JERC where crops may be planted in 40m x 40m Tower plots.
-  cropPlotDF <- cropSiteYearDF %>%
+  cropDF <- cropSiteYearDF %>%
     dplyr::group_by(.data$domainID,
                     .data$siteID,
                     .data$year,
@@ -717,7 +728,7 @@ scaleHerbMass = function(inputDataList,
 
 
   ##  Calculate peak biomass per plot without regard to eventID
-  cropPlotDF <- cropPlotDF %>%
+  cropDF <- cropDF %>%
     dplyr::group_by(.data$domainID,
                     .data$siteID,
                     .data$year,
@@ -761,7 +772,7 @@ scaleHerbMass = function(inputDataList,
     dplyr::mutate(dplyr::across("AllHerbaceousPlants_gm2":"WoodyStemmedPlants_gm2", ~dplyr::na_if(., NaN))) %>%
 
     #   Rename columns with "herb" prefix and simplify
-    dplyr::rename("herbMassTotal_gm2" = "AllHerbaceousPlants_gm2",
+    dplyr::rename("herbTotalMass_gm2" = "AllHerbaceousPlants_gm2",
                   "herbForbs_gm2" = "AnnualAndPerennialForbs_gm2",
                   "herbCoolSeasonGram_gm2" = "CoolSeasonGraminoids_gm2",
                   "herbNFixing_gm2" = "NFixingPlants_gm2",
@@ -774,14 +785,34 @@ scaleHerbMass = function(inputDataList,
                   .before = "herbMassTotal_gm2")
 
 
+  ##  Clean "wild-type" peak biomass plot data at grazed sites
+  grazedWildDF <- grazedWildDF %>%
+    dplyr::select(-"subplotID",
+                  -"clipID",
+                  -"targetTaxaPresent",
+                  -"sampleID",
+                  -"clipArea",
+                  -"exclosure",
+                  -("Barley_gm2":"Wheat_gm2")) %>%
+    dplyr::rename("herbTotalMass_gm2" = "AllHerbaceousPlants_gm2",
+                  "herbForbs_gm2" = "AnnualAndPerennialForbs_gm2",
+                  "herbCoolSeasonGram_gm2" = "CoolSeasonGraminoids_gm2",
+                  "herbNFixing_gm2" = "NFixingPlants_gm2",
+                  "herbWarmSeasonGram_gm2" = "WarmSeasonGraminoids_gm2",
+                  "herbWoodyPlants_gm2" = "WoodyStemmedPlants_gm2") %>%
+    dplyr::mutate(herbTotalMass_Mgha = round(.data$herbTotalMass_gm2 * 10000 * 0.000001,
+                                             digits = 2),
+                  .before = "herbTotalMass_gm2")
+
+
   ##  Clean "cropped" plot-level peak biomass output
-  cropPlotDF <- cropPlotDF %>%
+  cropDF <- cropDF %>%
 
     #   Replace "NaN" with NA
     dplyr::mutate(dplyr::across("AllHerbaceousPlants_gm2":"Wheat_gm2", ~dplyr::na_if(., NaN))) %>%
 
     #   Rename columns with "herb" prefix and simplify
-    dplyr::rename("herbMassTotal_gm2" = "AllHerbaceousPlants_gm2",
+    dplyr::rename("herbTotalMass_gm2" = "AllHerbaceousPlants_gm2",
                   "herbForbs_gm2" = "AnnualAndPerennialForbs_gm2",
                   "herbCoolSeasonGram_gm2" = "CoolSeasonGraminoids_gm2",
                   "herbNFixing_gm2" = "NFixingPlants_gm2",
@@ -789,42 +820,49 @@ scaleHerbMass = function(inputDataList,
                   "herbWoodyPlants_gm2" = "WoodyStemmedPlants_gm2") %>%
 
     #   Calculate "Mg/ha" for total herbaceous peak biomass; g/m2 x 10,000 m2/ha x 0.000001 Mg/g = Mg/ha
-    dplyr::mutate(herbMassTotal_Mgha = round(.data$herbMassTotal_gm2 * 10000 * 0.000001,
+    dplyr::mutate(herbTotalMass_Mgha = round(.data$herbTotalMass_gm2 * 10000 * 0.000001,
                                              digits = 2),
-                  .before = "herbMassTotal_gm2")
+                  .before = "herbTotalMass_gm2")
+
+
+
+
 
 
 
   ### Site-level output: Calculate site-level mean peak herbaceous biomass by year ####
-  #--> Begin again here
-
-
-
-  hbp_site <- hbp_plot %>%
+  siteDF <- plotDF %>%
     dplyr::group_by(.data$domainID,
                     .data$siteID,
                     .data$year) %>%
-    dplyr::summarise(herbPlotNum = length(stats::na.omit(.data$herbPeakMassTotal_gm2)),
-                     herbPlotType = dplyr::case_when(dplyr::n_distinct(plotType, na.rm = TRUE) == 1 ~
-                                                       paste(unique(plotType), collapse = ", "),
-                                                     TRUE ~ paste(unique(plotType), collapse = ", ")),
-                     herbPeakMassMean_gm2 = round(mean(.data$herbPeakMassTotal_gm2, na.rm = TRUE),
-                                                  digits = 3),
-                     herbPeakMassSD_gm2 = round(stats::sd(.data$herbPeakMassTotal_gm2, na.rm = TRUE),
+    dplyr::summarise(herbPlotNum = length(stats::na.omit(.data$herbTotalMass_gm2)),
+                     herbPlotType = dplyr::case_when(dplyr::n_distinct(.data$plotType, na.rm = TRUE) == 1 ~
+                                                       paste(unique(.data$plotType), collapse = ", "),
+                                                     TRUE ~ paste(unique(.data$plotType), collapse = ", ")),
+                     herbStartDate = min(.data$collectDate),
+                     herbEndDate = max(.data$collectDate),
+                     herbTotalMean_Mgha = round(mean(.data$herbTotalMass_Mgha, na.rm = TRUE),
                                                 digits = 2),
-                     herbPeakMassMean_Mgha = round(mean(.data$herbPeakMassTotal_Mgha, na.rm = TRUE),
-                                                   digits = 3),
-                     herbPeakMassSD_Mgha = round(stats::sd(.data$herbPeakMassTotal_Mgha, na.rm = TRUE),
-                                                 digits = 2),
+                     herbTotalSEM_Mgha = round(stats::sd(.data$herbTotalMass_Mgha, na.rm = TRUE) / sqrt(.data$herbPlotNum),
+                                               digits = 2),
+                     herbTotalMean_gm2 = round(mean(.data$herbTotalMass_gm2, na.rm = TRUE),
+                                               digits = 2),
+                     herbTotalSEM_gm2 = round(stats::sd(.data$herbTotalMass_gm2, na.rm = TRUE) / sqrt(.data$herbPlotNum),
+                                              digits = 2),
                      .groups = "drop")
+
+
+
 
 
 
   ### Return results: Bundle output as list and return ####
 
-  output <- list(hbp_agb = hbp_wide,
-                 hbp_plot = hbp_plot,
-                 hbp_site = hbp_site)
+  output <- list(hbp_agb = clipDF,
+                 hbp_plot = plotDF,
+                 hbp_plot_extra = grazedWildDF,
+                 hbp_plot_crop = cropDF,
+                 hbp_site = siteDF)
 
   return(output)
 }

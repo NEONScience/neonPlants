@@ -245,7 +245,7 @@ crop functional groups<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:L
     <node id="n13">
       <data key="d6">
         <y:GenericNode configuration="com.yworks.flowchart.annotation">
-          <y:Geometry height="139.0" width="291.0" x="1239.7957639939482" y="1417.7515056369305"/>
+          <y:Geometry height="139.0" width="291.0" x="1239.7957639939482" y="1501.160744500848"/>
           <y:Fill color="#E8EEF7" color2="#B7C9E3" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="left" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="88.796875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="226.9375" x="32.03125" xml:space="preserve" y="25.1015625">Note: In older data, "wild-type" plots
@@ -389,7 +389,6 @@ report these plots separately<y:LabelModel><y:SmartNodeLabelModel distance="4.0"
       </data>
     </node>
     <node id="n24">
-      <data key="d5"/>
       <data key="d6">
         <y:GenericNode configuration="com.yworks.flowchart.data">
           <y:Geometry height="40.0" width="117.82160986221902" x="1216.5103908969536" y="1126.8883309069824"/>
@@ -424,7 +423,7 @@ report these plots separately<y:LabelModel><y:SmartNodeLabelModel distance="4.0"
     <node id="n27">
       <data key="d6">
         <y:GenericNode configuration="com.yworks.flowchart.process">
-          <y:Geometry height="81.0" width="228.0" x="888.7071262365346" y="1446.7515056369305"/>
+          <y:Geometry height="81.0" width="228.0" x="888.7071262365346" y="1530.160744500848"/>
           <y:Fill color="#CCFFCC" color2="#99CC00" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="left" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="74.6640625" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="167.107421875" x="30.4462890625" xml:space="preserve" y="3.16796875">Crop sites, all plots:
@@ -457,13 +456,32 @@ and "grazed" sites<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:Label
       </data>
     </node>
     <node id="n30">
-      <data key="d5"/>
       <data key="d6">
         <y:GenericNode configuration="com.yworks.flowchart.data">
           <y:Geometry height="40.0" width="117.82160986221902" x="1216.5103908969536" y="1278.0714753797442"/>
           <y:Fill color="#E8D759" color2="#FFCC00" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.1328125" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="42.302734375" x="37.759437743609396" xml:space="preserve" y="10.93359375">plotDF<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
+        </y:GenericNode>
+      </data>
+    </node>
+    <node id="n31">
+      <data key="d6">
+        <y:GenericNode configuration="com.yworks.flowchart.data">
+          <y:Geometry height="40.0" width="117.82160986221902" x="1216.5103908969536" y="1373.03251203029"/>
+          <y:Fill color="#E8D759" color2="#FFCC00" transparent="false"/>
+          <y:BorderStyle color="#000000" type="line" width="1.0"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.1328125" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="40.181640625" x="38.819984618609396" xml:space="preserve" y="10.93359375">siteDF<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
+        </y:GenericNode>
+      </data>
+    </node>
+    <node id="n32">
+      <data key="d6">
+        <y:GenericNode configuration="com.yworks.flowchart.data">
+          <y:Geometry height="40.0" width="117.82160986221902" x="943.7963213054251" y="1665.975008931987"/>
+          <y:Fill color="#CCFFCC" color2="#99CC00" transparent="false"/>
+          <y:BorderStyle color="#000000" type="line" width="1.0"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.1328125" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="45.40234375" x="36.20963305610951" xml:space="preserve" y="10.93359375">cropDF<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
         </y:GenericNode>
       </data>
     </node>
@@ -655,7 +673,6 @@ and "grazed" sites<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:Label
       </data>
     </edge>
     <edge id="e18" source="n21" target="n22">
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
@@ -666,7 +683,6 @@ and "grazed" sites<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:Label
       </data>
     </edge>
     <edge id="e19" source="n22" target="n23">
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
@@ -677,7 +693,6 @@ and "grazed" sites<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:Label
       </data>
     </edge>
     <edge id="e20" source="n23" target="n24">
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
@@ -688,7 +703,6 @@ and "grazed" sites<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:Label
       </data>
     </edge>
     <edge id="e21" source="n20" target="n25">
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="13.512859304084714" sy="5.242910471531559" tx="0.0" ty="0.0"/>
@@ -699,7 +713,6 @@ and "grazed" sites<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:Label
       </data>
     </edge>
     <edge id="e22" source="n22" target="n26">
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
@@ -710,12 +723,11 @@ and "grazed" sites<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:Label
       </data>
     </edge>
     <edge id="e23" source="n18" target="n27">
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0">
             <y:Point x="838.9890737939148" y="992.6585690113614"/>
-            <y:Point x="838.9890737939148" y="1487.2515056369305"/>
+            <y:Point x="838.9890737939148" y="1570.660744500848"/>
           </y:Path>
           <y:LineStyle color="#000000" type="line" width="1.0"/>
           <y:Arrows source="none" target="standard"/>
@@ -724,7 +736,6 @@ and "grazed" sites<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:Label
       </data>
     </edge>
     <edge id="e24" source="n13" target="n27">
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
@@ -735,7 +746,6 @@ and "grazed" sites<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:Label
       </data>
     </edge>
     <edge id="e25" source="n26" target="n28">
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
@@ -746,7 +756,6 @@ and "grazed" sites<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:Label
       </data>
     </edge>
     <edge id="e26" source="n15" target="n29">
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
@@ -757,6 +766,27 @@ and "grazed" sites<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:Label
       </data>
     </edge>
     <edge id="e27" source="n28" target="n30">
+      <data key="d10">
+        <y:PolyLineEdge>
+          <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
+          <y:LineStyle color="#000000" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e28" source="n30" target="n31">
+      <data key="d9"/>
+      <data key="d10">
+        <y:PolyLineEdge>
+          <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
+          <y:LineStyle color="#000000" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e29" source="n27" target="n32">
       <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
