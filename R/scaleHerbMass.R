@@ -469,7 +469,7 @@ scaleHerbMass = function(inputDataList,
                     .data$siteID,
                     .data$year,
                     .data$eventID) %>%
-    dplyr::summarise(MeanBiomass_gm2 = mean(.data$AllHerbaceousPlants_gm2, na.rm = TRUE),
+    dplyr::summarise(MeanBiomass_gm2 = mean(.data$TotalMass_gm2, na.rm = TRUE),
                      count = n(),
                      .groups = "drop")
 
@@ -493,18 +493,18 @@ scaleHerbMass = function(inputDataList,
                     .data$plotSize,
                     .data$plotManagement) %>%
     dplyr::summarise(collectDate = min(.data$collectDate),
-                     AllHerbaceousPlants_gm2 = round(mean(.data$AllHerbaceousPlants_gm2, na.rm = TRUE),
-                                                     digits = 2),
-                     AnnualAndPerennialForbs_gm2 = round(mean(.data$AnnualAndPerennialForbs_gm2, na.rm = TRUE),
-                                                         digits = 2),
-                     CoolSeasonGraminoids_gm2 = round(mean(.data$CoolSeasonGraminoids_gm2, na.rm = TRUE),
-                                                      digits = 2),
-                     NFixingPlants_gm2 = round(mean(.data$NFixingPlants_gm2, na.rm = TRUE),
-                                               digits = 2),
-                     WarmSeasonGraminoids_gm2 = round(mean(.data$WarmSeasonGraminoids_gm2, na.rm = TRUE),
-                                                      digits = 2),
-                     WoodyStemmedPlants_gm2 = round(mean(.data$WoodyStemmedPlants_gm2, na.rm = TRUE),
-                                                    digits = 2),
+                     TotalMass_gm2 = round(mean(.data$TotalMass_gm2, na.rm = TRUE),
+                                           digits = 2),
+                     CoolSeasonGram_gm2 = round(mean(.data$CoolSeasonGram_gm2, na.rm = TRUE),
+                                                digits = 2),
+                     Forbs_gm2 = round(mean(.data$Forbs_gm2, na.rm = TRUE),
+                                       digits = 2),
+                     NFixing_gm2 = round(mean(.data$NFixing_gm2, na.rm = TRUE),
+                                         digits = 2),
+                     WarmSeasonGram_gm2 = round(mean(.data$WarmSeasonGram_gm2, na.rm = TRUE),
+                                                digits = 2),
+                     WoodyPlants_gm2 = round(mean(.data$WoodyPlants_gm2, na.rm = TRUE),
+                                             digits = 2),
                      Barley_gm2 = round(mean(.data$Barley_gm2, na.rm = TRUE),
                                         digits = 2),
                      Corn_gm2 = round(mean(.data$Corn_gm2, na.rm = TRUE),
@@ -564,7 +564,7 @@ scaleHerbMass = function(inputDataList,
                     .data$siteID,
                     .data$year,
                     .data$eventID) %>%
-    dplyr::summarise(MeanBiomass_gm2 = mean(.data$AllHerbaceousPlants_gm2, na.rm = TRUE),
+    dplyr::summarise(MeanBiomass_gm2 = mean(.data$TotalMass_gm2, na.rm = TRUE),
                      count = n(),
                      .groups = "drop")
 
@@ -589,18 +589,18 @@ scaleHerbMass = function(inputDataList,
                     .data$plotSize,
                     .data$plotManagement) %>%
     dplyr::summarise(collectDate = min(.data$collectDate),
-                     AllHerbaceousPlants_gm2 = round(mean(.data$AllHerbaceousPlants_gm2, na.rm = TRUE),
-                                                     digits = 2),
-                     AnnualAndPerennialForbs_gm2 = round(mean(.data$AnnualAndPerennialForbs_gm2, na.rm = TRUE),
-                                                         digits = 2),
-                     CoolSeasonGraminoids_gm2 = round(mean(.data$CoolSeasonGraminoids_gm2, na.rm = TRUE),
-                                                      digits = 2),
-                     NFixingPlants_gm2 = round(mean(.data$NFixingPlants_gm2, na.rm = TRUE),
-                                               digits = 2),
-                     WarmSeasonGraminoids_gm2 = round(mean(.data$WarmSeasonGraminoids_gm2, na.rm = TRUE),
-                                                      digits = 2),
-                     WoodyStemmedPlants_gm2 = round(mean(.data$WoodyStemmedPlants_gm2, na.rm = TRUE),
-                                                    digits = 2),
+                     TotalMass_gm2 = round(mean(.data$TotalMass_gm2, na.rm = TRUE),
+                                           digits = 2),
+                     CoolSeasonGram_gm2 = round(mean(.data$CoolSeasonGram_gm2, na.rm = TRUE),
+                                                digits = 2),
+                     Forbs_gm2 = round(mean(.data$Forbs_gm2, na.rm = TRUE),
+                                       digits = 2),
+                     NFixing_gm2 = round(mean(.data$NFixing_gm2, na.rm = TRUE),
+                                         digits = 2),
+                     WarmSeasonGram_gm2 = round(mean(.data$WarmSeasonGram_gm2, na.rm = TRUE),
+                                                digits = 2),
+                     WoodyPlants_gm2 = round(mean(.data$WoodyPlants_gm2, na.rm = TRUE),
+                                             digits = 2),
                      Barley_gm2 = round(mean(.data$Barley_gm2, na.rm = TRUE),
                                         digits = 2),
                      Corn_gm2 = round(mean(.data$Corn_gm2, na.rm = TRUE),
@@ -650,7 +650,7 @@ scaleHerbMass = function(inputDataList,
                     .data$siteID,
                     .data$year,
                     .data$eventID) %>%
-    dplyr::summarise(MeanBiomass_gm2 = mean(.data$AllHerbaceousPlants_gm2, na.rm = TRUE),
+    dplyr::summarise(MeanBiomass_gm2 = mean(.data$TotalMass_gm2, na.rm = TRUE),
                      count = n(),
                      .groups = "drop")
 
@@ -692,17 +692,17 @@ scaleHerbMass = function(inputDataList,
                     .data$plotSize,
                     .data$plotManagement) %>%
     dplyr::summarise(collectDate = min(.data$collectDate),
-                     AllHerbaceousPlants_gm2 = round(mean(.data$AllHerbaceousPlants_gm2, na.rm = TRUE),
+                     TotalMass_gm2 = round(mean(.data$TotalMass_gm2, na.rm = TRUE),
                                                      digits = 2),
-                     AnnualAndPerennialForbs_gm2 = round(mean(.data$AnnualAndPerennialForbs_gm2, na.rm = TRUE),
+                     CoolSeasonGram_gm2 = round(mean(.data$CoolSeasonGram_gm2, na.rm = TRUE),
+                                                      digits = 2),
+                     Forbs_gm2 = round(mean(.data$Forbs_gm2, na.rm = TRUE),
                                                          digits = 2),
-                     CoolSeasonGraminoids_gm2 = round(mean(.data$CoolSeasonGraminoids_gm2, na.rm = TRUE),
-                                                      digits = 2),
-                     NFixingPlants_gm2 = round(mean(.data$NFixingPlants_gm2, na.rm = TRUE),
+                     NFixing_gm2 = round(mean(.data$NFixing_gm2, na.rm = TRUE),
                                                digits = 2),
-                     WarmSeasonGraminoids_gm2 = round(mean(.data$WarmSeasonGraminoids_gm2, na.rm = TRUE),
+                     WarmSeasonGram_gm2 = round(mean(.data$WarmSeasonGram_gm2, na.rm = TRUE),
                                                       digits = 2),
-                     WoodyStemmedPlants_gm2 = round(mean(.data$WoodyStemmedPlants_gm2, na.rm = TRUE),
+                     WoodyPlants_gm2 = round(mean(.data$WoodyPlants_gm2, na.rm = TRUE),
                                                     digits = 2),
                      Barley_gm2 = round(mean(.data$Barley_gm2, na.rm = TRUE),
                                         digits = 2),
@@ -733,7 +733,7 @@ scaleHerbMass = function(inputDataList,
                     .data$siteID,
                     .data$year,
                     .data$plotID) %>%
-    dplyr::filter(AllHerbaceousPlants_gm2 == max(.data$AllHerbaceousPlants_gm2, na.rm = TRUE)) %>%
+    dplyr::filter(TotalMass_gm2 == max(.data$TotalMass_gm2, na.rm = TRUE)) %>%
     dplyr::ungroup() %>%
     dplyr::relocate("eventID",
                     .before = "collectDate") %>%
@@ -769,20 +769,20 @@ scaleHerbMass = function(inputDataList,
                   -"Wheat_gm2") %>%
 
     #   Replace "NaN" with NA
-    dplyr::mutate(dplyr::across("AllHerbaceousPlants_gm2":"WoodyStemmedPlants_gm2", ~dplyr::na_if(., NaN))) %>%
+    dplyr::mutate(dplyr::across("TotalMass_gm2":"WoodyPlants_gm2", ~dplyr::na_if(., NaN))) %>%
 
     #   Rename columns with "herb" prefix and simplify
-    dplyr::rename("herbTotalMass_gm2" = "AllHerbaceousPlants_gm2",
-                  "herbForbs_gm2" = "AnnualAndPerennialForbs_gm2",
-                  "herbCoolSeasonGram_gm2" = "CoolSeasonGraminoids_gm2",
-                  "herbNFixing_gm2" = "NFixingPlants_gm2",
-                  "herbWarmSeasonGram_gm2" = "WarmSeasonGraminoids_gm2",
-                  "herbWoodyPlants_gm2" = "WoodyStemmedPlants_gm2") %>%
+    dplyr::rename("herbTotalMass_gm2" = "TotalMass_gm2",
+                  "herbCoolSeasonGram_gm2" = "CoolSeasonGram_gm2",
+                  "herbForbs_gm2" = "Forbs_gm2",
+                  "herbNFixing_gm2" = "NFixing_gm2",
+                  "herbWarmSeasonGram_gm2" = "WarmSeasonGram_gm2",
+                  "herbWoodyPlants_gm2" = "WoodyPlants_gm2") %>%
 
     #   Calculate "Mg/ha" for total herbaceous peak biomass; g/m2 x 10,000 m2/ha x 0.000001 Mg/g = Mg/ha
-    dplyr::mutate(herbMassTotal_Mgha = round(.data$herbMassTotal_gm2 * 10000 * 0.000001,
+    dplyr::mutate(herbTotalMass_Mgha = round(.data$herbTotalMass_gm2 * 10000 * 0.000001,
                                              digits = 2),
-                  .before = "herbMassTotal_gm2")
+                  .before = "herbTotalMass_gm2")
 
 
   ##  Clean "wild-type" peak biomass plot data at grazed sites
@@ -794,12 +794,12 @@ scaleHerbMass = function(inputDataList,
                   -"clipArea",
                   -"exclosure",
                   -("Barley_gm2":"Wheat_gm2")) %>%
-    dplyr::rename("herbTotalMass_gm2" = "AllHerbaceousPlants_gm2",
-                  "herbForbs_gm2" = "AnnualAndPerennialForbs_gm2",
-                  "herbCoolSeasonGram_gm2" = "CoolSeasonGraminoids_gm2",
-                  "herbNFixing_gm2" = "NFixingPlants_gm2",
-                  "herbWarmSeasonGram_gm2" = "WarmSeasonGraminoids_gm2",
-                  "herbWoodyPlants_gm2" = "WoodyStemmedPlants_gm2") %>%
+    dplyr::rename("herbTotalMass_gm2" = "TotalMass_gm2",
+                  "herbCoolSeasonGram_gm2" = "CoolSeasonGram_gm2",
+                  "herbForbs_gm2" = "Forbs_gm2",
+                  "herbNFixing_gm2" = "NFixing_gm2",
+                  "herbWarmSeasonGram_gm2" = "WarmSeasonGram_gm2",
+                  "herbWoodyPlants_gm2" = "WoodyPlants_gm2") %>%
     dplyr::mutate(herbTotalMass_Mgha = round(.data$herbTotalMass_gm2 * 10000 * 0.000001,
                                              digits = 2),
                   .before = "herbTotalMass_gm2")
@@ -809,15 +809,15 @@ scaleHerbMass = function(inputDataList,
   cropDF <- cropDF %>%
 
     #   Replace "NaN" with NA
-    dplyr::mutate(dplyr::across("AllHerbaceousPlants_gm2":"Wheat_gm2", ~dplyr::na_if(., NaN))) %>%
+    dplyr::mutate(dplyr::across("TotalMass_gm2":"Wheat_gm2", ~dplyr::na_if(., NaN))) %>%
 
     #   Rename columns with "herb" prefix and simplify
-    dplyr::rename("herbTotalMass_gm2" = "AllHerbaceousPlants_gm2",
-                  "herbForbs_gm2" = "AnnualAndPerennialForbs_gm2",
-                  "herbCoolSeasonGram_gm2" = "CoolSeasonGraminoids_gm2",
-                  "herbNFixing_gm2" = "NFixingPlants_gm2",
-                  "herbWarmSeasonGram_gm2" = "WarmSeasonGraminoids_gm2",
-                  "herbWoodyPlants_gm2" = "WoodyStemmedPlants_gm2") %>%
+    dplyr::rename("herbTotalMass_gm2" = "TotalMass_gm2",
+                  "herbCoolSeasonGram_gm2" = "CoolSeasonGram_gm2",
+                  "herbForbs_gm2" = "Forbs_gm2",
+                  "herbNFixing_gm2" = "NFixing_gm2",
+                  "herbWarmSeasonGram_gm2" = "WarmSeasonGram_gm2",
+                  "herbWoodyPlants_gm2" = "WoodyPlants_gm2") %>%
 
     #   Calculate "Mg/ha" for total herbaceous peak biomass; g/m2 x 10,000 m2/ha x 0.000001 Mg/g = Mg/ha
     dplyr::mutate(herbTotalMass_Mgha = round(.data$herbTotalMass_gm2 * 10000 * 0.000001,
@@ -843,10 +843,14 @@ scaleHerbMass = function(inputDataList,
                      herbEndDate = max(.data$collectDate),
                      herbTotalMean_Mgha = round(mean(.data$herbTotalMass_Mgha, na.rm = TRUE),
                                                 digits = 2),
+                     herbTotalSD_Mgha = round(stats::sd(.data$herbTotalMass_Mgha, na.rm = TRUE),
+                                              digits = 2),
                      herbTotalSEM_Mgha = round(stats::sd(.data$herbTotalMass_Mgha, na.rm = TRUE) / sqrt(.data$herbPlotNum),
                                                digits = 2),
                      herbTotalMean_gm2 = round(mean(.data$herbTotalMass_gm2, na.rm = TRUE),
                                                digits = 2),
+                     herbTotalSD_gm2 = round(stats::sd(.data$herbTotalMass_gm2, na.rm = TRUE),
+                                             digits = 2),
                      herbTotalSEM_gm2 = round(stats::sd(.data$herbTotalMass_gm2, na.rm = TRUE) / sqrt(.data$herbPlotNum),
                                               digits = 2),
                      .groups = "drop")
