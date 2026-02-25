@@ -694,7 +694,7 @@ scaleHerbMass = function(inputDataList,
                     .data$plotType,
                     .data$plotSize,
                     .data$plotManagement) %>%
-    dplyr::summarise(collectDate = min(.data$collectDate),
+    dplyr::summarise(collectDate = ifelse(all(is.na(.data$collectDate)), NA, min(.data$collectDate)),
                      TotalMass_gm2 = round(mean(.data$TotalMass_gm2, na.rm = TRUE),
                                                      digits = 2),
                      CoolSeasonGram_gm2 = round(mean(.data$CoolSeasonGram_gm2, na.rm = TRUE),
