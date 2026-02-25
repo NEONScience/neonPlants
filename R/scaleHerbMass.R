@@ -495,7 +495,7 @@ scaleHerbMass = function(inputDataList,
                     .data$plotType,
                     .data$plotSize,
                     .data$plotManagement) %>%
-    dplyr::summarise(collectDate = min(.data$collectDate),
+    dplyr::summarise(collectDate = ifelse(all(is.na(.data$collectDate)), NA, min(.data$collectDate)),
                      TotalMass_gm2 = round(mean(.data$TotalMass_gm2, na.rm = TRUE),
                                            digits = 2),
                      CoolSeasonGram_gm2 = round(mean(.data$CoolSeasonGram_gm2, na.rm = TRUE),
@@ -591,7 +591,7 @@ scaleHerbMass = function(inputDataList,
                     .data$plotType,
                     .data$plotSize,
                     .data$plotManagement) %>%
-    dplyr::summarise(collectDate = min(.data$collectDate),
+    dplyr::summarise(collectDate = ifelse(all(is.na(.data$collectDate)), NA, min(.data$collectDate)),
                      TotalMass_gm2 = round(mean(.data$TotalMass_gm2, na.rm = TRUE),
                                            digits = 2),
                      CoolSeasonGram_gm2 = round(mean(.data$CoolSeasonGram_gm2, na.rm = TRUE),
@@ -661,7 +661,7 @@ scaleHerbMass = function(inputDataList,
     dplyr::group_by(.data$domainID,
                     .data$siteID,
                     .data$year) %>%
-    dplyr::filter(MeanBiomass_gm2 == max(MeanBiomass_gm2, na.rm = TRUE))
+    dplyr::filter(MeanBiomass_gm2 == max(.data$MeanBiomass_gm2, na.rm = TRUE))
 
   #   Isolate records for peak biomass "wild" type plots that were not sampled in the peak grazed biomass bout
   grazedWildDF <- grazedWildDF %>%
@@ -843,8 +843,8 @@ scaleHerbMass = function(inputDataList,
                      herbPlotType = dplyr::case_when(dplyr::n_distinct(.data$plotType, na.rm = TRUE) == 1 ~
                                                        paste(unique(.data$plotType), collapse = ", "),
                                                      TRUE ~ paste(unique(.data$plotType), collapse = ", ")),
-                     herbStartDate = min(.data$collectDate),
-                     herbEndDate = max(.data$collectDate),
+                     herbStartDate = ifelse(all(is.na(.data$collectDate)), NA, min(.data$collectDate)),
+                     herbEndDate = ifelse(all(is.na(.data$collectDate)), NA, max(.data$collectDate)),
                      herbTotalMean_Mgha = round(mean(.data$herbTotalMass_Mgha, na.rm = TRUE),
                                                 digits = 2),
                      herbTotalSD_Mgha = round(stats::sd(.data$herbTotalMass_Mgha, na.rm = TRUE),
