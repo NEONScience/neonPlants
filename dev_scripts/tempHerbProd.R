@@ -1,10 +1,21 @@
 ### Function testing: Odd TREE output from 2018 with eventIDs
+#   Test sites: Site list includes Ag (BLAN), grazed (CPER, SJER), partially grazed (CLBJ, KONZ), and "standard" sites
 inputDataList <- neonUtilities::loadByProduct(dpID = "DP1.10023.001",
                                               site = c("BLAN", "CLBJ", "CPER", "KONZ", "OSBS", "SJER", "SRER", "TEAK", "TREE"),
                                               startdate = "2018-01",
                                               enddate = "2019-12",
                                               check.size = FALSE,
                                               token = Sys.getenv("NEON_TOKEN"))
+
+#   Test data: Single "standard" site to test if code handles pared down data
+inputDataList <- neonUtilities::loadByProduct(dpID = "DP1.10023.001",
+                                              site = "ONAQ",
+                                              startdate = "2023-01",
+                                              enddate = "2025-12",
+                                              check.size = FALSE,
+                                              include.provisional = TRUE,
+                                              token = Sys.getenv("NEON_TOKEN"))
+
 inputBout <- inputDataList$hbp_perbout
 inputMass <- inputDataList$hbp_massdata
 
