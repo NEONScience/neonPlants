@@ -69,8 +69,6 @@ scaleHerbMass = function(inputDataList,
     #   Check that required tables within list match expected names
     listExpNames <- c("hbp_perbout", "hbp_massdata")
 
-
-    #   All expected tables required when includeDilution == TRUE
     if (length(setdiff(listExpNames, names(inputDataList))) > 0) {
       stop(glue::glue("Required tables missing from 'inputDataList':",
                       '{paste(setdiff(listExpNames, names(inputDataList)), collapse = ", ")}',
@@ -157,10 +155,11 @@ scaleHerbMass = function(inputDataList,
 
   ### Prepare 'inputBout' data frame
 
-  ##  Remove exclosure == "Y" records at sites where exclosures were trialed by not used (SRER) and where exclosure == "Y" was mistakenly selected
+  ##  Remove samplingImpractical records, and remove exclosure == "Y" records at sites where exclosures were trialed by not used (SRER) and where exclosure == "Y" was mistakenly selected
   exclosureFilter <- c("SERC", "JERC", "OSBS", "TREE", "UKFS", "JORN", "SRER", "TEAK")
 
   inputBout <- inputBout %>%
+    dplyr::filter(.data$samplingImpractical == "OK") %>%
     dplyr::filter(!(.data$siteID %in% exclosureFilter & .data$exclosure == "Y") | is.na(.data$exclosure))
 
   #   At TEAK, remove bouts where only one plot was sampled when exclosure == "Y"; remove all data from these bouts
@@ -224,7 +223,7 @@ scaleHerbMass = function(inputDataList,
                                           "qaDryMass"),
                           by = "sampleID")
 
-  #   Find orphaned hbp_massdata records, remove from 'hbp'; mass data records are expected to be orphaned at some sites due to inputBout filtering above, but orphaned records may also exist in input data (though unlikely)
+  #   Remove orphaned hbp_massdata records, remove from 'hbp'; mass data records are expected to be orphaned at some sites due to inputBout filtering above, but orphaned records may also exist in input data (though unlikely)
   hbp <- hbp %>%
     dplyr::filter(!is.na(.data$plotID) & !is.na(.data$eventID) & !is.na(.data$collectDate))
 
@@ -277,11 +276,11 @@ scaleHerbMass = function(inputDataList,
 
       dplyr::mutate(herbGroup = dplyr::case_when(.data$herbGroup == "All herbaceous plants" ~ "TotalMass",
                                                  .data$herbGroup == "Cool Season Graminoids" ~ "CoolSeasonGram",
-                                                 .data$herbGroup == "Woody-stemmed Plants" ~ "WoodyPlants",
-                                                 .data$herbGroup == "Warm Season Graminoids" ~ "WarmSeasonGram",
+                                                 .data$herbGroup == "Annual and Perennial Forbs" ~ "Forbs",
                                                  .data$herbGroup == "Leguminous Forbs" ~ "NFixing",
                                                  .data$herbGroup == "N-fixing Plants" ~ "NFixing",
-                                                 .data$herbGroup == "Annual and Perennial Forbs" ~ "Forbs",
+                                                 .data$herbGroup == "Woody-stemmed Plants" ~ "WoodyPlants",
+                                                 .data$herbGroup == "Warm Season Graminoids" ~ "WarmSeasonGram",
                                                  .data$herbGroup == "Orchard Grass" ~ "OrchardGrass",
                                                  TRUE ~ .data$herbGroup))
 
@@ -452,8 +451,10 @@ scaleHerbMass = function(inputDataList,
 
   ##  Step 3: Identify all "standard" clips - i.e., no grazing, no crops at any point in a 'siteID x year'
   stdSiteYearDF <- clipDF %>%
-    dplyr::filter(!.data$sampleID %in% grazedSiteYearDF$sampleID,
-                  !.data$sampleID %in% cropSiteYearDF$sampleID)
+    dplyr::mutate(siteYear = paste(.data$siteID, .data$year, sep = "-"),
+                  .before = "plotID") %>%
+    dplyr::filter(!.data$siteYear %in% grazedSiteYearDF$siteYear,
+                  !.data$siteYear %in% cropSiteYearDF$siteYear)
 
 
 
@@ -495,7 +496,7 @@ scaleHerbMass = function(inputDataList,
                     .data$plotType,
                     .data$plotSize,
                     .data$plotManagement) %>%
-    dplyr::summarise(collectDate = ifelse(all(is.na(.data$collectDate)), NA, min(.data$collectDate)),
+    dplyr::summarise(collectDate = as.Date(ifelse(all(is.na(.data$collectDate)), NA, min(.data$collectDate))),
                      TotalMass_gm2 = round(mean(.data$TotalMass_gm2, na.rm = TRUE),
                                            digits = 2),
                      CoolSeasonGram_gm2 = round(mean(.data$CoolSeasonGram_gm2, na.rm = TRUE),
@@ -591,7 +592,7 @@ scaleHerbMass = function(inputDataList,
                     .data$plotType,
                     .data$plotSize,
                     .data$plotManagement) %>%
-    dplyr::summarise(collectDate = ifelse(all(is.na(.data$collectDate)), NA, min(.data$collectDate)),
+    dplyr::summarise(collectDate = as.Date(ifelse(all(is.na(.data$collectDate)), NA, min(.data$collectDate))),
                      TotalMass_gm2 = round(mean(.data$TotalMass_gm2, na.rm = TRUE),
                                            digits = 2),
                      CoolSeasonGram_gm2 = round(mean(.data$CoolSeasonGram_gm2, na.rm = TRUE),
@@ -657,22 +658,22 @@ scaleHerbMass = function(inputDataList,
                      count = n(),
                      .groups = "drop")
 
-  temp <- temp %>%
-    dplyr::group_by(.data$domainID,
-                    .data$siteID,
-                    .data$year) %>%
-    dplyr::filter(MeanBiomass_gm2 == max(.data$MeanBiomass_gm2, na.rm = TRUE))
+    temp <- temp %>%
+      dplyr::group_by(.data$domainID,
+                      .data$siteID,
+                      .data$year) %>%
+      dplyr::filter(MeanBiomass_gm2 == max(.data$MeanBiomass_gm2, na.rm = TRUE))
 
-  #   Isolate records for peak biomass "wild" type plots that were not sampled in the peak grazed biomass bout
-  grazedWildDF <- grazedWildDF %>%
-    dplyr::filter(.data$eventID %in% temp$eventID) %>%
-    dplyr::select(-"siteYear",
-                  -"siteYearPlot") %>%
-    dplyr::arrange(.data$domainID,
-                   .data$siteID,
-                   .data$year,
-                   .data$eventID,
-                   .data$plotID)
+    #   Isolate records for peak biomass "wild" type plots that were not sampled in the peak grazed biomass bout
+    grazedWildDF <- grazedWildDF %>%
+      dplyr::filter(.data$eventID %in% temp$eventID) %>%
+      dplyr::select(-"siteYear",
+                    -"siteYearPlot") %>%
+      dplyr::arrange(.data$domainID,
+                     .data$siteID,
+                     .data$year,
+                     .data$eventID,
+                     .data$plotID)
 
 
   ##  Grazed cleanup
@@ -694,7 +695,7 @@ scaleHerbMass = function(inputDataList,
                     .data$plotType,
                     .data$plotSize,
                     .data$plotManagement) %>%
-    dplyr::summarise(collectDate = ifelse(all(is.na(.data$collectDate)), NA, min(.data$collectDate)),
+    dplyr::summarise(collectDate = as.Date(ifelse(all(is.na(.data$collectDate)), NA, min(.data$collectDate))),
                      TotalMass_gm2 = round(mean(.data$TotalMass_gm2, na.rm = TRUE),
                                                      digits = 2),
                      CoolSeasonGram_gm2 = round(mean(.data$CoolSeasonGram_gm2, na.rm = TRUE),
@@ -731,27 +732,32 @@ scaleHerbMass = function(inputDataList,
 
 
   ##  Calculate peak biomass per plot without regard to eventID
-  cropDF <- cropDF %>%
-    dplyr::group_by(.data$domainID,
-                    .data$siteID,
-                    .data$year,
-                    .data$plotID) %>%
-    dplyr::filter(TotalMass_gm2 == max(.data$TotalMass_gm2, na.rm = TRUE)) %>%
-    dplyr::ungroup() %>%
-    dplyr::relocate("eventID",
-                    .before = "collectDate") %>%
-    dplyr::arrange(.data$domainID,
-                   .data$siteID,
-                   .data$year,
-                   .data$plotID)
+  if (!nrow(cropDF)) {
 
+    cropDF <- cropDF
+
+  } else {
+    cropDF <- cropDF %>%
+      dplyr::group_by(.data$domainID,
+                      .data$siteID,
+                      .data$year,
+                      .data$plotID) %>%
+      dplyr::filter(TotalMass_gm2 == max(.data$TotalMass_gm2, na.rm = TRUE)) %>%
+      dplyr::ungroup() %>%
+      dplyr::relocate("eventID",
+                      .before = "collectDate") %>%
+      dplyr::arrange(.data$domainID,
+                     .data$siteID,
+                     .data$year,
+                     .data$plotID)
+  }
 
 
   ### Plot-level data frames: Clean up for output
 
   ##  Clean and combine "standard" and "grazed" plot-level peak biomass
   plotDF <- dplyr::full_join(grazedPlotPeakDF,
-                           stdPlotPeakDF) %>%
+                             stdPlotPeakDF) %>%
 
     #   Remove columns not relevant to plot-level peak biomass output
     dplyr::select(-"subplotID",

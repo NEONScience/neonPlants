@@ -4,7 +4,7 @@
 \alias{estimateHerbProd}
 \title{Estimate ANPP (Above-ground Net Primary Productivity) contributed by herbaceous vegetation}
 \usage{
-estimateHerbProd(inputDataList, plotSubset = "tower")
+estimateHerbProd(inputDataList, plotSubset = "all")
 }
 \arguments{
 \item{inputDataList}{An R list object produced by the neonUtilities::loadByProduct() function for the NEON Herbaceous Clip Harvest data product. \link{list}}
@@ -45,7 +45,7 @@ df <-estimateHerbProd(inputDataList = HbpDat)
 
 # example specifying many non-default arguments
 df <-estimateHerbProd(inputDataList = HbpDat,
-plotSubset = "all")
+plotSubset = "tower")
 
 }
 

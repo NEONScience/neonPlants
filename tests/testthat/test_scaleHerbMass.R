@@ -1,5 +1,6 @@
-# scaleHerbMass function tests
-# Samuel M Simkin (2024-12-15)  ssimkin@battelleecology.org
+### Function tests for scaleHerbMass
+#   Courtney Meier; cmeier@BattelleEcology.org
+#   Samuel M Simkin; simkin@BattelleEcology.org
 
 
 
