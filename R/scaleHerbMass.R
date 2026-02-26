@@ -52,6 +52,7 @@ scaleHerbMass = function(inputDataList,
                          plotSubset = "all") {
 
   options(dplyr.summarise.inform = FALSE)
+  options(dplyr.suppress_messages = TRUE)
 
 
 
@@ -562,70 +563,78 @@ scaleHerbMass = function(inputDataList,
     dplyr::ungroup()
 
   #   For grazed plots at grazed sites, determine peak biomass eventID; filter out exclosure == "Y" as these clips are not relevant for understanding peak biomass
-  temp <- tempGrazed %>%
-    dplyr::filter(.data$exclosure != "Y") %>%
-    dplyr::group_by(.data$domainID,
-                    .data$siteID,
-                    .data$year,
-                    .data$eventID) %>%
-    dplyr::summarise(MeanBiomass_gm2 = mean(.data$TotalMass_gm2, na.rm = TRUE),
-                     count = n(),
-                     .groups = "drop")
+  if (!nrow(tempGrazed)) {
 
-  temp <- temp %>%
-    dplyr::group_by(.data$domainID,
-                    .data$siteID,
-                    .data$year) %>%
-    dplyr::filter(MeanBiomass_gm2 == max(.data$MeanBiomass_gm2, na.rm = TRUE))
+    towerGrazedDF <- tempGrazed
 
-  #   Find all Tower plots associated with peak biomass eventID, grazed or ungrazed
-  towerGrazedDF <- grazedSiteYearDF %>%
-    dplyr::filter(.data$plotType == "tower",
-                  .data$eventID %in% temp$eventID,
-                  .data$exclosure != "Y") %>%
-    dplyr::group_by(.data$domainID,
-                    .data$siteID,
-                    .data$year,
-                    .data$eventID,
-                    .data$plotID,
-                    .data$nlcdClass,
-                    .data$plotType,
-                    .data$plotSize,
-                    .data$plotManagement) %>%
-    dplyr::summarise(collectDate = as.Date(ifelse(all(is.na(.data$collectDate)), NA, min(.data$collectDate))),
-                     TotalMass_gm2 = round(mean(.data$TotalMass_gm2, na.rm = TRUE),
-                                           digits = 2),
-                     CoolSeasonGram_gm2 = round(mean(.data$CoolSeasonGram_gm2, na.rm = TRUE),
-                                                digits = 2),
-                     Forbs_gm2 = round(mean(.data$Forbs_gm2, na.rm = TRUE),
-                                       digits = 2),
-                     NFixing_gm2 = round(mean(.data$NFixing_gm2, na.rm = TRUE),
-                                         digits = 2),
-                     WarmSeasonGram_gm2 = round(mean(.data$WarmSeasonGram_gm2, na.rm = TRUE),
-                                                digits = 2),
-                     WoodyPlants_gm2 = round(mean(.data$WoodyPlants_gm2, na.rm = TRUE),
+  } else {
+
+    temp <- tempGrazed %>%
+      dplyr::filter(.data$exclosure != "Y") %>%
+      dplyr::group_by(.data$domainID,
+                      .data$siteID,
+                      .data$year,
+                      .data$eventID) %>%
+      dplyr::summarise(MeanBiomass_gm2 = mean(.data$TotalMass_gm2, na.rm = TRUE),
+                       count = n(),
+                       .groups = "drop")
+
+    temp <- temp %>%
+      dplyr::group_by(.data$domainID,
+                      .data$siteID,
+                      .data$year) %>%
+      dplyr::filter(MeanBiomass_gm2 == max(.data$MeanBiomass_gm2, na.rm = TRUE))
+
+    #   Find all Tower plots associated with peak biomass eventID, grazed or ungrazed
+    towerGrazedDF <- grazedSiteYearDF %>%
+      dplyr::filter(.data$plotType == "tower",
+                    .data$eventID %in% temp$eventID,
+                    .data$exclosure != "Y") %>%
+      dplyr::group_by(.data$domainID,
+                      .data$siteID,
+                      .data$year,
+                      .data$eventID,
+                      .data$plotID,
+                      .data$nlcdClass,
+                      .data$plotType,
+                      .data$plotSize,
+                      .data$plotManagement) %>%
+      dplyr::summarise(collectDate = as.Date(ifelse(all(is.na(.data$collectDate)), NA, min(.data$collectDate))),
+                       TotalMass_gm2 = round(mean(.data$TotalMass_gm2, na.rm = TRUE),
                                              digits = 2),
-                     Barley_gm2 = round(mean(.data$Barley_gm2, na.rm = TRUE),
-                                        digits = 2),
-                     Corn_gm2 = round(mean(.data$Corn_gm2, na.rm = TRUE),
-                                      digits = 2),
-                     Millet_gm2 = round(mean(.data$Millet_gm2, na.rm = TRUE),
-                                        digits = 2),
-                     Oat_gm2 = round(mean(.data$Oat_gm2, na.rm = TRUE),
-                                     digits = 2),
-                     OrchardGrass_gm2 = round(mean(.data$OrchardGrass_gm2, na.rm = TRUE),
-                                              digits = 2),
-                     Rye_gm2 = round(mean(.data$Rye_gm2, na.rm = TRUE),
-                                     digits = 2),
-                     Sorghum_gm2 = round(mean(.data$Sorghum_gm2, na.rm = TRUE),
+                       CoolSeasonGram_gm2 = round(mean(.data$CoolSeasonGram_gm2, na.rm = TRUE),
+                                                  digits = 2),
+                       Forbs_gm2 = round(mean(.data$Forbs_gm2, na.rm = TRUE),
                                          digits = 2),
-                     Soybean_gm2 = round(mean(.data$Soybean_gm2, na.rm = TRUE),
-                                         digits = 2),
-                     Sunflower_gm2 = round(mean(.data$Sunflower_gm2, na.rm = TRUE),
+                       NFixing_gm2 = round(mean(.data$NFixing_gm2, na.rm = TRUE),
                                            digits = 2),
-                     Wheat_gm2 = round(mean(.data$Wheat_gm2, na.rm = TRUE),
+                       WarmSeasonGram_gm2 = round(mean(.data$WarmSeasonGram_gm2, na.rm = TRUE),
+                                                  digits = 2),
+                       WoodyPlants_gm2 = round(mean(.data$WoodyPlants_gm2, na.rm = TRUE),
+                                               digits = 2),
+                       Barley_gm2 = round(mean(.data$Barley_gm2, na.rm = TRUE),
+                                          digits = 2),
+                       Corn_gm2 = round(mean(.data$Corn_gm2, na.rm = TRUE),
+                                        digits = 2),
+                       Millet_gm2 = round(mean(.data$Millet_gm2, na.rm = TRUE),
+                                          digits = 2),
+                       Oat_gm2 = round(mean(.data$Oat_gm2, na.rm = TRUE),
                                        digits = 2),
-                     .groups = "drop")
+                       OrchardGrass_gm2 = round(mean(.data$OrchardGrass_gm2, na.rm = TRUE),
+                                                digits = 2),
+                       Rye_gm2 = round(mean(.data$Rye_gm2, na.rm = TRUE),
+                                       digits = 2),
+                       Sorghum_gm2 = round(mean(.data$Sorghum_gm2, na.rm = TRUE),
+                                           digits = 2),
+                       Soybean_gm2 = round(mean(.data$Soybean_gm2, na.rm = TRUE),
+                                           digits = 2),
+                       Sunflower_gm2 = round(mean(.data$Sunflower_gm2, na.rm = TRUE),
+                                             digits = 2),
+                       Wheat_gm2 = round(mean(.data$Wheat_gm2, na.rm = TRUE),
+                                         digits = 2),
+                       .groups = "drop")
+
+  } # end !nrow() conditional
 
 
   ##  Create plot-level peak biomass data frame for "grazed" sites
@@ -648,6 +657,14 @@ scaleHerbMass = function(inputDataList,
     dplyr::filter(.data$plotType == "tower",
                   !.data$plotID %in% grazedPlotPeakDF$plotID,
                   .data$exclosure != "Y")
+
+  if (!nrow(grazedWildDF)) {
+
+    grazedWildDF <- grazedWildDF %>%
+      dplyr::select(-"siteYear",
+                    -"siteYearPlot")
+
+  } else {
 
   temp <- grazedWildDF %>%
     dplyr::group_by(.data$domainID,
@@ -674,6 +691,8 @@ scaleHerbMass = function(inputDataList,
                      .data$year,
                      .data$eventID,
                      .data$plotID)
+
+  } # end !nrow() conditional
 
 
   ##  Grazed cleanup
@@ -760,7 +779,8 @@ scaleHerbMass = function(inputDataList,
                              stdPlotPeakDF) %>%
 
     #   Remove columns not relevant to plot-level peak biomass output
-    dplyr::select(-"subplotID",
+    dplyr::select(-"siteYear",
+                  -"subplotID",
                   -"clipID",
                   -"targetTaxaPresent",
                   -"sampleID",
@@ -849,8 +869,8 @@ scaleHerbMass = function(inputDataList,
                      herbPlotType = dplyr::case_when(dplyr::n_distinct(.data$plotType, na.rm = TRUE) == 1 ~
                                                        paste(unique(.data$plotType), collapse = ", "),
                                                      TRUE ~ paste(unique(.data$plotType), collapse = ", ")),
-                     herbStartDate = ifelse(all(is.na(.data$collectDate)), NA, min(.data$collectDate)),
-                     herbEndDate = ifelse(all(is.na(.data$collectDate)), NA, max(.data$collectDate)),
+                     herbStartDate = as.Date(ifelse(all(is.na(.data$collectDate)), NA, min(.data$collectDate))),
+                     herbEndDate = as.Date(ifelse(all(is.na(.data$collectDate)), NA, max(.data$collectDate))),
                      herbTotalMean_Mgha = round(mean(.data$herbTotalMass_Mgha, na.rm = TRUE),
                                                 digits = 2),
                      herbTotalSD_Mgha = round(stats::sd(.data$herbTotalMass_Mgha, na.rm = TRUE),
