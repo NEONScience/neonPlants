@@ -1,11 +1,18 @@
 ### Function testing: Odd TREE output from 2018 with eventIDs
 #   Test sites: Site list includes Ag (BLAN), grazed (CPER, SJER), partially grazed (CLBJ, KONZ), and "standard" sites with and without Distributed plot sampling.
 inputDataList <- neonUtilities::loadByProduct(dpID = "DP1.10023.001",
-                                              site = c("BLAN", "CLBJ", "CPER", "KONZ", "NOGP", "OSBS", "SJER", "SRER", "TEAK", "TREE"),
+                                              site = c("BLAN", "KONZ", "NOGP", "SJER", "SRER", "TEAK", "TREE"),
                                               startdate = "2018-01",
                                               enddate = "2019-12",
                                               check.size = FALSE,
                                               token = Sys.getenv("NEON_TOKEN"))
+
+#   Create new HBP test dataset
+hbp_testDat <- list(hbp_perbout = inputDataList$hbp_perbout,
+                    hbp_massdata = inputDataList$hbp_massdata)
+
+saveRDS(hbp_testDat,
+        file = "tests/testthat/testdata/hbp_testDat.RDS")
 
 #   Test data: Single "standard" site to test if code handles pared down data
 inputDataList <- neonUtilities::loadByProduct(dpID = "DP1.10023.001",

@@ -5,7 +5,7 @@
 
 
 ### Read in test data
-HbpDat <- readRDS(testthat::test_path("testdata", "HbpDat.rds"))
+HbpDat <- readRDS(testthat::test_path("testdata", "hbp_testDat.RDS"))
 
 
 scaleHerbMassOutputs <- neonPlants::scaleHerbMass(inputDataList = HbpDat)
@@ -39,6 +39,20 @@ testthat::test_that(desc = "Output class hbp_plot", {
 })
 
 
+testthat::test_that(desc = "Output class hbp_plot_extra", {
+
+  testthat::expect_s3_class(object = scaleHerbMassOutputs$hbp_plot_extra,
+                            class = "data.frame")
+})
+
+
+testthat::test_that(desc = "Output class hbp_plot_crop", {
+
+  testthat::expect_s3_class(object = scaleHerbMassOutputs$hbp_plot_crop,
+                            class = "data.frame")
+})
+
+
 testthat::test_that(desc = "Output class hbp_site", {
 
   testthat::expect_s3_class(object = scaleHerbMassOutputs$hbp_site,
@@ -52,35 +66,63 @@ testthat::test_that(desc = "Output class hbp_site", {
 testthat::test_that(desc = "Output data frame column number 'hbp_agb'", {
 
   testthat::expect_identical(object = ncol(scaleHerbMassOutputs$hbp_agb),
-                             expected = as.integer(31))
+                             expected = as.integer(32))
 })
 
 #   Check expected column number of per plot output
 testthat::test_that(desc = "Output data frame column number 'hbp_plot'", {
 
   testthat::expect_identical(object = ncol(scaleHerbMassOutputs$hbp_plot),
-                             expected = as.integer(20))
+                             expected = as.integer(17))
+})
+
+#   Check expected column number of per plot output
+testthat::test_that(desc = "Output data frame column number 'hbp_plot_crop'", {
+
+  testthat::expect_identical(object = ncol(scaleHerbMassOutputs$hbp_plot_crop),
+                             expected = as.integer(27))
+})
+
+#   Check expected column number of per plot output
+testthat::test_that(desc = "Output data frame column number 'hbp_plot_extra'", {
+
+  testthat::expect_identical(object = ncol(scaleHerbMassOutputs$hbp_plot_extra),
+                             expected = as.integer(17))
 })
 
 #   Check expected column number of per site output
 testthat::test_that(desc = "Output data frame column number 'hbp_site'", {
 
   testthat::expect_identical(object = ncol(scaleHerbMassOutputs$hbp_site),
-                             expected = as.integer(9))
+                             expected = as.integer(14))
 })
 
 #   Check expected row number of per sampling cell data frame output
 testthat::test_that(desc = "Output data frame row number 'hbp_agb'", {
 
   testthat::expect_identical(object = nrow(scaleHerbMassOutputs$hbp_agb),
-                             expected = as.integer(88))
+                             expected = as.integer(1481))
 })
 
 #   Check expected row number of per plot output
 testthat::test_that(desc = "Output data frame row number 'hbp_plot", {
 
   testthat::expect_identical(object = nrow(scaleHerbMassOutputs$hbp_plot),
-                             expected = as.integer(14))
+                             expected = as.integer(258))
+})
+
+#   Check expected row number of per plot output
+testthat::test_that(desc = "Output data frame row number 'hbp_plot_crop", {
+
+  testthat::expect_identical(object = nrow(scaleHerbMassOutputs$hbp_plot_crop),
+                             expected = as.integer(55))
+})
+
+#   Check expected row number of per plot output
+testthat::test_that(desc = "Output data frame row number 'hbp_plot_extra", {
+
+  testthat::expect_identical(object = nrow(scaleHerbMassOutputs$hbp_plot_extra),
+                             expected = as.integer(29))
 })
 
 #   Check expected row number of per site output
@@ -165,8 +207,8 @@ testthat::test_that(desc = "Output hbp_agb value as expected", {
 
   test <- scaleHerbMass(inputDataList = HbpDat)
 
-  testthat::expect_equal(object = test$hbp_agb$AllHerbaceousPlants_gm2[12],
-                         expected = 37.05)
+  testthat::expect_equal(object = test$hbp_agb$TotalMass_gm2[12],
+                         expected = 257.7)
 })
 
 
@@ -176,8 +218,30 @@ testthat::test_that(desc = "Output hbp_plot value as expected", {
 
   test <- scaleHerbMass(inputDataList = HbpDat)
 
-  testthat::expect_equal(object = test$hbp_plot$herbPeakMassTotal_Mgha[7],
-                         expected = 0.23)
+  testthat::expect_equal(object = test$hbp_plot$herbTotalMass_Mgha[7],
+                         expected = 3.48)
+})
+
+
+
+### Test: Generate error if output hbp_plot value not as expected
+testthat::test_that(desc = "Output hbp_plot_crop value as expected", {
+
+  test <- scaleHerbMass(inputDataList = HbpDat)
+
+  testthat::expect_equal(object = test$hbp_plot_crop$herbTotalMass_Mgha[21],
+                         expected = 0)
+})
+
+
+
+### Test: Generate error if output hbp_plot value not as expected
+testthat::test_that(desc = "Output hbp_plot_extra value as expected", {
+
+  test <- scaleHerbMass(inputDataList = HbpDat)
+
+  testthat::expect_equal(object = test$hbp_plot_extra$herbTotalMass_Mgha[29],
+                         expected = 1.04)
 })
 
 
@@ -187,7 +251,35 @@ testthat::test_that(desc = "Output hbp_site value as expected", {
 
   test <- scaleHerbMass(inputDataList = HbpDat)
 
-  testthat::expect_equal(object = test$hbp_site$herbPeakMassMean_Mgha[1],
-                         expected = 0.72)
+  testthat::expect_equal(object = test$hbp_site$herbTotalMean_Mgha[1],
+                         expected = 0.25)
 })
 
+
+
+### Test: Verify sites with data in input data frame exist in output 'hbp_agb'
+testthat::test_that(desc = "Output hbp_agb sites as expected", {
+
+  inputSites <- sort(unique(HbpDat$hbp_perbout$siteID))
+  outputSites <- sort(unique(scaleHerbMassOutputs$hbp_agb$siteID))
+
+  testthat::expect_identical(object = outputSites,
+                             expected = inputSites)
+
+})
+
+
+
+### Test: Verify sites with data in input data frame exist across plot-level outputs
+testthat::test_that(desc = "Output sites in plot-level tables as expected", {
+
+  inputSites <- sort(unique(HbpDat$hbp_perbout$siteID))
+  plotOutputSites <- unique(scaleHerbMassOutputs$hbp_plot$siteID)
+  cropOutputSites <- unique(scaleHerbMassOutputs$hbp_plot_crop$siteID)
+  extraOutputSites <- unique(scaleHerbMassOutputs$hbp_plot_extra$siteID)
+  outputSites <- sort(unique(c(plotOutputSites, cropOutputSites, extraOutputSites)))
+
+  testthat::expect_identical(object = outputSites,
+                             expected = inputSites)
+
+})

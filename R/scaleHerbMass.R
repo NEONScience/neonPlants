@@ -52,7 +52,6 @@ scaleHerbMass = function(inputDataList,
                          plotSubset = "all") {
 
   options(dplyr.summarise.inform = FALSE)
-  options(dplyr.suppress_messages = TRUE)
 
 
 
@@ -160,7 +159,7 @@ scaleHerbMass = function(inputDataList,
   exclosureFilter <- c("SERC", "JERC", "OSBS", "TREE", "UKFS", "JORN", "SRER", "TEAK")
 
   inputBout <- inputBout %>%
-    dplyr::filter(.data$samplingImpractical == "OK") %>%
+    dplyr::filter(.data$samplingImpractical == "OK" | is.na(.data$samplingImpractical)) %>%
     dplyr::filter(!(.data$siteID %in% exclosureFilter & .data$exclosure == "Y") | is.na(.data$exclosure))
 
   #   At TEAK, remove bouts where only one plot was sampled when exclosure == "Y"; remove all data from these bouts
@@ -534,14 +533,16 @@ scaleHerbMass = function(inputDataList,
 
 
   ##  Create plot-level peak biomass data frame for "standard" sites
-  stdPlotPeakDF <- dplyr::full_join(distStdDF,
-                                    towerStdDF) %>%
-    dplyr::arrange(.data$domainID,
-                   .data$siteID,
-                   .data$year,
-                   .data$plotType,
-                   .data$eventID,
-                   .data$plotID)
+  stdPlotPeakDF <- suppressMessages(
+    dplyr::full_join(distStdDF,
+                     towerStdDF) %>%
+      dplyr::arrange(.data$domainID,
+                     .data$siteID,
+                     .data$year,
+                     .data$plotType,
+                     .data$eventID,
+                     .data$plotID)
+  )
 
   rm(distStdDF, temp, towerStdDF)
 
@@ -638,16 +639,18 @@ scaleHerbMass = function(inputDataList,
 
 
   ##  Create plot-level peak biomass data frame for "grazed" sites
-  grazedPlotPeakDF <- dplyr::full_join(distGrazedDF,
-                                       towerGrazedDF) %>%
-    dplyr::select(-"siteYear",
-                  -"siteYearPlot") %>%
-    dplyr::arrange(.data$domainID,
-                   .data$siteID,
-                   .data$year,
-                   .data$plotType,
-                   .data$eventID,
-                   .data$plotID)
+  grazedPlotPeakDF <- suppressMessages(
+    dplyr::full_join(distGrazedDF,
+                     towerGrazedDF) %>%
+      dplyr::select(-"siteYear",
+                    -"siteYearPlot") %>%
+      dplyr::arrange(.data$domainID,
+                     .data$siteID,
+                     .data$year,
+                     .data$plotType,
+                     .data$eventID,
+                     .data$plotID)
+  )
 
 
   ##  Create plot-level peak biomass for "wild" type plots at grazed sites that were not sampled in the same peak biomass eventID as the grazed plots; these plots reported separately.
@@ -775,43 +778,45 @@ scaleHerbMass = function(inputDataList,
   ### Plot-level data frames: Clean up for output
 
   ##  Clean and combine "standard" and "grazed" plot-level peak biomass
-  plotDF <- dplyr::full_join(grazedPlotPeakDF,
-                             stdPlotPeakDF) %>%
+  plotDF <- suppressMessages(
+    dplyr::full_join(grazedPlotPeakDF,
+                     stdPlotPeakDF) %>%
 
-    #   Remove columns not relevant to plot-level peak biomass output
-    dplyr::select(-"siteYear",
-                  -"subplotID",
-                  -"clipID",
-                  -"targetTaxaPresent",
-                  -"sampleID",
-                  -"clipArea",
-                  -"exclosure",
-                  -"Barley_gm2",
-                  -"Corn_gm2",
-                  -"Millet_gm2",
-                  -"Oat_gm2",
-                  -"OrchardGrass_gm2",
-                  -"Rye_gm2",
-                  -"Sorghum_gm2",
-                  -"Soybean_gm2",
-                  -"Sunflower_gm2",
-                  -"Wheat_gm2") %>%
+      #   Remove columns not relevant to plot-level peak biomass output
+      dplyr::select(-"siteYear",
+                    -"subplotID",
+                    -"clipID",
+                    -"targetTaxaPresent",
+                    -"sampleID",
+                    -"clipArea",
+                    -"exclosure",
+                    -"Barley_gm2",
+                    -"Corn_gm2",
+                    -"Millet_gm2",
+                    -"Oat_gm2",
+                    -"OrchardGrass_gm2",
+                    -"Rye_gm2",
+                    -"Sorghum_gm2",
+                    -"Soybean_gm2",
+                    -"Sunflower_gm2",
+                    -"Wheat_gm2") %>%
 
-    #   Replace "NaN" with NA
-    dplyr::mutate(dplyr::across("TotalMass_gm2":"WoodyPlants_gm2", ~dplyr::na_if(., NaN))) %>%
+      #   Replace "NaN" with NA
+      dplyr::mutate(dplyr::across("TotalMass_gm2":"WoodyPlants_gm2", ~dplyr::na_if(., NaN))) %>%
 
-    #   Rename columns with "herb" prefix and simplify
-    dplyr::rename("herbTotalMass_gm2" = "TotalMass_gm2",
-                  "herbCoolSeasonGram_gm2" = "CoolSeasonGram_gm2",
-                  "herbForbs_gm2" = "Forbs_gm2",
-                  "herbNFixing_gm2" = "NFixing_gm2",
-                  "herbWarmSeasonGram_gm2" = "WarmSeasonGram_gm2",
-                  "herbWoodyPlants_gm2" = "WoodyPlants_gm2") %>%
+      #   Rename columns with "herb" prefix and simplify
+      dplyr::rename("herbTotalMass_gm2" = "TotalMass_gm2",
+                    "herbCoolSeasonGram_gm2" = "CoolSeasonGram_gm2",
+                    "herbForbs_gm2" = "Forbs_gm2",
+                    "herbNFixing_gm2" = "NFixing_gm2",
+                    "herbWarmSeasonGram_gm2" = "WarmSeasonGram_gm2",
+                    "herbWoodyPlants_gm2" = "WoodyPlants_gm2") %>%
 
-    #   Calculate "Mg/ha" for total herbaceous peak biomass; g/m2 x 10,000 m2/ha x 0.000001 Mg/g = Mg/ha
-    dplyr::mutate(herbTotalMass_Mgha = round(.data$herbTotalMass_gm2 * 10000 * 0.000001,
-                                             digits = 2),
-                  .before = "herbTotalMass_gm2")
+      #   Calculate "Mg/ha" for total herbaceous peak biomass; g/m2 x 10,000 m2/ha x 0.000001 Mg/g = Mg/ha
+      dplyr::mutate(herbTotalMass_Mgha = round(.data$herbTotalMass_gm2 * 10000 * 0.000001,
+                                               digits = 2),
+                    .before = "herbTotalMass_gm2")
+  )
 
 
   ##  Clean "wild-type" peak biomass plot data at grazed sites
