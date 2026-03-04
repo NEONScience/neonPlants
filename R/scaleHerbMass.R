@@ -419,7 +419,10 @@ scaleHerbMass = function(inputDataList,
                     "Soybean_gm2",
                     "Sunflower_gm2",
                     "Wheat_gm2",
-                    .after = "WoodyPlants_gm2")
+                    .after = "WoodyPlants_gm2") %>%
+
+    #   Convert NA masses to '0' to enable correct calculation of plot-level means in 40m x 40m Tower plots
+    dplyr::mutate(dplyr::across("TotalMass_gm2":"Wheat_gm2", ~tidyr::replace_na(., 0)))
 
 
 
