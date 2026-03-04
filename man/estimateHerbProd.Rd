@@ -2,7 +2,7 @@
 % Please edit documentation in R/estimateHerbProd.R
 \name{estimateHerbProd}
 \alias{estimateHerbProd}
-\title{Estimate ANPP (Above-ground Net Primary Productivity) contributed by herbaceous vegetation}
+\title{Estimate herbaceous ANPP (Above-ground Net Primary Productivity) at NEON sites}
 \usage{
 estimateHerbProd(inputDataList, plotSubset = "all")
 }
@@ -20,16 +20,18 @@ A list that includes productivity summary data frames. Output tables include:
 }
 }
 \description{
-Estimate above-ground herbaceous productivity using NEON Herbaceous Clip Harvest data tables (DP1.10023.001).
+Estimate above-ground herbaceous productivity at NEON sites using Herbaceous Clip Harvest data tables (DP1.10023.001).
 }
 \details{
 Input data should be a list of herbaceous biomass (DP1.10023.001) data frames downloaded via the neonUtilities::loadByProduct() function. The companion scaleHerbMass() function is called internally, and outputs from this function are used to estimate herbaceous productivity.
 
-Where herbaceous plants are not subject to grazing management and exclosures are not in use, the estimate of herbaceous ANPP is simply the standing biomass of the last bout of the season.
+At sites where herbaceous plants are not subject to grazing management and exclosures are not in use, and crops are not planted at any point during the year, the estimate of herbaceous ANPP is simply the standing biomass clipped from the bout with the greatest biomass.
 
-Where grazing management occurs in Tower plots and exclosures have been established, consumption is calculated for each Tower plot gsampling event as average biomass within exclosures minus average biomass outside of exclosures. Consumption at each sampling bout is summed and then added to the standing biomass of the last bout of the season for an estimate of herbaceous ANPP.
+Where grazing management occurs in Tower plots and exclosures have been established, consumption is calculated for each Tower plot sampling event as average biomass within exclosures minus average biomass outside of exclosures. Consumption at each sampling bout is summed and then added to the standing biomass of the last bout of the season for an estimate of herbaceous ANPP.
 
-Note that the Science Design only supports calculating consumption at the site level. The clip harvests within exclosures are not close enough to ambient clip harvests to support plot-level consumption estimates.
+At sites where crops are planted, productivity is determined on a plot-by-plot basis to account for the potential for multiple plantings throughout the season, as well as "wild-type" plots that are either fallow for the duration of the season or are not managed for agriculture.
+
+Note that at grazed sites, the Science Design only supports calculating consumption at the site level. The clip harvests within exclosures are not close enough to ambient clip harvests to support plot-level consumption estimates.
 }
 \examples{
 \dontrun{
@@ -40,10 +42,10 @@ package = "basic",
 check.size = FALSE
 )
 
-# example with arguments at default values
+# Example with arguments at default values
 df <-estimateHerbProd(inputDataList = HbpDat)
 
-# example specifying many non-default arguments
+# Example specifying an alternative plotSubset value
 df <-estimateHerbProd(inputDataList = HbpDat,
 plotSubset = "tower")
 

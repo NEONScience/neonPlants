@@ -67,13 +67,14 @@ estimateHerbProd = function(inputDataList,
 
 
 
-  ### Generate scaleHerbMass outputs
+  ### Generate scaleHerbMass outputs and unlist
   scaleHerbMassOutput <- neonPlants::scaleHerbMass(inputDataList = inputDataList,
                                                    plotSubset = plotSubset)
 
-  #   Unlist outputs
   hbp_agb <- scaleHerbMassOutput$hbp_agb
-  hbp_plot <- scaleHerbMassOutput$hbp_plot
+
+
+
 
 
 
@@ -81,21 +82,17 @@ estimateHerbProd = function(inputDataList,
 
   ### Verify scaleHerbMass output table 'hbp_agb' contains required data
   #   Check for data
-  if (nrow(hbp_agb) == 0) {
+  if (!nrow(hbp_agb)) {
     stop(glue::glue("Table from scaleHerbMass() output 'hbp_agb' has no data."))
   }
 
 
 
-  ### Verify scaleHerbMass output table 'hbp_plot' contains required data
-  #   Check for data
-  if (nrow(hbp_plot) == 0) {
-    stop(glue::glue("Table from scaleHerbMass() output 'hbp_plot' has no data."))
-  }
 
+  #--> start again here after 'scaleHerbMass' is updated to report '0' instead of NA for absent herbGroups ###############
 
+  ### Prepare data for downstream calculations ####
 
-  ### Prepare plot-level data for downstream calculations ####
   #   Filter input data using user-supplied 'plotSubset' argument; insurance step since scaleHerbMass() output should already only be produced for user-selected option
   if (plotSubset %in% c("distributed", "tower")) {
 
@@ -104,7 +101,136 @@ estimateHerbProd = function(inputDataList,
 
   }
 
-  #   Create long-format table from input 'hbp_agb' data frame; need to begin with sampleID-level data because plot-level output from scaleHerbMass function omits majority of grazed bouts at grazed sites.
+  #   Create 'site x year' variable for identifying all records at sites where a subset of plots are cropped
+  hbp_agb <- hbp_agb %>%
+    dplyr::mutate(siteYear = paste(.data$siteID, .data$year, sep = "-"),
+                  .before = "plotID")
+
+
+
+  ### Separate records into grazed, cropped, and standard 'siteID x year' data frames; each requires custom logic to calculate ANPP at the site level
+
+  ##  Step 1: Identify records in all 'siteID x year' combinations that supported grazing
+  grazedSiteYearDF <- hbp_agb %>%
+    dplyr::group_by(.data$siteID,
+                    .data$year) %>%
+    dplyr::filter(any(.data$exclosure == "Y")) %>%
+    dplyr::ungroup()
+
+
+  ##  Step 2: Identify records for all 'siteID x year' combinations that contained crops in a plot at any point
+  #   Isolate records with mass for a crop of any kind
+  temp <- hbp_agb %>%
+    dplyr::filter(rowSums(is.na(select(., "Barley_gm2":"Wheat_gm2"))) < 10)
+
+  #   Filter to all records from crop 'site x year' combos
+  cropSiteYearDF <- hbp_agb %>%
+    dplyr::filter(.data$siteYear %in% temp$siteYear)
+
+  rm(temp)
+
+
+  ##  Step 3: Identify all "standard" clips - i.e., no grazing, no crops at any point in a 'siteID x year'
+  stdSiteYearDF <- hbp_agb %>%
+    dplyr::filter(!.data$siteYear %in% grazedSiteYearDF$siteYear,
+                  !.data$siteYear %in% cropSiteYearDF$siteYear)
+
+
+
+
+
+
+  ### Standard sites: Calculate plot- and site-level ANPP for 'site x year' combos with no grazing or crops ####
+
+  ##  First: Quantify number of Tower plot eventIDs within each 'site x year'
+  temp <- stdSiteYearDF %>%
+    dplyr::filter(.data$plotType == "tower") %>%
+    dplyr::group_by(.data$domainID,
+                    .data$siteID,
+                    .data$year) %>%
+    dplyr::summarise(events = paste(unique(.data$eventID), collapse = ", "),
+                     count = length(unique(.data$eventID))) %>%
+    dplyr::filter(count == 1) %>%
+    dplyr::mutate(siteYear = paste(.data$siteID, .data$year, sep = "-"))
+
+
+  ##  Process plots with one Tower plot eventID in a 'site x year'
+  #   Get records for all plots in 'site x year' combos with a single eventID
+  stdSingleDF <- stdSiteYearDF %>%
+    dplyr::filter(.data$siteYear %in% temp$siteYear)
+
+  #   Calculate plot-level ANPP --> averages subplots within 40m x 40m Tower plots
+  stdSinglePlotProdDF <- stdSingleDF %>%
+    dplyr::group_by(.data$domainID,
+                    .data$siteID,
+                    .data$year,
+                    .data$plotID,
+                    .data$nlcdClass,
+                    .data$plotType,
+                    .data$plotSize,
+                    .data$plotManagement) %>%
+    dplyr::summarise(collectDate = as.Date(ifelse(all(is.na(.data$collectDate)), NA, min(.data$collectDate))),
+                     TotalMass_gm2 = round(mean(.data$TotalMass_gm2, na.rm = TRUE),
+                                           digits = 2),
+                     CoolSeasonGram_gm2 = round(mean(.data$CoolSeasonGram_gm2, na.rm = TRUE),
+                                                digits = 2),
+                     Forbs_gm2 = round(mean(.data$Forbs_gm2, na.rm = TRUE),
+                                       digits = 2),
+                     NFixing_gm2 = round(mean(.data$NFixing_gm2, na.rm = TRUE),
+                                         digits = 2),
+                     WarmSeasonGram_gm2 = round(mean(.data$WarmSeasonGram_gm2, na.rm = TRUE),
+                                                digits = 2),
+                     WoodyPlants_gm2 = round(mean(.data$WoodyPlants_gm2, na.rm = TRUE),
+                                             digits = 2))
+
+
+
+  #   Calculate site-level ANPP --> each sampling cell is considered an independent sample
+
+
+
+
+
+
+
+  if (nrow(standardFinalMass) > 0) {
+
+    herb_ANPP_site <- standardFinalMass %>%
+      dplyr::filter(.data$herbGroup == "AllHerbaceousPlants") %>%
+      dplyr::group_by(.data$domainID,
+                      .data$siteID,
+                      .data$year,
+                      .data$plotType,
+                      .data$eventID,
+                      .data$herbGroup) %>%
+      dplyr::summarise(herbClipCount = dplyr::n(),
+                       herbANPP_gm2yr = round(mean(.data$agb_gm2, na.rm = TRUE),
+                                              digits = 2),
+                       herbANPPSD_gm2yr = round(stats::sd(.data$agb_gm2, na.rm = TRUE),
+                                                digits = 2))
+
+  } else {
+
+    herb_ANPP_site <- data.frame()
+
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  #   Create long-format table from input 'hbp_agb' data frame
   hbp_agb_long <- hbp_agb %>%
     dplyr::rename_with(~ stringr::str_remove(., "_gm2"),
                        c("AllHerbaceousPlants_gm2",

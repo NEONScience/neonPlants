@@ -3,7 +3,7 @@
 # Courtney Meier (2025-06-20)   cmeier@BattelleEcology.org
 
 ### Read in test data ####
-HbpDat <- readRDS(testthat::test_path("testdata", "HbpDat.rds"))
+HbpDat <- readRDS(testthat::test_path("testdata", "hbp_testDat.RDS"))
 
 
 
