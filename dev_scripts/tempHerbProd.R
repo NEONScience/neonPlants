@@ -1,7 +1,7 @@
 ### Function testing: Odd TREE output from 2018 with eventIDs
-#   Test sites: Site list includes Ag (BLAN), grazed (CPER, SJER), partially grazed (CLBJ, KONZ), and "standard" sites with and without Distributed plot sampling.
+#   Test sites: Site list includes Ag (BLAN), grazed (NOGP, SJER), partially grazed (CLBJ, KONZ), partially grazed with multiple bouts for ungrazed pltos (CLBJ), and "standard" sites with and without Distributed plot sampling.
 inputDataList <- neonUtilities::loadByProduct(dpID = "DP1.10023.001",
-                                              site = c("BLAN", "KONZ", "NOGP", "SJER", "SRER", "TEAK", "TREE"),
+                                              site = c("BLAN", "CLBJ", "KONZ", "NOGP", "SJER", "SRER", "TEAK", "TREE"),
                                               startdate = "2018-01",
                                               enddate = "2019-12",
                                               check.size = FALSE,

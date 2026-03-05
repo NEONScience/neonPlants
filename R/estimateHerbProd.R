@@ -121,7 +121,7 @@ estimateHerbProd = function(inputDataList,
   ##  Step 2: Identify records for all 'siteID x year' combinations that contained crops in a plot at any point
   #   Isolate records with mass for a crop of any kind
   temp <- hbp_agb %>%
-    dplyr::filter(rowSums(is.na(select(., "Barley_gm2":"Wheat_gm2"))) < 10)
+    dplyr::filter(rowSums(dplyr::across("Barley_gm2":"Wheat_gm2")) > 0)
 
   #   Filter to all records from crop 'site x year' combos
   cropSiteYearDF <- hbp_agb %>%
@@ -141,8 +141,10 @@ estimateHerbProd = function(inputDataList,
 
 
   ### Standard sites: Calculate plot- and site-level ANPP for 'site x year' combos with no grazing or crops ####
+  #--> Sites with multiple Tower plot eventIDs take greatest mass per herbGroup across eventIDs.
+  #--> SRER is a special case where mass from multiple eventIDs is summed because species composition during spring green-up does not overlap with species present during monsoon clip.
 
-  ##  First: Quantify number of Tower plot eventIDs within each 'site x year'
+  ##  Identify 'site x year' combos with a single Tower plot eventID
   temp <- stdSiteYearDF %>%
     dplyr::filter(.data$plotType == "tower") %>%
     dplyr::group_by(.data$domainID,
@@ -154,13 +156,13 @@ estimateHerbProd = function(inputDataList,
     dplyr::mutate(siteYear = paste(.data$siteID, .data$year, sep = "-"))
 
 
-  ##  Process plots with one Tower plot eventID in a 'site x year'
-  #   Get records for all plots in 'site x year' combos with a single eventID
-  stdSingleDF <- stdSiteYearDF %>%
-    dplyr::filter(.data$siteYear %in% temp$siteYear)
+  ##  Process sites with one Tower plot eventID in a 'site x year'
 
-  #   Calculate plot-level ANPP --> averages subplots within 40m x 40m Tower plots
-  stdSinglePlotProdDF <- stdSingleDF %>%
+  stdSinglePlotProdDF <- stdSiteYearDF %>%
+    #   Get records for all plots in 'site x year' combos with a single eventID
+    dplyr::filter(.data$siteYear %in% temp$siteYear) %>%
+
+    #   Calculate plot-level ANPP --> averages subplots within 40m x 40m Tower plots
     dplyr::group_by(.data$domainID,
                     .data$siteID,
                     .data$year,
@@ -184,8 +186,11 @@ estimateHerbProd = function(inputDataList,
                                              digits = 2))
 
 
+  ##  Process sites with multiple Tower plot eventIDs in a 'site x year' (but not SRER)
+  #--> group by siteID, year, herbGroup, and eventID, and pick combo with greatest mass for each herbGroup, then sum herbGroups from selected eventIDs to get total production for each plot.
 
-  #   Calculate site-level ANPP --> each sampling cell is considered an independent sample
+
+
 
 
 
