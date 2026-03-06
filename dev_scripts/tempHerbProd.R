@@ -1,7 +1,7 @@
 ### Function testing: Odd TREE output from 2018 with eventIDs
-#   Test sites: Site list includes Ag (BLAN), grazed (NOGP, SJER), partially grazed (CLBJ, KONZ), partially grazed with multiple bouts for ungrazed pltos (CLBJ), and "standard" sites with and without Distributed plot sampling.
+#   Test sites: Site list includes Ag (BLAN), grazed (NOGP, SJER), partially grazed (CLBJ, KONZ), partially grazed with multiple bouts for ungrazed plots (CLBJ), ungrazed for some years at site with two clips (OAES), and "standard" sites with and without Distributed plot sampling.
 inputDataList <- neonUtilities::loadByProduct(dpID = "DP1.10023.001",
-                                              site = c("BLAN", "CLBJ", "KONZ", "NOGP", "SJER", "SRER", "TEAK", "TREE"),
+                                              site = c("BLAN", "CLBJ", "KONZ", "NOGP", "OAES", "SJER", "SRER", "TEAK", "TREE"),
                                               startdate = "2018-01",
                                               enddate = "2019-12",
                                               check.size = FALSE,
@@ -30,13 +30,16 @@ inputMass <- inputDataList$hbp_massdata
 
 
 
-### Identify all sites where grazing exclosures have been deployed; need to identify sites where
-### exclosures were deployed and trialed but were not successful (e.g., SRER)
+### Retrieve all HBP data for investigative purposes
+#--> Identify all sites where exclosures were deployed and trialed but were not successful (e.g., SRER, TEAK)
+#--> Identify sites with no exclosures and multiple bouts of Tower plot sampling
+
 hbpAll <- neonUtilities::loadByProduct(dpID = "DP1.10023.001",
                                        site = "all",
-                                       enddate = "2024-12",
+                                       enddate = "2025-12",
                                        tabl = "hbp_perbout",
                                        check.size = FALSE,
+                                       include.provisional = TRUE,
                                        token = Sys.getenv("NEON_TOKEN"))
 
 hbpAllBout <- hbpAll$hbp_perbout
@@ -85,6 +88,49 @@ teakRemove <- grazeDetails %>%
 
 teakRemove <- c("HBP.2019.TEAK.02.TOWER", "HBP.2019.TEAK.03.TOWER", "HBP.2019.TEAK.04.TOWER", "HBP.2021.TEAK.23.TOWER", "HBP.2021.TEAK.27.TOWER", "HBP.2021.TEAK.35.TOWER", "HBP.2021.TEAK.43.TOWER")
 
+
+
+### Identify sites with no exclosures and multiple bouts of Tower plot sampling
+towerSummary <- hbpAllBout %>%
+  dplyr::filter(plotType == "tower") %>%
+  dplyr::group_by(domainID,
+                  siteID,
+                  year) %>%
+  dplyr::filter(!any(exclosure == "Y")) %>%
+  dplyr::ungroup() %>%
+  dplyr::group_by(domainID,
+                  siteID,
+                  year,
+                  eventID) %>%
+  dplyr::summarise(count = n())
+
+towerSummary2 <- hbpAllBout %>%
+  dplyr::filter(plotType == "tower") %>%
+  dplyr::group_by(domainID,
+                  siteID,
+                  year) %>%
+  dplyr::filter(!any(exclosure == "Y")) %>%
+  dplyr::summarise(eventCount = length(unique(eventID)))
+
+#--> OAES in 2017, 2018 has two bouts (one June, one October)
+#--> A number of eventID errors that create perception of > 1 Tower plot bout
+
+distSummary <- hbpAllBout %>%
+  dplyr::filter(plotType == "distributed") %>%
+  dplyr::group_by(domainID,
+                  siteID,
+                  year) %>%
+  dplyr::summarise(eventCount = length(unique(eventID)))
+
+temp <- hbpAllBout %>%
+  dplyr::filter(plotType == "distributed",
+                siteID == "BONA",
+                year == 2024) %>%
+  dplyr::group_by(domainID,
+                  siteID,
+                  year) %>%
+  dplyr::summarise(eventCount = length(unique(eventID)),
+                   events = paste(unique(eventID), collapse = ", "))
 
 
 

@@ -818,7 +818,13 @@ scaleHerbMass = function(inputDataList,
       #   Calculate "Mg/ha" for total herbaceous peak biomass; g/m2 x 10,000 m2/ha x 0.000001 Mg/g = Mg/ha
       dplyr::mutate(herbTotalMass_Mgha = round(.data$herbTotalMass_gm2 * 10000 * 0.000001,
                                                digits = 2),
-                    .before = "herbTotalMass_gm2")
+                    .before = "herbTotalMass_gm2") %>%
+      dplyr::arrange(.data$domainID,
+                     .data$siteID,
+                     .data$year,
+                     .data$plotType,
+                     .data$eventID,
+                     .data$plotID)
   )
 
 
@@ -891,7 +897,10 @@ scaleHerbMass = function(inputDataList,
                                              digits = 2),
                      herbTotalSEM_gm2 = round(stats::sd(.data$herbTotalMass_gm2, na.rm = TRUE) / sqrt(.data$herbPlotNum),
                                               digits = 2),
-                     .groups = "drop")
+                     .groups = "drop") %>%
+    dplyr::arrange(.data$domainID,
+                   .data$siteID,
+                   .data$year)
 
 
 
