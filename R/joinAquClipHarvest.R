@@ -20,9 +20,9 @@
 #' 
 #' @param inputMorph The 'apc_morphospecies' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
 #'  
-#' @return Two tables are produced containing joined clip harvest data. The first "joinedBiomass" table contains one row per sampleID in 'apl_biomass'. A single sampleID in 'apl_biomass' may correspond to more than one taxa in 'apl_taxonomyProcessed'. When tables are joined, the taxon with the greatest 'algalParameterValue' in 'apl_taxonomyProcessed' will be listed as the 'acceptedTaxonID' and a new field, 'additionalTaxa', appears in the output and includes all other taxa associated with the sampleID. If more than one taxon shares the same max 'algalParameterValue', the first row in the input table is returned as the 'acceptedTaxonID'. Detailed taxonomic information for any additionalTaxa can be found in the input 'apl_taxonomyProcessed' table. 
+#' @return Two tables are produced containing joined clip harvest data. The first "apl_joinBiomass" table contains one row per sampleID in 'apl_biomass'. A single sampleID in 'apl_biomass' may correspond to more than one taxa in 'apl_taxonomyProcessed'. When tables are joined, the taxon with the greatest 'algalParameterValue' in 'apl_taxonomyProcessed' will be listed as the 'acceptedTaxonID' and a new field, 'additionalTaxa', appears in the output and includes all other taxa associated with the sampleID. If more than one taxon shares the same max 'algalParameterValue', the first row in the input table is returned as the 'acceptedTaxonID'. Detailed taxonomic information for any additionalTaxa can be found in the input 'apl_taxonomyProcessed' table. 
 #' 
-#' The second "fieldTaxonomy" table joins taxonomic identifications across tables to 'apl_clipHarvest' by field ID. Joining may result in one or many unique rows per sampleID.
+#' The second "apl_fieldTaxonomy" table joins taxonomic identifications across tables to 'apl_clipHarvest' by fieldID. Joining may result in one or many unique rows per sampleID.
 #' 
 #' @references
 #' License: GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007
@@ -397,8 +397,8 @@ joinAquClipHarvest <- function(inputDataList,
         "taxonID", "scientificName", "morphospeciesID", "identificationQualifier",
         "identificationReferences", "identifiedBy", "morphospeciesResolvedDate",
         ## Uncomment next two lines once morph table has been updated
-        # "phylum", "division", "class", "order", "family", "genus", "section", 
-        # "specificEpithet", "infraspecificEpithet", "variety", "form", "taxonRank",
+        "phylum", "division", "class", "order", "family", "genus", "section", 
+        "specificEpithet", "infraspecificEpithet", "variety", "form", "taxonRank",
         "dataQF"
       )%>% 
       dplyr::rename(identifiedDate="morphospeciesResolvedDate")
@@ -430,9 +430,9 @@ joinAquClipHarvest <- function(inputDataList,
       "scientificName", "identificationQualifier", "identificationReferences",
       "identifiedBy", "identifiedDate"
       ## Uncomment next two lines once morph table has been updated
-      # , "phylum", "division", "class", "order",
-      # "family", "genus", "section", "specificEpithet", "infraspecificEpithet",
-      # "variety", "form", "taxonRank"
+      , "phylum", "division", "class", "order",
+      "family", "genus", "section", "specificEpithet", "infraspecificEpithet",
+      "variety", "form", "taxonRank"
     )
     
     for (col in join2_cols) {
@@ -589,7 +589,7 @@ joinAquClipHarvest <- function(inputDataList,
   
   ### Create final output list ####
   
-  joinClipHarvest <- list('joinedBiomass' = joinedBiomass, 'fieldTaxonomy' = fieldTaxonomy)
+  joinClipHarvest <- list('apl_joinBiomass' = joinedBiomass, 'apl_fieldTaxonomy' = fieldTaxonomy)
 
   return(joinClipHarvest)
 

@@ -29,11 +29,11 @@
 #' 
 #' @param barPlots If TRUE, will produce a list of plots, one for each site/date in the data provided.
 #' 
-#' @return Two tables are produced containing point count summary data. The first "percentCover" table contains estimated percent cover for each observed species and/or substrate class on aquatic plant transects. This table includes a 'type' column indicating whether the estimate corresponds to a taxon or substrate class, and a 'substrateOrTaxonID' column which provides the corresponding taxonID or substrate identifier. 
+#' @return Two tables are produced containing point count summary data. The first "apc_percentCover" table contains estimated percent cover for each observed species and/or substrate class on aquatic plant transects. This table includes a 'type' column indicating whether the estimate corresponds to a taxon or substrate class, and a 'substrateOrTaxonID' column which provides the corresponding taxonID or substrate identifier. 
 #' 
-#' The second "transectMetrics" table contains summary information including the length, habitatType, and total number of points sampled at each transect. 
+#' The second "apc_transectMetrics" table contains summary information including the length, habitatType, and total number of points sampled at each transect. 
 #' 
-#' If barPlots = TRUE, a list containing plots for each site x date combination will also be produced. 
+#' If barPlots = TRUE, a list containing plots for each site x date combination is also produced. 
 #'
 #' @references
 #' License: GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007
@@ -157,7 +157,7 @@ estimateAquPercentCover <- function(inputDataList,
     dplyr::mutate(transectLength_m = .data$transectMax - .data$transectMin) %>%
     dplyr::select("domainID", "siteID", "namedLocation", "collectDate", "boutNumber", "habitatType", "transectLength_m", "totalPoints", "pointsWithTaxaPresent")
   
-  returnList <- list(percentCover=percent_cover, transectMetrics=transect_metrics)
+  returnList <- list(apc_percentCover=percent_cover, apc_transectMetrics=transect_metrics)
   
   
   ### Optionally Plot Percent Cover by Site/Date ####
@@ -248,7 +248,7 @@ estimateAquPercentCover <- function(inputDataList,
     names(plot_list) <- plot_ids
     
     # Bind df and plots
-    returnList$plot_list <- plot_list
+    returnList$apc_barPlots <- plot_list
     
   }
   

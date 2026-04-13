@@ -2,11 +2,11 @@
 
 #' @author Madaline Ritter \email{ritterm1@battelleecology.org} \cr
 
-#' @description Join the 'apc_pointTransect', 'apc_perTaxon', 'apc_taxonomyProcessed' and 'apc_morphospecies' tables to generate a single table that contains point count data with taxonomic identifications for each sampleID. Data inputs are NEON Aquatic Plant, Bryophyte, Lichen, and Macroalgae Point Counts in Wadeable Streams (DP1.20072.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input data tables with an equivalent structure and representing the same site x month combinations. 
+#' @description Join the 'apc_pointTransect', 'apc_perTaxon', 'apc_taxonomy' (Processed or Raw) and 'apc_morphospecies' tables to generate a single table that contains point count data with taxonomic identifications for each sampleID. Data inputs are NEON Aquatic Plant, Bryophyte, Lichen, and Macroalgae Point Counts in Wadeable Streams (DP1.20072.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input data tables with an equivalent structure and representing the same site x month combinations. 
 #'
-#' @details Input data may be provided either as a list or as individual tables. However, if both list and table inputs are provided at the same time the function will error out. For table joining to be successful, inputs must contain data from the same site x month combination(s) for all tables.
+#' @details Input data may be provided either as a list or as individual tables. However, if both list and table inputs are provided at the same time the function will error out. For table joining to be successful, inputs must contain data from the same site x month combination(s) for all tables. If both processed and raw taxonomy tables are provided as list inputs, the function will default to the 'apc_taxonomyProcessed' table for joining. If the 'apc_morphospecies' table is not provided, the function will proceed with joining point count data and per taxon identifications without incorporating morphospecies identifications.
 #' 
-#' In the joined output table, the 'acceptedTaxonID' and associated taxonomic fields are populated from the first available identification in the following order: 'apc_taxonomyProcessed', 'apc_perTaxon', or 'apc_morphospecies'. For samples identified both in the field and by an expert taxonomist, the expert identification is retained in the output. A new field, 'taxonIDSourceTable', is included in the output and indicates the source table for each sample's identification.
+#' In the joined output table, the 'acceptedTaxonID' and associated taxonomic fields are populated from the first available identification in the following order: 'apc_taxonomyProcessed', 'apc_taxonomyRaw', 'apc_perTaxon', or 'apc_morphospecies'. For samples identified both in the field and by an expert taxonomist, the expert identification is retained in the output. A new field, 'taxonIDSourceTable', is included in the output and indicates the source table for each sample's identification.
 #' 
 #' If a single sample in 'apc_taxonomyProcessed' contains multiple macroalgae species, each species will be represented as a separate row in 'apc_pointTransect' for every point associated with that sampleID.
 #' 
@@ -16,11 +16,11 @@
 #' 
 #' @param inputPerTax The 'apc_perTaxon' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
 #' 
-#' @param inputTaxProc The 'apc_taxonomyProcessed' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
+#' @param inputTaxonomy The 'apc_taxonomyProcessed' or 'apc_taxonomyRaw' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
 #' 
 #' @param inputMorph The 'apc_morphospecies' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
 #' 
-#' @return A table containing point transect data with all associated taxonomic information for each point where targetTaxaPresent == 'Y'.
+#' @return A table containing point transect data joined with taxonomic identifications. For points where targetTaxaPresent == 'Y', taxonomic information is joined from the first available source table.
 #' 
 #' @references
 #' License: GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007
@@ -43,7 +43,7 @@
 #' inputDataList = apc,
 #' inputPoint = NA,
 #' inputPerTax = NA,
-#' inputTaxProc = NA,
+#' inputTaxonomy = NA,
 #' inputMorph = NA
 #' )
 #'
@@ -56,7 +56,7 @@
 joinAquPointCount <- function(inputDataList,
                               inputPoint = NA,
                               inputPerTax = NA,
-                              inputTaxProc = NA,
+                              inputTaxonomy = NA,
                               inputMorph = NA) {
   ### Test that user has supplied arguments as required by function ####
   
@@ -94,7 +94,7 @@ joinAquPointCount <- function(inputDataList,
   ### Verify table inputs are NA if inputDataList is supplied
   if (!is.null(inputDataList)) {
     if (!isTRUE(is.na(inputPoint)) || !isTRUE(is.na(inputPerTax)) ||
-        !isTRUE(is.na(inputTaxProc)) || !isTRUE(is.na(inputMorph))) {
+        !isTRUE(is.na(inputTaxonomy)) || !isTRUE(is.na(inputMorph))) {
       stop("When 'inputDataList' is supplied, all table input arguments must be NA.")
     }
   }
@@ -115,9 +115,11 @@ joinAquPointCount <- function(inputDataList,
     apPoint <- inputDataList$apc_pointTransect
     apPerTax <- inputDataList$apc_perTaxon
     if (!is.null(inputDataList$apc_taxonomyProcessed)) {
-      apTaxProc <- inputDataList$apc_taxonomyProcessed
-    } else{
-      apTaxProc <- NA
+      apTax <- inputDataList$apc_taxonomyProcessed
+    } else if (!is.null(inputDataList$apc_taxonomyRaw)) {
+      apTax <- inputDataList$apc_taxonomyRaw
+    }else{
+      apTax <- NA
     }
     if (!is.null(inputDataList$apc_morphospecies)) {
       apMorph <- inputDataList$apc_morphospecies
@@ -128,7 +130,7 @@ joinAquPointCount <- function(inputDataList,
   } else {
     apPoint <- inputPoint
     apPerTax <- inputPerTax
-    apTaxProc <- inputTaxProc
+    apTax <- inputTaxonomy
     apMorph <- inputMorph
     
   }
@@ -216,8 +218,8 @@ joinAquPointCount <- function(inputDataList,
   
   
   
-  ### Verify 'apTaxProc' table contains required data if data exists
-  taxProcExpCols <- c(
+  ### Verify 'apTax' table contains required data if data exists
+  expertTaxExpCols <- c(
     "sampleID",
     "acceptedTaxonID",
     "scientificName",
@@ -253,20 +255,20 @@ joinAquPointCount <- function(inputDataList,
   )
   
   #   Check for data
-  if (is.data.frame(apTaxProc)) {
-    if (nrow(apTaxProc) == 0) {
+  if (is.data.frame(apTax)) {
+    if (nrow(apTax) == 0) {
       message(
         glue::glue(
-          "Warning: Table 'inputTaxProc' has no data. Join will not include processed taxonomy data."
+          "Warning: Table 'inputTaxonomy' has no data. Join will not include processed taxonomy data."
         )
       )
     } else {
       #   Check for required columns if data exists
-      if (length(setdiff(taxProcExpCols, colnames(apTaxProc))) > 0) {
+      if (length(setdiff(expertTaxExpCols, colnames(apTax))) > 0) {
         stop(
           glue::glue(
-            "Required columns missing from 'inputTaxProc':",
-            '{paste(setdiff(taxProcExpCols, colnames(apTaxProc)), collapse = ", ")}',
+            "Required columns missing from 'inputTaxonomy':",
+            '{paste(setdiff(expertTaxExpCols, colnames(apTax)), collapse = ", ")}',
             .sep = " "
           )
         )
@@ -311,11 +313,11 @@ joinAquPointCount <- function(inputDataList,
   
   
   
-  ### Join apPerTax and apTaxProc tables ####
+  ### Join apPerTax and apTax tables ####
   
-  if (is.data.frame(apTaxProc) && nrow(apTaxProc) > 0) {
-    #   Select needed columns from apTaxProc
-    apTaxProc <- apTaxProc %>%
+  if (is.data.frame(apTax) && nrow(apTax) > 0) {
+    #   Select needed columns from apTax
+    apTax <- apTax %>%
       dplyr::select(
         -"uid",
         -"domainID",
@@ -326,7 +328,7 @@ joinAquPointCount <- function(inputDataList,
       ) %>%
       dplyr::rename(taxonID = "acceptedTaxonID")
     
-    #   Columns conditionally replaced with taxProc data
+    #   Columns conditionally replaced with expertTax data
     join1_cols <- c(
       "scientificName", 
       "phylum", "division", "class", "order",
@@ -338,83 +340,83 @@ joinAquPointCount <- function(inputDataList,
     #   Update expert taxonomist identifications
     apJoin1 <- apPerTax %>%
       dplyr::left_join(
-        apTaxProc,
+        apTax,
         by = "sampleID",
-        suffix = c("_perTax", "_taxProc"),
+        suffix = c("_perTax", "_expertTax"),
         relationship = "many-to-many"
       ) %>%
       dplyr::mutate(
         sampleCondition = dplyr::case_when(
           !is.na(.data$sampleCondition_perTax) &
-            !is.na(.data$sampleCondition_taxProc) ~ paste0(
+            !is.na(.data$sampleCondition_expertTax) ~ paste0(
               "perTaxon ",
               .data$sampleCondition_perTax,
-              " | taxProcessed ",
-              .data$sampleCondition_taxProc
+              " | expertTax ",
+              .data$sampleCondition_expertTax
             ),!is.na(.data$sampleCondition_perTax) &
-            is.na(.data$sampleCondition_taxProc) ~ paste0("perTaxon ", .data$sampleCondition_perTax),
+            is.na(.data$sampleCondition_expertTax) ~ paste0("perTaxon ", .data$sampleCondition_perTax),
           is.na(.data$sampleCondition_perTax) &
-            !is.na(.data$sampleCondition_taxProc) ~ paste0("taxProcessed ", .data$sampleCondition_taxProc),
+            !is.na(.data$sampleCondition_expertTax) ~ paste0("expertTax ", .data$sampleCondition_expertTax),
           TRUE ~ NA
         ),
         taxonIDSourceTable = dplyr::case_when(
-          !is.na(.data$taxonID_taxProc) ~ "apc_taxonomyProcessed",
-          is.na(.data$taxonID_taxProc) &
-            !is.na(.data$taxonID_perTax) ~ "apc_perTaxon",
+          !is.na(.data$taxonID_expertTax) & (unique(apTax$Table) == 'apc_taxonomyProcessed') ~ "apc_taxonomyProcessed",
+          !is.na(.data$taxonID_expertTax) & (unique(apTax$Table) == 'apc_taxonomyRaw') ~ "apc_taxonomyRaw",
+          is.na(.data$taxonID_expertTax) & !is.na(.data$taxonID_perTax) ~ "apc_perTaxon",
           TRUE ~ NA
         ),
         tempTaxonID = dplyr::if_else(
-          !is.na(.data$taxonID_taxProc),
-          .data$taxonID_taxProc,
+          !is.na(.data$taxonID_expertTax),
+          .data$taxonID_expertTax,
           .data$taxonID_perTax
         ),
         identificationHistoryID = dplyr::case_when(
           !is.na(.data$identificationHistoryID_perTax) &
-            !is.na(.data$identificationHistoryID_taxProc) ~ paste0(
+            !is.na(.data$identificationHistoryID_expertTax) ~ paste0(
               .data$identificationHistoryID_perTax,
               " | ",
-              .data$identificationHistoryID_taxProc
+              .data$identificationHistoryID_expertTax
             ),
-          is.na(.data$identificationHistoryID_taxProc) &
-            !is.na(.data$identificationHistoryID_perTax) ~ .data$identificationHistoryID_perTax,!is.na(.data$identificationHistoryID_taxProc) &
-            is.na(.data$identificationHistoryID_perTax) ~ .data$identificationHistoryID_taxProc,
+          is.na(.data$identificationHistoryID_expertTax) &
+            !is.na(.data$identificationHistoryID_perTax) ~ .data$identificationHistoryID_perTax,!is.na(.data$identificationHistoryID_expertTax) &
+            is.na(.data$identificationHistoryID_perTax) ~ .data$identificationHistoryID_expertTax,
           TRUE ~ NA
         ),
         perTaxonDataQF = .data$dataQF_perTax,
-        taxProcessedDataQF = .data$dataQF_taxProc,
+        expertTaxDataQF = .data$dataQF_expertTax,
         perTaxonPublicationDate = .data$publicationDate_perTax,
-        taxProcessedPublicationDate = .data$publicationDate_taxProc,
-        taxProcessedRelease = .data$release_taxProc,
+        expertTaxPublicationDate = .data$publicationDate_expertTax,
+        expertTaxRelease = .data$release_expertTax,
         perTaxonRelease = .data$release_perTax,
         remarks = dplyr::case_when(
-          !is.na(.data$remarks_perTax) & !is.na(.data$remarks_taxProc) ~ paste0(
-              "perTaxon remarks - ", .data$remarks_perTax, " | taxProcessed remarks - ",.data$remarks_taxProc
+          !is.na(.data$remarks_perTax) & !is.na(.data$remarks_expertTax) ~ paste0(
+              "perTaxon remarks - ", .data$remarks_perTax, " | expertTax remarks - ",.data$remarks_expertTax
               ),
-          is.na(.data$remarks_taxProc) &
-            !is.na(.data$remarks_perTax) ~ paste0("perTaxon remarks - ", .data$remarks_perTax),!is.na(.data$remarks_taxProc) &
-            is.na(.data$remarks_perTax) ~ paste0("taxProcessed remarks - ", .data$remarks_taxProc),
+          is.na(.data$remarks_expertTax) &
+            !is.na(.data$remarks_perTax) ~ paste0("perTaxon remarks - ", .data$remarks_perTax),!is.na(.data$remarks_expertTax) &
+            is.na(.data$remarks_perTax) ~ paste0("expertTax remarks - ", .data$remarks_expertTax),
           TRUE ~ NA
         )
       ) 
     
     for (col in join1_cols) {
-      taxProc_col <- paste0(col, "_taxProc")
+      expertTax_col <- paste0(col, "_expertTax")
       perTax_col <- paste0(col, "_perTax")
       apJoin1[[col]] <- dplyr::if_else(
-        !is.na(apJoin1$taxonID_taxProc),
-        if (taxProc_col %in% names(apJoin1)) as.character(apJoin1[[taxProc_col]]) else NA_character_,
+        !is.na(apJoin1$taxonID_expertTax),
+        if (expertTax_col %in% names(apJoin1)) as.character(apJoin1[[expertTax_col]]) else NA_character_,
         if (perTax_col %in% names(apJoin1)) as.character(apJoin1[[perTax_col]]) else NA_character_
       )
     }
     
     apJoin1 <- apJoin1 %>%
       dplyr::select(-"uid", -"targetTaxaPresent",
-                    -dplyr::matches("_taxProc"),-dplyr::matches("_perTax"))
+                    -dplyr::matches("_expertTax"),-dplyr::matches("_perTax"))
     
     
   } else {
     message("No data joined from apc_taxonomyProcessed table.")
-    #   rename columns if no taxProc join
+    #   rename columns if no expertTax join
     apJoin1 <- apPerTax %>%
       dplyr::mutate(
         tempTaxonID = .data$taxonID,
@@ -448,18 +450,19 @@ joinAquPointCount <- function(inputDataList,
         "identificationReferences",
         "identifiedBy",
         "morphospeciesResolvedDate",
-        # "phylum",
-        # "division",
-        # "class",
-        # "order",
-        # "family",
-        # "genus",
-        # "section",
-        # "specificEpithet",
-        # "infraspecificEpithet",
-        # "variety",
-        # "form",
-        # "taxonRank"
+        ## Uncomment next lines once morph table has been updated
+        "phylum",
+        "division",
+        "class",
+        "order",
+        "family",
+        "genus",
+        "section",
+        "specificEpithet",
+        "infraspecificEpithet",
+        "variety",
+        "form",
+        "taxonRank",
         "dataQF"
       ) %>% 
       dplyr::rename(identifiedDate="morphospeciesResolvedDate")
@@ -487,9 +490,10 @@ joinAquPointCount <- function(inputDataList,
     join2_cols <- c(
       "scientificName", "identificationQualifier", "identificationReferences",
       "identifiedBy", "identifiedDate"
-      # , "phylum", "division", "class", "order",
-      # "family", "genus", "section", "specificEpithet", "infraspecificEpithet",
-      # "variety", "form", "taxonRank"
+      ## Uncomment next two lines once morph table has been updated
+      , "phylum", "division", "class", "order",
+      "family", "genus", "section", "specificEpithet", "infraspecificEpithet",
+      "variety", "form", "taxonRank"
     )
     
     for (col in join2_cols) {
@@ -522,7 +526,7 @@ joinAquPointCount <- function(inputDataList,
   
   ### Join apPoint and apPerTax tables ####
   
-  joinPointCounts <- apPoint %>%
+  apc_joinPointCounts <- apPoint %>%
     dplyr::rename(
       pointPublicationDate = "publicationDate",
       pointRelease = "release",
@@ -558,23 +562,23 @@ joinAquPointCount <- function(inputDataList,
   
   
   ###  Re-format date columns ####
-  joinPointCounts$identifiedDate <- as.Date(joinPointCounts$identifiedDate)
+  apc_joinPointCounts$identifiedDate <- as.Date(apc_joinPointCounts$identifiedDate)
   
-  joinPointCounts$collectDate <- as.POSIXct(joinPointCounts$collectDate, 
+  apc_joinPointCounts$collectDate <- as.POSIXct(apc_joinPointCounts$collectDate, 
     format = "%Y-%m-%dT%H:%MZ", tz = "UTC")
   
-  joinPointCounts$pointPublicationDate <- as.POSIXct(joinPointCounts$pointPublicationDate, 
+  apc_joinPointCounts$pointPublicationDate <- as.POSIXct(apc_joinPointCounts$pointPublicationDate, 
     format = "%Y%m%dT%H%M%SZ", tz = "UTC")
   
-  joinPointCounts$perTaxonPublicationDate <- as.POSIXct(joinPointCounts$perTaxonPublicationDate, 
+  apc_joinPointCounts$perTaxonPublicationDate <- as.POSIXct(apc_joinPointCounts$perTaxonPublicationDate, 
     format = "%Y%m%dT%H%M%SZ", tz = "UTC")
   
-  if (is.data.frame(apTaxProc) && nrow(apTaxProc) > 0) {
-    joinPointCounts$taxProcessedPublicationDate <- as.POSIXct(joinPointCounts$taxProcessedPublicationDate, 
+  if (is.data.frame(apTax) && nrow(apTax) > 0) {
+    apc_joinPointCounts$expertTaxPublicationDate <- as.POSIXct(apc_joinPointCounts$expertTaxPublicationDate, 
       format = "%Y%m%dT%H%M%SZ", tz = "UTC")
   }
 
   
-  return(joinPointCounts)
+  return(apc_joinPointCounts)
   
 } #function closer
