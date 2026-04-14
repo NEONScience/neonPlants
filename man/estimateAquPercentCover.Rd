@@ -8,7 +8,7 @@ estimateAquPercentCover(
   inputDataList,
   inputPoint = NA,
   inputPerTax = NA,
-  inputTaxProc = NA,
+  inputTaxonomy = NA,
   inputMorph = NA,
   barPlots = FALSE
 )
@@ -20,7 +20,7 @@ estimateAquPercentCover(
 
 \item{inputPerTax}{The 'apc_perTaxon' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 
-\item{inputTaxProc}{The 'apc_taxonomyProcessed' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
+\item{inputTaxonomy}{The 'apc_taxonomyProcessed' or 'apc_taxonomyRaw'table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 
 \item{inputMorph}{The 'apc_morphospecies' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 
@@ -68,7 +68,7 @@ list <- neonPlants::estimateAquPercentCover(
 inputDataList = apc,
 inputPoint = NA,
 inputPerTax = NA,
-inputTaxProc = NA,
+inputTaxonomy = NA,
 inputMorph = NA,
 barPlots = FALSE
 )

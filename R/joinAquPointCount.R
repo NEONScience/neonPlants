@@ -116,8 +116,12 @@ joinAquPointCount <- function(inputDataList,
     apPerTax <- inputDataList$apc_perTaxon
     if (!is.null(inputDataList$apc_taxonomyProcessed)) {
       apTax <- inputDataList$apc_taxonomyProcessed
+      apTax$Table <- "apc_taxonomyProcessed"
     } else if (!is.null(inputDataList$apc_taxonomyRaw)) {
       apTax <- inputDataList$apc_taxonomyRaw
+      apTax$Table <- "apc_taxonomyRaw"
+      apTax$taxonRank <- NA #not currently published in taxonomyRaw table. Delete when taxonomy WG completes standardization
+      apTax<- dplyr::rename(apTax, acceptedTaxonID = "taxonID")
     }else{
       apTax <- NA
     }
@@ -131,6 +135,13 @@ joinAquPointCount <- function(inputDataList,
     apPoint <- inputPoint
     apPerTax <- inputPerTax
     apTax <- inputTaxonomy
+    if (is.data.frame(apTax) && "acceptedTaxonID" %in% colnames(apTax)) {
+      apTax$Table <- "apc_taxonomyProcessed"
+    }else if(is.data.frame(apTax) && "taxonID" %in% colnames(apTax)){
+      apTax$Table <- "apc_taxonomyRaw"
+      apTax$taxonRank <- NA #not currently published in taxonomyRaw table. Delete when taxonomy WG completes standardization
+      apTax <- dplyr::rename(apTax, acceptedTaxonID = "taxonID")
+    }
     apMorph <- inputMorph
     
   }
@@ -159,6 +170,9 @@ joinAquPointCount <- function(inputDataList,
         .sep = " "
       )
     )
+  }else{
+    # apPoint$collectDate <- as.POSIXct(apPoint$collectDate, format = "%Y%m%dT%H%M%SZ", tz = "UTC")
+    apPoint$collectDate <- as.POSIXct(apPoint$collectDate, format = "%Y-%m-%d %H:%M:%S", tz = "UTC")
   }
   
   #   Check for data
@@ -251,7 +265,8 @@ joinAquPointCount <- function(inputDataList,
     "domainID",
     "siteID",
     "namedLocation",
-    "collectDate"
+    "collectDate",
+    "Table"
   )
   
   #   Check for data
@@ -285,6 +300,7 @@ joinAquPointCount <- function(inputDataList,
     "identificationQualifier",
     "identificationReferences",
     "identifiedBy",
+    "morphospeciesResolvedDate",
     "dataQF"
   )
   
@@ -558,7 +574,7 @@ joinAquPointCount <- function(inputDataList,
           !is.na(.data$remarks_point) ~ paste0("pointTransect remarks - ", .data$remarks_point),
         TRUE ~ NA
       )) %>% 
-    dplyr::select(-"remarks_perTax", -"remarks_point")
+    dplyr::select(-"remarks_perTax", -"remarks_point", -"Table")
   
   
   ###  Re-format date columns ####

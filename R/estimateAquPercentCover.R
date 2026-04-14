@@ -23,7 +23,7 @@
 #' 
 #' @param inputPerTax The 'apc_perTaxon' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
 #' 
-#' @param inputTaxProc The 'apc_taxonomyProcessed' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
+#' @param inputTaxonomy The 'apc_taxonomyProcessed' or 'apc_taxonomyRaw'table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
 #' 
 #' @param inputMorph The 'apc_morphospecies' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
 #' 
@@ -55,7 +55,7 @@
 #' inputDataList = apc,
 #' inputPoint = NA,
 #' inputPerTax = NA,
-#' inputTaxProc = NA,
+#' inputTaxonomy = NA,
 #' inputMorph = NA,
 #' barPlots = FALSE
 #' )
@@ -69,7 +69,7 @@
 estimateAquPercentCover <- function(inputDataList,
                                     inputPoint = NA,
                                     inputPerTax = NA,
-                                    inputTaxProc = NA,
+                                    inputTaxonomy = NA,
                                     inputMorph = NA,
                                     barPlots = FALSE) {
   
@@ -78,14 +78,14 @@ estimateAquPercentCover <- function(inputDataList,
   if(!missing(inputDataList)){
     
     joinPointCounts <- neonPlants::joinAquPointCount(inputDataList = inputDataList)
-    # joinPointCounts <- joinAquPointCount(inputDataList = apc)
+    # joinPointCounts <- joinAquPointCount(inputDataList = inputDataList)
     
     
   } else {
     
     joinPointCounts <- neonPlants::joinAquPointCount(inputPoint = inputPoint,
                                                      inputPerTax = inputPerTax,
-                                                     inputTaxProc = inputTaxProc,
+                                                     inputTaxonomy = inputTaxonomy,
                                                      inputMorph = inputMorph)
   }
   

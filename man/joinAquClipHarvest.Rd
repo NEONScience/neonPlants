@@ -8,7 +8,7 @@ joinAquClipHarvest(
   inputDataList,
   inputBio = NA,
   inputClip = NA,
-  inputTaxProc = NA,
+  inputTaxonomy = NA,
   inputMorph = NA
 )
 }
@@ -19,7 +19,7 @@ joinAquClipHarvest(
 
 \item{inputClip}{The 'apl_clipHarvest' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 
-\item{inputTaxProc}{The 'apl_taxonomyProcessed' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
+\item{inputTaxonomy}{The 'apl_taxonomyProcessed' or 'apl_taxonomyRaw' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 
 \item{inputMorph}{The 'apc_morphospecies' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 }
@@ -55,7 +55,7 @@ list <- neonPlants::joinAquClipHarvest(
 inputDataList = apl,
 inputBio = NA,
 inputClip = NA,
-inputTaxProc = NA,
+inputTaxonomy = NA,
 inputMorph = NA
 )
 

@@ -8,6 +8,7 @@ testList <- readRDS(testthat::test_path("testdata", "joinAquPointCount_testData_
 testPoint <- testList$apc_pointTransect
 testPerTax <- testList$apc_perTaxon
 testTaxProc <- testList$apc_taxonomyProcessed
+testTaxRaw <- testList$apc_taxonomyRaw
 testMorph <- testList$apc_morphospecies
 
 
@@ -26,7 +27,7 @@ testthat::test_that(desc = "Output type table input", {
   
   testthat::expect_type(object = joinAquPointCount(inputPoint = testPoint,
                                                    inputPerTax = testPerTax,
-                                                   inputTaxProc = testTaxProc,
+                                                   inputTaxonomy = testTaxProc,
                                                    inputMorph = testMorph),
                         type = "list")
 })
@@ -46,7 +47,7 @@ testthat::test_that(desc = "Output class table input", {
   
   testthat::expect_s3_class(object = joinAquPointCount(inputPoint = testPoint,
                                                        inputPerTax = testPerTax,
-                                                       inputTaxProc = testTaxProc,
+                                                       inputTaxonomy = testTaxProc,
                                                        inputMorph = testMorph),
                             class = "data.frame")
 })
@@ -67,7 +68,7 @@ testthat::test_that(desc = "Output data frame row number list input", {
 testthat::test_that(desc = "Output data frame column number list input", {
   
   testthat::expect_identical(object = ncol(joinAquPointCount(inputDataList = testList)),
-                             expected = as.integer(73))
+                             expected = as.integer(74))
 })
 
 
@@ -77,26 +78,26 @@ testthat::test_that(desc = "Output data frame row number table input", {
   
   testthat::expect_identical(object = nrow(joinAquPointCount(inputPoint = testPoint,
                                                              inputPerTax = testPerTax,
-                                                             inputTaxProc = testTaxProc,
+                                                             inputTaxonomy = testTaxRaw,
                                                              inputMorph = testMorph)),
                              expected = as.integer(145))
 })
 
 #   Check expected column number of output
-testthat::test_that(desc = "Output data frame row number table input", {
+testthat::test_that(desc = "Output data frame column number table input", {
   
   testthat::expect_identical(object = ncol(joinAquPointCount(inputPoint = testPoint,
                                                              inputPerTax = testPerTax,
-                                                             inputTaxProc = testTaxProc,
+                                                             inputTaxonomy = testTaxRaw,
                                                              inputMorph = testMorph)),
-                             expected = as.integer(73))
+                             expected = as.integer(74))
 })
 
 
 
 ### Test: Generates expected data using test data ####
 ##  Test dataframe output 
-#   Check 'acceptedTaxonID' is pulled from apc_perTaxon if identification is not in morphospecies or taxProcessed tables
+#   Check 'acceptedTaxonID' is pulled from apc_perTaxon if identification is not in morphospecies or taxonomy tables
 testthat::test_that(desc = "Output data frame source: taxonomyProcessed", {
   
   outDF <- joinAquPointCount(inputDataList = testList)
@@ -127,6 +128,27 @@ testthat::test_that(desc = "Output data frame source: taxonomyProcessed", {
   
   testthat::expect_identical(object = unique(outDF$taxonIDSourceTable[which(outDF$sampleID == 'REDB.20230719.AP19.1.T4')]),
                              expected = "apc_taxonomyProcessed")
+  testthat::expect_identical(object = unique(outDF$acceptedTaxonID[which(outDF$sampleID == 'REDB.20230719.AP19.1.T4')]),
+                             expected = "EQAR")
+})
+
+#   Check 'acceptedTaxonID' is pulled from apc_taxonomRaw when expertTaxonomyRequired = 'Y' and only apc_taxonomyRaw is provided
+testthat::test_that(desc = "Output data frame source: taxonomyRaw", {
+  tempTestList <- testList
+  tempTestList$apc_taxonomyProcessed <- NULL
+  outDF <- joinAquPointCount(inputDataList = tempTestList)
+  testthat::expect_identical(object = unique(outDF$taxonIDSourceTable[which(outDF$sampleID == 'KING.20230719.MACROALGAE17.T5')]),
+                             expected = "apc_taxonomyRaw")
+  testthat::expect_identical(object = unique(outDF$acceptedTaxonID[which(outDF$sampleID == 'KING.20230719.MACROALGAE17.T5')]),
+                             expected = c("NEONDREX444000", "NEONDREX1220001"))
+  
+  testthat::expect_identical(object = unique(outDF$taxonIDSourceTable[which(outDF$sampleID == 'WLOU.20230703.AP19.1.T7')]),
+                             expected = "apc_taxonomyRaw")
+  testthat::expect_identical(object = unique(outDF$acceptedTaxonID[which(outDF$sampleID == 'WLOU.20230703.AP19.1.T7')]),
+                             expected = "HYOC5")
+  
+  testthat::expect_identical(object = unique(outDF$taxonIDSourceTable[which(outDF$sampleID == 'REDB.20230719.AP19.1.T4')]),
+                             expected = "apc_taxonomyRaw")
   testthat::expect_identical(object = unique(outDF$acceptedTaxonID[which(outDF$sampleID == 'REDB.20230719.AP19.1.T4')]),
                              expected = "EQAR")
 })
@@ -174,7 +196,7 @@ testthat::test_that(desc = "Table inputs NA when required", {
 testthat::test_that(desc = "Table inputs are data frames when required", {
   
   testthat::expect_error(object = joinAquPointCount(inputPoint = testPoint,
-                                                    inputTaxProc = testTaxProc),
+                                                    inputTaxonomy = testTaxProc),
                          regexp = "Data frames must be supplied for table inputs if 'inputDataList' is missing")
 })
 
@@ -221,15 +243,15 @@ testthat::test_that(desc = "Table 'inputPerTax' missing data", {
 
 
 
-### Test: Generate expected errors for issues with taxonomyProcessed table (works for inputDataList or inputTaxProc source) ####
-# Test when inputTaxProc lacks required column
-testthat::test_that(desc = "Table 'inputTaxProc' missing column", {
+### Test: Generate expected errors for issues with taxonomy table (works for inputDataList or inputTaxonomy source) ####
+# Test when inputTaxonomy  lacks required column
+testthat::test_that(desc = "Table 'inputTaxonomy' missing column", {
   
-  testthat::expect_error(object = joinAquPointCount(inputTaxProc = testTaxProc %>%
+  testthat::expect_error(object = joinAquPointCount(inputTaxonomy = testTaxProc %>%
                                                       dplyr::select(-acceptedTaxonID),
                                                     inputPoint = testPoint,
                                                     inputPerTax = testPerTax),
-                         regexp = "Required columns missing from 'inputTaxProc': acceptedTaxonID")
+                         regexp = "Required columns missing from 'inputTaxonomy': acceptedTaxonID")
 })
 
 
