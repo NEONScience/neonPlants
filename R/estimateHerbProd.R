@@ -10,11 +10,9 @@
 #'
 #' At sites where herbaceous plants are not subject to grazing management and exclosures are not in use, and crops are not planted at any point during the year, the estimate of herbaceous ANPP is simply the standing biomass clipped from the bout with the greatest biomass.
 #'
-#' Where grazing management occurs in Tower plots and exclosures have been established, consumption is calculated for each Tower plot sampling event as average biomass within exclosures minus average biomass outside of exclosures. Consumption at each sampling bout is summed and then added to the standing biomass of the last bout of the season for an estimate of herbaceous ANPP.
+#' Where grazing management occurs in Tower plots and exclosures have been established, consumption is calculated for each Tower plot sampling event as average biomass within exclosures minus average biomass outside of exclosures; the consumption estimate is therefore inherently a "site-level" estimate rather than a "plot-level" estimate. Site-level consumption from each sampling bout is then summed across all bouts and added to the standing biomass of the last bout of the season to generate site-level estimates of herbaceous ANPP. For grazed sites, the Science Design only supports calculating consumption at the site level. The clip harvests within exclosures are not close enough to ambient clip harvests to support plot-level consumption estimates.
 #'
 #' At sites where crops are planted, productivity is determined on a plot-by-plot basis to account for the potential for multiple plantings throughout the season, as well as "wild-type" plots that are either fallow for the duration of the season or are not managed for agriculture.
-#'
-#' Note that at grazed sites, the Science Design only supports calculating consumption at the site level. The clip harvests within exclosures are not close enough to ambient clip harvests to support plot-level consumption estimates.
 #'
 #' @param inputDataList An R list object produced by the neonUtilities::loadByProduct() function for the NEON Herbaceous Clip Harvest data product. [list]
 #'
@@ -89,8 +87,6 @@ estimateHerbProd = function(inputDataList,
 
 
 
-  #--> start again here after 'scaleHerbMass' is updated to report '0' instead of NA for absent herbGroups ###############
-
   ### Prepare data for downstream calculations ####
 
   #   Filter input data using user-supplied 'plotSubset' argument; insurance step since scaleHerbMass() output should already only be produced for user-selected option
@@ -144,21 +140,19 @@ estimateHerbProd = function(inputDataList,
   #--> Sites with multiple Tower plot eventIDs take greatest mass per herbGroup across eventIDs.
   #--> SRER is a special case where mass from multiple eventIDs is summed because species composition during spring green-up does not overlap with species present during monsoon clip.
 
-  ##  Identify 'site x year' combos with a single Tower plot eventID
+  ### Identify 'site x year' combos with a single Tower plot eventID
   temp <- stdSiteYearDF %>%
     dplyr::filter(.data$plotType == "tower") %>%
     dplyr::group_by(.data$domainID,
-                    .data$siteID,
-                    .data$year) %>%
+                    .data$siteYear) %>%
     dplyr::summarise(events = paste(unique(.data$eventID), collapse = ", "),
                      count = length(unique(.data$eventID))) %>%
-    dplyr::filter(count == 1) %>%
-    dplyr::mutate(siteYear = paste(.data$siteID, .data$year, sep = "-"))
+    dplyr::filter(count == 1)
 
 
   ##  Process sites with one Tower plot eventID in a 'site x year'
 
-  stdSinglePlotProdDF <- stdSiteYearDF %>%
+  stdSingleEventProdDF <- stdSiteYearDF %>%
     #   Get records for all plots in 'site x year' combos with a single eventID
     dplyr::filter(.data$siteYear %in% temp$siteYear) %>%
 
@@ -186,45 +180,122 @@ estimateHerbProd = function(inputDataList,
                                              digits = 2))
 
 
-  ##  Process sites with multiple Tower plot eventIDs in a 'site x year' (but not SRER)
+
+
+  ### Process sites with multiple Tower plot eventIDs in a 'site x year' (but not SRER)
   #--> group by siteID, year, herbGroup, and eventID, and pick combo with greatest mass for each herbGroup, then sum herbGroups from selected eventIDs to get total production for each plot.
 
+  ##  Identify 'site x year' combos with multiple Tower plot eventIDs; remove SRER for separate processing
+  temp <- stdSiteYearDF %>%
+    dplyr::filter(!.data$siteYear %in% temp$siteYear,
+                  .data$siteID != "SRER")
+
+
+  ##  Isolate and process Distributed plots; these are clipped 1X/year and require no special processing --> data already represent plot-level ANPP. Select columns similar to above in 'stdSinglePlotProdDF'
+  tempDist <- stdSiteYearDF %>%
+    dplyr::filter(.data$siteYear %in% temp$siteYear,
+                  .data$plotType == "distributed") %>%
+    dplyr::select("domainID",
+                  "siteID",
+                  "year",
+                  "plotID",
+                  "nlcdClass",
+                  "plotType",
+                  "plotSize",
+                  "plotManagement",
+                  "collectDate",
+                  "TotalMass_gm2",
+                  "CoolSeasonGram_gm2",
+                  "Forbs_gm2",
+                  "NFixing_gm2",
+                  "WarmSeasonGram_gm2",
+                  "WoodyPlants_gm2")
+
+
+  ##  Process Tower plots clipped > 1X/year
+  tempTower <- stdSiteYearDF %>%
+    dplyr::filter(.data$siteYear %in% temp$siteYear,
+                  .data$plotType == "tower")
+
+  #   Pivot data to long format to enable grouping by herbGroup
+  tempTower <- tempTower %>%
+
+    #   Remove crop columns as these are not populated for these site-year combos based on upstream filtering
+    dplyr::select(-"TotalMass_gm2",
+                  -c("Barley_gm2":"Wheat_gm2")) %>%
+    dplyr::rename_with(~ stringr::str_remove(., "_gm2"),
+                       .cols = c("CoolSeasonGram_gm2":"WoodyPlants_gm2")) %>%
+    tidyr::pivot_longer(cols = c("CoolSeasonGram":"WoodyPlants"),
+                        names_to = "herbGroup",
+                        values_to = "agb_gm2")
+
+  #   Identify the 'site x year x herbGroup x eventID' combo with greatest productivity
+  towerMax <- tempTower %>%
+    dplyr::group_by(.data$domainID,
+                    .data$siteYear,
+                    .data$herbGroup,
+                    .data$eventID) %>%
+    dplyr::summarise(count = n(),
+                     herbMass = round(mean(.data$agb_gm2, na.rm = TRUE),
+                                      digits = 2)) %>%
+    dplyr::filter(herbMass == max(.data$herbMass)) %>%
+    dplyr::mutate(herbEvent = paste(.data$siteYear, .data$herbGroup, .data$eventID,
+                                    sep = "-"),
+                  .before = "domainID")
+
+  #   Retain records associated with max 'site x year x herbGroup x eventID' combos, pivot wider, then calculate plot-level ANPP
+  tempTower <- tempTower %>%
+    dplyr::mutate(herbEvent = paste(.data$siteYear, .data$herbGroup, .data$eventID,
+                                    sep = "-"),
+                  .before = "domainID") %>%
+    dplyr::filter(.data$herbEvent %in% towerMax$herbEvent) %>%
+    dplyr::select(-"herbEvent",
+                  -"eventID",
+                  -"clipID",
+                  -"collectDate",
+                  -"sampleID") %>%
+    tidyr::pivot_wider(names_from = "herbGroup",
+                       names_glue = "{herbGroup}_gm2",
+                       values_from = "agb_gm2") %>%
+    dplyr::mutate(dplyr::across("CoolSeasonGram_gm2":"WoodyPlants_gm2", ~tidyr::replace_na(., 0))) %>%
+    dplyr::mutate(TotalMass_gm2 = rowSums(dplyr::across("CoolSeasonGram_gm2":"WoodyPlants_gm2"), na.rm = TRUE),
+                  .before = "CoolSeasonGram_gm2") %>%
+
+    #   Calculate mean for 'site x year x plotID' combo to account for potential of 2 subplots per large Tower plot
+    dplyr::group_by(.data$domainID,
+                    .data$siteID,
+                    .data$year,
+                    .data$plotID,
+                    .data$nlcdClass,
+                    .data$plotType,
+                    .data$plotSize,
+                    .data$plotManagement) %>%
+    dplyr::summarise(TotalMass_gm2 = round(mean(.data$TotalMass_gm2, na.rm = TRUE),
+                                           digits = 2),
+                     CoolSeasonGram_gm2 = round(mean(.data$CoolSeasonGram_gm2, na.rm = TRUE),
+                                                digits = 2),
+                     Forbs_gm2 = round(mean(.data$Forbs_gm2, na.rm = TRUE),
+                                       digits = 2),
+                     NFixing_gm2 = round(mean(.data$NFixing_gm2, na.rm = TRUE),
+                                         digits = 2),
+                     WarmSeasonGram_gm2 = round(mean(.data$WarmSeasonGram_gm2, na.rm = TRUE),
+                                                digits = 2),
+                     WoodyPlants_gm2 = round(mean(.data$WoodyPlants_gm2, na.rm = TRUE),
+                                             digits = 2),
+                     .groups = "drop")
+
+
+  ##  Combine Distributed and Tower plot ANPP for ungrazed sites with Tower plots clipped > 1x/year (but not SRER)
+  stdMultiEventProdDF <- dplyr::bind_rows(tempDist,
+                                          tempTower)
 
 
 
 
 
-
-
-
-
-  if (nrow(standardFinalMass) > 0) {
-
-    herb_ANPP_site <- standardFinalMass %>%
-      dplyr::filter(.data$herbGroup == "AllHerbaceousPlants") %>%
-      dplyr::group_by(.data$domainID,
-                      .data$siteID,
-                      .data$year,
-                      .data$plotType,
-                      .data$eventID,
-                      .data$herbGroup) %>%
-      dplyr::summarise(herbClipCount = dplyr::n(),
-                       herbANPP_gm2yr = round(mean(.data$agb_gm2, na.rm = TRUE),
-                                              digits = 2),
-                       herbANPPSD_gm2yr = round(stats::sd(.data$agb_gm2, na.rm = TRUE),
-                                                digits = 2))
-
-  } else {
-
-    herb_ANPP_site <- data.frame()
-
-  }
-
-
-
-
-
-
+  ### Next tasks ####
+  ### --> Check exception handling for chunks above to see what happens when no data for Tower plots clipped > 1X/year
+  ### --> Next chunk is to process SRER
 
 
 
