@@ -187,7 +187,7 @@ estimateHerbProd = function(inputDataList,
 
       stdSinglePlotProdDF <- NULL
 
-    } #   End nrow conditional checking for site-years with single Tower plot eventID
+    } #   End nrow(temp) conditional checking for site-years with single Tower plot eventID
 
 
     ### Process sites with multiple Tower plot eventIDs in a 'site x year' (but not SRER)
@@ -227,85 +227,136 @@ estimateHerbProd = function(inputDataList,
         dplyr::filter(.data$siteYear %in% temp$siteYear,
                       .data$plotType == "tower")
 
-      #   Pivot data to long format to enable grouping by herbGroup
-      tempTower <- tempTower %>%
 
-        #   Remove crop columns as these are not populated for these site-year combos based on upstream filtering
-        dplyr::select(-"TotalMass_gm2",
-                      -c("Barley_gm2":"Wheat_gm2")) %>%
-        dplyr::rename_with(~ stringr::str_remove(., "_gm2"),
-                           .cols = c("CoolSeasonGram_gm2":"WoodyPlants_gm2")) %>%
-        tidyr::pivot_longer(cols = c("CoolSeasonGram":"WoodyPlants"),
-                            names_to = "herbGroup",
-                            values_to = "agb_gm2")
+      if (nrow(tempTower)) {
 
-      #   Identify the 'site x year x herbGroup x eventID' combo with greatest productivity
-      towerMax <- tempTower %>%
-        dplyr::group_by(.data$domainID,
-                        .data$siteYear,
-                        .data$herbGroup,
-                        .data$eventID) %>%
-        dplyr::summarise(count = n(),
-                         herbMass = round(mean(.data$agb_gm2, na.rm = TRUE),
-                                          digits = 2)) %>%
-        dplyr::filter(herbMass == max(.data$herbMass)) %>%
-        dplyr::mutate(herbEvent = paste(.data$siteYear, .data$herbGroup, .data$eventID,
-                                        sep = "-"),
-                      .before = "domainID")
+        #   Pivot data to long format to enable grouping by herbGroup
+        tempTower <- tempTower %>%
 
-      #   Retain records associated with max 'site x year x herbGroup x eventID' combos, pivot wider, then calculate plot-level ANPP
-      tempTower <- tempTower %>%
-        dplyr::mutate(herbEvent = paste(.data$siteYear, .data$herbGroup, .data$eventID,
-                                        sep = "-"),
-                      .before = "domainID") %>%
-        dplyr::filter(.data$herbEvent %in% towerMax$herbEvent) %>%
-        dplyr::select(-"herbEvent",
-                      -"eventID",
-                      -"clipID",
-                      -"collectDate",
-                      -"sampleID") %>%
-        tidyr::pivot_wider(names_from = "herbGroup",
-                           names_glue = "{herbGroup}_gm2",
-                           values_from = "agb_gm2") %>%
-        dplyr::mutate(dplyr::across("CoolSeasonGram_gm2":"WoodyPlants_gm2", ~tidyr::replace_na(., 0))) %>%
-        dplyr::mutate(TotalMass_gm2 = rowSums(dplyr::across("CoolSeasonGram_gm2":"WoodyPlants_gm2"), na.rm = TRUE),
-                      .before = "CoolSeasonGram_gm2") %>%
+          #   Remove crop columns as these are not populated for these site-year combos based on upstream filtering
+          dplyr::select(-"TotalMass_gm2",
+                        -c("Barley_gm2":"Wheat_gm2")) %>%
+          dplyr::rename_with(~ stringr::str_remove(., "_gm2"),
+                             .cols = c("CoolSeasonGram_gm2":"WoodyPlants_gm2")) %>%
+          tidyr::pivot_longer(cols = c("CoolSeasonGram":"WoodyPlants"),
+                              names_to = "herbGroup",
+                              values_to = "agb_gm2")
 
-        #   Calculate mean for 'site x year x plotID' combo to account for potential of 2 subplots per large Tower plot
-        dplyr::group_by(.data$domainID,
-                        .data$siteID,
-                        .data$year,
-                        .data$plotID,
-                        .data$nlcdClass,
-                        .data$plotType,
-                        .data$plotSize,
-                        .data$plotManagement) %>%
-        dplyr::summarise(TotalMass_gm2 = round(mean(.data$TotalMass_gm2, na.rm = TRUE),
-                                               digits = 2),
-                         CoolSeasonGram_gm2 = round(mean(.data$CoolSeasonGram_gm2, na.rm = TRUE),
-                                                    digits = 2),
-                         Forbs_gm2 = round(mean(.data$Forbs_gm2, na.rm = TRUE),
-                                           digits = 2),
-                         NFixing_gm2 = round(mean(.data$NFixing_gm2, na.rm = TRUE),
-                                             digits = 2),
-                         WarmSeasonGram_gm2 = round(mean(.data$WarmSeasonGram_gm2, na.rm = TRUE),
-                                                    digits = 2),
-                         WoodyPlants_gm2 = round(mean(.data$WoodyPlants_gm2, na.rm = TRUE),
+        #   Identify the 'site x year x herbGroup x eventID' combo with greatest productivity
+        towerMax <- tempTower %>%
+          dplyr::group_by(.data$domainID,
+                          .data$siteYear,
+                          .data$herbGroup,
+                          .data$eventID) %>%
+          dplyr::summarise(count = n(),
+                           herbMass = round(mean(.data$agb_gm2, na.rm = TRUE),
+                                            digits = 2)) %>%
+          dplyr::filter(herbMass == max(.data$herbMass)) %>%
+          dplyr::mutate(herbEvent = paste(.data$siteYear, .data$herbGroup, .data$eventID,
+                                          sep = "-"),
+                        .before = "domainID")
+
+        #   Retain records associated with max 'site x year x herbGroup x eventID' combos, pivot wider, then calculate plot-level ANPP
+        tempTower <- tempTower %>%
+          dplyr::mutate(herbEvent = paste(.data$siteYear, .data$herbGroup, .data$eventID,
+                                          sep = "-"),
+                        .before = "domainID") %>%
+          dplyr::filter(.data$herbEvent %in% towerMax$herbEvent) %>%
+          dplyr::select(-"herbEvent",
+                        -"eventID",
+                        -"clipID",
+                        -"collectDate",
+                        -"sampleID") %>%
+          tidyr::pivot_wider(names_from = "herbGroup",
+                             names_glue = "{herbGroup}_gm2",
+                             values_from = "agb_gm2") %>%
+          dplyr::mutate(dplyr::across("CoolSeasonGram_gm2":"WoodyPlants_gm2", ~tidyr::replace_na(., 0))) %>%
+          dplyr::mutate(TotalMass_gm2 = rowSums(dplyr::across("CoolSeasonGram_gm2":"WoodyPlants_gm2"), na.rm = TRUE),
+                        .before = "CoolSeasonGram_gm2") %>%
+
+          #   Calculate mean for 'site x year x plotID' combo to account for potential of 2 subplots per large Tower plot
+          dplyr::group_by(.data$domainID,
+                          .data$siteID,
+                          .data$year,
+                          .data$plotID,
+                          .data$nlcdClass,
+                          .data$plotType,
+                          .data$plotSize,
+                          .data$plotManagement) %>%
+          dplyr::summarise(TotalMass_gm2 = round(mean(.data$TotalMass_gm2, na.rm = TRUE),
                                                  digits = 2),
-                         .groups = "drop")
+                           CoolSeasonGram_gm2 = round(mean(.data$CoolSeasonGram_gm2, na.rm = TRUE),
+                                                      digits = 2),
+                           Forbs_gm2 = round(mean(.data$Forbs_gm2, na.rm = TRUE),
+                                             digits = 2),
+                           NFixing_gm2 = round(mean(.data$NFixing_gm2, na.rm = TRUE),
+                                               digits = 2),
+                           WarmSeasonGram_gm2 = round(mean(.data$WarmSeasonGram_gm2, na.rm = TRUE),
+                                                      digits = 2),
+                           WoodyPlants_gm2 = round(mean(.data$WoodyPlants_gm2, na.rm = TRUE),
+                                                   digits = 2),
+                           .groups = "drop")
 
 
-      ##  Combine Distributed and Tower plot ANPP for ungrazed sites with Tower plots clipped > 1x/year (but not SRER)
-      stdMultiEventProdDF <- dplyr::bind_rows(tempDist,
-                                              tempTower)
+        ##  Combine Distributed and Tower plot ANPP for ungrazed sites with Tower plots clipped > 1x/year (but not SRER)
+        stdMultiEventProdDF <- dplyr::bind_rows(tempDist,
+                                                tempTower)
+
+      } else {
+
+        stdMultiEventProdDF <- tempDist
+
+      } # End nrow(tempTower) conditional
+
+    } #   End nrow(temp) conditional for processing standard 'site-year' combos with > 1 Tower plot eventID (not SRER)
 
 
-    } #   End nrow conditional for processing standard 'site-year' combos with > 1 Tower plot eventID
+
+    ### Process SRER data: Multiple Tower plot eventIDs, herbGroups summed across eventIDs
+    #--> Group by siteID, year, plotID, subplotID, and herbGroup, then sum to get production by herbGroup; then sum across herbGroups to get total production by plotID.
+
+    #   Isolate SRER data
+    srerDF <- stdSiteYearDF %>%
+      dplyr::filter(.data$siteID == "SRER")
+
+    #--> Need to pull out Distributed plots separately to retain the collectDate ##################################
+
+    #   Pivot data to long format to enable grouping by herbGroup
+    srerTower <- srerDF %>%
+      dplyr::filter(.data$plotType == "tower") %>%
+
+      #   Remove crop columns as these are not populated for these site-year combos based on upstream filtering
+      dplyr::select(-"TotalMass_gm2",
+                    -c("Barley_gm2":"Wheat_gm2")) %>%
+      dplyr::rename_with(~ stringr::str_remove(., "_gm2"),
+                         .cols = c("CoolSeasonGram_gm2":"WoodyPlants_gm2")) %>%
+      tidyr::pivot_longer(cols = c("CoolSeasonGram":"WoodyPlants"),
+                          names_to = "herbGroup",
+                          values_to = "agb_gm2") %>%
+
+      #   Sum within herbGroups and across bouts
+      dplyr::group_by(.data$domainID,
+                      .data$siteID,
+                      .data$year,
+                      .data$plotID,
+                      .data$subplotID,
+                      .data$herbGroup,
+                      .data$nlcdClass,
+                      .data$plotType,
+                      .data$plotSize,
+                      .data$plotManagement) %>%
+      dplyr::summarise(agb_gm2 = sum(.data$agb_gm2, na.rm = TRUE),
+                       .groups = "drop")
+
+    #--> next want to pivot wider like above...
+
+
+
 
   #   Create a NULL data frame named identically to the above output in the event no "standard" sites exist in input dataset
   } else {
 
-    renameThisObjectToMatchAbove <- NULL
+    renameThisObjectToMatchAbove <- NULL #--> just overwrite 'stdSiteYearDF' after binding rows for stdSinglePlotProdDF, stdMultiEventProdDF, and srerDF?
 
   } #   End nrow(stdSiteYearDF) standard site processing conditional
 
@@ -313,10 +364,7 @@ estimateHerbProd = function(inputDataList,
 
 
   ### Next tasks ####
-  ### --> Check exception handling for chunks above to see what happens when no data for Tower plots clipped > 1X/year.
-      #   --> started this, begin again adding conditional logic at line 205 with a Distributed plot conditional
-  ### --> Next chunk is to process SRER
-
+  #--> Complete SRER logic above
 
 
 
