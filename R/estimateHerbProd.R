@@ -71,7 +71,7 @@ estimateHerbProd = function(inputDataList,
 
   hbp_agb <- scaleHerbMassOutput$hbp_agb
 
-
+  rm(scaleHerbMassOutput)
 
 
 
@@ -434,6 +434,11 @@ estimateHerbProd = function(inputDataList,
     stdSiteYearDF <- NULL
 
   } #   End nrow(stdSiteYearDF) standard site processing conditional
+
+
+
+  ### Clean up following "standard" site processing
+  rm(srerDF, srerDist, srerTower, tempDist, tempTower, towerMax)
 
 
 
