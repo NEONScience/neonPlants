@@ -45,6 +45,7 @@ Imports:
     lifecycle,
     lubridate,
     magrittr,
+    methods,
     rlang,
     stringr,
     tidyr,
@@ -52,3 +53,5 @@ Imports:
     RColorBrewer,
     ggplot2,
     plotly
+    lubridate
+LazyData: true

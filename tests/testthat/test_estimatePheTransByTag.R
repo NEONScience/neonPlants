@@ -7,8 +7,9 @@
 testList <- readRDS(testthat::test_path("testdata", "phe_testDat_GRSM.rds"))
 testStatus <- testList$phe_statusintensity
 testTags <- testList$phe_perindividual
-
-
+testtrans <- estimatePheTransByTag(inputDataList = testList)
+testtransti <- estimatePheTransByTag(inputStatus = testStatus,
+                      inputTags = testTags)
 
 ### Test function inputs meet requirements ####
 #   Test that only one input is provided
@@ -150,7 +151,8 @@ testthat::test_that("Data contain duplicates", {
   testthat::expect_error(estimatePheTransByTag(inputStatus = testStatus,
                                                inputTags = rbind(testTags[1,], 
                                                                  testTags)),
-                         regexp = "duplicate records present for NEON.PLA.D07.GRSM.06049 please resolve before running estimatePheTrans")
+                         regexp = "Duplicate records found for individual(s) NEON.PLA.D07.GRSM.06049 in phe_perindividual. Attempted to resolve by retaining most recently edited records; resolution failed. Check data carefully and if possible, remove duplicates by keeping records with most recent editedDate.",
+                         fixed=TRUE)
   
 })
 
@@ -162,15 +164,14 @@ testthat::test_that("Data contain duplicates", {
 #   Test list input
 testthat::test_that(desc = "Output class list input", {
   
-  testthat::expect_s3_class(object = estimatePheTransByTag(inputDataList = testList),
+  testthat::expect_s3_class(object = testtrans,
                             class = "data.frame")
 })
 
 #   Test table input
 testthat::test_that(desc = "Output class table input", {
   
-  testthat::expect_s3_class(object = estimatePheTransByTag(inputStatus = testStatus,
-                                                           inputTags = testTags),
+  testthat::expect_s3_class(object = testtransti,
                             class = "data.frame")
 })
 

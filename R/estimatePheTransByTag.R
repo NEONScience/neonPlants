@@ -2,24 +2,25 @@
 #'
 #' @author Katie Jones \email{kjones@battelleecology.org} \cr
 #'
-#' @description Data from the NEON Plant Phenology Observation data product (DP1.10055.001) are used to calculate phenophase transition dates for each phenophase transition (status = no -> yes or yes -> no) for each tagged plant or patch observed along a NEON phenology transect or within a phenocam plot in the input data set. Additionally, each estimated transition includes fields describing the number of transitions observed for the given individual x phenophase combination and the sampling interval around the estimate. Required inputs are either a list of data frames (inputDataList) as returned from neonUtilities::loadByProduct() that must include a data frame titled "phe_statusintensity" and one titled "phe_perindividual". Alternatively, the function will accept two individual data frames corresponding to the "phe_statusintensity" table and the "phe_perindividual" table.
+#' @description Data from the NEON Plant Phenology Observation data product (DP1.10055.001) are used to calculate phenophase transition dates for each phenophase transition (status = no -> yes or yes -> no) for each tagged plant or patch observed along a NEON phenology transect or within a phenocam plot in the input data set. Additionally, each estimated transition includes fields describing the count of transitions observed during each year for the given individual x phenophase combination and the sampling interval around the estimate. Required inputs are either a list of data frames (inputDataList) as returned from neonUtilities::loadByProduct() that must include a data frame titled "phe_statusintensity" and one titled "phe_perindividual". Alternatively, the function will accept two individual data frames corresponding to the "phe_statusintensity" table and the "phe_perindividual" table.
 #' 
 #' @details Input data may be provided either as a list generated from the neonUtilities::laodByProduct() function or as individual tables. However, if both list and table inputs are provided at the same time the function will error.
 #' 
-#' For table joining to be successful, inputs must contain data from the same sites for all tables. When individualID duplicates exist in the "phe_perindividual" table, the function will produce an error. If this occurs when providing data via the inputDataList argument, extract individual data frames from the list, resolve duplicates, and re-run with separate inputStatus and inputTags inputs.
+#' For table joining to be successful, inputs must contain data from the same sites for all tables. When individualID duplicates exist in the "phe_perindividual" table, the function will attempt to resolve them based on the editedDate field.
+#' 
+#' Phenophases may begin in one year and end in another. For the most part this happens in southern sites, but users should be alert for it at any site. Function outputs include both year (the calendar year of the phenophase transition) and yearPhenophaseBegan (the calendar year of phenophase onset for a particular individual and phenophase). Calculation of the count of phenophase transitions per year (nthTransition) can be performed based on either year or yearPhenophaseBegan, using the began= input. The default is year.
 #'
 #' @param inputDataList A list of data frames returned from the neonUtilities::loadByProduct() function. [list]
-#' 
 #' @param inputStatus A data frame with phenological observation data, either the "phe_statusintensity" table or equivalent. [data.frame]
-#' 
 #' @param inputTags A data frame with taxon data for individuals present in the inputStatus dataframe, either the "phe_perindividual" table or equivalent. [data.frame]
+#' @param began Should transition count be based on the calendar year at the time of transition, or the year the phenophase began? Defaults to FALSE, base the count on calendar year. [logical]
 #
 #' @return A data frame containing a time series for each phenophase reported for each individual in the data set, including identified  transition dates for beginning and end of a given phenophase, as well as explanatory metrics about that estimate for the time frame provided in the input data frame. Calculated values include:
-#'  * transition date - the mid-point between two consecutive dates with different phenophase status values.
-#'  * transitionType - the phenophase status values of the transition.
-#'  * sampling interval - the number of days between observations.
+#'  * transitionDate - the mid-point between consecutive dates when different phenophase status values were observed.
+#'  * transitionType - onset or end of phenophase.
+#'  * samplingInterval - the number of days between the two observation dates when the phenophase transition occurred.
 #'  * uncertainty - sampling interval/2
-#'  * nth transition - a count of onset events per individualID, phenophase name, within a given calendar year.
+#'  * nthTransition - a count of onset events per individualID and phenophase name within a given year (either calendar year or year phenophase began, depending on the value of the input began=).
 #'
 #' @references
 #' License: GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007
@@ -53,7 +54,8 @@
 
 estimatePheTransByTag <- function(inputDataList = NULL,
                                   inputStatus = NULL,
-                                  inputTags = NULL) {
+                                  inputTags = NULL,
+                                  began = FALSE) {
   
   # Verify that only one input type is provided
   if(!is.null(inputDataList) && !is.null(inputStatus) |!is.null(inputDataList) && !is.null(inputTags)) {
@@ -172,18 +174,41 @@ estimatePheTransByTag <- function(inputDataList = NULL,
     tags <- inputTags
   }
 
-  #check for duplicate tags
+  # resolve duplicate tags
   if(any(duplicated(tags$individualID))) {
-    stop(paste("duplicate records present for", unique(tags$individualID[duplicated(tags$individualID)]),
-               "please resolve before running estimatePheTrans"))
+    dups <- unique(tags$individualID[duplicated(tags$individualID)])
+    dropuid <- character()
+    dedup <- try({
+      tagdup <- tags[union(which(duplicated(tags$individualID)),
+                           which(duplicated(tags$individualID, fromLast=TRUE))),]
+      for(i in unique(tagdup$individualID)) {
+        tagdupi <- tagdup[which(tagdup$individualID==i),]
+        dropuid <- c(dropuid, tagdupi$uid[which(tagdupi$editedDate!=max(tagdupi$editedDate))])
+      }
+    }, silent=TRUE)
+    if(inherits(dedup, "try-error")) {
+      stop(paste("Duplicate records found for individual(s)", paste(dups, collapse=", "),
+                 "in phe_perindividual. Attempted to resolve by retaining most recently edited records; resolution failed. Check data carefully and if possible, remove duplicates by keeping records with most recent editedDate."))
+    }
+    if(length(dropuid)==0) {
+      stop(paste("Duplicate records found for individual(s)", paste(dups, collapse=", "),
+                 "in phe_perindividual. Attempted to resolve by retaining most recently edited records; resolution failed. Check data carefully and if possible, remove duplicates by keeping records with most recent editedDate."))
+    } else {
+      tags <- tags[-which(tags$uid %in% dropuid),]
+      message(paste("Duplicate records found for individual(s)", paste(dups, collapse=", "),
+                    "in phe_perindividual. Duplicates were resolved by retaining the record with the most recent editedDate."))
+    }
   }
 
   # Print data range for input data set
-  print(paste("Observation date range:", min(obs$date), "to", max(obs$date)))
+  message(paste("Observation date range:", min(obs$date), "to", max(obs$date)))
 
 
   # Format transition output dataframe
   step_one <- obs %>%
+    
+    # order by date of observation
+    dplyr::arrange(.data$date) %>%
     
     # extract year from date
     dplyr::mutate(year = substr(.data$date, 1,4)) %>%
@@ -214,17 +239,38 @@ estimatePheTransByTag <- function(inputDataList = NULL,
     dplyr::mutate(dateTransition = as.Date(.data$dateIntervalStart + (.data$date - .data$dateIntervalStart) / 2),
                   doyTransition = lubridate::yday(.data$dateTransition),
                   precisionDays = as.numeric(difftime(.data$date, .data$dateIntervalStart, units = "days"))/2,
-                  samplingInterval = as.numeric(difftime(.data$date, .data$dateIntervalStart, units = "days"))) %>%  
+                  samplingInterval = as.numeric(difftime(.data$date, .data$dateIntervalStart, units = "days"))) %>%
     
-    dplyr::group_by(.data$year,
-                    .data$individualID, 
-                    .data$phenophaseName) %>%  
+    dplyr::mutate(yearPhenophaseBegan = ifelse(.data$transitionType=="no-yes", 
+                                               lubridate::year(.data$dateTransition),
+                                               lubridate::year(dplyr::lag(.data$dateTransition))))
     
-    # Count number of onsets (per year, individual, phenophase)
-    dplyr::mutate(nthTransition = cumsum(.data$statusLag == "no" & .data$phenophaseStatus == "yes")) %>%
+    # split here - group by year or yearPhenophaseBegan
+  if(isFALSE(began)) {
+    step_three <- step_two %>%
+      
+      dplyr::group_by(.data$year,
+                      .data$individualID, 
+                      .data$phenophaseName) %>%  
+      
+      # Count number of onsets (per year, individual, phenophase)
+      dplyr::mutate(nthTransition = cumsum(.data$statusLag == "no" & .data$phenophaseStatus == "yes"))
+  } else {
+    step_three <- step_two %>%
+      
+      dplyr::group_by(.data$yearPhenophaseBegan,
+                      .data$individualID, 
+                      .data$phenophaseName) %>%  
+      
+      # Count number of onsets (per year, individual, phenophase)
+      dplyr::mutate(nthTransition = cumsum(.data$statusLag == "no" & .data$phenophaseStatus == "yes"))
+  }
+  
+  # Clean up outputs
+  step_four <- step_three %>%
     
-    # Clean up outputs
     dplyr::select("year", 
+                  "yearPhenophaseBegan",
                   "siteID", 
                   "individualID", 
                   "phenophaseName", 
@@ -245,11 +291,11 @@ estimatePheTransByTag <- function(inputDataList = NULL,
   
   
   # Rename transition type to onset/offset
-  step_two$transitionType <- ifelse(step_two$transitionType == 'no-yes',
+  step_four$transitionType <- ifelse(step_four$transitionType == 'no-yes',
                                     'onset',
-                                    ifelse(step_two$transitionType == 'yes-no', 
+                                    ifelse(step_four$transitionType == 'yes-no', 
                                            'end',
-                                           step_two$transitionType))
+                                           step_four$transitionType))
   
   # Prep tags df
   out <- tags %>%
@@ -259,11 +305,12 @@ estimatePheTransByTag <- function(inputDataList = NULL,
                   "growthForm") %>%
     
     # Join with Obs
-    dplyr::right_join(step_two, 
+    dplyr::right_join(step_four, 
                       by = "individualID") %>%
     
     # Reorder fields
     dplyr::select("year", 
+                  "yearPhenophaseBegan",
                   "siteID", 
                   "individualID", 
                   "taxonID", 

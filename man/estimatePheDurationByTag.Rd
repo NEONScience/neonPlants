@@ -18,25 +18,28 @@ estimatePheDurationByTag(
 \item{inputTags}{A data frame with taxon data for individuals present in the inputStatus dataframe, either the "phe_perindividual" table or equivalent. \link{data.frame}}
 }
 \value{
-The time series created by the neonPlants::estimatePheTransByTag() function is used to calculate phenophase durations for the time frame provided in the input data frame. Calculated values include:
+The time series of phenophase transitions created by the neonPlants::estimatePheTransByTag() function is used to calculate the duration of each phenophase for each individual for the time frame provided in the input data frame. Calculated values include:
 \itemize{
-\item dateTransitionStart - calendar date of the estimated transition onset
-\item doyTransitionStart - ordinal day of year of the estimated transition onset
-\item dateTransitionEnd - calendar date of the estimated transition end
-\item doyTransitionEnd - ordinal day of year of the estimated transition end
-\item duration - difference in days from the onset day of year to the transition end
+\item yearPhenophaseBegan - calendar year of the estimated onset of the phenophase
+\item dateTransitionStart - calendar date of the estimated phenophase onset
+\item doyTransitionStart - ordinal day of year of the estimated phenophase onset
+\item dateTransitionEnd - calendar date of the estimated phenophase end
+\item doyTransitionEnd - ordinal day of year of the estimated phenophase end
+\item duration - difference in days from the onset to the end of the phenophase
 \item transitionType - indicator that output is for phenophase duration
-\item precisionDuration - sum of precisionDays for estimated oneset and end
-\item nth transition - a count of onset events per individualID, phenophase name, within a given calendar year
+\item precisionDuration - sum of precisionDays for estimated onset and end
+\item nthTransition - count of onset events per individualID and phenophase name for each year (yearPhenophaseBegan)
 }
 }
 \description{
-Data from the NEON Plant Phenology Observation (DP1.10055.001) product are used to calculate phenophase duration for each phenophase transition identified by the neonPlants::estimatePheTransByTag() function for the time frame provided in the input data frame. Each  duration includes additional fields describing number of transitions reported for the given individual x phenophase combination, the start and end date and day of year, and the precision around the duration estimate. Required inputs are either a list of data frames as returned from neonUtilities::loadByProduct() that must include a data frame titled "phe_statusintensity" and one titled "phe_perindividual", or two individual data frames corresponding to the "phe_statusintensity" table and the "phe_perindividual" table.
+Data from the NEON Plant Phenology Observation (DP1.10055.001) product are used to calculate phenophase duration for each phenophase identified by the neonPlants::estimatePheTransByTag() function for the time frame provided in the input data frame. Each duration includes additional fields including an annual count of transitions reported for the given individual x phenophase combination, the start and end date and day of year for each phenophase, and the precision around the duration estimate. Required inputs are either a list of data frames as returned from neonUtilities::loadByProduct() that must include a data frame titled "phe_statusintensity" and one titled "phe_perindividual", or two individual data frames corresponding to the "phe_statusintensity" table and the "phe_perindividual" table.
 }
 \details{
 Input data may be provided either as a list generated from the neonUtilities::laodByProduct() function or as individual tables. However, if both list and table inputs are provided at the same time the function will error.
 
-For table joining to be successful, inputs must contain data from the same sites for all tables. When individualID duplicates exist in the "phe_perindividual" table, the function will error. If this occurs when providing data via the inputDataList argument, extract individual data frames from the list, resolve duplicates, and re-run with separate inputStatus and inputTags inputs.
+For table joining to be successful, inputs must contain data from the same sites for all tables. When individualID duplicates exist in the "phe_perindividual" table, the function will attempt to resolve them based on the editedDate field.
+
+Phenophases may begin in one year and end in another. For the most part this happens in southern sites, but users should be alert for it at any site. estimatePheDurationByTag() calls estimatePheTransByTag() to find the dates of phenophase transitions, and uses yearPhenophaseBegan for those calculations.
 }
 \examples{
 \dontrun{
