@@ -136,7 +136,7 @@ estimateHerbProd = function(inputDataList,
 
 
 
-  ### Standard sites: Calculate plot- and site-level ANPP for 'site x year' combos with no grazing or crops ####
+  ### Standard sites: Calculate plot-level ANPP for 'site x year' combos with no grazing or crops ####
   #--> Sites with multiple Tower plot eventIDs take greatest mass per herbGroup across eventIDs.
   #--> SRER is a special case where mass from multiple eventIDs is summed because species composition during spring green-up does not overlap with species present during monsoon clip.
 
@@ -443,8 +443,76 @@ estimateHerbProd = function(inputDataList,
 
 
 
-  ### Next tasks ####
-  #--> Develop logic for crop sites
+  ### Ag sites: Calculate plot-level ANPP for 'site x year' combos with crops in at least one plot ####
+  #--> Identify plots that contain a crop within a site-year, sum production across all bouts within a site-year for these plots.
+  #--> For plots with no crops in a site-year, identify bout with greatest mass across all herbGroups as plot-level productivity.
+
+
+
+  ### Parse plots into crop vs cropless in a given site-year
+  cropSiteYearDF <- cropSiteYearDF %>%
+    dplyr::mutate(plotSiteYear = paste(.data$siteYear, .data$plotID, sep = "-"),
+                  .after = "siteYear")
+
+  #   Isolate records with mass for a crop of any kind
+  temp <- cropSiteYearDF %>%
+    dplyr::filter(rowSums(dplyr::across("Barley_gm2":"Wheat_gm2")) > 0)
+
+  cropPlots <- cropSiteYearDF %>%
+    dplyr::filter(.data$plotSiteYear %in% temp$plotSiteYear)
+
+  #   Isolate records for cropless plots
+  croplessPlots <- cropSiteYearDF %>%
+    dplyr::filter(!.data$plotSiteYear %in% temp$plotSiteYear)
+
+
+
+  ### Process crop plots to obtain plot-level annual production
+  #--> Group by plot-site-year and herbGroup and sum to get total production
+
+  if (nrow(cropPlots)) {
+
+    #   Pivot to long format to enable grouping by herbGroup; remove "TotalMass" column, will be re-calculated later
+    cropLong <- cropPlots %>%
+      dplyr::select(-"TotalMass_gm2") %>%
+      dplyr::rename_with(~ stringr::str_remove(., "_gm2"),
+                         .cols = c("CoolSeasonGram_gm2":"Wheat_gm2")) %>%
+      tidyr::pivot_longer(cols = c("CoolSeasonGram":"Wheat"),
+                          names_to = "herbGroup",
+                          values_to = "agb_gm2")
+
+    test <- cropLong %>%
+
+      #   First group by site-year, plotID, subplotID, and herbGroup and sum across potential eventIDs
+      dplyr::group_by(.data$domainID,
+                      .data$siteID,
+                      .data$year,
+                      .data$plotID,
+                      .data$subplotID,
+                      .data$herbGroup,
+                      .data$nlcdClass,
+                      .data$plotType,
+                      .data$plotSize,
+                      .data$plotManagement) %>%
+      dplyr::summarise(agb_gm2 = sum(.data$agb_gm2, na.rm = TRUE),
+                       .groups = "drop") %>%
+
+      #   Next average across potential multiple subplotIDs to get mean plot-level production by herbGroup
+
+
+      #   Finally, pivot_wider to create one row per plot with columns per herbGroup, and calculate plot-level productivity as rowSums()
+
+
+
+  } # End nrow(cropPlots) conditional
+
+
+
+
+
+
+
+
 
 
 
