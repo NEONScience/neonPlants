@@ -261,6 +261,120 @@ temp1 <- eventConsum %>%
 #
 # }
 
+# #   Create long-format table from input 'hbp_agb' data frame
+# hbp_agb_long <- hbp_agb %>%
+#   dplyr::rename_with(~ stringr::str_remove(., "_gm2"),
+#                      c("AllHerbaceousPlants_gm2",
+#                        "CoolSeasonGraminoids_gm2",
+#                        "AnnualAndPerennialForbs_gm2",
+#                        "NFixingPlants_gm2",
+#                        "WarmSeasonGraminoids_gm2",
+#                        "WoodyStemmedPlants_gm2",
+#                        "Corn_gm2",
+#                        "Barley_gm2",
+#                        "OrchardGrass_gm2",
+#                        "Soybean_gm2",
+#                        "Sorghum_gm2",
+#                        "Wheat_gm2",
+#                        "Millet_gm2")) %>%
+#   tidyr::pivot_longer(cols = c("AllHerbaceousPlants",
+#                                "CoolSeasonGraminoids",
+#                                "WoodyStemmedPlants",
+#                                "WarmSeasonGraminoids",
+#                                "NFixingPlants",
+#                                "AnnualAndPerennialForbs",
+#                                "Corn",
+#                                "Barley",
+#                                "OrchardGrass",
+#                                "Soybean",
+#                                "Sorghum",
+#                                "Wheat",
+#                                "Millet"),
+#                       names_to = "herbGroup",
+#                       values_to = "agb_gm2")
+#
+# #   Populate exclosure == "N" if value is NA
+# #--> Skipping this for now, not sure if needed?
+# # hbp_agb_long$exclosure <- dplyr::if_else(is.na(hbp_agb_long$exclosure),
+# #                                          "N", hbp_agb_long$exclosure,
+# #                                          hbp_agb_long$exclosure)
+#
+# #   Remove duplicates based on primary keys; cannot use 'sampleID' because it is NA for records with targetTaxaPresent == "N"
+# hbp_agb_long <- hbp_agb_long[!duplicated(paste0(hbp_agb_long$clipID,
+#                                                 hbp_agb_long$eventID,
+#                                                 hbp_agb_long$herbGroup),
+#                                          fromLast = TRUE), ]
+#
+#
+# ##  Prepare 'hbp_agb_long' data frame for downstream processing
+# #   Remove unneeded columns from 'hbp_agb_long' and keep 'ambient' and 'exclosure' data at native spatial resolution;
+# #   i.e., assume subplots within large-stature Tower plots are independent.
+# hbp_agb_long <- hbp_agb_long %>%
+#   dplyr::select("domainID",
+#                 "siteID",
+#                 "plotID",
+#                 "subplotID",
+#                 "sampleID",
+#                 "nlcdClass",
+#                 "plotType",
+#                 "plotManagement",
+#                 "collectDate",
+#                 "year",
+#                 "eventID",
+#                 "targetTaxaPresent",
+#                 "exclosure",
+#                 "peak",
+#                 "herbGroup",
+#                 "agb_gm2") %>%
+#
+#   #   Create 'plot-year' variable for subsequent ID of Tower plots likely managed for grazing
+#   dplyr::mutate(plotYear = paste(.data$plotID, .data$year, sep = "-"),
+#                 .before = "plotID")
+#
+#
+# # ##  Identify grazed sites in the dataset using exclosure == Y
+# # grazed_sites <- hbp_agb %>%
+# #   dplyr::select("siteID",
+# #                 "exclosure") %>%
+# #   dplyr::filter(.data$exclosure == "Y")
+# #
+# # grazed_sites <- sort(unique(as.character(grazed_sites$siteID)))
+# #--> Likely not helpful to identify grazed sites, since grazing may not occur at all Tower plots within a site.
+#
+#
+#
+# ### Standard sites: Determine latest standing ambient biomass within a 'year' for each herbGroup ####
+# #-->  This is productivity for sites/plots with no grazing exclosures.
+#
+# ### Obtain final standing mass for sites with no grazing management; also bring in Distributed plots at grazed sites and Tower plots at grazed sites that are not actively managed for grazing (i.e., only a portion of the Tower plots have cows and exclosures). For plots NOT managed for grazing (i.e., no exclosure == "Y" records) but that WERE clipped every grazed bout, cannot identify peak biomass as latest eventID --> use peak == "atPeak" instead.
+#
+# ##  For each plot-year combination, determine whether an exclosure was deployed in that year; if "Y", the plot-year is assumed to be under grazing management. Plots managed for grazing in a given year do not contribute to "standard" site-level productivity estimates and instead are put through the "consumption" workflow.
+#
+# #   Create list of unique Tower 'plot-year' combinations
+# towerPlotYears <- sort(unique(hbp_agb_long$plotYear[hbp_agb_long$plotType == "tower"]))
+#
+# #   Identify grazed Tower 'plot-year' combinations
+# if (length(towerPlotYears) > 0) {
+#
+#   grazedPlotYears <- c()
+#
+#   for (i in 1:length(towerPlotYears)) {
+#
+#     tempDF <- hbp_agb_long %>%
+#       dplyr::filter(.data$plotYear == towerPlotYears[i])
+#
+#     if ("Y" %in% tempDF$exclosure) {grazedPlotYears <- c(grazedPlotYears, towerPlotYears[i])}
+#
+#   }
+#
+#   rm(tempDF, i)
+#
+# } else {
+#
+#   grazedPlotYears <- c()
+#
+# } # End length(towerPlotYears) conditional
+
 
 ##  Identify peak biomass bouts at grazed sites --> re-insert a version of this into plot-level section?
 #   Define list of sites with grazing management where exclosures are deployed; list developed by counting 'perbout' records with exclosure == "Y" across sites. Sites that trialed exclosures for a while are not included (e.g., SRER, TEAK)
