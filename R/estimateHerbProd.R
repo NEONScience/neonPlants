@@ -623,6 +623,11 @@ estimateHerbProd = function(inputDataList,
 
 
 
+  ### Clean up following "crop" site processing
+  rm(croplessMax, croplessPlots, cropLong, cropPlots)
+
+
+
   ### Grazed sites: Calculate site-level ANPP for 'site x year' combos with grazing in at least one plot ####
   #--> For plots with exclosure == "Y" at any point in a site-year, treat as a grazed plot; this means that when a clipID under a damaged exclosure is not clipped, the "ambient" clip is still used to estimate grazing consumption.
   #--> Treat plots with no exclosure at any point in a site-year as ungrazed, and take the eventID with the greatest mean mass across all plots as the eventID that equals ANPP.
@@ -659,6 +664,68 @@ estimateHerbProd = function(inputDataList,
                                          sep = "-"),
                     .after = "siteYear") %>%
       dplyr::filter(!.data$plotSiteYear %in% grazedPlots$plotSiteYear)
+
+
+
+    ### Process grazed plots for ANPP
+
+    ##  Identify latest eventID for each 'site' x 'year' combination; these are used to estimate ambient biomass at last sampling eventID of the year.
+    grazedLatestEvents <- grazedPlots %>%
+      dplyr::filter(.data$plotType == "tower") %>%
+      dplyr::distinct(.data$domainID,
+                      .data$siteID,
+                      .data$year,
+                      .data$eventID) %>%
+      dplyr::group_by(.data$domainID,
+                      .data$siteID,
+                      .data$year) %>%
+      dplyr::arrange(.data$eventID) %>%
+      dplyr::slice_tail() %>%
+      dplyr::mutate(finalSiteYearEvent = paste(.data$siteID, .data$year, .data$eventID,
+                                               sep = "-"),
+                    .after = "year")
+
+
+    ##  Determine final ambient biomass for latest events
+    grazedFinalMass <- grazedPlots %>%
+      dplyr::mutate(finalSiteYearEvent = paste(.data$siteID, .data$year, .data$eventID,
+                                               sep = "-"),
+                    .after = "year") %>%
+      dplyr::filter(.data$finalSiteYearEvent %in% grazedLatestEvents$finalSiteYearEvent,
+                    .data$exclosure == "N") %>%
+      dplyr::select(-c("CoolSeasonGram_gm2":"WoodyPlants_gm2")) %>%
+      dplyr::arrange(.data$domainID,
+                     .data$siteID,
+                     .data$year,
+                     .data$plotID,
+                     .data$subplotID) %>%
+
+      #   Generate means and SD for final ambient biomass
+      dplyr::group_by(.data$domainID,
+                      .data$siteID,
+                      .data$year,
+                      .data$eventID,
+                      .data$plotType,
+                      .data$plotSize,
+                      .data$plotManagement) %>%
+      dplyr::summarise(finalClipCount = dplyr::n(),
+                       finalAGBMean_gm2 = round(mean(.data$TotalMass_gm2, na.rm = TRUE),
+                                                digits = 2),
+                       finalAGBSD_gm2 = round(stats::sd(.data$TotalMass_gm2, na.rm = TRUE),
+                                              digits = 2),
+                       .groups = "drop") %>%
+      dplyr::rename("finalEventID" = "eventID")
+
+
+
+    ### Calculate consumption as difference between exclosure == "Y" and exclosure == "N" for all other eventIDs
+    #--> Begin again here: Use logic in chunk beginning line 825
+
+
+
+
+
+
 
 
 
@@ -749,71 +816,13 @@ estimateHerbProd = function(inputDataList,
 
 
 
-  ### Grazed sites: Determine final standing mass needed for ANPP ####
 
-  ##  Obtain final standing mass at plot level for sites with grazing management
-  #   First, identify latest eventID for each 'site' x 'year' combination; these are used to estimate standing crop at last sampling eventID of the year.
-  grazedLatestEvents <- hbp_agb_long %>%
-    dplyr::filter(.data$plotType == "tower",
-                  .data$siteID %in% grazed_sites) %>%
-    dplyr::distinct(.data$domainID,
-                    .data$siteID,
-                    .data$year,
-                    .data$eventID) %>%
-    dplyr::group_by(.data$domainID,
-                    .data$siteID,
-                    .data$year) %>%
-    dplyr::arrange(.data$eventID) %>%
-    dplyr::slice_tail()
 
-  #   Determine latest ambient standing crop at grazed sites
-  if (length(grazed_sites) > 0) {
 
-    grazedFinalMass <- hbp_agb_long %>%
-      dplyr::filter(.data$exclosure == "N",
-                    .data$siteID %in% grazed_sites,
-                    .data$plotType == "tower",
-                    .data$herbGroup == "AllHerbaceousPlants",
-                    .data$eventID %in% grazedLatestEvents$eventID) %>%
-      dplyr::arrange(.data$domainID,
-                     .data$siteID,
-                     .data$year,
-                     .data$plotID,
-                     .data$subplotID)
-
-  } else {
-
-    grazedFinalMass <- data.frame()
-
-  }
 
 
 
   ### Grazed sites: Estimate consumption to add to finalStandingMass ####
-  if (nrow(grazedFinalMass) > 0) {
-
-    ### For last eventID of season: Determine mean standing mass by siteID x year
-    #   Remove NAs from 'agb_gm2' (insurance step)
-    grazedFinalMass <- grazedFinalMass %>%
-      dplyr::filter(!is.na(.data$agb_gm2))
-
-    #   Generate means and SD for siteID x year
-    grazedFinalMass <- grazedFinalMass %>%
-      dplyr::group_by(.data$domainID,
-                      .data$siteID,
-                      .data$plotType,
-                      .data$year,
-                      .data$eventID,
-                      .data$herbGroup) %>%
-      dplyr::summarise("finalClipCount" = dplyr::n(),
-                       "finalAGBMean_gm2" = round(mean(.data$agb_gm2, na.rm = TRUE),
-                                                  digits = 2),
-                       "finalAGBSD_gm2" = round(stats::sd(.data$agb_gm2, na.rm = TRUE),
-                                                digits = 2),
-                       .groups = "drop") %>%
-      dplyr::rename("finalEventID" = "eventID")
-
-
 
     ### Calculate consumption productivity component using exclosure data
     #   Calculate mean exclosure == "Y" and exclosure == "N" mass across clip samples by eventID
