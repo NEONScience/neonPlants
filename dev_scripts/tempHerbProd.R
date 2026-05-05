@@ -206,7 +206,62 @@ temp1 <- eventConsum %>%
 #--> https://www.mathbench.umd.edu/modules/statistical-tests_t-tests/page06.htm for unequal sample size approach (also what Duck AI returned)
 
 
-### Removed from scaleHerbMass function as obsolete
+### Removed from scaleHerbMass function as obsolete ####
+
+### Standard sites: Calculate site-level productivity and SD by 'year' and 'herbGroup' ####
+
+#   Filter to "standard" plot data: Sites with no grazing, Distributed plots at grazed sites, Tower plots at grazed sites but that are not grazed. Also remove rows for herbGroups with "NA" mass (mostly crops).
+standardFinalMass <- hbp_agb_long %>%
+  dplyr::filter(!.data$siteID %in% grazed_sites | (.data$siteID %in% grazed_sites & .data$plotType == "distributed") |
+                  (.data$siteID %in% grazed_sites & .data$plotType == "tower" & !.data$plotYear %in% grazedPlotYears),
+                !is.na(.data$agb_gm2))
+
+#   Identify latest eventID for each 'site' x 'year' x 'plotType' combination
+standardLatestEvents <- standardFinalMass %>%
+  dplyr::distinct(.data$domainID,
+                  .data$siteID,
+                  .data$year,
+                  .data$plotType,
+                  .data$eventID) %>%
+  dplyr::group_by(.data$domainID,
+                  .data$siteID,
+                  .data$year,
+                  .data$plotType) %>%
+  dplyr::arrange(.data$eventID) %>%
+  dplyr::slice_tail()
+
+#   Further filter to latest "standard" eventID --> should be redundant with filtering above unless Tower plot was clipped more than once and never had an exclosure in it for entire 'plot' x 'year' combination
+test <- standardFinalMass %>%
+  dplyr::filter(!.data$eventID %in% standardLatestEvents$eventID)
+
+standardFinalMass <- standardFinalMass %>%
+  dplyr::filter(.data$eventID %in% standardLatestEvents$eventID)
+#--> This doesn't quite work right for plots that don't have exclosure but are sampled for all the grazed bouts anyway (happened at SJER in 2017)...
+
+
+#   Create site-level ANPP estimates for "standard" sites/plots
+if (nrow(standardFinalMass) > 0) {
+
+  herb_ANPP_site <- standardFinalMass %>%
+    dplyr::filter(.data$herbGroup == "AllHerbaceousPlants") %>%
+    dplyr::group_by(.data$domainID,
+                    .data$siteID,
+                    .data$year,
+                    .data$plotType,
+                    .data$eventID,
+                    .data$herbGroup) %>%
+    dplyr::summarise(herbClipCount = dplyr::n(),
+                     herbANPP_gm2yr = round(mean(.data$agb_gm2, na.rm = TRUE),
+                                            digits = 2),
+                     herbANPPSD_gm2yr = round(stats::sd(.data$agb_gm2, na.rm = TRUE),
+                                              digits = 2))
+
+} else {
+
+  herb_ANPP_site <- data.frame()
+
+}
+
 # #   Aggregate dryMass across herbGroups in peak biomass bouts
 # hbp_peak_biomass_herb_groups <- hbp %>%
 #   dplyr::filter(.data$herbGroup != "AllHerbaceousPlants")
