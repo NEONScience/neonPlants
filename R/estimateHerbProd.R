@@ -802,7 +802,7 @@ estimateHerbProd = function(inputDataList,
 
 
     #--> then calculate site-level mean from grazeless plots and determine weighted site-level productivity; weighting should come from % grazed plots and % grazeless plots
-    #--> Use code from line 205 "standard" sites as model; process Dist plots separately, assume multiple bouts for Tower plots and choose herbGroup x eventID combos with greatest mass to sum for ANPP
+    #--> Use code from line 205 "standard" sites as model but treat clipIDs as independent observations - i.e., do not collapse to plot-level since combining uncertainty with exclosure data makes more sense this way; process Dist plots separately, assume multiple bouts for Tower plots and choose herbGroup x eventID combos with greatest mass to sum for ANPP
 
 
 
