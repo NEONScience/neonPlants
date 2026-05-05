@@ -709,10 +709,10 @@ estimateHerbProd = function(inputDataList,
                       .data$plotSize,
                       .data$plotManagement) %>%
       dplyr::summarise(finalClipCount = dplyr::n(),
-                       finalAGBMean_gm2 = round(mean(.data$TotalMass_gm2, na.rm = TRUE),
-                                                digits = 2),
-                       finalAGBSD_gm2 = round(stats::sd(.data$TotalMass_gm2, na.rm = TRUE),
-                                              digits = 2),
+                       finalStandingMass_gm2 = round(mean(.data$TotalMass_gm2, na.rm = TRUE),
+                                                     digits = 2),
+                       finalStandingSD_gm2 = round(stats::sd(.data$TotalMass_gm2, na.rm = TRUE),
+                                                   digits = 2),
                        .groups = "drop") %>%
       dplyr::rename("finalEventID" = "eventID")
 
@@ -721,7 +721,7 @@ estimateHerbProd = function(inputDataList,
     ### Calculate consumption as difference between exclosure == "Y" and exclosure == "N" for all other eventIDs
     #--> Treat all clipIDs as independent observations; that is, subplotIDs within plots are NOT averaged first.
 
-    temp <- grazedPlots %>%
+    grazedPlots <- grazedPlots %>%
 
       #   Filter to Tower plots; should be redundant but do anyway
       dplyr::filter(.data$plotType == "tower") %>%
@@ -776,10 +776,33 @@ estimateHerbProd = function(inputDataList,
                                                digits = 2),
                        consumptionSD_gm2 = round(sqrt(sum(.data$consumSD2_N, na.rm = TRUE)),
                                                  digits = 2),
-                       .groups = "drop")
+                       .groups = "drop") %>%
 
-    #--> need to add grazedFinalMass and then calculate site-level mean from grazed plots
+      #   Join with 'grazedFinalMass' and add to consumption to get ANPP for grazed plots
+      dplyr::left_join(grazedFinalMass %>%
+                         dplyr::select(-"plotType",
+                                       -"plotSize",
+                                       -"plotManagement"),
+                       by = c("domainID", "siteID", "year")) %>%
+      dplyr::mutate(clipCount = .data$consumClipCount + .data$finalClipCount,
+                    totalMass_gm2 = .data$consumption_gm2 + .data$finalStandingMass_gm2,
+                    totalMassSD_gm2 = round(sqrt((.data$finalStandingSD_gm2^2 / .data$finalClipCount) +
+                                                   (.data$consumptionSD_gm2^2 / .data$consumClipCount)),
+                                            digits = 2),
+                    .after = "plotManagement")
+
+
+
+    ### Process graze-less plots for ANPP
+
+
+
+
+
+
+
     #--> then calculate site-level mean from grazeless plots and determine weighted site-level productivity; weighting should come from % grazed plots and % grazeless plots
+    #--> Use code from line 205 "standard" sites as model; process Dist plots separately, assume multiple bouts for Tower plots and choose herbGroup x eventID combos with greatest mass to sum for ANPP
 
 
 
@@ -797,87 +820,11 @@ estimateHerbProd = function(inputDataList,
 
 
 
-
-
-  ### Grazed sites: Estimate consumption to add to finalStandingMass ####
-
-    ### Calculate consumption productivity component using exclosure data
-    #   Calculate mean exclosure == "Y" and exclosure == "N" mass across clip samples by eventID
-    exclosure <- hbp_agb_long %>%
-      dplyr::filter(.data$herbGroup == "AllHerbaceousPlants",
-                    .data$siteID %in% grazed_sites,
-                    .data$plotType == "tower",
-                    !is.na(.data$agb_gm2),
-                    .data$plotYear %in% grazedPlotYears) %>%
-      dplyr::group_by(.data$domainID,
-                      .data$siteID,
-                      .data$year,
-                      .data$eventID,
-                      .data$peak,
-                      .data$herbGroup,
-                      .data$exclosure) %>%
-      dplyr::summarise("clipCount" = dplyr::n(),
-                       "agbMean_gm2" = round(mean(.data$agb_gm2, na.rm = TRUE),
-                                             digits = 2),
-                       "agbSD_gm2" = round(stats::sd(.data$agb_gm2, na.rm = TRUE),
-                                           digits = 2),
-                       .groups = "drop") %>%
-      dplyr::arrange(.data$domainID,
-                     .data$siteID,
-                     .data$year,
-                     .data$eventID)
-
-    #   Calculate consumption mean and SD per eventID
-    #--> Uncertainties combined according to: https://www.mathbench.umd.edu/modules/statistical-tests_t-tests/page06.htm
-
-    eventConsum <- exclosure %>%
-      tidyr::pivot_wider(names_from = "exclosure",
-                         values_from = c("clipCount" , "agbMean_gm2", "agbSD_gm2"),
-                         names_prefix = "excl") %>%
-      dplyr::mutate("consumClipCount" = .data$clipCount_exclN + .data$clipCount_exclY,
-                    "consumMean_gm2" = round(.data$agbMean_gm2_exclY - .data$agbMean_gm2_exclN,
-                                             digits = 2),
-                    "consumSD_gm2" = round(sqrt((.data$agbSD_gm2_exclN^2 / .data$clipCount_exclN) +
-                                                  (.data$agbSD_gm2_exclY^2 / .data$clipCount_exclY)),
-                                           digits = 2),
-                    "consumSD2_N" = round(.data$consumSD_gm2^2 / .data$consumClipCount,
-                                          digits = 2))
-
-
-    ##  Sum consumption for all events per site and year
-    siteConsum <- eventConsum %>%
-      dplyr::filter(!is.na(.data$consumMean_gm2)) %>%
-      dplyr::group_by(.data$domainID,
-                      .data$siteID,
-                      .data$year,
-                      .data$herbGroup) %>%
-      dplyr::summarise("consumEventCount" = dplyr::n(),
-                       "consumClipCount" = sum(.data$consumClipCount),
-                       "consumption_gm2" = round(sum(.data$consumMean_gm2, na.rm = TRUE),
-                                                 digits = 2),
-                       "consumptionSD_gm2" = round(sqrt(sum(.data$consumSD2_N, na.rm = TRUE)),
-                                                   digits = 2),
-                       .groups = "drop")
-
-
-    ##  Join with 'grazedFinalMass' to calculate herbaceous ANPP at grazed sites
-    herb_ANPP_grazed <- dplyr::left_join(grazedFinalMass,
-                                         siteConsum,
-                                         by = c("domainID", "siteID", "year", "herbGroup")) %>%
-      dplyr::mutate(herbClipCount = .data$finalClipCount + .data$consumClipCount,
-                    herbANPP_gm2yr = rowSums(dplyr::across(c("finalAGBMean_gm2", "consumption_gm2")),
-                                             na.rm = TRUE),
-                    herbANPPSD_gm2yr = round(sqrt((.data$finalAGBSD_gm2^2 / .data$finalClipCount) +
-                                                    (.data$consumptionSD_gm2^2 / .data$consumClipCount)),
-                                             digits = 2),
-                    .after = "herbGroup")
-
-
-  } else {
-
-    herb_ANPP_grazed <- data.frame()
-
-  } # end nrow(grazedFinalMass) conditional
+  # } else {
+  #
+  #   herb_ANPP_grazed <- data.frame()
+  #
+  # } # end nrow(grazedFinalMass) conditional
 
 
 
