@@ -148,7 +148,8 @@ estimateHerbProd = function(inputDataList,
       dplyr::group_by(.data$domainID,
                       .data$siteYear) %>%
       dplyr::summarise(events = paste(unique(.data$eventID), collapse = ", "),
-                       count = length(unique(.data$eventID))) %>%
+                       count = length(unique(.data$eventID)),
+                       .groups = "drop") %>%
       dplyr::filter(count == 1)
 
 
@@ -181,7 +182,8 @@ estimateHerbProd = function(inputDataList,
                        WarmSeasonGram_gm2 = round(mean(.data$WarmSeasonGram_gm2, na.rm = TRUE),
                                                   digits = 2),
                        WoodyPlants_gm2 = round(mean(.data$WoodyPlants_gm2, na.rm = TRUE),
-                                               digits = 2))
+                                               digits = 2),
+                       .groups = "drop")
 
     } else {
 
@@ -230,10 +232,8 @@ estimateHerbProd = function(inputDataList,
 
       if (nrow(tempTower)) {
 
-        #   Pivot data to long format to enable grouping by herbGroup
+        #   Pivot data to long format to enable grouping by herbGroup. Remove 'TotalMass_gm2' as this is not a true herbGroup; remove crop columns as these are not populated for these site-year combos based on upstream filtering.
         tempTower <- tempTower %>%
-
-          #   Remove crop columns as these are not populated for these site-year combos based on upstream filtering
           dplyr::select(-"TotalMass_gm2",
                         -c("Barley_gm2":"Wheat_gm2")) %>%
           dplyr::rename_with(~ stringr::str_remove(., "_gm2"),
@@ -251,11 +251,15 @@ estimateHerbProd = function(inputDataList,
           dplyr::summarise(count = n(),
                            herbMass = round(mean(.data$agb_gm2, na.rm = TRUE),
                                             digits = 2),
-                           .groups = "keep") %>%
+                           .groups = "drop") %>%
+          dplyr::group_by(.data$domainID,
+                          .data$siteYear,
+                          .data$herbGroup) %>%
           dplyr::filter(herbMass == max(.data$herbMass)) %>%
           dplyr::mutate(herbEvent = paste(.data$siteYear, .data$herbGroup, .data$eventID,
                                           sep = "-"),
-                        .before = "domainID")
+                        .before = "domainID") %>%
+          dplyr::ungroup()
 
         #   Retain records associated with max 'site x year x herbGroup x eventID' combos, pivot wider, then calculate plot-level ANPP
         tempTower <- tempTower %>%
@@ -634,6 +638,8 @@ estimateHerbProd = function(inputDataList,
 
   if (nrow(grazedSiteYearDF)) {
 
+    ### Parse plots into grazed (ostensibly all Tower plots) and graze-less (mix of Tower and Distributed plots)
+
     #   Remove crop columns as not relevant to grazed sites
     grazedSiteYearDF <- grazedSiteYearDF %>%
       dplyr::select(-c("Barley_gm2":"Wheat_gm2"))
@@ -795,13 +801,98 @@ estimateHerbProd = function(inputDataList,
 
     ### Process graze-less plots for ANPP
 
+    if (nrow(grazelessPlots)) {
+
+      ##  Isolate and process Tower plots; assume Tower plots may be clipped > 1X/year even though they should not be.
+      #--> Ignore Distributed plots for ANPP at grazed sites. Don't know whether these plots were grazed, and they do not have exclosures if they were grazed, so cannot contribute meaningfully to ANPP estimates.
+      #--> Choose herbGroup x eventID combos with greatest mass to sum for ANPP.
+      tempTower <- grazelessPlots %>%
+        dplyr::filter(.data$plotType == "tower")
+
+      #   Pivot data to long format to enable grouping by herbGroup
+      tempTower <- tempTower %>%
+
+        #   Remove 'TotalMass_gm2' as this is not an official herbGroup
+        dplyr::select(-"TotalMass_gm2") %>%
+        dplyr::rename_with(~ stringr::str_remove(., "_gm2"),
+                           .cols = c("CoolSeasonGram_gm2":"WoodyPlants_gm2")) %>%
+        tidyr::pivot_longer(cols = c("CoolSeasonGram":"WoodyPlants"),
+                            names_to = "herbGroup",
+                            values_to = "agb_gm2")
+
+      #   Identify the 'site x year x herbGroup x eventID' combo with greatest productivity; the mean is across all clipIDs to enable easily combining with productivity estimate from grazed plots.
+      towerMax <- tempTower %>%
+        dplyr::group_by(.data$domainID,
+                        .data$siteYear,
+                        .data$herbGroup,
+                        .data$eventID) %>%
+        dplyr::summarise(count = n(),
+                         herbMass = round(mean(.data$agb_gm2, na.rm = TRUE),
+                                          digits = 2),
+                         .groups = "drop") %>%
+        dplyr::group_by(.data$domainID,
+                        .data$siteYear,
+                        .data$herbGroup) %>%
+        dplyr::filter(herbMass == max(.data$herbMass)) %>%
+        dplyr::mutate(herbEvent = paste(.data$siteYear, .data$herbGroup, .data$eventID,
+                                        sep = "-"),
+                      .before = "domainID")
+
+      #   Retain records from max 'site x year x herbGroup x eventID' combos, pivot wider, then calculate plot-level ANPP
+      test <- tempTower %>%
+        dplyr::mutate(herbEvent = paste(.data$siteYear, .data$herbGroup, .data$eventID,
+                                        sep = "-"),
+                      .before = "domainID") %>%
+        dplyr::filter(.data$herbEvent %in% towerMax$herbEvent) %>%
+        dplyr::select(-"herbEvent",
+                      -"eventID",
+                      -"clipID",
+                      -"collectDate",
+                      -"sampleID") %>%
+        tidyr::pivot_wider(names_from = "herbGroup",
+                           names_glue = "{herbGroup}_gm2",
+                           values_from = "agb_gm2") %>%
+        dplyr::mutate(dplyr::across("CoolSeasonGram_gm2":"WoodyPlants_gm2", ~tidyr::replace_na(., 0))) %>%
+        dplyr::mutate(TotalMass_gm2 = rowSums(dplyr::across("CoolSeasonGram_gm2":"WoodyPlants_gm2"), na.rm = TRUE),
+                      .before = "CoolSeasonGram_gm2") # %>%
+
+        #--> Need to recreate test dataset and re-test above before moving on to test code commented out below...
+
+        # #   Calculate mean for 'site x year x plotID' combo to account for potential of 2 subplots per large Tower plot
+        # dplyr::group_by(.data$domainID,
+        #                 .data$siteID,
+        #                 .data$year,
+        #                 .data$plotID,
+        #                 .data$nlcdClass,
+        #                 .data$plotType,
+        #                 .data$plotSize,
+        #                 .data$plotManagement) %>%
+        # dplyr::summarise(TotalMass_gm2 = round(mean(.data$TotalMass_gm2, na.rm = TRUE),
+        #                                        digits = 2),
+        #                  CoolSeasonGram_gm2 = round(mean(.data$CoolSeasonGram_gm2, na.rm = TRUE),
+        #                                             digits = 2),
+        #                  Forbs_gm2 = round(mean(.data$Forbs_gm2, na.rm = TRUE),
+        #                                    digits = 2),
+        #                  NFixing_gm2 = round(mean(.data$NFixing_gm2, na.rm = TRUE),
+        #                                      digits = 2),
+        #                  WarmSeasonGram_gm2 = round(mean(.data$WarmSeasonGram_gm2, na.rm = TRUE),
+        #                                             digits = 2),
+        #                  WoodyPlants_gm2 = round(mean(.data$WoodyPlants_gm2, na.rm = TRUE),
+        #                                          digits = 2),
+        #                  .groups = "drop")
 
 
 
 
 
 
-    #--> then calculate site-level mean from grazeless plots and determine weighted site-level productivity; weighting should come from % grazed plots and % grazeless plots
+
+    } # End nrow(grazelessPlots) conditional
+
+
+
+
+    #--> then calculate site-level mean from grazeless plots and determine weighted site-level productivity; weighting should come from % grazed clips and % grazeless clips
     #--> Use code from line 205 "standard" sites as model but treat clipIDs as independent observations - i.e., do not collapse to plot-level since combining uncertainty with exclosure data makes more sense this way; process Dist plots separately, assume multiple bouts for Tower plots and choose herbGroup x eventID combos with greatest mass to sum for ANPP
 
 

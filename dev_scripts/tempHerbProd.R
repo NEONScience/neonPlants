@@ -1,5 +1,5 @@
-### Function testing: Odd TREE output from 2018 with eventIDs
-#   Test sites: Site list includes Ag (BLAN), grazed (NOGP, SJER), partially grazed (CLBJ, KONZ), partially grazed with multiple bouts for ungrazed plots (CLBJ), ungrazed for some years at site with two clips (OAES), and "standard" sites with and without Distributed plot sampling.
+### Function dev and testing: Create test dataset for scaleHerbMass and estimateHerbProd
+#   Test sites: Site list includes Ag (BLAN), grazed (NOGP, SJER), partially grazed (CLBJ, KONZ), partially grazed with multiple bouts for ungrazed plots (CLBJ), ungrazed for some years at site with two clips (OAES), and "standard" sites with and without Distributed plot sampling. SRER is included because spring and summer bouts are summed at SRER due to non-overlapping plant communities
 inputDataList <- neonUtilities::loadByProduct(dpID = "DP1.10023.001",
                                               site = c("BLAN", "CLBJ", "KONZ", "NOGP", "OAES", "SJER", "SRER", "TEAK", "TREE"),
                                               startdate = "2018-01",
