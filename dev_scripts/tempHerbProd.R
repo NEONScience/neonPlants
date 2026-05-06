@@ -1,33 +1,4 @@
-### Function dev and testing: Create test dataset for scaleHerbMass and estimateHerbProd
-#   Test sites: Site list includes Ag (BLAN), grazed (NOGP, SJER), partially grazed (CLBJ, KONZ), partially grazed with multiple bouts for ungrazed plots (CLBJ), ungrazed for some years at site with two clips (OAES), and "standard" sites with and without Distributed plot sampling. SRER is included because spring and summer bouts are summed at SRER due to non-overlapping plant communities
-inputDataList <- neonUtilities::loadByProduct(dpID = "DP1.10023.001",
-                                              site = c("BLAN", "CLBJ", "KONZ", "NOGP", "OAES", "SJER", "SRER", "TEAK", "TREE"),
-                                              startdate = "2018-01",
-                                              enddate = "2019-12",
-                                              check.size = FALSE,
-                                              token = Sys.getenv("NEON_TOKEN"))
-
-#   Create new HBP test dataset
-hbp_testDat <- list(hbp_perbout = inputDataList$hbp_perbout,
-                    hbp_massdata = inputDataList$hbp_massdata)
-
-saveRDS(hbp_testDat,
-        file = "tests/testthat/testdata/hbp_testDat.RDS")
-
-#   Test data: Single "standard" site to test if code handles pared down data
-inputDataList <- neonUtilities::loadByProduct(dpID = "DP1.10023.001",
-                                              site = "ONAQ",
-                                              startdate = "2023-01",
-                                              enddate = "2025-12",
-                                              check.size = FALSE,
-                                              include.provisional = TRUE,
-                                              token = Sys.getenv("NEON_TOKEN"))
-
-inputBout <- inputDataList$hbp_perbout
-inputMass <- inputDataList$hbp_massdata
-
-
-
+### Function dev and testing ####
 
 
 ### Retrieve all HBP data for investigative purposes

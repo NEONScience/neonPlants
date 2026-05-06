@@ -171,17 +171,17 @@ estimateHerbProd = function(inputDataList,
                       .data$plotSize,
                       .data$plotManagement) %>%
       dplyr::summarise(collectDate = as.Date(ifelse(all(is.na(.data$collectDate)), NA, min(.data$collectDate))),
-                       TotalMass_gm2 = round(mean(.data$TotalMass_gm2, na.rm = TRUE),
+                       totalProd_gm2yr = round(mean(.data$TotalMass_gm2, na.rm = TRUE),
                                              digits = 2),
-                       CoolSeasonGram_gm2 = round(mean(.data$CoolSeasonGram_gm2, na.rm = TRUE),
+                       CoolSeasonGram_gm2yr = round(mean(.data$CoolSeasonGram_gm2, na.rm = TRUE),
                                                   digits = 2),
-                       Forbs_gm2 = round(mean(.data$Forbs_gm2, na.rm = TRUE),
+                       Forbs_gm2yr = round(mean(.data$Forbs_gm2, na.rm = TRUE),
                                          digits = 2),
-                       NFixing_gm2 = round(mean(.data$NFixing_gm2, na.rm = TRUE),
+                       NFixing_gm2yr = round(mean(.data$NFixing_gm2, na.rm = TRUE),
                                            digits = 2),
-                       WarmSeasonGram_gm2 = round(mean(.data$WarmSeasonGram_gm2, na.rm = TRUE),
+                       WarmSeasonGram_gm2yr = round(mean(.data$WarmSeasonGram_gm2, na.rm = TRUE),
                                                   digits = 2),
-                       WoodyPlants_gm2 = round(mean(.data$WoodyPlants_gm2, na.rm = TRUE),
+                       WoodyPlants_gm2yr = round(mean(.data$WoodyPlants_gm2, na.rm = TRUE),
                                                digits = 2),
                        .groups = "drop")
 
@@ -213,7 +213,6 @@ estimateHerbProd = function(inputDataList,
                       "plotID",
                       "nlcdClass",
                       "plotType",
-                      "plotSize",
                       "plotManagement",
                       "collectDate",
                       "TotalMass_gm2",
@@ -288,17 +287,17 @@ estimateHerbProd = function(inputDataList,
                           .data$plotType,
                           .data$plotSize,
                           .data$plotManagement) %>%
-          dplyr::summarise(TotalMass_gm2 = round(mean(.data$TotalMass_gm2, na.rm = TRUE),
+          dplyr::summarise(totalProd_gm2yr = round(mean(.data$TotalMass_gm2, na.rm = TRUE),
                                                  digits = 2),
-                           CoolSeasonGram_gm2 = round(mean(.data$CoolSeasonGram_gm2, na.rm = TRUE),
+                           CoolSeasonGram_gm2yr = round(mean(.data$CoolSeasonGram_gm2, na.rm = TRUE),
                                                       digits = 2),
-                           Forbs_gm2 = round(mean(.data$Forbs_gm2, na.rm = TRUE),
+                           Forbs_gm2yr = round(mean(.data$Forbs_gm2, na.rm = TRUE),
                                              digits = 2),
-                           NFixing_gm2 = round(mean(.data$NFixing_gm2, na.rm = TRUE),
+                           NFixing_gm2yr = round(mean(.data$NFixing_gm2, na.rm = TRUE),
                                                digits = 2),
-                           WarmSeasonGram_gm2 = round(mean(.data$WarmSeasonGram_gm2, na.rm = TRUE),
+                           WarmSeasonGram_gm2yr = round(mean(.data$WarmSeasonGram_gm2, na.rm = TRUE),
                                                       digits = 2),
-                           WoodyPlants_gm2 = round(mean(.data$WoodyPlants_gm2, na.rm = TRUE),
+                           WoodyPlants_gm2yr = round(mean(.data$WoodyPlants_gm2, na.rm = TRUE),
                                                    digits = 2),
                            .groups = "drop")
 
@@ -334,7 +333,6 @@ estimateHerbProd = function(inputDataList,
                     "plotID",
                     "nlcdClass",
                     "plotType",
-                    "plotSize",
                     "plotManagement",
                     "collectDate",
                     "TotalMass_gm2",
@@ -373,7 +371,6 @@ estimateHerbProd = function(inputDataList,
                       .data$herbGroup,
                       .data$nlcdClass,
                       .data$plotType,
-                      .data$plotSize,
                       .data$plotManagement) %>%
       dplyr::summarise(agb_gm2 = sum(.data$agb_gm2, na.rm = TRUE),
                        .groups = "drop") %>%
@@ -393,19 +390,18 @@ estimateHerbProd = function(inputDataList,
                       .data$plotID,
                       .data$nlcdClass,
                       .data$plotType,
-                      .data$plotSize,
                       .data$plotManagement) %>%
-      dplyr::summarise(TotalMass_gm2 = round(mean(.data$TotalMass_gm2, na.rm = TRUE),
+      dplyr::summarise(totalProd_gm2yr = round(mean(.data$TotalMass_gm2, na.rm = TRUE),
                                              digits = 2),
-                       CoolSeasonGram_gm2 = round(mean(.data$CoolSeasonGram_gm2, na.rm = TRUE),
+                       CoolSeasonGram_gm2yr = round(mean(.data$CoolSeasonGram_gm2, na.rm = TRUE),
                                                   digits = 2),
-                       Forbs_gm2 = round(mean(.data$Forbs_gm2, na.rm = TRUE),
+                       Forbs_gm2yr = round(mean(.data$Forbs_gm2, na.rm = TRUE),
                                          digits = 2),
-                       NFixing_gm2 = round(mean(.data$NFixing_gm2, na.rm = TRUE),
+                       NFixing_gm2yr = round(mean(.data$NFixing_gm2, na.rm = TRUE),
                                            digits = 2),
-                       WarmSeasonGram_gm2 = round(mean(.data$WarmSeasonGram_gm2, na.rm = TRUE),
+                       WarmSeasonGram_gm2yr = round(mean(.data$WarmSeasonGram_gm2, na.rm = TRUE),
                                                   digits = 2),
-                       WoodyPlants_gm2 = round(mean(.data$WoodyPlants_gm2, na.rm = TRUE),
+                       WoodyPlants_gm2yr = round(mean(.data$WoodyPlants_gm2, na.rm = TRUE),
                                                digits = 2),
                        .groups = "drop")
 
@@ -477,7 +473,7 @@ estimateHerbProd = function(inputDataList,
 
     if (nrow(cropPlots)) {
 
-      #   Pivot to long format to enable grouping by herbGroup; remove "TotalMass" column, will be re-calculated later
+      #   Pivot to long format to enable grouping by herbGroup; remove "TotalMass_gm2" column as not an herbGroup
       cropPlots <- cropPlots %>%
         dplyr::select(-"TotalMass_gm2") %>%
         dplyr::rename_with(~ stringr::str_remove(., "_gm2"),
@@ -495,7 +491,6 @@ estimateHerbProd = function(inputDataList,
                         .data$herbGroup,
                         .data$nlcdClass,
                         .data$plotType,
-                        .data$plotSize,
                         .data$plotManagement) %>%
         dplyr::summarise(agb_gm2 = sum(.data$agb_gm2, na.rm = TRUE),
                          .groups = "drop") %>%
@@ -508,7 +503,6 @@ estimateHerbProd = function(inputDataList,
                         .data$herbGroup,
                         .data$nlcdClass,
                         .data$plotType,
-                        .data$plotSize,
                         .data$plotManagement) %>%
         dplyr::summarise(agb_gm2 = mean(.data$agb_gm2, na.rm = TRUE),
                          .groups = "drop") %>%
@@ -528,7 +522,7 @@ estimateHerbProd = function(inputDataList,
                         "Sunflower_gm2",
                         "Wheat_gm2",
                         .after = "WoodyPlants_gm2") %>%
-        dplyr::mutate(TotalMass_gm2 = rowSums(dplyr::across("CoolSeasonGram_gm2":"Wheat_gm2")),
+        dplyr::mutate(totalProd_gm2yr = rowSums(dplyr::across("CoolSeasonGram_gm2":"Wheat_gm2")),
                       .after = "plotManagement")
 
     } else {
@@ -567,8 +561,13 @@ estimateHerbProd = function(inputDataList,
         dplyr::summarise(count = n(),
                          herbMass = round(mean(.data$agb_gm2, na.rm = TRUE),
                                           digits = 2),
-                         .groups = "keep") %>%
+                         .groups = "drop") %>%
+        dplyr::group_by(.data$domainID,
+                        .data$siteYear,
+                        .data$plotType,
+                        .data$herbGroup) %>%
         dplyr::filter(herbMass == max(.data$herbMass)) %>%
+        dplyr::ungroup() %>%
 
         #   Create concatenated identifier for the plotType-herb-event combos with greatest mass
         dplyr::mutate(herbEvent = paste(.data$siteYear, .data$plotType, .data$herbGroup, .data$eventID,
@@ -588,7 +587,6 @@ estimateHerbProd = function(inputDataList,
                         .data$herbGroup,
                         .data$nlcdClass,
                         .data$plotType,
-                        .data$plotSize,
                         .data$plotManagement) %>%
         dplyr::summarise(agb_gm2 = mean(.data$agb_gm2, na.rm = TRUE),
                          .groups = "drop") %>%
@@ -597,7 +595,7 @@ estimateHerbProd = function(inputDataList,
         tidyr::pivot_wider(names_from = "herbGroup",
                            names_glue = "{herbGroup}_gm2",
                            values_from = "agb_gm2") %>%
-        dplyr::mutate(TotalMass_gm2 = rowSums(dplyr::across("CoolSeasonGram_gm2":"WoodyPlants_gm2")),
+        dplyr::mutate(totalProd_gm2yr = rowSums(dplyr::across("CoolSeasonGram_gm2":"WoodyPlants_gm2")),
                       .after = "plotManagement")
 
     } else {
@@ -628,7 +626,7 @@ estimateHerbProd = function(inputDataList,
 
 
   ### Clean up following "crop" site processing
-  rm(croplessMax, croplessPlots, cropLong, cropPlots)
+  rm(croplessMax, croplessPlots, cropPlots)
 
 
 
@@ -651,9 +649,7 @@ estimateHerbProd = function(inputDataList,
                       .data$siteID,
                       .data$year,
                       .data$plotID,
-                      .data$nlcdClass,
                       .data$plotType,
-                      .data$plotSize,
                       .data$plotManagement) %>%
       dplyr::filter(any(.data$exclosure == "Y")) %>%
       dplyr::ungroup() %>%
@@ -712,7 +708,6 @@ estimateHerbProd = function(inputDataList,
                       .data$year,
                       .data$eventID,
                       .data$plotType,
-                      .data$plotSize,
                       .data$plotManagement) %>%
       dplyr::summarise(finalClipCount = dplyr::n(),
                        finalStandingMass_gm2 = round(mean(.data$TotalMass_gm2, na.rm = TRUE),
@@ -741,7 +736,6 @@ estimateHerbProd = function(inputDataList,
                       .data$eventID,
                       .data$exclosure,
                       .data$plotType,
-                      .data$plotSize,
                       .data$plotManagement) %>%
 
       #   Determine sample size, mean, and SD for exclosure = "N" and "Y"
@@ -774,7 +768,6 @@ estimateHerbProd = function(inputDataList,
                       .data$siteID,
                       .data$year,
                       .data$plotType,
-                      .data$plotSize,
                       .data$plotManagement) %>%
       dplyr::summarise(consumEventCount = dplyr::n(),
                        consumClipCount = sum(.data$consumClipCount),
@@ -787,14 +780,13 @@ estimateHerbProd = function(inputDataList,
       #   Join with 'grazedFinalMass' and add to consumption to get ANPP for grazed plots
       dplyr::left_join(grazedFinalMass %>%
                          dplyr::select(-"plotType",
-                                       -"plotSize",
                                        -"plotManagement"),
                        by = c("domainID", "siteID", "year")) %>%
-      dplyr::mutate(clipCount = .data$consumClipCount + .data$finalClipCount,
-                    totalMass_gm2 = .data$consumption_gm2 + .data$finalStandingMass_gm2,
-                    totalMassSD_gm2 = round(sqrt((.data$finalStandingSD_gm2^2 / .data$finalClipCount) +
-                                                   (.data$consumptionSD_gm2^2 / .data$consumClipCount)),
-                                            digits = 2),
+      dplyr::mutate(grazedClipCount = .data$consumClipCount + .data$finalClipCount,
+                    grazedProd_gm2yr = .data$consumption_gm2 + .data$finalStandingMass_gm2,
+                    grazedProdSD_gm2yr = round(sqrt((.data$finalStandingSD_gm2^2 / .data$finalClipCount) +
+                                                      (.data$consumptionSD_gm2^2 / .data$consumClipCount)),
+                                               digits = 2),
                     .after = "plotManagement")
 
 
@@ -803,83 +795,59 @@ estimateHerbProd = function(inputDataList,
 
     if (nrow(grazelessPlots)) {
 
-      ##  Isolate and process Tower plots; assume Tower plots may be clipped > 1X/year even though they should not be.
-      #--> Ignore Distributed plots for ANPP at grazed sites. Don't know whether these plots were grazed, and they do not have exclosures if they were grazed, so cannot contribute meaningfully to ANPP estimates.
-      #--> Choose herbGroup x eventID combos with greatest mass to sum for ANPP.
+      ##  Isolate and process Tower plots; assume ungrazed Tower plots may be clipped > 1X/year even though they should not be.
+      #--> Ignore Distributed plots for ANPP at grazed sites. Cannot determine whether these plots were grazed, and if they were grazed they do not have exclosures so cannot contribute meaningfully to ANPP estimates.
+      #--> Choose eventID with greatest mass to sum for ANPP.
+
+      #   Use only 'TotalMass_gm2' and ignore herbGroup because some of these plots may have no herbGroup data if they were clipped on the same schedule as the grazed Tower plots and were not sorted to herbGroup AND they never had an exclosure during the site-year.
       tempTower <- grazelessPlots %>%
-        dplyr::filter(.data$plotType == "tower")
+        dplyr::filter(.data$plotType == "tower") %>%
+        dplyr::select(-c("CoolSeasonGram_gm2":"WoodyPlants_gm2"))
 
-      #   Pivot data to long format to enable grouping by herbGroup
-      tempTower <- tempTower %>%
-
-        #   Remove 'TotalMass_gm2' as this is not an official herbGroup
-        dplyr::select(-"TotalMass_gm2") %>%
-        dplyr::rename_with(~ stringr::str_remove(., "_gm2"),
-                           .cols = c("CoolSeasonGram_gm2":"WoodyPlants_gm2")) %>%
-        tidyr::pivot_longer(cols = c("CoolSeasonGram":"WoodyPlants"),
-                            names_to = "herbGroup",
-                            values_to = "agb_gm2")
-
-      #   Identify the 'site x year x herbGroup x eventID' combo with greatest productivity; the mean is across all clipIDs to enable easily combining with productivity estimate from grazed plots.
+      #   Identify the 'site x year x herbGroup x eventID' combo with greatest productivity; the mean is across all clipIDs to ensure the same sampling scale is combined with the productivity estimate from grazed plots.
       towerMax <- tempTower %>%
         dplyr::group_by(.data$domainID,
                         .data$siteYear,
-                        .data$herbGroup,
                         .data$eventID) %>%
         dplyr::summarise(count = n(),
-                         herbMass = round(mean(.data$agb_gm2, na.rm = TRUE),
+                         herbMass = round(mean(.data$TotalMass_gm2, na.rm = TRUE),
                                           digits = 2),
                          .groups = "drop") %>%
         dplyr::group_by(.data$domainID,
-                        .data$siteYear,
-                        .data$herbGroup) %>%
+                        .data$siteYear) %>%
         dplyr::filter(herbMass == max(.data$herbMass)) %>%
-        dplyr::mutate(herbEvent = paste(.data$siteYear, .data$herbGroup, .data$eventID,
-                                        sep = "-"),
+        dplyr::mutate(maxEvent = paste(.data$siteYear, .data$eventID,
+                                       sep = "-"),
                       .before = "domainID")
 
-      #   Retain records from max 'site x year x herbGroup x eventID' combos, pivot wider, then calculate plot-level ANPP
-      test <- tempTower %>%
-        dplyr::mutate(herbEvent = paste(.data$siteYear, .data$herbGroup, .data$eventID,
-                                        sep = "-"),
+      #   Retain records from max 'site x year x eventID' combos, then calculate plot-level ANPP.
+      #--> Productivity will be underestimated in these plots if they were grazed but an exclosure was never successfully deployed in the plot during the site-year; this reflects a current limitation of the data collected.
+      tempTower <- tempTower %>%
+        dplyr::mutate(maxEvent = paste(.data$siteYear, .data$eventID,
+                                       sep = "-"),
                       .before = "domainID") %>%
-        dplyr::filter(.data$herbEvent %in% towerMax$herbEvent) %>%
-        dplyr::select(-"herbEvent",
-                      -"eventID",
-                      -"clipID",
-                      -"collectDate",
-                      -"sampleID") %>%
-        tidyr::pivot_wider(names_from = "herbGroup",
-                           names_glue = "{herbGroup}_gm2",
-                           values_from = "agb_gm2") %>%
-        dplyr::mutate(dplyr::across("CoolSeasonGram_gm2":"WoodyPlants_gm2", ~tidyr::replace_na(., 0))) %>%
-        dplyr::mutate(TotalMass_gm2 = rowSums(dplyr::across("CoolSeasonGram_gm2":"WoodyPlants_gm2"), na.rm = TRUE),
-                      .before = "CoolSeasonGram_gm2") # %>%
+        dplyr::filter(.data$maxEvent %in% towerMax$maxEvent) %>%
+        dplyr::select(-"maxEvent") %>%
 
-        #--> Need to recreate test dataset and re-test above before moving on to test code commented out below...
+        #   Calculate mean for 'site x year' combo keeping sample count and ANPP at clipID scale similar to grazed plots
+        dplyr::group_by(.data$domainID,
+                        .data$siteID,
+                        .data$year,
+                        .data$plotType,
+                        .data$plotManagement) %>%
+        dplyr::summarise(ungrazedClipCount = n(),
+                         ungrazedProd_gm2yr = round(mean(.data$TotalMass_gm2, na.rm = TRUE),
+                                                    digits = 2),
+                         ungrazedProdSD_gm2 = round(stats::sd(.data$TotalMass_gm2, na.rm = TRUE),
+                                                    digits = 2),
+                         .groups = "drop")
 
-        # #   Calculate mean for 'site x year x plotID' combo to account for potential of 2 subplots per large Tower plot
-        # dplyr::group_by(.data$domainID,
-        #                 .data$siteID,
-        #                 .data$year,
-        #                 .data$plotID,
-        #                 .data$nlcdClass,
-        #                 .data$plotType,
-        #                 .data$plotSize,
-        #                 .data$plotManagement) %>%
-        # dplyr::summarise(TotalMass_gm2 = round(mean(.data$TotalMass_gm2, na.rm = TRUE),
-        #                                        digits = 2),
-        #                  CoolSeasonGram_gm2 = round(mean(.data$CoolSeasonGram_gm2, na.rm = TRUE),
-        #                                             digits = 2),
-        #                  Forbs_gm2 = round(mean(.data$Forbs_gm2, na.rm = TRUE),
-        #                                    digits = 2),
-        #                  NFixing_gm2 = round(mean(.data$NFixing_gm2, na.rm = TRUE),
-        #                                      digits = 2),
-        #                  WarmSeasonGram_gm2 = round(mean(.data$WarmSeasonGram_gm2, na.rm = TRUE),
-        #                                             digits = 2),
-        #                  WoodyPlants_gm2 = round(mean(.data$WoodyPlants_gm2, na.rm = TRUE),
-        #                                          digits = 2),
-        #                  .groups = "drop")
+
+      ##  Join with grazed plot output and combine productivity and uncertainty at site-year scale
+      #--> Begin again here...
+
+
+
 
 
 
@@ -888,6 +856,7 @@ estimateHerbProd = function(inputDataList,
 
 
     } # End nrow(grazelessPlots) conditional
+    #--> need to add final columns from above output when grazeless has no rows
 
 
 
