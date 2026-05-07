@@ -12,11 +12,12 @@ estimateHerbProd(inputDataList, plotSubset = "all")
 \item{plotSubset}{The options are the default "all" (all Tower and Distributed plots), "tower" (all plots in the Tower airshed but no Distributed plots), and "distributed" (all Distributed plots, which are sampled on a 5-year interval and are spatially representative of the NLCD classes at a site, and no Tower plots). \link{character}}
 }
 \value{
-A list that includes productivity summary data frames. Output tables include:
+A list that includes productivity summary outputs and additional productivity details from grazed sites. Output tables include:
 \itemize{
 \item herb_ANPP_site - Summarizes herbaceous ANPP for each site x year combination ("Mg/ha/yr" and "g/m2/yr").
-\item herb_ANPP_plot - Summarizes herbaceous ANPP for the sum of all herbaceous plants for each plot x year combination ("Mg/ha/yr" and "g/m2/yr"). Plot-level summaries are not returned for grazed Tower plots, for the reason outlined in details.
-\item herb_ANPP_plot_herbgroup - Summarizes herbaceous ANPP by herbGroup ("Cool Season Graminoids", "N-fixing Plants", etc.) for each plot x year combination ("Mg/ha/yr" and "g/m2/yr"). Plot-level summaries are not returned for grazed Tower plots.
+\item herb_ANPP_plot - Summarizes herbaceous ANPP for all herbaceous plants for each plot x year combination ("Mg/ha/yr" and "g/m2/yr"). Plot-level summaries are not returned for grazed Tower plots, for the reason outlined in the 'details' section above.
+\item herb_ANPP_grazed_extra - Provides summary information about each of the components required to calculate herbaceous ANPP from Tower plots at grazed sites - i.e., total estimated consumption across all bouts and final standing biomass from grazed Tower plots, as well as the mean productivity contributed from ungrazed Tower plots at grazed sites.
+\item herb_grazed_consumption - Detailed per bout mass data from exclosure = "Y" and exclosure = "N" clip harvests ("g/m2/yr"), and derived bout-level consumption data for each grazed site ("g/m2/yr"). These data are useful to understand how consumption estimates and total herbaceous ANPP at grazed sites was derived.
 }
 }
 \description{
@@ -25,19 +26,18 @@ Estimate above-ground herbaceous productivity at NEON sites using Herbaceous Cli
 \details{
 Input data should be a list of herbaceous biomass (DP1.10023.001) data frames downloaded via the neonUtilities::loadByProduct() function. The companion scaleHerbMass() function is called internally, and outputs from this function are used to estimate herbaceous productivity.
 
-At sites where herbaceous plants are not subject to grazing management and exclosures are not in use, and crops are not planted at any point during the year, the estimate of herbaceous ANPP is simply the standing biomass clipped from the bout with the greatest biomass.
+At sites where herbaceous plants are not subject to grazing management and exclosures are not in use, and crops are not planted at any point during the year, the estimate of herbaceous ANPP is the sum of the standing biomass clipped from the bout with the greatest biomass for each herbGroup. For example, if there is an early-season and late-season bout at a site, and Cool Season Graminoids have greatest mass early-season and Warm Season Graminoids have greatest mass late-season, and both of these herbGroups have mass in each bout, the productivity from these two groups would be the sum of early-season Cool Season Graminoid and late-season Warm Season Graminoid biomass. The exception is the Domain 14 Santa Rita Experimental Range site, where biomass from all bouts and all herbGroups is summed to estimate productivity because early-season and late-season biomass is derived from non-overlapping species pools.
 
-Where grazing management occurs in Tower plots and exclosures have been established, consumption is calculated for each Tower plot sampling event as average biomass within exclosures minus average biomass outside of exclosures. Consumption at each sampling bout is summed and then added to the standing biomass of the last bout of the season for an estimate of herbaceous ANPP.
+Where grazing management occurs in Tower plots and exclosures have been established, consumption is calculated for each Tower plot sampling event as average biomass within exclosures minus average biomass outside of exclosures; the consumption estimate is therefore inherently a "site-level" estimate rather than a "plot-level" estimate. Site-level consumption from each sampling bout is then summed across all bouts and added to the standing biomass of the last bout of the season to generate site-level estimates of herbaceous ANPP. For grazed sites, the Science Design only supports calculating consumption at the site level. The clip harvests within exclosures are not close enough to ambient clip harvests to support plot-level consumption estimates. Where biomass production is spatially heterogeneous and stocking rates are low, consumption estimates can be negative.
 
-At sites where crops are planted, productivity is determined on a plot-by-plot basis to account for the potential for multiple plantings throughout the season, as well as "wild-type" plots that are either fallow for the duration of the season or are not managed for agriculture.
-
-Note that at grazed sites, the Science Design only supports calculating consumption at the site level. The clip harvests within exclosures are not close enough to ambient clip harvests to support plot-level consumption estimates.
+At sites where crops are planted, productivity in cropped plots is determined on a plot-by-plot basis as the sum of all biomass from every bout within a given 'site x year' combination; this approach sums the productivity from multiple potential plantings throughout the season. Productivity from "wild-type" plots at cropped sites that are not planted with a crop in a given site-year is estimated using the same rubric described above for sites not subject to grazing and with no crops.
 }
 \examples{
 \dontrun{
 # Obtain NEON Herbaceous clip harvest data
 HbpDat <- neonUtilities::loadByProduct(
 dpID = "DP1.10023.001",
+site = c("HARV", "CPER")
 package = "basic",
 check.size = FALSE
 )

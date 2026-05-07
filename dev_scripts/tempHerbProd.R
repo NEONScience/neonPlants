@@ -2,7 +2,32 @@
 
 #   Replace first letter of selected columns with lower-case
 dplyr::rename_with(~ stringr::str_replace(.x, "^(.)", ~ tolower(.x)),
-                   .cols = "CoolSeasonGram_gm2":"Wheat_gm2") %>%
+                   .cols = "CoolSeasonGram_gm2":"Wheat_gm2")
+
+
+### Check function output for 2025 data from all sites
+tempHBP <- neonUtilities::loadByProduct(dpID = "DP1.10023.001",
+                                        site = "all",
+                                        startdate = "2025-01",
+                                        enddate = "2025-12",
+                                        check.size = FALSE,
+                                        include.provisional = TRUE,
+                                        token = Sys.getenv("NEON_TOKEN"))
+
+outputDF <- neonPlants::estimateHerbProd(inputDataList = tempHBP)
+
+plotProd <- outputDF$herb_ANPP_plot
+siteProd <- outputDF$herb_ANPP_site
+grazeExtra <- outputDF$herb_ANPP_grazed_extra
+consume <- outputDF$herb_grazed_consumption
+
+#   Problems & oddities:
+#--> plotProd: Fallow plots at STER coming back with herbProd = NA even though herbGroups have mass
+#--> siteProd: LAJA, WOOD, CPER, OAES, MOAB, SJER all have NAs in all columns (basically most of the grazed sites, but not all - e.g., DCFS, NOGP do have data)
+#--> consume: HBP.2025.NOGP.24.TOWER has zeroes for exclN and exclY biomass columns, strange, need to investigate...
+#--> consume: HBP.2025.SJER.05.TOWER only has one exclN record --> maybe a weekBoutBegan eventID error in input data?
+#--> grazeExtra: Sites with NA for 'herbProd_gm2yr' all have no ungrazed plots --> need logic to deal with all plots being grazed.
+
 
 
 ### Retrieve all HBP data for investigative purposes
