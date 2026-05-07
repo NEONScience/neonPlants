@@ -1,5 +1,9 @@
 ### Function dev and testing ####
 
+#   Replace first letter of selected columns with lower-case
+dplyr::rename_with(~ stringr::str_replace(.x, "^(.)", ~ tolower(.x)),
+                   .cols = "CoolSeasonGram_gm2":"Wheat_gm2") %>%
+
 
 ### Retrieve all HBP data for investigative purposes
 #--> Identify all sites where exclosures were deployed and trialed but were not successful (e.g., SRER, TEAK)
@@ -305,6 +309,31 @@ if (nrow(standardFinalMass) > 0) {
   herb_ANPP_site <- data.frame()
 
 }
+
+#   Create plot-level output for herbGroup = "AllHerbaceousPlants"
+herb_ANPP_plot <- standardFinalMass %>%
+  dplyr::filter(.data$herbGroup == "AllHerbaceousPlants") %>%
+  dplyr::rename("herbANPP_gm2yr" = "agb_gm2") %>%
+  dplyr::mutate(herbANPP_Mghayr = round(.data$herbANPP_gm2yr * 10000 * 0.000001,
+                                        digits = 2),
+                .after = "exclosure")
+
+herb_ANPP_site <- dplyr::bind_rows(herb_ANPP_site,
+                                   herb_ANPP_grazed) %>%
+  dplyr::relocate("finalEventID",
+                  .after = "eventID")
+
+#   Add columns with "Mg/ha/y" units for ANPP and SD and arrange
+herb_ANPP_site <- herb_ANPP_site %>%
+  dplyr::mutate(herbANPP_Mghayr = round(.data$herbANPP_gm2yr * 10000 * 0.000001,
+                                        digits = 2),
+                herbANPPSD_Mghayr = round(.data$herbANPPSD_gm2yr * 10000 * 0.000001,
+                                          digits = 2),
+                .after = "herbClipCount") %>%
+  dplyr::arrange(.data$domainID,
+                 .data$siteID,
+                 .data$year,
+                 .data$plotType)
 
 # #   Aggregate dryMass across herbGroups in peak biomass bouts
 # hbp_peak_biomass_herb_groups <- hbp %>%
