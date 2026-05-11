@@ -258,6 +258,8 @@ estimateHerbProd = function(inputDataList,
                           .data$siteYear,
                           .data$herbGroup) %>%
           dplyr::filter(herbMass == max(.data$herbMass)) %>%
+          dplyr::slice_max(order_by = .data$count,
+                           n = 1) %>%
           dplyr::mutate(herbEvent = paste(.data$siteYear, .data$herbGroup, .data$eventID,
                                           sep = "-"),
                         .before = "domainID") %>%
@@ -505,7 +507,8 @@ estimateHerbProd = function(inputDataList,
                         .data$plotType,
                         .data$plotSize,
                         .data$plotManagement) %>%
-        dplyr::summarise(agb_gm2 = mean(.data$agb_gm2, na.rm = TRUE),
+        dplyr::summarise(agb_gm2 = round(mean(.data$agb_gm2, na.rm = TRUE),
+                                         digits = 2),
                          .groups = "drop") %>%
 
         #   Use pivot_wider and rowSums to get one row per plot with columns per herbGroup, and calculate plot-level productivity
@@ -523,7 +526,10 @@ estimateHerbProd = function(inputDataList,
                         "Sunflower_gm2yr",
                         "Wheat_gm2yr",
                         .after = "WoodyPlants_gm2yr") %>%
-        dplyr::mutate(totalProd_gm2yr = rowSums(dplyr::across("CoolSeasonGram_gm2yr":"Wheat_gm2yr")),
+        #   Replace NAs in columns with zero
+        dplyr::mutate(dplyr::across("CoolSeasonGram_gm2yr":"Wheat_gm2yr", ~tidyr::replace_na(., 0))) %>%
+        dplyr::mutate(totalProd_gm2yr = round(rowSums(dplyr::across("CoolSeasonGram_gm2yr":"Wheat_gm2yr"), na.rm = TRUE),
+                                              digits = 2),
                       .after = "plotManagement")
 
     } else {
@@ -568,6 +574,8 @@ estimateHerbProd = function(inputDataList,
                         .data$plotType,
                         .data$herbGroup) %>%
         dplyr::filter(herbMass == max(.data$herbMass)) %>%
+        dplyr::slice_max(order_by = .data$count,
+                         n = 1) %>%
         dplyr::ungroup() %>%
 
         #   Create concatenated identifier for the plotType-herb-event combos with greatest mass
@@ -590,14 +598,18 @@ estimateHerbProd = function(inputDataList,
                         .data$plotType,
                         .data$plotSize,
                         .data$plotManagement) %>%
-        dplyr::summarise(agb_gm2 = mean(.data$agb_gm2, na.rm = TRUE),
+        dplyr::summarise(agb_gm2 = round(mean(.data$agb_gm2, na.rm = TRUE),
+                                         digits = 2),
                          .groups = "drop") %>%
 
         #   Use pivot_wider and rowSums to get one row per plot with columns per herbGroup, and calculate plot-level productivity
         tidyr::pivot_wider(names_from = "herbGroup",
                            names_glue = "{herbGroup}_gm2yr",
                            values_from = "agb_gm2") %>%
-        dplyr::mutate(totalProd_gm2yr = rowSums(dplyr::across("CoolSeasonGram_gm2yr":"WoodyPlants_gm2yr")),
+        #   Replace NAs for cropless plots in herbGroup columns with zero
+        dplyr::mutate(dplyr::across("CoolSeasonGram_gm2yr":"WoodyPlants_gm2yr", ~tidyr::replace_na(., 0))) %>%
+        dplyr::mutate(totalProd_gm2yr = round(rowSums(dplyr::across("CoolSeasonGram_gm2yr":"WoodyPlants_gm2yr"), na.rm = TRUE),
+                                              digits = 2),
                       .after = "plotManagement")
 
     } else {
@@ -610,7 +622,9 @@ estimateHerbProd = function(inputDataList,
 
     ### Combine results from cropped and cropless plots
     cropSiteYearDF <- dplyr::bind_rows(cropPlots,
-                                       croplessPlots)
+                                       croplessPlots) %>%
+      #   Replace NAs for herbGroup columns with zero
+      dplyr::mutate(dplyr::across("CoolSeasonGram_gm2yr":"Wheat_gm2yr", ~tidyr::replace_na(., 0)))
 
   } else {
 
@@ -791,7 +805,7 @@ estimateHerbProd = function(inputDataList,
     ##  Set aside detailed consumption data for output
     consumptionDF <- grazedPlots %>%
       dplyr::select(-"consumSD2_N") %>%
-      dplyr::mutate(plotManagement = paste(.data$plotManagement, "grazing", sep = ", ")) %>%
+      dplyr::mutate(plotManagement = paste(.data$plotManagement, "grazed", sep = ", ")) %>%
       dplyr::relocate("consumClipCount":"consumSD_gm2yr",
                       .after = "plotManagement")
 
@@ -853,6 +867,8 @@ estimateHerbProd = function(inputDataList,
         dplyr::group_by(.data$domainID,
                         .data$siteYear) %>%
         dplyr::filter(herbMass == max(.data$herbMass)) %>%
+        dplyr::slice_max(order_by = .data$count,
+                         n = 1) %>%
         dplyr::mutate(maxEvent = paste(.data$siteYear, .data$eventID,
                                        sep = "-"),
                       .before = "domainID")
@@ -885,16 +901,26 @@ estimateHerbProd = function(inputDataList,
       grazedSiteYearDF <- dplyr::full_join(grazedPlots,
                                            grazelessPlots,
                                            by = c("domainID", "siteID", "year", "plotType", "plotManagement")) %>%
-        dplyr::mutate(totalClipCount = .data$grazedClipCount + .data$ungrazedClipCount,
-                      herbProd_gm2yr = round((.data$finalClipCount / (.data$finalClipCount + .data$ungrazedClipCount)) *
-                                               .data$grazedProd_gm2yr +
-                                               (.data$ungrazedClipCount / (.data$finalClipCount + .data$ungrazedClipCount))
-                                             * .data$ungrazedProd_gm2yr,
-                                             digits = 2),
-                      herbProdSD_gm2yr = round(sqrt((.data$grazedProdSD_gm2yr^2 / .data$grazedClipCount) +
-                                                      (.data$ungrazedProdSD_gm2yr^2 / .data$ungrazedClipCount)),
-                                               digits = 2),
-                      .after = "plotManagement")
+        dplyr::rowwise() %>%
+        dplyr::mutate(totalClipCount = sum(.data$grazedClipCount, .data$ungrazedClipCount, na.rm = TRUE),
+
+                      herbProd_gm2yr = dplyr::case_when(
+                        is.na(.data$ungrazedClipCount) ~ .data$grazedProd_gm2yr,
+                        TRUE ~ round((.data$finalClipCount / (.data$finalClipCount + .data$ungrazedClipCount)) *
+                                       .data$grazedProd_gm2yr +
+                                       (.data$ungrazedClipCount / (.data$finalClipCount + .data$ungrazedClipCount))
+                                     * .data$ungrazedProd_gm2yr,
+                                     digits = 2)),
+
+                      herbProdSD_gm2yr = dplyr::case_when(
+                        is.na(.data$ungrazedClipCount) ~ .data$grazedProdSD_gm2yr,
+                        TRUE ~ round(sqrt((.data$grazedProdSD_gm2yr^2 / .data$grazedClipCount) +
+                                            (.data$ungrazedProdSD_gm2yr^2 / .data$ungrazedClipCount)),
+                                     digits = 2)
+                      ),
+
+                      .after = "plotManagement") %>%
+          dplyr::ungroup()
 
     } else {
 

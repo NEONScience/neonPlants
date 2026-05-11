@@ -11,6 +11,7 @@ tempHBP <- neonUtilities::loadByProduct(dpID = "DP1.10023.001",
                                         startdate = "2025-01",
                                         enddate = "2025-12",
                                         check.size = FALSE,
+                                        release = "LATEST",
                                         include.provisional = TRUE,
                                         token = Sys.getenv("NEON_TOKEN"))
 
@@ -22,11 +23,32 @@ grazeExtra <- outputDF$herb_ANPP_grazed_extra
 consume <- outputDF$herb_grazed_consumption
 
 #   Problems & oddities:
-#--> plotProd: Fallow plots at STER coming back with herbProd = NA even though herbGroups have mass
+#--> plotProd: Fallow plots at STER coming back with herbProd = NA even though herbGroups have mass --> fixed problem with tie-breaker when filter == max() used and all inputs are zero so multiples were returned.
+
 #--> siteProd: LAJA, WOOD, CPER, OAES, MOAB, SJER all have NAs in all columns (basically most of the grazed sites, but not all - e.g., DCFS, NOGP do have data)
-#--> consume: HBP.2025.NOGP.24.TOWER has zeroes for exclN and exclY biomass columns, strange, need to investigate...
-#--> consume: HBP.2025.SJER.05.TOWER only has one exclN record --> maybe a weekBoutBegan eventID error in input data?
+
+#--> consume: HBP.2025.NOGP.24.TOWER has zeroes for exclN and exclY biomass columns, strange, need to investigate... --> problem with samplingImpractical not being correctly applied.
+
+#--> consume: HBP.2025.SJER.05.TOWER only has one exclN record --> maybe a weekBoutBegan eventID error in input data? --> yes, problem; single SJER.05 record should be SJER.07
+
 #--> grazeExtra: Sites with NA for 'herbProd_gm2yr' all have no ungrazed plots --> need logic to deal with all plots being grazed.
+
+#--> Check all filter == max() statements to break ties --> done.
+
+
+
+### Check KONZ eventIDs
+konzHBP <- neonUtilities::loadByProduct(dpID = "DP1.10023.001",
+                                        site = "KONZ",
+                                        startdate = "2018-01",
+                                        enddate = "2018-12",
+                                        check.size = FALSE,
+                                        release = "LATEST",
+                                        include.provisional = TRUE,
+                                        token = Sys.getenv("NEON_TOKEN"))
+
+konzBout <- konzHBP$hbp_perbout
+#--> !!! Evidently the release = "LATEST" argument is required to see edits made to previously released data.
 
 
 
