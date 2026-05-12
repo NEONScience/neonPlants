@@ -638,14 +638,41 @@ estimateHerbProd = function(inputDataList,
 
 
   ### Plot-level output: Finalize plot-level productivity table for "standard" and "crop" sites ####
-  herb_ANPP_plot <- dplyr::bind_rows(stdSiteYearDF,
-                                     cropSiteYearDF) %>%
-    dplyr::arrange(.data$domainID,
-                   .data$siteID,
-                   .data$year,
-                   .data$plotID)
+  ##  Conditionally combine plot output from "standard" and "crop" sites
+  if (!is.null(stdSiteYearDF) & !is.null(cropSiteYearDF)) {
 
-  if (nrow(herb_ANPP_plot)) {
+    herb_ANPP_plot <- dplyr::bind_rows(stdSiteYearDF,
+                                       cropSiteYearDF) %>%
+      dplyr::arrange(.data$domainID,
+                     .data$siteID,
+                     .data$year,
+                     .data$plotID)
+
+  } else if (!is.null(stdSiteYearDF) & is.null(cropSiteYearDF)) {
+
+    herb_ANPP_plot <- stdSiteYearDF %>%
+      dplyr::arrange(.data$domainID,
+                     .data$siteID,
+                     .data$year,
+                     .data$plotID)
+
+  } else if (is.null(stdSiteYearDF) & !is.null(cropSiteYearDF)) {
+
+    herb_ANPP_plot <- cropSiteYearDF %>%
+      dplyr::arrange(.data$domainID,
+                     .data$siteID,
+                     .data$year,
+                     .data$plotID)
+
+  } else {
+
+    herb_ANPP_plot <- NULL
+
+  }
+
+
+  ##  Finalize herb_ANPP_plot data frame
+  if (!is.null(herb_ANPP_plot)) {
 
     herb_ANPP_plot <- herb_ANPP_plot %>%
       #   Replace NAs for cropless plots in crop columns with zero
@@ -656,12 +683,7 @@ estimateHerbProd = function(inputDataList,
       dplyr::mutate(herbProd_Mghayr = round(.data$herbProd_gm2yr * 0.01, digits = 2),
                     .before = "herbProd_gm2yr")
 
-  } else {
-
-    herb_ANPP_plot <- NULL
-
   }
-
 
 
 
@@ -833,12 +855,14 @@ estimateHerbProd = function(inputDataList,
                          dplyr::select(-"plotType",
                                        -"plotManagement"),
                        by = c("domainID", "siteID", "year")) %>%
-      dplyr::mutate(grazedClipCount = .data$consumClipCount + .data$finalClipCount,
-                    grazedProd_gm2yr = .data$consumption_gm2yr + .data$finalStandingMass_gm2yr,
+      dplyr::rowwise() %>%
+      dplyr::mutate(grazedClipCount = sum(.data$consumClipCount, .data$finalClipCount, na.rm = TRUE),
+                    grazedProd_gm2yr = sum(.data$consumption_gm2yr, .data$finalStandingMass_gm2yr, na.rm = TRUE),
                     grazedProdSD_gm2yr = round(sqrt((.data$finalStandingSD_gm2yr^2 / .data$finalClipCount) +
                                                       (.data$consumptionSD_gm2yr^2 / .data$consumClipCount)),
                                                digits = 2),
-                    .after = "plotManagement")
+                    .after = "plotManagement") %>%
+      dplyr::ungroup()
 
 
 
@@ -953,7 +977,7 @@ estimateHerbProd = function(inputDataList,
   #--> Create "herb_ANPP_grazed_extra" output with consumption, final standing mass, ungrazed plot detail; the "herb_ANPP_site" table just gets a stripped down version of grazing output.
 
   #   Create site-level outputs for "standard" and "crop" sites
-  if (nrow(herb_ANPP_plot)) {
+  if (!is.null(herb_ANPP_plot)) {
 
     herb_ANPP_site <- herb_ANPP_plot %>%
       dplyr::group_by(.data$domainID,
@@ -971,7 +995,12 @@ estimateHerbProd = function(inputDataList,
                                             digits = 2),
                     herbProdSD_Mghayr = round(.data$herbProdSD_gm2yr * 0.01,
                                               digits = 2),
-                    .after = "plotCount")
+                    .after = "plotCount") %>%
+      dplyr::relocate("totalClipCount",
+                      .before = "herbProd_Mghayr") %>%
+      dplyr::arrange(.data$domainID,
+                     .data$siteID,
+                     .data$year)
 
   } else {
 
@@ -980,7 +1009,7 @@ estimateHerbProd = function(inputDataList,
   }
 
   #   Conditionally extract summary site-level output from grazed sites
-  if (nrow(grazedSiteYearDF)) {
+  if (!is.null(grazedSiteYearDF)) {
 
     herb_ANPP_site <- dplyr::bind_rows(herb_ANPP_site,
                                        grazedSiteYearDF %>%

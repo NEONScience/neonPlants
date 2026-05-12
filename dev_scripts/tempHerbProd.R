@@ -39,9 +39,9 @@ consume <- outputDF$herb_grazed_consumption
 
 ### Check 2024 function output for all sites
 tempHBP <- neonUtilities::loadByProduct(dpID = "DP1.10023.001",
-                                        site = "all",
+                                        site = "SJER",
                                         startdate = "2024-01",
-                                        enddate = "2024-12",
+                                        enddate = "2025-06",
                                         check.size = FALSE,
                                         release = "LATEST",
                                         include.provisional = TRUE,
@@ -56,7 +56,7 @@ consume <- outputDF$herb_grazed_consumption
 
 #   Problems and oddities:
 #--> Only one bout at WOOD in 2024? Seem so...
-#--> All other outputs seem reasonable.
+#--> Multiple SJER bouts (43, 47) with zero consumption estimate
 
 herbDF <- neonPlants::scaleHerbMass(inputDataList = tempHBP)
 

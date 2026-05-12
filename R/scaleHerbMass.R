@@ -480,59 +480,70 @@ scaleHerbMass = function(inputDataList,
                      count = n(),
                      .groups = "drop")
 
-  temp <- temp %>%
-    dplyr::group_by(.data$domainID,
-                    .data$siteID,
-                    .data$year) %>%
-    dplyr::filter(MeanBiomass_gm2 == max(.data$MeanBiomass_gm2, na.rm = TRUE))
+  #   Conditionally identify eventID with max mean biomass
+  if (nrow(temp)) {
 
-  #   Reduce Tower plot data to plots from peak biomass eventID; calculate mean biomass for 40m x 40m Tower plots
-  towerStdDF <- stdSiteYearDF %>%
-    dplyr::filter(.data$plotType == "tower",
-                  .data$eventID %in% temp$eventID) %>%
-    dplyr::group_by(.data$domainID,
-                    .data$siteID,
-                    .data$year,
-                    .data$eventID,
-                    .data$plotID,
-                    .data$nlcdClass,
-                    .data$plotType,
-                    .data$plotSize,
-                    .data$plotManagement) %>%
-    dplyr::summarise(collectDate = as.Date(ifelse(all(is.na(.data$collectDate)), NA, min(.data$collectDate))),
-                     TotalMass_gm2 = round(mean(.data$TotalMass_gm2, na.rm = TRUE),
-                                           digits = 2),
-                     CoolSeasonGram_gm2 = round(mean(.data$CoolSeasonGram_gm2, na.rm = TRUE),
-                                                digits = 2),
-                     Forbs_gm2 = round(mean(.data$Forbs_gm2, na.rm = TRUE),
-                                       digits = 2),
-                     NFixing_gm2 = round(mean(.data$NFixing_gm2, na.rm = TRUE),
-                                         digits = 2),
-                     WarmSeasonGram_gm2 = round(mean(.data$WarmSeasonGram_gm2, na.rm = TRUE),
-                                                digits = 2),
-                     WoodyPlants_gm2 = round(mean(.data$WoodyPlants_gm2, na.rm = TRUE),
+    temp <- temp %>%
+      dplyr::group_by(.data$domainID,
+                      .data$siteID,
+                      .data$year) %>%
+      dplyr::filter(MeanBiomass_gm2 == max(.data$MeanBiomass_gm2, na.rm = TRUE))
+
+    #   Reduce Tower plot data to plots from peak biomass eventID; calculate mean biomass for 40m x 40m Tower plots
+    towerStdDF <- stdSiteYearDF %>%
+      dplyr::filter(.data$plotType == "tower",
+                    .data$eventID %in% temp$eventID) %>%
+      dplyr::group_by(.data$domainID,
+                      .data$siteID,
+                      .data$year,
+                      .data$eventID,
+                      .data$plotID,
+                      .data$nlcdClass,
+                      .data$plotType,
+                      .data$plotSize,
+                      .data$plotManagement) %>%
+      dplyr::summarise(collectDate = as.Date(ifelse(all(is.na(.data$collectDate)), NA, min(.data$collectDate))),
+                       TotalMass_gm2 = round(mean(.data$TotalMass_gm2, na.rm = TRUE),
                                              digits = 2),
-                     Barley_gm2 = round(mean(.data$Barley_gm2, na.rm = TRUE),
-                                        digits = 2),
-                     Corn_gm2 = round(mean(.data$Corn_gm2, na.rm = TRUE),
-                                      digits = 2),
-                     Millet_gm2 = round(mean(.data$Millet_gm2, na.rm = TRUE),
-                                        digits = 2),
-                     Oat_gm2 = round(mean(.data$Oat_gm2, na.rm = TRUE),
-                                     digits = 2),
-                     OrchardGrass_gm2 = round(mean(.data$OrchardGrass_gm2, na.rm = TRUE),
-                                              digits = 2),
-                     Rye_gm2 = round(mean(.data$Rye_gm2, na.rm = TRUE),
-                                     digits = 2),
-                     Sorghum_gm2 = round(mean(.data$Sorghum_gm2, na.rm = TRUE),
+                       CoolSeasonGram_gm2 = round(mean(.data$CoolSeasonGram_gm2, na.rm = TRUE),
+                                                  digits = 2),
+                       Forbs_gm2 = round(mean(.data$Forbs_gm2, na.rm = TRUE),
                                          digits = 2),
-                     Soybean_gm2 = round(mean(.data$Soybean_gm2, na.rm = TRUE),
-                                         digits = 2),
-                     Sunflower_gm2 = round(mean(.data$Sunflower_gm2, na.rm = TRUE),
+                       NFixing_gm2 = round(mean(.data$NFixing_gm2, na.rm = TRUE),
                                            digits = 2),
-                     Wheat_gm2 = round(mean(.data$Wheat_gm2, na.rm = TRUE),
+                       WarmSeasonGram_gm2 = round(mean(.data$WarmSeasonGram_gm2, na.rm = TRUE),
+                                                  digits = 2),
+                       WoodyPlants_gm2 = round(mean(.data$WoodyPlants_gm2, na.rm = TRUE),
+                                               digits = 2),
+                       Barley_gm2 = round(mean(.data$Barley_gm2, na.rm = TRUE),
+                                          digits = 2),
+                       Corn_gm2 = round(mean(.data$Corn_gm2, na.rm = TRUE),
+                                        digits = 2),
+                       Millet_gm2 = round(mean(.data$Millet_gm2, na.rm = TRUE),
+                                          digits = 2),
+                       Oat_gm2 = round(mean(.data$Oat_gm2, na.rm = TRUE),
                                        digits = 2),
-                     .groups = "drop")
+                       OrchardGrass_gm2 = round(mean(.data$OrchardGrass_gm2, na.rm = TRUE),
+                                                digits = 2),
+                       Rye_gm2 = round(mean(.data$Rye_gm2, na.rm = TRUE),
+                                       digits = 2),
+                       Sorghum_gm2 = round(mean(.data$Sorghum_gm2, na.rm = TRUE),
+                                           digits = 2),
+                       Soybean_gm2 = round(mean(.data$Soybean_gm2, na.rm = TRUE),
+                                           digits = 2),
+                       Sunflower_gm2 = round(mean(.data$Sunflower_gm2, na.rm = TRUE),
+                                             digits = 2),
+                       Wheat_gm2 = round(mean(.data$Wheat_gm2, na.rm = TRUE),
+                                         digits = 2),
+                       .groups = "drop")
+
+  } else {
+
+    # Create empty data frame with "domainID"
+    #--> Single column name required to enable join below
+    towerStdDF <- tibble(domainID = character(0))
+
+  } # End nrow(temp) for Tower plots
 
 
   ##  Create plot-level peak biomass data frame for "standard" sites
