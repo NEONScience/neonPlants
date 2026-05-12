@@ -541,7 +541,7 @@ scaleHerbMass = function(inputDataList,
 
     # Create empty data frame with "domainID"
     #--> Single column name required to enable join below
-    towerStdDF <- tibble(domainID = character(0))
+    towerStdDF <- dplyr::tibble(domainID = character(0))
 
   } # End nrow(temp) for Tower plots
 
