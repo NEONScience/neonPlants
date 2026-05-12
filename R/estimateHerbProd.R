@@ -937,7 +937,7 @@ estimateHerbProd = function(inputDataList,
                                      digits = 2)),
 
                       herbProdSD_gm2yr = dplyr::case_when(
-                        is.na(.data$ungrazedClipCount) ~ .data$grazedProdSD_gm2yr,
+                        is.na(.data$ungrazedProdSD_gm2yr) ~ .data$grazedProdSD_gm2yr,
                         TRUE ~ round(sqrt((.data$grazedProdSD_gm2yr^2 / .data$grazedClipCount) +
                                             (.data$ungrazedProdSD_gm2yr^2 / .data$ungrazedClipCount)),
                                      digits = 2)
@@ -996,8 +996,6 @@ estimateHerbProd = function(inputDataList,
                     herbProdSD_Mghayr = round(.data$herbProdSD_gm2yr * 0.01,
                                               digits = 2),
                     .after = "plotCount") %>%
-      dplyr::relocate("totalClipCount",
-                      .before = "herbProd_Mghayr") %>%
       dplyr::arrange(.data$domainID,
                      .data$siteID,
                      .data$year)

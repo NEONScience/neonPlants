@@ -39,9 +39,9 @@ consume <- outputDF$herb_grazed_consumption
 
 ### Check 2024 function output for all sites
 tempHBP <- neonUtilities::loadByProduct(dpID = "DP1.10023.001",
-                                        site = "SJER",
+                                        site = "all",
                                         startdate = "2024-01",
-                                        enddate = "2025-06",
+                                        enddate = "2024-12",
                                         check.size = FALSE,
                                         release = "LATEST",
                                         include.provisional = TRUE,
@@ -56,11 +56,35 @@ consume <- outputDF$herb_grazed_consumption
 
 #   Problems and oddities:
 #--> Only one bout at WOOD in 2024? Seem so...
-#--> Multiple SJER bouts (43, 47) with zero consumption estimate
+#--> Multiple SJER bouts (43, 47) with zero consumption estimate --> all plots have tTP == "N", so correct.
 
 herbDF <- neonPlants::scaleHerbMass(inputDataList = tempHBP)
 
 plotMass <- herbDF$hbp_plot
+
+
+
+### Check 2023 function output for all sites
+tempHBP <- neonUtilities::loadByProduct(dpID = "DP1.10023.001",
+                                        site = "all",
+                                        startdate = "2023-01",
+                                        enddate = "2023-12",
+                                        check.size = FALSE,
+                                        release = "LATEST",
+                                        include.provisional = TRUE,
+                                        token = Sys.getenv("NEON_TOKEN"))
+
+outputDF <- neonPlants::estimateHerbProd(inputDataList = tempHBP)
+
+plotProd <- outputDF$herb_ANPP_plot
+siteProd <- outputDF$herb_ANPP_site
+grazeExtra <- outputDF$herb_ANPP_grazed_extra
+consume <- outputDF$herb_grazed_consumption
+
+#   Problems and oddities:
+#--> HBP.2023.NOGP.40.TOWER only has two plots with exclosure = "N" (last bout of year clipped early Oct) which is odd, but can't determine if anything in the data should be changed.
+
+
 
 
 
