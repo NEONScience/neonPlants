@@ -105,6 +105,28 @@ consume <- outputDF$herb_grazed_consumption
 
 
 
+### Check 2021 function output for all sites
+tempHBP <- neonUtilities::loadByProduct(dpID = "DP1.10023.001",
+                                        site = "all",
+                                        startdate = "2021-01",
+                                        enddate = "2021-12",
+                                        check.size = FALSE,
+                                        release = "LATEST",
+                                        include.provisional = TRUE,
+                                        token = Sys.getenv("NEON_TOKEN"))
+
+outputDF <- neonPlants::estimateHerbProd(inputDataList = tempHBP)
+
+plotProd <- outputDF$herb_ANPP_plot
+siteProd <- outputDF$herb_ANPP_site
+grazeExtra <- outputDF$herb_ANPP_grazed_extra
+consume <- outputDF$herb_grazed_consumption
+
+#   Problem to fix: Need better exception handling when only single plot clipped for grazed bout - i.e., HBP.2021.NOGP.36.TOWER
+#--> Begin again with fixing exception handlign when SD is NA
+
+
+
 
 
 ### Check KONZ eventIDs
