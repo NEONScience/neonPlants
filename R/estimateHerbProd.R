@@ -858,9 +858,15 @@ estimateHerbProd = function(inputDataList,
       dplyr::rowwise() %>%
       dplyr::mutate(grazedClipCount = sum(.data$consumClipCount, .data$finalClipCount, na.rm = TRUE),
                     grazedProd_gm2yr = sum(.data$consumption_gm2yr, .data$finalStandingMass_gm2yr, na.rm = TRUE),
-                    grazedProdSD_gm2yr = round(sqrt((.data$finalStandingSD_gm2yr^2 / .data$finalClipCount) +
-                                                      (.data$consumptionSD_gm2yr^2 / .data$consumClipCount)),
-                                               digits = 2),
+                    grazedProdSD_gm2yr = dplyr::case_when(
+                      is.na(.data$finalStandingSD_gm2yr) & !is.na(.data$consumptionSD_gm2yr) ~
+                        round(.data$consumptionSD_gm2yr, digits = 2),
+                      !is.na(.data$finalStandingSD_gm2yr) & is.na(.data$consumptionSD_gm2yr) ~
+                        round(.data$finalStandingSD_gm2yr, digits = 2),
+                      TRUE ~ round(sqrt((.data$finalStandingSD_gm2yr^2 / .data$finalClipCount) +
+                                          (.data$consumptionSD_gm2yr^2 / .data$consumClipCount)),
+                                   digits = 2)
+                    ),
                     .after = "plotManagement") %>%
       dplyr::ungroup()
 
