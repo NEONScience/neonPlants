@@ -122,8 +122,18 @@ siteProd <- outputDF$herb_ANPP_site
 grazeExtra <- outputDF$herb_ANPP_grazed_extra
 consume <- outputDF$herb_grazed_consumption
 
-#   Problem to fix: Need better exception handling when only single plot clipped for grazed bout - i.e., HBP.2021.NOGP.36.TOWER
-#--> Begin again with fixing exception handlign when SD is NA
+#   Problem and oddities:
+#--> Need better exception handling when only single plot clipped for grazed bout - i.e., HBP.2021.NOGP.36.TOWER; begin again with fixing exception handlign when SD is NA --> done.
+#--> UKFS has zero herbaceous production
+ukfs <- dplyr::full_join(tempHBP$hbp_perbout,
+                         tempHBP$hbp_massdata %>%
+                           dplyr::select("sampleID":"dataQF"),
+                         by = "sampleID") %>%
+  dplyr::filter(siteID == "UKFS")
+  #-->  No hbp_massdata records for HBP.2021.UKFS.34.TOWER
+#--> Update scaleHerbMass because do not want to report 0 gm/m2 mass when ALL mass data are NA
+ukfsBout <- tempHBP$hbp_perbout %>% dplyr::filter(siteID == "UKFS")
+ukfsMass <- tempHBP$hbp_massdata %>% dplyr::filter(siteID == "UKFS")
 
 
 
