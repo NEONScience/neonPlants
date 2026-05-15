@@ -99,6 +99,10 @@ estimateHerbProd = function(inputDataList,
 
   }
 
+  #   Remove records with NA mass values; these are output from scaleHerbMass when targetTaxaPresent == "Y" in hbp_perbout but hbp_massdata records are missing
+  hbp_agb <- hbp_agb %>%
+    dplyr::filter(!is.na(.data$TotalMass_gm2))
+
   #   Create 'site x year' variable for identifying all records with a given site-year combination
   hbp_agb <- hbp_agb %>%
     dplyr::mutate(siteYear = paste(.data$siteID, .data$year, sep = "-"),

@@ -373,11 +373,16 @@ scaleHerbMass = function(inputDataList,
 
 
     ##  Calculate "TotalMass" biomass for sampling events sorted to herbGroup
+    #   Define columns to assess whether all are NAs
+    cols <- names(clipDF)[which(names(clipDF) == "NA_gm2"):ncol(clipDF)]
+
+    #   Sum herbGroup masses: If all herbGroup are NA (missing data in hbp_massdata) AND TotalMass_gm2 is NA, then TotalMass_gm2 = NA; otherwise TotalMass_gm2 is the sum of herbGroup masses
     clipDF <- clipDF %>%
-      dplyr::mutate(TotalMass_gm2 = dplyr::case_when(is.na(.data$TotalMass_gm2) ~
-                                                       rowSums(dplyr::across("NA_gm2":utils::tail(names(clipDF), 1)),
-                                                               na.rm = TRUE),
-                                                     TRUE ~ .data$TotalMass_gm2)) %>%
+      dplyr::mutate(TotalMass_gm2 = dplyr::case_when(
+        is.na(.data$TotalMass_gm2) & dplyr::if_all(dplyr::all_of(cols), is.na) ~ NA_real_,
+        is.na(.data$TotalMass_gm2) ~ rowSums(dplyr::across("NA_gm2":utils::tail(names(clipDF), 1)), na.rm = TRUE),
+        TRUE ~ .data$TotalMass_gm2
+      )) %>%
       dplyr::select(-"NA_gm2") %>%
       dplyr::arrange(.data$domainID,
                      .data$siteID,
@@ -387,11 +392,16 @@ scaleHerbMass = function(inputDataList,
                      .data$subplotID,
                      .data$clipID)
 
+    rm(cols)
+
   } #   End !nrow() conditional
 
 
 
   ### Cell-level output: Finalize data frame ####
+  #   Define columns to assess whether all are NAs
+  cols <- names(clipDF)[which(names(clipDF) == "TotalMass_gm2"):ncol(clipDF)]
+
   #   Assign data types to herbGroup_gm2 columns; can be "logi" if an herbGroup is absent from the dataset for selected sites
   clipDF <- clipDF %>%
     dplyr::mutate(CoolSeasonGram_gm2 = as.numeric(.data$CoolSeasonGram_gm2),
@@ -421,8 +431,13 @@ scaleHerbMass = function(inputDataList,
                     "Wheat_gm2",
                     .after = "WoodyPlants_gm2") %>%
 
-    #   Convert NA masses to '0' to enable correct calculation of plot-level means in 40m x 40m Tower plots
-    dplyr::mutate(dplyr::across("TotalMass_gm2":"Wheat_gm2", ~tidyr::replace_na(., 0)))
+    #   When all of 'cols' are NOT NA, convert NA masses to '0' to enable correct calculation of plot-level means in 40m x 40m Tower plots; otherwise, keep the NAs since they represent missing data in hbp_massdata
+    dplyr::mutate(all_na = rowSums(is.na(dplyr::across(dplyr::all_of(cols)))) == length(cols),
+                  dplyr::across(dplyr::all_of(cols), ~ ifelse(all_na, NA_real_, tidyr::replace_na(., 0))),
+                  .keep = "unused") %>%
+    dplyr::select(-"all_na")
+
+  rm(cols)
 
 
 
@@ -476,7 +491,9 @@ scaleHerbMass = function(inputDataList,
                     .data$siteID,
                     .data$year,
                     .data$eventID) %>%
-    dplyr::summarise(MeanBiomass_gm2 = mean(.data$TotalMass_gm2, na.rm = TRUE),
+    dplyr::filter(!is.na(.data$TotalMass_gm2)) %>%
+    dplyr::summarise(MeanBiomass_gm2 = round(mean(.data$TotalMass_gm2, na.rm = TRUE),
+                                             digits = 2),
                      count = n(),
                      .groups = "drop")
 
@@ -688,7 +705,8 @@ scaleHerbMass = function(inputDataList,
                     .data$siteID,
                     .data$year,
                     .data$eventID) %>%
-    dplyr::summarise(MeanBiomass_gm2 = mean(.data$TotalMass_gm2, na.rm = TRUE),
+    dplyr::summarise(MeanBiomass_gm2 = round(mean(.data$TotalMass_gm2, na.rm = TRUE),
+                                             digits = 2),
                      count = n(),
                      .groups = "drop")
 
@@ -773,6 +791,7 @@ scaleHerbMass = function(inputDataList,
     cropDF <- cropDF
 
   } else {
+
     cropDF <- cropDF %>%
       dplyr::group_by(.data$domainID,
                       .data$siteID,
