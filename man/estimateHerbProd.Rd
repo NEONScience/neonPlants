@@ -54,5 +54,4 @@ plotSubset = "tower")
 }
 \author{
 Courtney Meier \email{cmeier@BattelleEcology.org} \cr
-Samuel M Simkin \email{ssimkin@battelleecology.org} \cr
 }

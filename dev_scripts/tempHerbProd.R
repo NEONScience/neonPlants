@@ -122,7 +122,7 @@ siteProd <- outputDF$herb_ANPP_site
 grazeExtra <- outputDF$herb_ANPP_grazed_extra
 consume <- outputDF$herb_grazed_consumption
 
-#   Problem and oddities:
+#   Problems and oddities:
 #--> Need better exception handling when only single plot clipped for grazed bout - i.e., HBP.2021.NOGP.36.TOWER; begin again with fixing exception handlign when SD is NA --> done.
 #--> UKFS has zero herbaceous production
 ukfs <- dplyr::full_join(tempHBP$hbp_perbout,
@@ -134,6 +134,32 @@ ukfs <- dplyr::full_join(tempHBP$hbp_perbout,
 #--> Update scaleHerbMass because do not want to report 0 gm/m2 mass when ALL mass data are NA
 ukfsBout <- tempHBP$hbp_perbout %>% dplyr::filter(siteID == "UKFS")
 ukfsMass <- tempHBP$hbp_massdata %>% dplyr::filter(siteID == "UKFS")
+
+
+
+### Check 2020 function output for all sites
+tempHBP <- neonUtilities::loadByProduct(dpID = "DP1.10023.001",
+                                        site = "all",
+                                        startdate = "2020-01",
+                                        enddate = "2020-12",
+                                        check.size = FALSE,
+                                        release = "LATEST",
+                                        include.provisional = TRUE,
+                                        token = Sys.getenv("NEON_TOKEN"))
+
+outputDF <- neonPlants::estimateHerbProd(inputDataList = tempHBP)
+
+plotProd <- outputDF$herb_ANPP_plot
+siteProd <- outputDF$herb_ANPP_site
+grazeExtra <- outputDF$herb_ANPP_grazed_extra
+consume <- outputDF$herb_grazed_consumption
+
+#   Problems and oddities:
+#--> Two rows of LAJA output in herb_ANPP_site, should only be one; only one row in herb_ANPP_grazed_extra; in plot-level output table, 17 Tower plots identified in 2020 as not grazed --> is this correct?
+    #--> Two Distributed plots have a small amount of Sorghum biomass recorded, causes LAJA to be processed both as a grazed site AND a cropped site
+#--> SJER 2020, 52 clips and PROD = 0 and SD = 0 --> could be only 1 eventID and all plots/subplots with tTP = "N", need to verify --> yes
+
+
 
 
 
