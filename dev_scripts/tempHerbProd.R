@@ -223,8 +223,12 @@ grazeExtra <- outputDF$herb_ANPP_grazed_extra
 consume <- outputDF$herb_grazed_consumption
 
 #   Problems and oddities:
-#-->  Cannot run 2017 data; error working with 'agb_gm2' column; scaleHerbMass output works fine...
-#--> Lines 240-325 error out
+#-->  Cannot run 2017 data; error working with 'agb_gm2' column; scaleHerbMass output works fine; lines 240-325 error out --> slice_max based on count returning > 1 record. --> fixed.
+#--> Problem: LAJA, MOAB, SJER (all grazed) return > 1 row in site output table
+      #--> exclosure = NA but with mass a problem at SJER --> maybe Distributed plots in older data?
+      #--> plotManagement = NA also in the data for all three of these sites; maybe just missing in some older data?
+
+
 
 
 

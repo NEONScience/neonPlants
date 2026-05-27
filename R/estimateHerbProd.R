@@ -266,6 +266,7 @@ estimateHerbProd = function(inputDataList,
         dplyr::filter(herbMass == max(.data$herbMass)) %>%
         dplyr::slice_max(order_by = .data$count,
                          n = 1) %>%
+        dplyr::slice_tail() %>%
         dplyr::mutate(herbEvent = paste(.data$siteYear, .data$herbGroup, .data$eventID,
                                         sep = "-"),
                       .before = "domainID") %>%
@@ -596,6 +597,7 @@ estimateHerbProd = function(inputDataList,
         dplyr::filter(herbMass == max(.data$herbMass)) %>%
         dplyr::slice_max(order_by = .data$count,
                          n = 1) %>%
+        dplyr::slice_tail() %>%
         dplyr::ungroup() %>%
 
         #   Create concatenated identifier for the plotType-herb-event combos with greatest mass
@@ -938,6 +940,7 @@ estimateHerbProd = function(inputDataList,
         dplyr::filter(herbMass == max(.data$herbMass)) %>%
         dplyr::slice_max(order_by = .data$count,
                          n = 1) %>%
+        dplyr::slice_tail() %>%
         dplyr::mutate(maxEvent = paste(.data$siteYear, .data$eventID,
                                        sep = "-"),
                       .before = "domainID")
