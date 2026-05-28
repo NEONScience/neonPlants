@@ -1022,7 +1022,7 @@ estimateHerbProd = function(inputDataList,
         dplyr::filter(.data$plotType == "tower") %>%
         dplyr::select(-c("CoolSeasonGram_gm2yr":"WoodyPlants_gm2yr"))
 
-      #   Identify the 'site x year x herbGroup x eventID' combo with greatest productivity; the mean is across all clipIDs to ensure the same sampling scale is combined with the productivity estimate from grazed plots.
+      #   Identify the 'site x year x eventID' combo with greatest productivity; the mean is across all clipIDs to ensure the same sampling scale is combined with the productivity estimate from grazed plots.
       towerMax <- grazelessPlots %>%
         dplyr::group_by(.data$domainID,
                         .data$siteYear,
@@ -1116,7 +1116,9 @@ estimateHerbProd = function(inputDataList,
 
   } else {
 
+    #   Create objects required for function output
     grazedSiteYearDF <- NULL
+    consumptionDF <- NULL
 
   } # End nrow(grazedSiteYearDF) conditional
 

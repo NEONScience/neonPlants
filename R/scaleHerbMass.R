@@ -696,6 +696,9 @@ scaleHerbMass = function(inputDataList,
                                          digits = 2),
                        .groups = "drop")
 
+    #   Clean up
+    rm(temp, tempGrazed)
+
   } # end !nrow() conditional
 
 
@@ -712,6 +715,9 @@ scaleHerbMass = function(inputDataList,
                      .data$eventID,
                      .data$plotID)
   )
+
+  #   Clean up
+  rm(distGrazedDF, towerGrazedDF)
 
 
   ##  Create plot-level peak biomass for "wild" type plots at grazed sites that were not sampled in the same peak biomass eventID as the grazed plots; these plots reported separately.
@@ -759,10 +765,6 @@ scaleHerbMass = function(inputDataList,
                      .data$plotID)
 
   } # end !nrow() conditional
-
-
-  ##  Grazed cleanup
-  rm(temp, distGrazedDF, towerGrazedDF, tempGrazed)
 
 
 
