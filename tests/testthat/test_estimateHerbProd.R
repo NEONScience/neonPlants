@@ -2,6 +2,11 @@
 # Samuel M Simkin (2024-12-15)  ssimkin@battelleecology.org
 # Courtney Meier (2025-06-20)   cmeier@BattelleEcology.org
 
+
+#---> Add test to verify that number of rows in site-level output table equals number of sites in input dataset
+
+
+
 ### Read in test data ####
 HbpDat <- readRDS(testthat::test_path("testdata", "hbp_testDat.RDS"))
 

@@ -450,10 +450,27 @@ estimateHerbProd = function(inputDataList,
 
 
 
-  ### Create a NULL data frame named identically to the above output in the event no "standard" sites exist in input dataset
+  ### Create empty data frame in the event no "standard" sites exist in input dataset
   } else {
 
-    stdSiteYearDF <- NULL
+    theCols <- list(domainID = character(),
+                    siteID = character(),
+                    year = numeric(),
+                    plotID = character(),
+                    nlcdClass = character(),
+                    plotType = character(),
+                    plotSize = numeric(),
+                    plotManagement = character(),
+                    collectDate = as.Date(character()),
+                    clipCount = numeric(),
+                    totalProd_gm2yr = numeric(),
+                    CoolSeasonGram_gm2yr = numeric(),
+                    Forbs_gm2yr = numeric(),
+                    NFixing_gm2yr = numeric(),
+                    WarmSeasonGram_gm2yr = numeric(),
+                    WoodyPlants_gm2yr = numeric())
+
+    stdSiteYearDF <- tibble::tibble(!!!theCols)
 
   } #   End nrow(stdSiteYearDF) standard site processing conditional
 
@@ -672,7 +689,35 @@ estimateHerbProd = function(inputDataList,
 
   } else {
 
-    cropSiteYearDF <- NULL
+    #   Create empty data frame with all required columns in the event no crop sites processed
+    theCols <- list(domainID = character(),
+                    siteID = character(),
+                    year = numeric(),
+                    plotID = character(),
+                    nlcdClass = character(),
+                    plotType = character(),
+                    plotSize = numeric(),
+                    plotManagement = character(),
+                    collectDate = as.Date(character()),
+                    clipCount = numeric(),
+                    totalProd_gm2yr = numeric(),
+                    CoolSeasonGram_gm2yr = numeric(),
+                    Forbs_gm2yr = numeric(),
+                    NFixing_gm2yr = numeric(),
+                    WarmSeasonGram_gm2yr = numeric(),
+                    WoodyPlants_gm2yr = numeric(),
+                    Barley_gm2yr = numeric(),
+                    Corn_gm2yr = numeric(),
+                    Millet_gm2yr = numeric(),
+                    Oat_gm2yr = numeric(),
+                    OrchardGrass_gm2yr = numeric(),
+                    Rye_gm2yr = numeric(),
+                    Sorghum_gm2yr = numeric(),
+                    Soybean_gm2yr = numeric(),
+                    Sunflower_gm2yr = numeric(),
+                    Wheat_gm2yr = numeric())
+
+    cropSiteYearDF <- tibble::tibble(!!!theCols)
 
   } # End nrow(cropSiteYearDF) conditional
 
