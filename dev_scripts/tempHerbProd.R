@@ -249,7 +249,7 @@ grazeExtra <- outputDF$herb_ANPP_grazed_extra
 consume <- outputDF$herb_grazed_consumption
 
 #   Problems and oddities:
-#--> `Forbs_gm2yr` column not found in the data
+#--> `Forbs_gm2yr` column not found in the data --> fixed, added logic to combine older herbGroups into current herbGroups
 
 
 

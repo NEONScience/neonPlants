@@ -778,7 +778,7 @@ estimateHerbProd = function(inputDataList,
                     .after = "siteYear") %>%
 
       #   Update missing plotManagement and assign exclosure = "N" when NA and tTP = "N" (occurs in old data)
-      dplyr::mutate(plotManagement = dplyr::case_when(is.na(.data$plotManagement) ~ "Non-agricultural, grazed",
+      dplyr::mutate(plotManagement = dplyr::case_when(is.na(.data$plotManagement) ~ "Non-agricultural, Grazed",
                                                       TRUE ~ paste(.data$plotManagement, "Grazed", sep = ", ")),
                     exclosure = dplyr::case_when(is.na(.data$exclosure) & .data$targetTaxaPresent == "N" ~ "N",
                                                  TRUE ~ .data$exclosure)) %>%
@@ -795,7 +795,7 @@ estimateHerbProd = function(inputDataList,
       dplyr::filter(!.data$plotSiteYear %in% grazedPlots$plotSiteYear) %>%
 
       #   Update missing plotManagement values; grazeless plots also have "grazed" value because final join includes plotManagement and at site-level the plotManagement is "grazed"
-      dplyr::mutate(plotManagement = dplyr::case_when(.data$plotType == "tower" ~ "Non-agricultural, grazed",
+      dplyr::mutate(plotManagement = dplyr::case_when(.data$plotType == "tower" ~ "Non-agricultural, Grazed",
                                                       TRUE ~ .data$plotManagement))
 
 
