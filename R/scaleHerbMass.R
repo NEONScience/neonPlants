@@ -270,19 +270,46 @@ scaleHerbMass = function(inputDataList,
                        .groups = "drop") %>%
 
       dplyr::mutate(dryMass = dplyr::case_when(.data$targetTaxaPresent == "N" ~ 0,
-                                               TRUE ~ round(.data$dryMass, digits = 2)),
-                    dryMass_gm2 = dplyr::case_when(.data$targetTaxaPresent == "N" ~ 0,
-                                                   TRUE ~ round(.data$dryMass / .data$clipArea, digits = 2))) %>%
+                                               TRUE ~ round(.data$dryMass, digits = 2))) %>%
 
+      #   Standardize older herbGroups to current convention and condense names
       dplyr::mutate(herbGroup = dplyr::case_when(.data$herbGroup == "All herbaceous plants" ~ "TotalMass",
                                                  .data$herbGroup == "Cool Season Graminoids" ~ "CoolSeasonGram",
                                                  .data$herbGroup == "Annual and Perennial Forbs" ~ "Forbs",
                                                  .data$herbGroup == "Leguminous Forbs" ~ "NFixing",
                                                  .data$herbGroup == "N-fixing Plants" ~ "NFixing",
+                                                 .data$herbGroup == "Non-leguminous Forbs" ~ "Forbs",
                                                  .data$herbGroup == "Woody-stemmed Plants" ~ "WoodyPlants",
                                                  .data$herbGroup == "Warm Season Graminoids" ~ "WarmSeasonGram",
                                                  .data$herbGroup == "Orchard Grass" ~ "OrchardGrass",
-                                                 TRUE ~ .data$herbGroup))
+                                                 TRUE ~ .data$herbGroup)) %>%
+
+      #   Combine masses from older herbGroups into current herbGroups
+      dplyr::group_by(.data$domainID,
+                      .data$siteID,
+                      .data$plotID,
+                      .data$subplotID,
+                      .data$clipID,
+                      .data$nlcdClass,
+                      .data$plotType,
+                      .data$plotSize,
+                      .data$plotManagement,
+                      .data$collectDate,
+                      .data$year,
+                      .data$eventID,
+                      .data$samplingImpractical,
+                      .data$targetTaxaPresent,
+                      .data$sampleID,
+                      .data$clipArea,
+                      .data$exclosure,
+                      .data$herbGroup) %>%
+      dplyr::summarise(dryMass = dplyr::case_when(all(is.na(.data$dryMass)) ~ NA,
+                                                  TRUE ~ sum(.data$dryMass, na.rm = TRUE)),
+                       .groups = "drop") %>%
+
+      #   Calculate dryMass per unit area (g/m2)
+      dplyr::mutate(dryMass_gm2 = dplyr::case_when(.data$targetTaxaPresent == "N" ~ 0,
+                                                   TRUE ~ round(.data$dryMass / .data$clipArea, digits = 2)))
 
 
     ##  Identify sampleIDs containing crop functional groups; easiest to do here when only 'herbGroup' column to consider before the table pivots wider below.

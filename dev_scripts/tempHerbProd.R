@@ -231,6 +231,28 @@ consume <- outputDF$herb_grazed_consumption
 
 
 
+### Check 2016 function output for all sites
+tempHBP <- neonUtilities::loadByProduct(dpID = "DP1.10023.001",
+                                        site = "all",
+                                        startdate = "2016-01",
+                                        enddate = "2016-12",
+                                        check.size = FALSE,
+                                        release = "LATEST",
+                                        include.provisional = TRUE,
+                                        token = Sys.getenv("NEON_TOKEN"))
+
+outputDF <- neonPlants::estimateHerbProd(inputDataList = tempHBP)
+
+plotProd <- outputDF$herb_ANPP_plot
+siteProd <- outputDF$herb_ANPP_site
+grazeExtra <- outputDF$herb_ANPP_grazed_extra
+consume <- outputDF$herb_grazed_consumption
+
+#   Problems and oddities:
+#--> `Forbs_gm2yr` column not found in the data
+
+
+
 
 
 

@@ -779,7 +779,7 @@ estimateHerbProd = function(inputDataList,
 
       #   Update missing plotManagement and assign exclosure = "N" when NA and tTP = "N" (occurs in old data)
       dplyr::mutate(plotManagement = dplyr::case_when(is.na(.data$plotManagement) ~ "Non-agricultural, grazed",
-                                                      TRUE ~ paste(.data$plotManagement, "grazed", sep = ", ")),
+                                                      TRUE ~ paste(.data$plotManagement, "Grazed", sep = ", ")),
                     exclosure = dplyr::case_when(is.na(.data$exclosure) & .data$targetTaxaPresent == "N" ~ "N",
                                                  TRUE ~ .data$exclosure)) %>%
 
