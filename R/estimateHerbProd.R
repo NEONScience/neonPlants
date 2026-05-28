@@ -152,6 +152,12 @@ estimateHerbProd = function(inputDataList,
 
   if (nrow(stdSiteYearDF)) {
 
+    ### Fix missing plotManagement values (needed for correct summary output)
+    stdSiteYearDF <- stdSiteYearDF %>%
+      dplyr::mutate(plotManagement = dplyr::case_when(is.na(.data$plotManagement) ~ "Non-agricultural",
+                                                      TRUE ~ .data$plotManagement))
+
+
     ### Identify 'site x year' combos with a single Tower plot eventID
     temp <- stdSiteYearDF %>%
       dplyr::filter(.data$plotType == "tower") %>%
@@ -493,6 +499,11 @@ estimateHerbProd = function(inputDataList,
 
     if (nrow(cropPlots)) {
 
+      #   Update missing plotManagement values
+      cropPlots <- cropPlots %>%
+        dplyr::mutate(plotManagement = dplyr::case_when(is.na(.data$plotManagement) ~ "Agricultural",
+                                                        TRUE ~ .data$plotManagement))
+
       #   Pivot to long format to enable grouping by herbGroup; remove "TotalMass_gm2" column as not an herbGroup
       cropPlots <- cropPlots %>%
         dplyr::select(-"totalProd_gm2yr") %>%
@@ -566,6 +577,11 @@ estimateHerbProd = function(inputDataList,
     #--> In a given site x year, identify for each herbGroup which eventID has the greatest productivity; mean herbGroup productivity is calculated across all clipIDs.
 
     if (nrow(croplessPlots)) {
+
+      #   Update missing plotManagement values
+      croplessPlots <- croplessPlots %>%
+        dplyr::mutate(plotManagement = dplyr::case_when(is.na(.data$plotManagement) ~ "Non-agricultural",
+                                                        TRUE ~ .data$plotManagement))
 
       #   Remove crop columns as these are not populated for croplessPlots by definition
       croplessPlots <- croplessPlots %>%
@@ -736,7 +752,7 @@ estimateHerbProd = function(inputDataList,
 
 
 
-    ### Parse plots into grazed (ostensibly all Tower plots) and graze-less
+    ### Parse plots into grazed and graze-less; occurs when cows kept out of portion of Tower plots for duration of season
     #--> Graze-less plots are a mix of Tower plots and Distributed plots where none of the Distributed plots are cropped;
     #--> If any Distributed plots are cropped (as at LAJA in 2020), Distributed plots are processed above as cropped.
 
@@ -759,7 +775,16 @@ estimateHerbProd = function(inputDataList,
       #   Create plotSiteYear variable to enable parsing plots into grazed vs ungrazed
       dplyr::mutate(plotSiteYear = paste(.data$siteID, .data$year, .data$plotID,
                                          sep = "-"),
-                    .after = "siteYear")
+                    .after = "siteYear") %>%
+
+      #   Update missing plotManagement and assign exclosure = "N" when NA and tTP = "N" (occurs in old data)
+      dplyr::mutate(plotManagement = dplyr::case_when(is.na(.data$plotManagement) ~ "Non-agricultural, grazed",
+                                                      TRUE ~ paste(.data$plotManagement, "grazed", sep = ", ")),
+                    exclosure = dplyr::case_when(is.na(.data$exclosure) & .data$targetTaxaPresent == "N" ~ "N",
+                                                 TRUE ~ .data$exclosure)) %>%
+
+      #   Remove any remaining exclosure = NA records; these are ambiguous and cannot be used for consumption estimates
+      dplyr::filter(!is.na(.data$exclosure))
 
 
     ##  Identify ungrazed plots at sites managed for grazing
@@ -767,7 +792,11 @@ estimateHerbProd = function(inputDataList,
       dplyr::mutate(plotSiteYear = paste(.data$siteID, .data$year, .data$plotID,
                                          sep = "-"),
                     .after = "siteYear") %>%
-      dplyr::filter(!.data$plotSiteYear %in% grazedPlots$plotSiteYear)
+      dplyr::filter(!.data$plotSiteYear %in% grazedPlots$plotSiteYear) %>%
+
+      #   Update missing plotManagement values; grazeless plots also have "grazed" value because final join includes plotManagement and at site-level the plotManagement is "grazed"
+      dplyr::mutate(plotManagement = dplyr::case_when(.data$plotType == "tower" ~ "Non-agricultural, grazed",
+                                                      TRUE ~ .data$plotManagement))
 
 
 
@@ -829,9 +858,7 @@ estimateHerbProd = function(inputDataList,
       #   Filter to Tower plots; should be redundant but do anyway
       dplyr::filter(.data$plotType == "tower") %>%
 
-      #   Update exclosure to be "N" when targetTaxaPresent == "N" so these zeroes are properly included in the estimate of ambient biomass.
-      dplyr::mutate(exclosure = dplyr::case_when(is.na(.data$exclosure) & .data$targetTaxaPresent == "N" ~ "N",
-                                                 TRUE ~ exclosure)) %>%
+      #   Determine sample size, mean, and SD for exclosure = "N" and "Y"
       dplyr::group_by(.data$domainID,
                       .data$siteID,
                       .data$year,
@@ -840,7 +867,6 @@ estimateHerbProd = function(inputDataList,
                       .data$plotType,
                       .data$plotManagement) %>%
 
-      #   Determine sample size, mean, and SD for exclosure = "N" and "Y"
       dplyr::summarise(clipCount = dplyr::n(),
                        agbMean_gm2 = round(mean(.data$totalProd_gm2yr, na.rm = TRUE),
                                            digits = 2),
@@ -868,7 +894,6 @@ estimateHerbProd = function(inputDataList,
     ##  Set aside detailed consumption data for output
     consumptionDF <- grazedPlots %>%
       dplyr::select(-"consumSD2_N") %>%
-      dplyr::mutate(plotManagement = paste(.data$plotManagement, "grazed", sep = ", ")) %>%
       dplyr::relocate("consumClipCount":"consumSD_gm2yr",
                       .after = "plotManagement")
 
@@ -1004,10 +1029,9 @@ estimateHerbProd = function(inputDataList,
 
     } # End nrow(grazelessPlots) conditional
 
-    #   Add 'herbProd_Mghayr' column and update 'plotManagement' to indicate grazing
+    #   Add 'herbProd_Mghayr' column
     grazedSiteYearDF <- grazedSiteYearDF %>%
-      dplyr::mutate(plotManagement = paste(.data$plotManagement, "grazed", sep = ", "),
-                    herbProd_Mghayr = round(.data$herbProd_gm2yr * 0.01, digits = 2),
+      dplyr::mutate(herbProd_Mghayr = round(.data$herbProd_gm2yr * 0.01, digits = 2),
                     herbProdSD_Mghayr = round(.data$herbProdSD_gm2yr * 0.01, digits = 2),
                     .after = "totalClipCount")
 

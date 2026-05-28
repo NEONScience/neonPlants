@@ -506,7 +506,7 @@ scaleHerbMass = function(inputDataList,
                       .data$siteID,
                       .data$year) %>%
       dplyr::filter(MeanBiomass_gm2 == max(.data$MeanBiomass_gm2, na.rm = TRUE)) %>%
-      dplyr::slice_tail() %>%
+      dplyr::slice_tail()
 
     #   Reduce Tower plot data to plots from peak biomass eventID; calculate mean biomass for 40m x 40m Tower plots
     towerStdDF <- stdSiteYearDF %>%
@@ -618,7 +618,7 @@ scaleHerbMass = function(inputDataList,
                       .data$siteID,
                       .data$year) %>%
       dplyr::filter(MeanBiomass_gm2 == max(.data$MeanBiomass_gm2, na.rm = TRUE)) %>%
-      dplyr::slice_tail() %>%
+      dplyr::slice_tail()
 
     #   Find all Tower plots associated with peak biomass eventID, grazed or ungrazed
     towerGrazedDF <- grazedSiteYearDF %>%
@@ -718,7 +718,7 @@ scaleHerbMass = function(inputDataList,
                       .data$siteID,
                       .data$year) %>%
       dplyr::filter(MeanBiomass_gm2 == max(.data$MeanBiomass_gm2, na.rm = TRUE)) %>%
-      dplyr::slice_tail() %>%
+      dplyr::slice_tail()
 
     #   Isolate records for peak biomass "wild" type plots that were not sampled in the peak grazed biomass bout
     grazedWildDF <- grazedWildDF %>%
