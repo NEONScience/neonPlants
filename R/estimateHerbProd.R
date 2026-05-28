@@ -898,88 +898,114 @@ estimateHerbProd = function(inputDataList,
     ### Calculate consumption as difference between exclosure == "Y" and exclosure == "N" for all eventIDs
     #--> Treat all clipIDs as independent observations; that is, subplotIDs within plots are NOT averaged first.
 
+    #   Filter to Tower plots; some stray exclosure = "Y" Distributed plots in older data
     grazedPlots <- grazedPlots %>%
+      dplyr::filter(.data$plotType == "tower")
 
-      #   Filter to Tower plots; should be redundant but do anyway
-      dplyr::filter(.data$plotType == "tower") %>%
 
-      #   Determine sample size, mean, and SD for exclosure = "N" and "Y"
-      dplyr::group_by(.data$domainID,
-                      .data$siteID,
-                      .data$year,
-                      .data$eventID,
-                      .data$exclosure,
-                      .data$plotType,
-                      .data$plotManagement) %>%
+    ##  Conditionally process grazedPlots
+    if (!nrow(grazedPlots)) {
 
-      dplyr::summarise(clipCount = dplyr::n(),
-                       agbMean_gm2 = round(mean(.data$totalProd_gm2yr, na.rm = TRUE),
+      #   Create empty grazedPlots data frame for joining with processed grazelessPlots below
+      theCols <- list(domainID = character(),
+                      siteID = character(),
+                      year = numeric(),
+                      plotType = character(),
+                      plotManagement = character(),
+                      grazedClipCount = numeric(),
+                      finalClipCount = numeric(),
+                      grazedProd_gm2yr = numeric(),
+                      grazedProdSD_gm2yr = numeric())
+
+      grazedPlots <- tibble::tibble(!!!theCols)
+
+      #   Create NULL consumptionDF data frame for final output
+      consumptionDF <- NULL
+
+
+    } else {
+
+      grazedPlots <- grazedPlots %>%
+
+        #   Determine sample size, mean, and SD for exclosure = "N" and "Y"
+        dplyr::group_by(.data$domainID,
+                        .data$siteID,
+                        .data$year,
+                        .data$eventID,
+                        .data$exclosure,
+                        .data$plotType,
+                        .data$plotManagement) %>%
+
+        dplyr::summarise(clipCount = dplyr::n(),
+                         agbMean_gm2 = round(mean(.data$totalProd_gm2yr, na.rm = TRUE),
+                                             digits = 2),
+                         agbSD_gm2 = round(stats::sd(.data$totalProd_gm2yr, na.rm = TRUE),
                                            digits = 2),
-                       agbSD_gm2 = round(stats::sd(.data$totalProd_gm2yr, na.rm = TRUE),
-                                         digits = 2),
-                       .groups = "drop") %>%
+                         .groups = "drop") %>%
 
-      #   Pivot wider to get exclosure = "N" and "Y" on same row to enable within row consumption estimate for each eventID
-      tidyr::pivot_wider(names_from = "exclosure",
-                         values_from = c("clipCount" , "agbMean_gm2", "agbSD_gm2"),
-                         names_prefix = "excl") %>%
+        #   Pivot wider to get exclosure = "N" and "Y" on same row to enable within row consumption estimate for each eventID
+        tidyr::pivot_wider(names_from = "exclosure",
+                           values_from = c("clipCount" , "agbMean_gm2", "agbSD_gm2"),
+                           names_prefix = "excl") %>%
 
-      #   Calculate consumption mean and SD per eventID
-      #--> Uncertainties combined according to: https://www.mathbench.umd.edu/modules/statistical-tests_t-tests/page06.htm
-      dplyr::mutate(consumClipCount = .data$clipCount_exclN + .data$clipCount_exclY,
-                    consumMean_gm2yr = round(.data$agbMean_gm2_exclY - .data$agbMean_gm2_exclN,
-                                           digits = 2),
-                    consumSD_gm2yr = round(sqrt((.data$agbSD_gm2_exclN^2 / .data$clipCount_exclN) +
-                                                (.data$agbSD_gm2_exclY^2 / .data$clipCount_exclY)),
-                                         digits = 2),
-                    consumSD2_N = round(.data$consumSD_gm2yr^2 / .data$consumClipCount,
-                                        digits = 2))
-
-
-    ##  Set aside detailed consumption data for output
-    consumptionDF <- grazedPlots %>%
-      dplyr::select(-"consumSD2_N") %>%
-      dplyr::relocate("consumClipCount":"consumSD_gm2yr",
-                      .after = "plotManagement")
-
-
-    ##  Summarize consumption data at the site level
-    grazedPlots <- grazedPlots %>%
-
-      #   Remove NAs from 'consumMean_gm2' (happens when no exclosure = "Y" records for a bout), then sum consumption across all bouts in a site-year and propagate uncertainty
-      dplyr::filter(!is.na(.data$consumMean_gm2yr)) %>%
-      dplyr::group_by(.data$domainID,
-                      .data$siteID,
-                      .data$year,
-                      .data$plotType,
-                      .data$plotManagement) %>%
-      dplyr::summarise(consumEventCount = dplyr::n(),
-                       consumClipCount = sum(.data$consumClipCount),
-                       consumption_gm2yr = round(sum(.data$consumMean_gm2yr, na.rm = TRUE),
+        #   Calculate consumption mean and SD per eventID
+        #--> Uncertainties combined according to: https://www.mathbench.umd.edu/modules/statistical-tests_t-tests/page06.htm
+        dplyr::mutate(consumClipCount = .data$clipCount_exclN + .data$clipCount_exclY,
+                      consumMean_gm2yr = round(.data$agbMean_gm2_exclY - .data$agbMean_gm2_exclN,
                                                digits = 2),
-                       consumptionSD_gm2yr = round(sqrt(sum(.data$consumSD2_N, na.rm = TRUE)),
-                                                 digits = 2),
-                       .groups = "drop") %>%
+                      consumSD_gm2yr = round(sqrt((.data$agbSD_gm2_exclN^2 / .data$clipCount_exclN) +
+                                                    (.data$agbSD_gm2_exclY^2 / .data$clipCount_exclY)),
+                                             digits = 2),
+                      consumSD2_N = round(.data$consumSD_gm2yr^2 / .data$consumClipCount,
+                                          digits = 2))
 
-      #   Join with 'grazedFinalMass' and add to consumption to get ANPP for grazed plots
-      dplyr::left_join(grazedFinalMass %>%
-                         dplyr::select(-"plotType",
-                                       -"plotManagement"),
-                       by = c("domainID", "siteID", "year")) %>%
-      dplyr::rowwise() %>%
-      dplyr::mutate(grazedClipCount = sum(.data$consumClipCount, .data$finalClipCount, na.rm = TRUE),
-                    grazedProd_gm2yr = sum(.data$consumption_gm2yr, .data$finalStandingMass_gm2yr, na.rm = TRUE),
-                    grazedProdSD_gm2yr = dplyr::case_when(
-                      is.na(.data$finalStandingSD_gm2yr) & !is.na(.data$consumptionSD_gm2yr) ~
-                        round(.data$consumptionSD_gm2yr, digits = 2),
-                      !is.na(.data$finalStandingSD_gm2yr) & is.na(.data$consumptionSD_gm2yr) ~
-                        round(.data$finalStandingSD_gm2yr, digits = 2),
-                      TRUE ~ round(sqrt((.data$finalStandingSD_gm2yr^2 / .data$finalClipCount) +
-                                          (.data$consumptionSD_gm2yr^2 / .data$consumClipCount)),
-                                   digits = 2)
-                    ),
-                    .after = "plotManagement") %>%
-      dplyr::ungroup()
+
+      ##  Set aside detailed consumption data for output
+      consumptionDF <- grazedPlots %>%
+        dplyr::select(-"consumSD2_N") %>%
+        dplyr::relocate("consumClipCount":"consumSD_gm2yr",
+                        .after = "plotManagement")
+
+
+      ##  Summarize consumption data at the site level
+      grazedPlots <- grazedPlots %>%
+
+        #   Remove NAs from 'consumMean_gm2' (happens when no exclosure = "Y" records for a bout), then sum consumption across all bouts in a site-year and propagate uncertainty
+        dplyr::filter(!is.na(.data$consumMean_gm2yr)) %>%
+        dplyr::group_by(.data$domainID,
+                        .data$siteID,
+                        .data$year,
+                        .data$plotType,
+                        .data$plotManagement) %>%
+        dplyr::summarise(consumEventCount = dplyr::n(),
+                         consumClipCount = sum(.data$consumClipCount),
+                         consumption_gm2yr = round(sum(.data$consumMean_gm2yr, na.rm = TRUE),
+                                                   digits = 2),
+                         consumptionSD_gm2yr = round(sqrt(sum(.data$consumSD2_N, na.rm = TRUE)),
+                                                     digits = 2),
+                         .groups = "drop") %>%
+
+        #   Join with 'grazedFinalMass' and add to consumption to get ANPP for grazed plots
+        dplyr::left_join(grazedFinalMass %>%
+                           dplyr::select(-"plotType",
+                                         -"plotManagement"),
+                         by = c("domainID", "siteID", "year")) %>%
+        dplyr::rowwise() %>%
+        dplyr::mutate(grazedClipCount = sum(.data$consumClipCount, .data$finalClipCount, na.rm = TRUE),
+                      grazedProd_gm2yr = sum(.data$consumption_gm2yr, .data$finalStandingMass_gm2yr, na.rm = TRUE),
+                      grazedProdSD_gm2yr = dplyr::case_when(
+                        is.na(.data$finalStandingSD_gm2yr) & !is.na(.data$consumptionSD_gm2yr) ~
+                          round(.data$consumptionSD_gm2yr, digits = 2),
+                        !is.na(.data$finalStandingSD_gm2yr) & is.na(.data$consumptionSD_gm2yr) ~
+                          round(.data$finalStandingSD_gm2yr, digits = 2),
+                        TRUE ~ round(sqrt((.data$finalStandingSD_gm2yr^2 / .data$finalClipCount) +
+                                            (.data$consumptionSD_gm2yr^2 / .data$consumClipCount)),
+                                     digits = 2)
+                      ),
+                      .after = "plotManagement") %>%
+        dplyr::ungroup()
+
+    } # End !nrow(grazedPlots) conditional
 
 
 
@@ -1037,42 +1063,50 @@ estimateHerbProd = function(inputDataList,
                                                     digits = 2),
                          .groups = "drop")
 
-
-      ##  Join with grazed plot output and combine productivity and uncertainty at site-year scale
-      #--> The finalClipCount is used to weight 'totalProd_gm2yr' because this value represents the number of independent subplotIDs sampled across grazed + ungrazed plots
-      grazedSiteYearDF <- dplyr::full_join(grazedPlots,
-                                           grazelessPlots,
-                                           by = c("domainID", "siteID", "year", "plotType", "plotManagement")) %>%
-        dplyr::rowwise() %>%
-        dplyr::mutate(totalClipCount = sum(.data$grazedClipCount, .data$ungrazedClipCount, na.rm = TRUE),
-
-                      herbProd_gm2yr = dplyr::case_when(
-                        is.na(.data$ungrazedClipCount) ~ .data$grazedProd_gm2yr,
-                        TRUE ~ round((.data$finalClipCount / (.data$finalClipCount + .data$ungrazedClipCount)) *
-                                       .data$grazedProd_gm2yr +
-                                       (.data$ungrazedClipCount / (.data$finalClipCount + .data$ungrazedClipCount))
-                                     * .data$ungrazedProd_gm2yr,
-                                     digits = 2)),
-
-                      herbProdSD_gm2yr = dplyr::case_when(
-                        is.na(.data$ungrazedProdSD_gm2yr) ~ .data$grazedProdSD_gm2yr,
-                        TRUE ~ round(sqrt((.data$grazedProdSD_gm2yr^2 / .data$grazedClipCount) +
-                                            (.data$ungrazedProdSD_gm2yr^2 / .data$ungrazedClipCount)),
-                                     digits = 2)
-                      ),
-
-                      .after = "plotManagement") %>%
-          dplyr::ungroup()
-
     } else {
 
-      #   Standardize column names
-      grazedSiteYearDF <- grazedPlots %>%
-        dplyr::rename("totalClipCount" = "grazedClipCount",
-                      "herbProd_gm2yr" = "grazedProd_gm2yr",
-                      "herbProdSD_gm2yr" = "grazedProdSD_gm2yr")
+      #   Create empty data frame to enable downstream calculations when no data
+      theCols <- list(domainID = character(),
+                      siteID = character(),
+                      year = numeric(),
+                      plotType = character(),
+                      plotManagement = character(),
+                      ungrazedClipCount = numeric(),
+                      ungrazedProd_gm2yr = numeric(),
+                      ungrazedProdSD_gm2yr = numeric())
+
+      grazelessPlots <- tibble::tibble(!!!theCols)
 
     } # End nrow(grazelessPlots) conditional
+
+
+    ##  Join with grazed plot output and combine productivity and uncertainty at site-year scale
+    #--> The finalClipCount is used to weight 'totalProd_gm2yr' because this value represents the number of independent subplotIDs sampled across grazed + ungrazed plots
+    grazedSiteYearDF <- dplyr::full_join(grazedPlots,
+                                         grazelessPlots,
+                                         by = c("domainID", "siteID", "year", "plotType", "plotManagement")) %>%
+      dplyr::rowwise() %>%
+      dplyr::mutate(totalClipCount = sum(.data$grazedClipCount, .data$ungrazedClipCount, na.rm = TRUE),
+
+                    herbProd_gm2yr = dplyr::case_when(
+                      is.na(.data$ungrazedClipCount) ~ .data$grazedProd_gm2yr,
+                      is.na(.data$grazedClipCount) ~ .data$ungrazedProd_gm2yr,
+                      TRUE ~ round((.data$finalClipCount / (.data$finalClipCount + .data$ungrazedClipCount)) *
+                                     .data$grazedProd_gm2yr +
+                                     (.data$ungrazedClipCount / (.data$finalClipCount + .data$ungrazedClipCount))
+                                   * .data$ungrazedProd_gm2yr,
+                                   digits = 2)),
+
+                    herbProdSD_gm2yr = dplyr::case_when(
+                      is.na(.data$ungrazedProdSD_gm2yr) ~ .data$grazedProdSD_gm2yr,
+                      is.na(.data$grazedProdSD_gm2yr) ~ .data$ungrazedProdSD_gm2yr,
+                      TRUE ~ round(sqrt((.data$grazedProdSD_gm2yr^2 / .data$grazedClipCount) +
+                                          (.data$ungrazedProdSD_gm2yr^2 / .data$ungrazedClipCount)),
+                                   digits = 2)
+                    ),
+
+                    .after = "plotManagement") %>%
+      dplyr::ungroup()
 
     #   Add 'herbProd_Mghayr' column
     grazedSiteYearDF <- grazedSiteYearDF %>%

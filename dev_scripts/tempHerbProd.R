@@ -292,6 +292,10 @@ siteProd <- outputDF$herb_ANPP_site
 grazeExtra <- outputDF$herb_ANPP_grazed_extra
 consume <- outputDF$herb_grazed_consumption
 
+#   Problems:
+#--> CPER has two bouts (each sorted) for Distributed and Tower plots in 2014; no exclosure = "Y" in the data --> pre exclosure deployment?
+#--> Column `clipCount_exclN` not found in `.data` --> fixed exception handling to deal with unexpected grazed plot inputs
+
 
 
 
