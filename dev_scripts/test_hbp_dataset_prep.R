@@ -4,12 +4,24 @@ library(tidyverse)
 
 
 ### HBP test dataset prep ####
-#   Test sites: Site list includes Ag (BLAN), grazed (NOGP, SJER), partially grazed (CLBJ, KONZ), partially grazed with multiple bouts for ungrazed plots (CLBJ), ungrazed for some years at site with two clips (OAES), and "standard" sites with and without Distributed plot sampling. SRER is included because spring and summer bouts are summed at SRER due to non-overlapping plant communities
+#   Test dataset details:
+#--> BLAN 2018, 2019: Agricultural site with a mix of crop types in subsets of both Distributed and Tower plots
+#--> TREE 2018, 2019: A "standard" forested site some qualifying Distributed plots and Tower plots clipped 1X per year
+#--> KONZ 2018, 2019: Mix of Tower plots that are grazed and ungrazed; included to ensure fixed eventIDs work properly
+#--> NOGP 2018, 2019: Mix of Tower plots that are grazed and ungrazed
+#--> CLBJ 2018, 2019: Mix of Tower plots that are grazed and ungrazed, with multiple bouts for ungrazed
+#--> OAES 2018, 2019: Year 2018 site was ungrazed with multiple Tower plot clips, both Distributed and Tower plots sampled; 2019 a subset of Tower plots grazed and no Distributed plots.
+#--> SRER 2018, 2019: Year 2018 multiple Tower plot clips, with productivity summed across bouts; 2019 year with multiple Tower plot clips and Distributed plot single clip; also checked to ensure older exclosure = "Y" records excluded from analysis.
+#--> SJER 2018, 2019: Grazed site with subset of Tower plots not grazed, included to check parsing of months into Mediterranean growing season
+#--> TEAK 2019: Included to ensure older exclosure = "Y" records excluded from analysis.
+
 inputDataList <- neonUtilities::loadByProduct(dpID = "DP1.10023.001",
                                               site = c("BLAN", "CLBJ", "KONZ", "NOGP", "OAES", "SJER", "SRER", "TEAK", "TREE"),
                                               startdate = "2018-01",
                                               enddate = "2019-12",
                                               check.size = FALSE,
+                                              release = "LATEST",
+                                              include.provisional = TRUE,
                                               token = Sys.getenv("NEON_TOKEN"))
 
 #   Extract tables to make KONZ updates, only needed in perBout

@@ -1,23 +1,22 @@
-# estimateHerbProd function tests
-# Samuel M Simkin (2024-12-15)  ssimkin@battelleecology.org
-# Courtney Meier (2025-06-20)   cmeier@BattelleEcology.org
-
-
-#---> Add test to verify that number of rows in site-level output table equals number of sites in input dataset
+### Function tests for estimateHerbProd (updated 2026-06-01)
+#   Courtney Meier; cmeier@BattelleEcology.org
+#   Samuel M Simkin
 
 
 
 ### Read in test data ####
+#--> Test dataset details documented in 'test_hbp_dataset_prep.R' in 'dev_scripts' folder.
 HbpDat <- readRDS(testthat::test_path("testdata", "hbp_testDat.RDS"))
 
 
 
 ### Generate estimateHerbProd outputs ####
-estimateHerbProdOutputs <- estimateHerbProd(inputDataList = HbpDat)
+estimateHerbProdOutputs <- neonPlants::estimateHerbProd(inputDataList = HbpDat)
 
 
 
 ### Output type tests ####
+
 ### Test: Function generates expected output type
 testthat::test_that(desc = "Output type", {
   testthat::expect_type(object = estimateHerbProd(inputDataList = HbpDat),
@@ -26,7 +25,7 @@ testthat::test_that(desc = "Output type", {
 
 
 
-### Test: Function generates expected output class
+### Tests: Function generates expected output class for all output list objects
 #   Check 'herb_ANPP_site' output table is a data frame
 testthat::test_that(desc = "Output class 'herb_ANPP_site'", {
   testthat::expect_s3_class(object = estimateHerbProdOutputs$herb_ANPP_site,
@@ -39,16 +38,23 @@ testthat::test_that(desc = "Output class 'herb_ANPP_plot'", {
                             class = "data.frame")
 })
 
-#   Check that 'herb_ANPP_plot_herbGroup' output table is a data frame
-testthat::test_that(desc = "Output class 'herb_ANPP_plot_herbgroup'", {
-  testthat::expect_s3_class(object = estimateHerbProdOutputs$herb_ANPP_plot_herbgroup,
+#   Check that 'herb_ANPP_grazed_extra' output table is a data frame
+testthat::test_that(desc = "Output class 'herb_ANPP_grazed_extra'", {
+  testthat::expect_s3_class(object = estimateHerbProdOutputs$herb_ANPP_grazed_extra,
+                            class = "data.frame")
+})
+
+#   Check that 'herb_grazed_consumption' output table is a data frame
+testthat::test_that(desc = "Output class 'herb_ANPP_grazed_consumption'", {
+  testthat::expect_s3_class(object = estimateHerbProdOutputs$herb_grazed_consumption,
                             class = "data.frame")
 })
 
 
 
 ### Output dimension tests ####
-### Test: Function generates data frame with expected dimensions using test data and function defaults (plotSubset = "tower")
+
+### Test: Function generates data frame with expected dimensions using test data and function defaults (plotSubset = "all")
 #   Check expected column number of 'herb_ANPP_site' data frame
 testthat::test_that(desc = "Output 'herb_ANPP_site' column number", {
   testthat::expect_identical(object = ncol(estimateHerbProdOutputs$herb_ANPP_site),
@@ -109,6 +115,8 @@ testthat::test_that(desc = "Output 'herb_ANPP_plot_herbgroup' table value as exp
                          expected = 70.03)
 })
 
+
+#---> Add test to verify that number of rows in site-level output table equals number of sites in input dataset
 
 
 ### Expected error tests: Generate expected errors for input arguments ####

@@ -449,18 +449,6 @@ temp <- hbpAllBout %>%
 
 
 
-### Example: Retain all rows in a group when a row within the group matches a filter criterion;
-### useful to identify plots that are grazed but that intermittently have exclosures (due to
-### damage) or to identify plots planted with crops for part of the year.
-result <- df %>%
-  group_by(group) %>%
-  filter(any(value > 4))
-
-
-
-
-
-
 ### Function testing: Odd DCFS and KONZ output
 hbpTest <- neonUtilities::loadByProduct(dpID = "DP1.10023.001",
                                         site = c("DCFS", "KONZ", "SJER"),
