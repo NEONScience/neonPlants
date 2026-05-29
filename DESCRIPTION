@@ -45,8 +45,10 @@ Imports:
     lubridate,
     magrittr,
     methods,
+    purrr,
     rlang,
     stringr,
+    tibble,
     tidyr
 LazyData: true
 Config/roxygen2/version: 8.0.0

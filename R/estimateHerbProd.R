@@ -166,7 +166,7 @@ estimateHerbProd = function(inputDataList,
       dplyr::summarise(events = paste(unique(.data$eventID), collapse = ", "),
                        count = length(unique(.data$eventID)),
                        .groups = "drop") %>%
-      dplyr::filter(count == 1)
+      dplyr::filter(.data$count == 1)
 
 
     if (nrow(temp)) {
@@ -187,7 +187,7 @@ estimateHerbProd = function(inputDataList,
                       .data$plotSize,
                       .data$plotManagement) %>%
       dplyr::summarise(collectDate = as.Date(ifelse(all(is.na(.data$collectDate)), NA, min(.data$collectDate))),
-                       clipCount = n(),
+                       clipCount = dplyr::n(),
                        totalProd_gm2yr = round(mean(.data$totalProd_gm2yr, na.rm = TRUE),
                                              digits = 2),
                        CoolSeasonGram_gm2yr = round(mean(.data$CoolSeasonGram_gm2yr, na.rm = TRUE),
@@ -262,14 +262,14 @@ estimateHerbProd = function(inputDataList,
                         .data$siteYear,
                         .data$herbGroup,
                         .data$eventID) %>%
-        dplyr::summarise(count = n(),
+        dplyr::summarise(count = dplyr::n(),
                          herbMass = round(mean(.data$agb_gm2, na.rm = TRUE),
                                           digits = 2),
                          .groups = "drop") %>%
         dplyr::group_by(.data$domainID,
                         .data$siteYear,
                         .data$herbGroup) %>%
-        dplyr::filter(herbMass == max(.data$herbMass)) %>%
+        dplyr::filter(.data$herbMass == max(.data$herbMass)) %>%
         dplyr::slice_max(order_by = .data$count,
                          n = 1) %>%
         dplyr::slice_tail() %>%
@@ -305,7 +305,7 @@ estimateHerbProd = function(inputDataList,
                         .data$plotType,
                         .data$plotSize,
                         .data$plotManagement) %>%
-        dplyr::summarise(clipCount = n(),
+        dplyr::summarise(clipCount = dplyr::n(),
                          totalProd_gm2yr = round(mean(.data$totalProd_gm2yr, na.rm = TRUE),
                                                  digits = 2),
                          CoolSeasonGram_gm2yr = round(mean(.data$CoolSeasonGram_gm2yr, na.rm = TRUE),
@@ -355,7 +355,7 @@ estimateHerbProd = function(inputDataList,
                     "plotManagement",
                     "collectDate",
                     c("totalProd_gm2yr":"WoodyPlants_gm2yr")) %>%
-      dplyr::mutate(clipCount = n(),
+      dplyr::mutate(clipCount = dplyr::n(),
                     .after = "collectDate")
 
 
@@ -411,7 +411,7 @@ estimateHerbProd = function(inputDataList,
                         .data$plotType,
                         .data$plotSize,
                         .data$plotManagement) %>%
-        dplyr::summarise(clipCount = n(),
+        dplyr::summarise(clipCount = dplyr::n(),
                          totalProd_gm2yr = round(mean(.data$totalProd_gm2yr, na.rm = TRUE),
                                                  digits = 2),
                          CoolSeasonGram_gm2yr = round(mean(.data$CoolSeasonGram_gm2yr, na.rm = TRUE),
@@ -541,7 +541,7 @@ estimateHerbProd = function(inputDataList,
                         .data$plotType,
                         .data$plotSize,
                         .data$plotManagement) %>%
-        dplyr::summarise(clipCount = n(),
+        dplyr::summarise(clipCount = dplyr::n(),
                          agb_gm2 = sum(.data$agb_gm2, na.rm = TRUE),
                          .groups = "drop") %>%
 
@@ -619,7 +619,7 @@ estimateHerbProd = function(inputDataList,
                         .data$plotType,
                         .data$herbGroup,
                         .data$eventID) %>%
-        dplyr::summarise(count = n(),
+        dplyr::summarise(count = dplyr::n(),
                          herbMass = round(mean(.data$agb_gm2, na.rm = TRUE),
                                           digits = 2),
                          .groups = "drop") %>%
@@ -627,7 +627,7 @@ estimateHerbProd = function(inputDataList,
                         .data$siteYear,
                         .data$plotType,
                         .data$herbGroup) %>%
-        dplyr::filter(herbMass == max(.data$herbMass)) %>%
+        dplyr::filter(.data$herbMass == max(.data$herbMass)) %>%
         dplyr::slice_max(order_by = .data$count,
                          n = 1) %>%
         dplyr::slice_tail() %>%
@@ -653,7 +653,7 @@ estimateHerbProd = function(inputDataList,
                         .data$plotType,
                         .data$plotSize,
                         .data$plotManagement) %>%
-        dplyr::summarise(clipCount = n(),
+        dplyr::summarise(clipCount = dplyr::n(),
                          agb_gm2 = round(mean(.data$agb_gm2, na.rm = TRUE),
                                          digits = 2),
                          .groups = "drop") %>%
@@ -1027,13 +1027,13 @@ estimateHerbProd = function(inputDataList,
         dplyr::group_by(.data$domainID,
                         .data$siteYear,
                         .data$eventID) %>%
-        dplyr::summarise(count = n(),
+        dplyr::summarise(count = dplyr::n(),
                          herbMass = round(mean(.data$totalProd_gm2yr, na.rm = TRUE),
                                           digits = 2),
                          .groups = "drop") %>%
         dplyr::group_by(.data$domainID,
                         .data$siteYear) %>%
-        dplyr::filter(herbMass == max(.data$herbMass)) %>%
+        dplyr::filter(.data$herbMass == max(.data$herbMass)) %>%
         dplyr::slice_max(order_by = .data$count,
                          n = 1) %>%
         dplyr::slice_tail() %>%
@@ -1056,7 +1056,7 @@ estimateHerbProd = function(inputDataList,
                         .data$year,
                         .data$plotType,
                         .data$plotManagement) %>%
-        dplyr::summarise(ungrazedClipCount = n(),
+        dplyr::summarise(ungrazedClipCount = dplyr::n(),
                          ungrazedProd_gm2yr = round(mean(.data$totalProd_gm2yr, na.rm = TRUE),
                                                     digits = 2),
                          ungrazedProdSD_gm2yr = round(stats::sd(.data$totalProd_gm2yr, na.rm = TRUE),
@@ -1138,7 +1138,7 @@ estimateHerbProd = function(inputDataList,
                       .data$year) %>%
       dplyr::summarise(plotType = paste(sort(unique(.data$plotType)), collapse = ", "),
                        plotManagement = paste(sort(unique(.data$plotManagement)), collapse = ", "),
-                       plotCount = n(),
+                       plotCount = dplyr::n(),
                        clipCount = sum(.data$clipCount),
                        siteProd_gm2yr = round(mean(.data$herbProd_gm2yr, na.rm = TRUE),
                                               digits = 2),
@@ -1177,7 +1177,7 @@ estimateHerbProd = function(inputDataList,
                       .data$year) %>%
       dplyr::summarise(plotType = paste(sort(unique(.data$plotType)), collapse = ", "),
                        plotManagement = {
-                         vals <- plotManagement %>%
+                         vals <- .data$plotManagement %>%
                            stringr::str_split(",") %>%            # split each string into vector
                            purrr::flatten_chr() %>%               # flatten to one vector
                            stringr::str_trim() %>%                # trim whitespace
@@ -1197,7 +1197,7 @@ estimateHerbProd = function(inputDataList,
                                                        "totalClipCount":"herbProdSD_gm2yr",
                                                        "finalClipCount",
                                                        "ungrazedClipCount") %>%
-                                         dplyr::rename_with(~ sub("^herb", "grazed", .x), starts_with("herb")) %>%
+                                         dplyr::rename_with(~ sub("^herb", "grazed", .x), dplyr::starts_with("herb")) %>%
                                          dplyr::rename("totGrazeClipCount" = "totalClipCount"),
                                        by = c("domainID", "siteID", "year")) %>%
       dplyr::relocate("totGrazeClipCount",

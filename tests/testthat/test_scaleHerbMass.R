@@ -22,7 +22,7 @@ scaleHerbMassOutputs <- neonPlants::scaleHerbMass(inputDataList = HbpDat)
 
 ### Test: Function generates expected output type
 testthat::test_that(desc = "Output type", {
-  testthat::expect_type(object = neonPlants::scaleHerbMass(inputDataList = HbpDat),
+  testthat::expect_type(object = scaleHerbMassOutputs,
                         type = "list")
 })
 
@@ -201,62 +201,42 @@ testthat::test_that(desc = "Table 'hbp_massdata' missing data", {
 
 ### Output value tests ####
 
-### Test: Generate error if output 'hbp_agb' value not as expected
+##  Test: Generate error if output 'hbp_agb' value not as expected
 testthat::test_that(desc = "Output 'hbp_agb' value as expected", {
-
-  test <- neonPlants::scaleHerbMass(inputDataList = HbpDat)
-
-  testthat::expect_equal(object = test$hbp_agb$TotalMass_gm2[12],
+  testthat::expect_equal(object = scaleHerbMassOutputs$hbp_agb$TotalMass_gm2[12],
                          expected = 257.7)
 })
 
 
-
-### Test: Generate error if output hbp_plot value not as expected
+##  Test: Generate error if output hbp_plot value not as expected
 testthat::test_that(desc = "Output 'hbp_plot' value as expected", {
-
-  test <- neonPlants::scaleHerbMass(inputDataList = HbpDat)
-
-  testthat::expect_equal(object = test$hbp_plot$herbTotalMass_Mgha[7],
+  testthat::expect_equal(object = scaleHerbMassOutputs$hbp_plot$herbTotalMass_Mgha[7],
                          expected = 0.26)
 })
 
 
-
-### Test: Generate error if output hbp_plot value not as expected
+##  Test: Generate error if output hbp_plot value not as expected
 testthat::test_that(desc = "Output 'hbp_plot_crop' value as expected", {
-
-  test <- neonPlants::scaleHerbMass(inputDataList = HbpDat)
-
-  testthat::expect_equal(object = test$hbp_plot_crop$herbTotalMass_Mgha[21],
+  testthat::expect_equal(object = scaleHerbMassOutputs$hbp_plot_crop$herbTotalMass_Mgha[21],
                          expected = 0)
 })
 
 
-
-### Test: Generate error if output hbp_plot_extra value not as expected
+##  Test: Generate error if output hbp_plot_extra value not as expected
 testthat::test_that(desc = "Output 'hbp_plot_extra' value as expected", {
-
-  test <- neonPlants::scaleHerbMass(inputDataList = HbpDat)
-
-  testthat::expect_equal(object = test$hbp_plot_extra$herbTotalMass_Mgha[29],
+  testthat::expect_equal(object = scaleHerbMassOutputs$hbp_plot_extra$herbTotalMass_Mgha[29],
                          expected = 1.04)
 })
 
 
-
-### Test: Generate error if output hbp_site value not as expected
+##  Test: Generate error if output hbp_site value not as expected
 testthat::test_that(desc = "Output 'hbp_site' value as expected", {
-
-  test <- neonPlants::scaleHerbMass(inputDataList = HbpDat)
-
-  testthat::expect_equal(object = test$hbp_site$herbTotalMean_Mgha[1],
+  testthat::expect_equal(object = scaleHerbMassOutputs$hbp_site$herbTotalMean_Mgha[1],
                          expected = 0.25)
 })
 
 
-
-### Test: Verify sites in input data exist in 'hbp_agb' output
+##  Test: Verify sites in input data exist in 'hbp_agb' output
 testthat::test_that(desc = "Output 'hbp_agb' sites as expected", {
 
   inputSites <- sort(unique(HbpDat$hbp_perbout$siteID))
@@ -268,8 +248,7 @@ testthat::test_that(desc = "Output 'hbp_agb' sites as expected", {
 })
 
 
-
-### Test: Verify sites in input data exist across plot-level outputs
+##  Test: Verify sites in input data exist across plot-level outputs
 testthat::test_that(desc = "Output sites in plot-level tables as expected", {
 
   inputSites <- sort(unique(HbpDat$hbp_perbout$siteID))
@@ -284,8 +263,7 @@ testthat::test_that(desc = "Output sites in plot-level tables as expected", {
 })
 
 
-
-### Test: Verify number of site-years in input data is equivalent to row number of 'hbp_site' output
+##  Test: Verify number of site-years in input data is equivalent to row number of 'hbp_site' output
 testthat::test_that(desc = "Rows in 'hbp_site' equal to number of site-years in input data", {
 
   #   Identify number of site-years in hbp_perbout input table; remove BLAN since Ag sites not included in 'hbp_site' peak biomass output
@@ -302,7 +280,6 @@ testthat::test_that(desc = "Rows in 'hbp_site' equal to number of site-years in 
                                           TRUE ~ .data$year)) %>%
 
     dplyr::mutate(siteYear = paste(.data$siteID, .data$year, sep = "-")) %>%
-    dplyr::arrange(.data$siteYear) %>%
     dplyr::distinct(.data$siteYear)
 
   #   Check identical objects

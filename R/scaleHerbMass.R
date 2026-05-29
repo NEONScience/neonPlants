@@ -407,7 +407,7 @@ scaleHerbMass = function(inputDataList,
     clipDF <- clipDF %>%
       dplyr::mutate(TotalMass_gm2 = dplyr::case_when(
         is.na(.data$TotalMass_gm2) & dplyr::if_all(dplyr::all_of(cols), is.na) ~ NA_real_,
-        is.na(.data$TotalMass_gm2) ~ rowSums(dplyr::across("NA_gm2":utils::tail(names(clipDF), 1)), na.rm = TRUE),
+        is.na(.data$TotalMass_gm2) ~ rowSums(dplyr::across(dplyr::all_of(cols)), na.rm = TRUE),
         TRUE ~ .data$TotalMass_gm2
       )) %>%
       dplyr::select(-"NA_gm2") %>%
@@ -522,7 +522,7 @@ scaleHerbMass = function(inputDataList,
     dplyr::filter(!is.na(.data$TotalMass_gm2)) %>%
     dplyr::summarise(MeanBiomass_gm2 = round(mean(.data$TotalMass_gm2, na.rm = TRUE),
                                              digits = 2),
-                     count = n(),
+                     count = dplyr::n(),
                      .groups = "drop")
 
   #   Conditionally identify eventID with max mean biomass
@@ -532,7 +532,7 @@ scaleHerbMass = function(inputDataList,
       dplyr::group_by(.data$domainID,
                       .data$siteID,
                       .data$year) %>%
-      dplyr::filter(MeanBiomass_gm2 == max(.data$MeanBiomass_gm2, na.rm = TRUE)) %>%
+      dplyr::filter(.data$MeanBiomass_gm2 == max(.data$MeanBiomass_gm2, na.rm = TRUE)) %>%
       dplyr::slice_tail()
 
     #   Reduce Tower plot data to plots from peak biomass eventID; calculate mean biomass for 40m x 40m Tower plots
@@ -637,14 +637,14 @@ scaleHerbMass = function(inputDataList,
                       .data$year,
                       .data$eventID) %>%
       dplyr::summarise(MeanBiomass_gm2 = mean(.data$TotalMass_gm2, na.rm = TRUE),
-                       count = n(),
+                       count = dplyr::n(),
                        .groups = "drop")
 
     temp <- temp %>%
       dplyr::group_by(.data$domainID,
                       .data$siteID,
                       .data$year) %>%
-      dplyr::filter(MeanBiomass_gm2 == max(.data$MeanBiomass_gm2, na.rm = TRUE)) %>%
+      dplyr::filter(.data$MeanBiomass_gm2 == max(.data$MeanBiomass_gm2, na.rm = TRUE)) %>%
       dplyr::slice_tail()
 
     #   Find all Tower plots associated with peak biomass eventID, grazed or ungrazed
@@ -743,14 +743,14 @@ scaleHerbMass = function(inputDataList,
                     .data$eventID) %>%
     dplyr::summarise(MeanBiomass_gm2 = round(mean(.data$TotalMass_gm2, na.rm = TRUE),
                                              digits = 2),
-                     count = n(),
+                     count = dplyr::n(),
                      .groups = "drop")
 
     temp <- temp %>%
       dplyr::group_by(.data$domainID,
                       .data$siteID,
                       .data$year) %>%
-      dplyr::filter(MeanBiomass_gm2 == max(.data$MeanBiomass_gm2, na.rm = TRUE)) %>%
+      dplyr::filter(.data$MeanBiomass_gm2 == max(.data$MeanBiomass_gm2, na.rm = TRUE)) %>%
       dplyr::slice_tail()
 
     #   Isolate records for peak biomass "wild" type plots that were not sampled in the peak grazed biomass bout
@@ -830,7 +830,7 @@ scaleHerbMass = function(inputDataList,
                       .data$siteID,
                       .data$year,
                       .data$plotID) %>%
-      dplyr::filter(TotalMass_gm2 == max(.data$TotalMass_gm2, na.rm = TRUE)) %>%
+      dplyr::filter(.data$TotalMass_gm2 == max(.data$TotalMass_gm2, na.rm = TRUE)) %>%
       dplyr::slice_tail() %>%
       dplyr::ungroup() %>%
       dplyr::relocate("eventID",
