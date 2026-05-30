@@ -964,7 +964,9 @@ estimateHerbProd = function(inputDataList,
       consumptionDF <- grazedPlots %>%
         dplyr::select(-"consumSD2_N") %>%
         dplyr::relocate("consumClipCount":"consumSD_gm2yr",
-                        .after = "plotManagement")
+                        .after = "plotManagement") %>%
+        dplyr::rename("consumMean_gm2" = "consumMean_gm2yr",
+                      "consumSD_gm2" = "consumSD_gm2yr")
 
 
       ##  Summarize consumption data at the site level
@@ -1205,7 +1207,7 @@ estimateHerbProd = function(inputDataList,
       dplyr::rowwise() %>%
       dplyr::mutate(
         #   Calculate total clip count
-        totClipCount = sum(.data$clipCount, .data$totGrazeClipCount, na.rm = TRUE),
+        totalClipCount = sum(.data$clipCount, .data$totGrazeClipCount, na.rm = TRUE),
 
         #   Determine site-level productivity
         totProd_gm2yr = dplyr::case_when(
