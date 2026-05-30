@@ -13,6 +13,7 @@ Library of R functions to work with NEON plant data.
 
 Authors:
 \itemize{
+  \item Eric Sokol \email{esokol@BattelleEcology.org} (\href{https://orcid.org/0000-0001-5923-0917}{ORCID}) [copyright holder]
   \item Dave Barnett \email{dbarnett@BattelleEcology.org} (\href{https://orcid.org/0000-0002-0485-3567}{ORCID})
   \item Sam Simkin \email{ssimkin@BattelleEcology.org} (\href{https://orcid.org/0000-0003-2418-4265}{ORCID})
   \item Courtney Meier \email{cmeier@BattelleEcology.org} (\href{https://orcid.org/0000-0003-3576-883X}{ORCID})

@@ -2,7 +2,7 @@
 % Please edit documentation in R/standardizeRootMass.R
 \name{standardizeRootMass}
 \alias{standardizeRootMass}
-\title{Standardize root dry mass data to current size and root status categories}
+\title{Standardize NEON root dry mass data to current size and root status categories}
 \usage{
 standardizeRootMass(inputDataList, inputMass = NA)
 }
