@@ -152,7 +152,7 @@ testthat::test_that(desc = "Output 'herb_ANPP_grazed_extra' table value as expec
 
 ##  Check output 'herb_grazed_consumption' value is as expected
 testthat::test_that(desc = "Output 'herb_grazed_consumption' table value as expected", {
-  testthat::expect_equal(object = estimateHerbProdOutputs$herb_grazed_consumption$consumMean_gm2yr[10],
+  testthat::expect_equal(object = estimateHerbProdOutputs$herb_grazed_consumption$consumMean_gm2[10],
                          expected = 32.75)
 })
 
