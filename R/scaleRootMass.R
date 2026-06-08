@@ -1,4 +1,4 @@
-#' @title Scale root biomass by size category to mass per area and mass per volume
+#' @title Scale NEON root biomass by size category to mass per area and mass per volume
 
 #' @author Courtney Meier \email{cmeier@battelleecology.org} \cr
 

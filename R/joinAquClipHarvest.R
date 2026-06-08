@@ -1,0 +1,602 @@
+#' @title Join taxonomic identifications in NEON aquatic plant clip harvest data to field and biomass tables
+
+#' @author Madaline Ritter \email{ritterm1@battelleecology.org} \cr
+
+#' @description Join the 'apl_clipHarvest', 'apl_biomass', 'apl_taxonomyProcessed' and 'apc_morphospecies' tables to generate two joined output tables that contain clip harvest data with merged taxonomic identifications. Data inputs are NEON Aquatic Plant Bryophyte Macroalgae Clip Harvest (DP1.20066.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input data tables with an equivalent structure and representing the same site x month combinations. 
+#'
+#' @details Input data may be provided either as a list or as individual tables. However, if both list and table inputs are provided at the same time the function will error out. For table joining to be successful, inputs must contain data from the same site x month combination(s) for all tables.
+#' 
+#' Only data from bout 2 (midsummer sampling) is returned in the joined output tables, as other bouts do not include taxonomy data. If the input does not include any bout 2 data, the function will error out.
+#' 
+#' In the joined output tables, the 'acceptedTaxonID' and associated taxonomic fields are populated from the first available identification in the following order: 'apl_taxonomyProcessed', 'apl_biomass', or 'apc_morphospecies'. For samples identified both in the field and by an expert taxonomist, the expert identification is retained in the output. A new field, 'taxonIDSourceTable', is included in the output and indicates the source table for each sample's identification.
+#' 
+#' @param inputDataList A list object comprised of Aquatic Plant Bryophyte Macroalgae Clip Harvest tables (DP1.20066.001) downloaded using the neonUtilities::loadByProduct() function. If list input is provided, the table input arguments must all be NA; similarly, if list input is missing, table inputs must be provided. [list]
+#'
+#' @param inputBio The 'apl_biomass' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
+#' 
+#' @param inputClip The 'apl_clipHarvest' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
+#' 
+#' @param inputTaxonomy The 'apl_taxonomyProcessed' or 'apl_taxonomyRaw' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
+#' 
+#' @param inputMorph The 'apc_morphospecies' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
+#'  
+#' @return Two tables are produced containing joined clip harvest data. The first "apl_joinBiomass" table contains one row per sampleID in 'apl_biomass'. A single sampleID in 'apl_biomass' may correspond to more than one taxa in 'apl_taxonomyProcessed'. When tables are joined, the taxon with the greatest 'algalParameterValue' in 'apl_taxonomyProcessed' will be listed as the 'acceptedTaxonID' and a new field, 'additionalTaxa', appears in the output and includes all other taxa associated with the sampleID. If more than one taxon shares the same max 'algalParameterValue', the first row in the input table is returned as the 'acceptedTaxonID'. Detailed taxonomic information for any additionalTaxa can be found in the input 'apl_taxonomyProcessed' table. 
+#' 
+#' The second "apl_fieldTaxonomy" table joins taxonomic identifications across tables to 'apl_clipHarvest' by fieldID. Joining may result in one or many unique rows per sampleID.
+#' 
+#' @references
+#' License: GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007
+#' 
+#' @examples
+#' \dontrun{
+#' #   Obtain NEON Aquatic Plant Clip Harvest data
+#' apl <- neonUtilities::loadByProduct(
+#' dpID = "DP1.20066.001",
+#' site = "all",
+#' startdate = "2018-07",
+#' enddate = "2018-08",
+#' tabl = "all",
+#' check.size = FALSE
+#' )
+#' 
+#' #   Join downloaded clip harvest data
+#' list <- neonPlants::joinAquClipHarvest(
+#' inputDataList = apl,
+#' inputBio = NA,
+#' inputClip = NA,
+#' inputTaxonomy = NA,
+#' inputMorph = NA
+#' )
+#'
+#' }
+#' 
+#' @export joinAquClipHarvest
+
+
+
+joinAquClipHarvest <- function(inputDataList,
+                               inputBio = NA,
+                               inputClip = NA,
+                               inputTaxonomy = NA,
+                               inputMorph = NA) {
+  
+  ### Test that user has supplied arguments as required by function ####
+  
+  ### Verify user-supplied inputDataList object contains correct data if not NA
+  if (!missing(inputDataList)) {
+    
+    #   Check that input is a list
+    if (!inherits(inputDataList, "list")) {
+      stop(
+        glue::glue(
+          "Argument 'inputDataList' must be a list object from neonUtilities::loadByProduct();
+                     supplied input object is {class(inputDataList)}"
+        )
+      )
+    }
+    
+    #   Check that required tables within list match expected names
+    listExpNames <- c("apl_biomass", "apl_clipHarvest")
+    
+    #   Determine dataType or stop with appropriate message
+    if (length(setdiff(listExpNames, names(inputDataList))) > 0) {
+      stop(
+        glue::glue(
+          "Required tables missing from 'inputDataList':",
+          '{paste(setdiff(listExpNames, names(inputDataList)), collapse = ", ")}',
+          .sep = " "
+        )
+      )
+    }
+  } else {
+    
+    inputDataList <- NULL
+    
+  } # end missing conditional
+  
+  
+  ### Verify table inputs are NA if inputDataList is supplied
+  if (!is.null(inputDataList)) {
+    if (!isTRUE(is.na(inputBio)) || !isTRUE(is.na(inputClip)) ||
+        !isTRUE(is.na(inputTaxonomy)) || !isTRUE(is.na(inputMorph))) {
+      stop("When 'inputDataList' is supplied, all table input arguments must be NA.")
+    }
+  }
+  
+  
+  ### Verify all table inputs are data frames if inputDataList is NA
+  if (is.null(inputDataList) &
+      (
+        !is.data.frame(inputBio) || !is.data.frame(inputClip)
+      )) {
+    stop("Data frames must be supplied for table inputs if 'inputDataList' is missing")
+    
+  }
+  
+  
+  ### Conditionally define input tables ####
+  if (inherits(inputDataList, "list")) {
+    apBio <- inputDataList$apl_biomass
+    apClip <- inputDataList$apl_clipHarvest
+    if (!is.null(inputDataList$apl_taxonomyProcessed)) {
+      apTax <- inputDataList$apl_taxonomyProcessed
+      apTax$Table <- "apl_taxonomyProcessed"
+    } else if (!is.null(inputDataList$apl_taxonomyRaw)) {
+      apTax <- inputDataList$apl_taxonomyRaw
+      apTax$Table <- "apl_taxonomyRaw"
+    } else {
+      apTax <- NA
+    }
+    if (!is.null(inputDataList$apc_morphospecies)) {
+      apMorph <- inputDataList$apc_morphospecies
+    } else {
+      apMorph <- NA
+    }
+    
+  } else {
+    apBio <- inputBio
+    apClip <- inputClip
+    apTax <- inputTaxonomy
+    if (is.data.frame(apTax)) {
+      apTax$Table <- "apl_taxonomy"
+    }
+    apMorph <- inputMorph
+  }
+  
+  
+  
+  ### Verify input tables contain required columns and data ####
+  
+  ### Verify 'apBio' table contains required data
+  #   Check for required columns
+  bioExpCols <- c(
+    "sampleID", "taxonID", "scientificName", "morphospeciesID", "identifiedDate",
+    "sampleCondition", "identificationHistoryID", "dataQF", "publicationDate",
+    "release", "division", "class", "order", "family", "genus",  "section",
+    "specificEpithet", "scientificNameAuthorship", "identificationQualifier",
+    "identificationReferences", "remarks", "identifiedBy", "uid"
+  )
+  
+  
+  if (length(setdiff(bioExpCols, colnames(apBio))) > 0) {
+    stop(
+      glue::glue(
+        "Required columns missing from 'inputBio':",
+        '{paste(setdiff(bioExpCols, colnames(apBio)), collapse = ", ")}',
+        .sep = " "
+      )
+    )
+  }
+  
+  #   Check for data
+  if (nrow(apBio) == 0) {
+    stop(glue::glue("Table 'inputBio' has no data."))
+  }
+  
+  
+  
+  ### Verify 'apClip' table contains required data
+  #   Check for required columns
+  clipExpCols <- c(
+    "namedLocation", "eventID", "boutNumber", "fieldID", "benthicArea", "domainID",
+    "siteID", "startDate", "collectDate", "fieldIDCode", "recordedBy", "remarks"
+  )
+  
+  if (length(setdiff(clipExpCols, colnames(apClip))) > 0) {
+    stop(
+      glue::glue(
+        "Required columns missing from 'inputClip':",
+        '{paste(setdiff(clipExpCols, colnames(apClip)), collapse = ", ")}',
+        .sep = " "
+      )
+    )
+  }
+  
+  #   Check for data
+  if (nrow(apClip) == 0) {
+    stop(glue::glue("Table 'inputClip' has no data."))
+  }
+  
+  #   Check for bout 2 data
+  if (nrow(apClip %>% dplyr::filter(.data$boutNumber == '2')) == 0) {
+    stop(
+      glue::glue(
+        "The input data does not contain any bout 2 records. No taxonomy data to join."
+      )
+    )
+  }
+  
+  
+  ### Verify 'apTax' table contains required data if data exists
+  taxExpCols <- c(
+    "sampleID", "taxonID", "identifiedDate", "sampleCondition", 
+    "identificationHistoryID", "dataQF", "publicationDate", "release", 
+    "division", "class", "order", "family", "genus", "section", "specificEpithet",
+    "scientificNameAuthorship", "identificationQualifier", 
+    "identificationReferences", "remarks", "identifiedBy", "morphospeciesID", 
+    "uid", "domainID", "siteID", "namedLocation", "collectDate", "sampleCode", "Table"
+  )
+  
+  #   Check for data
+  if (is.data.frame(apTax)) {
+    if(nrow(apTax) == 0) {
+      message(
+        glue::glue(
+          "Warning: Table 'inputTaxonomy' has no data. Join will not include processed taxonomy data."
+        )
+      )
+    } else {
+      #   Check for required columns if data exists
+      if (length(setdiff(taxExpCols, colnames(apTax))) > 0) {
+        stop(
+          glue::glue(
+            "Required columns missing from 'inputTaxonomy':",
+            '{paste(setdiff(taxExpCols, colnames(apTax)), collapse = ", ")}',
+            .sep = " "
+          )
+        )
+      }
+    }
+  }
+  
+  
+  ### Verify 'apMorph' table contains required data if data exists
+  morphExpCols <- c(
+    "morphospeciesID", "taxonID", "scientificName", "identificationQualifier",
+    "identificationReferences", "identifiedBy", "dataQF"
+  )
+  
+  
+  #   Check for data
+  if (is.data.frame(apMorph)){
+    if(nrow(apMorph) == 0) {
+      message(
+        "Warning: Table 'inputMorph' has no data. Joined output does not include identifications from the morphospecies table."
+      )
+    } else {
+      #   Check for required columns if data exists
+      if (length(setdiff(morphExpCols, colnames(apMorph))) > 0) {
+        stop(
+          glue::glue(
+            "Required columns missing from 'inputMorph':",
+            '{paste(setdiff(morphExpCols, colnames(apMorph)), collapse = ", ")}',
+            .sep = " "
+          )
+        )
+      }
+    }
+  }
+  
+  
+  
+  ### Join apBio and apTax tables using sampleID ####
+  
+  if (is.data.frame(apTax) && nrow(apTax) > 0) {
+    
+    #   Select needed columns from apTax
+    apTax <- apTax %>%
+      dplyr::select(
+        -"uid",
+        -"domainID",
+        -"siteID",
+        -"namedLocation",
+        -"collectDate",
+        -"morphospeciesID",
+        -"sampleCode"
+      ) #%>% 
+      # dplyr::mutate(identifiedDate = as.character(identifiedDate)) #biomass identifiedDate is character, not date
+    
+    #   Columns conditionally replaced with expert taxonomist data
+    join1_cols <- c(
+      "division", "class", "order", "family",
+      "genus", "section", "specificEpithet",
+      "scientificNameAuthorship", "identificationQualifier", "identificationReferences",
+      "taxonRank", "identifiedBy", "identifiedDate"
+    )
+    
+    #   Update expert taxonomist identifications
+    apJoin1 <- apBio %>%
+      dplyr::left_join(
+        apTax,
+        by = "sampleID",
+        suffix = c("_bio", "_expertTax"),
+        relationship = "many-to-many"
+      ) %>%
+      dplyr::mutate(
+        
+        sampleCondition = dplyr::case_when(
+          !is.na(.data$sampleCondition_bio) & !is.na(.data$sampleCondition_expertTax) ~ 
+            paste0("biomass ", .data$sampleCondition_bio," | expertTax ", .data$sampleCondition_expertTax),
+          !is.na(.data$sampleCondition_bio) & is.na(.data$sampleCondition_expertTax) ~ 
+            paste0("biomass ", .data$sampleCondition_bio),
+          is.na(.data$sampleCondition_bio) & !is.na(.data$sampleCondition_expertTax) ~ 
+            paste0("expertTax ", .data$sampleCondition_expertTax),
+          TRUE ~ NA
+        ),
+        
+        taxonIDSourceTable = dplyr::case_when(
+          !is.na(.data$taxonID_expertTax) ~ unique(apTax$Table),
+          is.na(.data$taxonID_expertTax) & !is.na(.data$taxonID_bio) ~ "apl_biomass",
+          TRUE ~ NA
+        ),
+        
+        tempTaxonID = dplyr::if_else(
+          !is.na(.data$taxonID_expertTax), .data$taxonID_expertTax, .data$taxonID_bio
+        ),
+        
+        scientificName = dplyr::if_else(
+          !is.na(.data$taxonID_expertTax),
+          .data$scientificName_expertTax,
+          .data$scientificName_bio
+        ),
+        
+        identificationHistoryID = dplyr::case_when(
+          !is.na(.data$identificationHistoryID_bio) & !is.na(.data$identificationHistoryID_expertTax) ~
+            paste0(.data$identificationHistoryID_bio," | ",.data$identificationHistoryID_expertTax),
+          is.na(.data$identificationHistoryID_expertTax) & !is.na(.data$identificationHistoryID_bio) ~
+            .data$identificationHistoryID_bio,
+          !is.na(.data$identificationHistoryID_expertTax) & is.na(.data$identificationHistoryID_bio) ~
+            .data$identificationHistoryID_expertTax,
+          TRUE ~ NA
+        ),
+        
+        biomassDataQF = .data$dataQF_bio,
+        expertTaxDataQF = .data$dataQF_expertTax,
+        biomassPublicationDate = .data$publicationDate_bio,
+        expertTaxPublicationDate = .data$publicationDate_expertTax,
+        biomassRelease = .data$release_bio,
+        expertTaxRelease = .data$release_expertTax,
+        
+        remarks = dplyr::case_when(
+          !is.na(.data$remarks_bio) & !is.na(.data$remarks_expertTax) ~ 
+            paste0( "biomass remarks - ", .data$remarks_bio, " | expertTax remarks - ",  .data$remarks_expertTax),
+          is.na(.data$remarks_expertTax) & !is.na(.data$remarks_bio) ~ 
+            paste0("biomass remarks - ", .data$remarks_bio),
+          !is.na(.data$remarks_expertTax) & is.na(.data$remarks_bio) ~ 
+            paste0("expertTax remarks - ", .data$remarks_expertTax),
+          TRUE ~ NA
+        )
+      )
+    
+    for (col in join1_cols) {
+      expertTax_col <- paste0(col, "_expertTax")
+      bio_col <- paste0(col, "_bio")
+      apJoin1[[col]] <- dplyr::if_else(
+        !is.na(apJoin1$taxonID_expertTax),
+        if (expertTax_col %in% names(apJoin1)) as.character(apJoin1[[expertTax_col]]) else NA_character_,
+        if (bio_col %in% names(apJoin1)) as.character(apJoin1[[bio_col]]) else NA_character_
+      )
+    }
+    apJoin1 <- apJoin1 %>%
+      dplyr::select(-"uid", -"targetTaxaPresent", -"Table",
+                    -dplyr::matches("_expertTax"),-dplyr::matches("_bio"))
+  
+    
+  } else {
+    message("Output tables do not include identifications from expert taxonomists.\nProvide the 'apl_taxonomyProcessed' or 'apl_taxonomyRaw' table to join expert identifications.")
+    # rename columns if no expertTax join
+    apJoin1 <- apBio %>%
+      dplyr::mutate(
+        startDate = NA,
+        tempTaxonID = .data$taxonID,
+        remarks = dplyr::if_else(is.na(.data$remarks), NA, paste0("biomass remarks - ", .data$remarks)),
+        biomassRelease = .data$release,
+        taxonIDSourceTable = dplyr::if_else(is.na(.data$taxonID), NA, "apl_biomass"),
+        biomassDataQF = .data$dataQF,
+        biomassPublicationDate = .data$publicationDate
+      ) %>%
+      dplyr::select(-"taxonID",
+             -"release",
+             -"dataQF",
+             -"publicationDate",
+             -"uid")
+  }
+  
+  
+  ### Join apJoin1 and apMorph tables ####
+  
+  #   Select needed columns from apMorph
+  if (is.data.frame(apMorph) && nrow(apMorph) > 0) {
+    # message("Join morphospecies taxonomic identifications.")
+    apMorph <- apMorph %>%
+      dplyr::select(
+        "taxonID", "scientificName", "morphospeciesID", "identificationQualifier",
+        "identificationReferences", "identifiedBy", "morphospeciesResolvedDate",
+        ## Uncomment next two lines once morph table has been updated
+        "phylum", "division", "class", "order", "family", "genus", "section", 
+        "specificEpithet", "infraspecificEpithet", "variety", "form", "taxonRank",
+        "dataQF"
+      )%>% 
+      dplyr::rename(identifiedDate="morphospeciesResolvedDate")
+    
+    # Update morphospecies taxon identifications
+    apJoin2 <- apJoin1 %>%
+      dplyr::mutate(
+        morphospeciesID = dplyr::if_else(
+          !is.na(.data$morphospeciesID),
+          paste0(.data$morphospeciesID, ".", substr(.data$collectDate, 1, 4)),
+          .data$morphospeciesID
+        )
+      ) %>%
+      dplyr::left_join(apMorph, by="morphospeciesID", suffix=c("_bio","_morph")) %>%
+      dplyr::mutate(
+        taxonIDSourceTable = dplyr::if_else(
+          !is.na(.data$taxonID) & .data$tempTaxonID %in% c('2PLANT', 'UNKALG'),
+          "apc_morphospecies", .data$taxonIDSourceTable),
+        
+        acceptedTaxonID = dplyr::if_else(
+          !is.na(.data$taxonID) & .data$tempTaxonID %in% c('2PLANT', 'UNKALG'),
+          .data$taxonID, .data$tempTaxonID),
+        
+        morphospeciesDataQF = .data$dataQF
+      )
+    
+    #   Columns conditionally replaced with morph data
+    join2_cols <- c(
+      "scientificName", "identificationQualifier", "identificationReferences",
+      "identifiedBy", "identifiedDate"
+      ## Uncomment next two lines once morph table has been updated
+      , "phylum", "division", "class", "order",
+      "family", "genus", "section", "specificEpithet", "infraspecificEpithet",
+      "variety", "form", "taxonRank"
+    )
+    
+    for (col in join2_cols) {
+      morph_col <- paste0(col, "_morph")
+      bio_col <- paste0(col, "_bio")
+      apJoin2[[col]] <- dplyr::if_else(
+        !is.na(apJoin2$taxonID) & apJoin2$tempTaxonID %in% c("2PLANT", "UNKALG"),
+        if (morph_col %in% names(apJoin2)) as.character(apJoin2[[morph_col]]) else NA_character_,
+        if (bio_col %in% names(apJoin2)) as.character(apJoin2[[bio_col]]) else NA_character_
+      )
+    }
+
+    apJoin2 <- apJoin2 %>%
+    dplyr::select(
+      -"taxonID", -"tempTaxonID", -"dataQF",
+      -dplyr::matches("_morph"),-dplyr::matches("_bio"))
+    
+
+  } else {
+    message("No data joined from apc_morphospecies table.")
+    
+    apJoin2 <- apJoin1 %>%
+      dplyr::mutate(acceptedTaxonID = .data$tempTaxonID) %>%
+      dplyr::select(-"tempTaxonID") 
+  }
+  
+  
+  
+  
+  
+  ### Join apClip and apBio tables ####
+  
+  finalJoin <- apClip %>%
+    dplyr::left_join(
+      apJoin2 %>% dplyr::select(
+        -"benthicArea", -"namedLocation", -"domainID", -"siteID",
+        -"startDate", -"collectDate", -"fieldIDCode"), # 
+      by = "fieldID", suffix = c("_clip", "_bio")) %>%
+    dplyr::mutate(
+      remarks = dplyr::case_when(
+        !is.na(.data$remarks_bio) &
+          !is.na(.data$remarks_clip) ~ paste0(
+            "clipHarvest remarks - ",
+            .data$remarks_clip,
+            " | ",
+            .data$remarks_bio
+          ),!is.na(.data$remarks_bio) &
+          is.na(.data$remarks_clip) ~ .data$remarks_bio,
+        is.na(.data$remarks_bio) &
+          !is.na(.data$remarks_clip) ~ paste0("clipHarvest remarks - ", .data$remarks_clip),
+        TRUE ~ NA
+      ),
+      recordedBy = dplyr::if_else(
+        !is.na(.data$recordedBy_clip),
+        .data$recordedBy_clip,
+        .data$recordedBy_bio
+      ),
+      clipDataQF = .data$dataQF,
+      clipPublicationDate = .data$publicationDate,
+      clipRelease = .data$release
+    ) %>%
+    dplyr::select(-"dataQF",
+                  -"publicationDate",
+                  -"release",-dplyr::matches("_bio"),-dplyr::matches("_clip"))
+  
+  
+  ###  Filter out bout 1 and 3 data ####
+  finalJoin <- finalJoin %>% dplyr::filter(.data$boutNumber == '2')
+  
+  
+  ###  Re-format date columns ####
+  
+  finalJoin$processingDate <- as.Date(finalJoin$processingDate)
+  finalJoin$identifiedDate <- as.Date(finalJoin$identifiedDate)
+  finalJoin$collectDate <- as.POSIXct(finalJoin$collectDate, 
+    format = "%Y-%m-%d %H:%M:%S", tz = "UTC")
+  finalJoin$startDate <- as.POSIXct(finalJoin$startDate,
+    format = "%Y-%m-%d %H:%M:%S", tz = "UTC")
+  finalJoin$biomassPublicationDate <- as.POSIXct(finalJoin$biomassPublicationDate,
+    format = "%Y%m%dT%H%M%SZ", tz = "UTC")
+  finalJoin$clipPublicationDate <- as.POSIXct(finalJoin$clipPublicationDate,
+    format = "%Y%m%dT%H%M%SZ", tz = "UTC")
+  if (is.data.frame(apTax) && nrow(apTax) > 0){
+    finalJoin$expertTaxPublicationDate <- as.POSIXct(finalJoin$expertTaxPublicationDate,
+                                                        format = "%Y%m%dT%H%M%SZ", tz = "UTC")
+  }
+  
+  
+  ### Create joinedBiomass output table ####
+  if (is.data.frame(apTax) && nrow(apTax) > 0) {
+    joinedBiomass <- finalJoin %>%
+      dplyr::filter(.data$targetTaxaPresent=='Y') %>% #only include records where taxa present
+      dplyr::group_by(.data$sampleID) %>%
+      # Arrange so the highest algalParameterValue comes first
+      dplyr::arrange(dplyr::desc(.data$algalParameterValue), .by_group = TRUE) %>%
+      # Create new column with all acceptedTaxonIDs except the first
+        dplyr::mutate(
+          additionalTaxa = {
+            unique_taxa <- unique(.data$acceptedTaxonID)
+            if (length(unique_taxa) > 1) {
+              other_taxa <- .data$acceptedTaxonID[-1] # all but the first
+              other_taxa <- other_taxa[!is.na(other_taxa)] # remove NAs
+              if (length(other_taxa) > 0) paste(other_taxa, collapse = "|") 
+              else NA_character_
+            } else {
+              NA_character_
+            }
+          }
+        ) %>%
+      # Keep only the first row per sampleID
+      dplyr::slice(1) %>%
+      dplyr::ungroup() %>% 
+      dplyr::relocate('additionalTaxa', .after = 'acceptedTaxonID')
+    } else {
+      joinedBiomass <- finalJoin %>%
+        dplyr::filter(.data$targetTaxaPresent=='Y') %>% #only include records where taxa present
+        # Create empty column for acceptedTaxonID
+        dplyr::mutate(
+          additionalTaxa = NA_character_
+        ) %>%
+        dplyr::relocate('additionalTaxa', .after = 'acceptedTaxonID')
+    }
+  
+  
+  ### Create fieldTaxonomy output table ####
+  if (is.data.frame(apTax) && nrow(apTax) > 0) {
+    fieldTaxCols <- setdiff(
+      c(names(apClip), "fieldID", "sampleID", "sampleCode", "sampleCondition", 
+        "acceptedTaxonID", "scientificName", "scientificNameAuthorship", 
+        "identificationQualifier", "identificationHistoryID", "identificationReferences", 
+        "identifiedBy", "identifiedDate", "taxonIDSourceTable",  
+        "algalParameter", "algalParameterValue", "algalParameterUnit", "testMethod", "method",
+        "subspecies", "variety", "subvariety", "form", "subform", "speciesGroup", 
+        "taxonDatabaseName", "taxonDatabaseID", 
+        "division", "class", "order", "family", "genus", "section", "specificEpithet", 
+        "taxonRank","clipDataQF", "expertTaxDataQF", "clipPublicationDate", "expertTaxPublicationDate"), 
+      c("release", "dataQF", "publicationDate")
+    )
+  } else {
+    fieldTaxCols <- setdiff(
+      c(names(apClip), "fieldID", "sampleID", "sampleCode", "sampleCondition", 
+        "acceptedTaxonID", "scientificName", "scientificNameAuthorship", 
+        "identificationQualifier", "identificationHistoryID", "identificationReferences", 
+        "identifiedBy", "identifiedDate", "taxonIDSourceTable", 
+        "division", "class", "order", "family", "genus", "section", "specificEpithet", 
+        "taxonRank","clipDataQF", "clipPublicationDate"), 
+      c("release", "dataQF", "publicationDate")
+    )
+  }
+  
+  fieldTaxonomy <- finalJoin %>% 
+    dplyr::select(tidyselect::all_of(fieldTaxCols))
+  
+  
+  ### Create final output list ####
+  
+  joinClipHarvest <- list('apl_joinBiomass' = joinedBiomass, 'apl_fieldTaxonomy' = fieldTaxonomy)
+
+  return(joinClipHarvest)
+
+} #function closer

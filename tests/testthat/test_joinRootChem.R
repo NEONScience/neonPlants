@@ -6,14 +6,16 @@ testList <- readRDS(testthat::test_path("testdata", "rootdatalist-201807.RDS"))
 testMass <- testList$bbc_rootmass
 testPool <- testList$bbc_chemistryPooling
 testChem <- testList$bbc_rootChemistry
-
-
+rctest <- joinRootChem(inputDataList = testList)
+rctestti <- joinRootChem(inputMass = testMass,
+                         inputPool = testPool,
+                         inputChem = testChem)
 
 ### Test: Function generates expected output type
 #   Test list input
 testthat::test_that(desc = "Output type list input", {
 
-  testthat::expect_type(object = joinRootChem(inputDataList = testList),
+  testthat::expect_type(object = rctest,
                         type = "list")
 
 })
@@ -21,9 +23,7 @@ testthat::test_that(desc = "Output type list input", {
 #   Test table input
 testthat::test_that(desc = "Output type table input", {
   
-  testthat::expect_type(object = joinRootChem(inputMass = testMass,
-                                              inputPool = testPool,
-                                              inputChem = testChem),
+  testthat::expect_type(object = rctestti,
                         type = "list")
 })
 
@@ -33,16 +33,14 @@ testthat::test_that(desc = "Output type table input", {
 #   Test list input
 testthat::test_that(desc = "Output class list input", {
 
-  testthat::expect_s3_class(object = joinRootChem(inputDataList = testList),
+  testthat::expect_s3_class(object = rctest,
                             class = "data.frame")
 })
 
 #   Test table input
 testthat::test_that(desc = "Output class table input", {
   
-  testthat::expect_s3_class(object = joinRootChem(inputMass = testMass,
-                                                  inputPool = testPool,
-                                                  inputChem = testChem),
+  testthat::expect_s3_class(object = rctestti,
                             class = "data.frame")
 })
 
@@ -53,7 +51,7 @@ testthat::test_that(desc = "Output class table input", {
 #   Check expected row number of output
 testthat::test_that(desc = "Output data frame row number list input", {
 
-  testthat::expect_identical(object = nrow(joinRootChem(inputDataList = testList)),
+  testthat::expect_identical(object = nrow(rctest),
                              expected = as.integer(477))
 })
 
@@ -61,7 +59,7 @@ testthat::test_that(desc = "Output data frame row number list input", {
 #   Check expected column number of output
 testthat::test_that(desc = "Output data frame column number list input", {
 
-  testthat::expect_identical(object = ncol(joinRootChem(inputDataList = testList)),
+  testthat::expect_identical(object = ncol(rctest),
                              expected = as.integer(35))
 })
 
@@ -70,18 +68,14 @@ testthat::test_that(desc = "Output data frame column number list input", {
 #   Check expected row number of output
 testthat::test_that(desc = "Output data frame row number table input", {
   
-  testthat::expect_identical(object = nrow(joinRootChem(inputMass = testMass,
-                                                        inputPool = testPool,
-                                                        inputChem = testChem)),
+  testthat::expect_identical(object = nrow(rctestti),
                              expected = as.integer(477))
 })
 
 #   Check expected column number of output
 testthat::test_that(desc = "Output data frame row number table input", {
   
-  testthat::expect_identical(object = ncol(joinRootChem(inputMass = testMass,
-                                                        inputPool = testPool,
-                                                        inputChem = testChem)),
+  testthat::expect_identical(object = ncol(rctestti),
                              expected = as.integer(35))
 })
 
@@ -194,3 +188,15 @@ testthat::test_that(desc = "Table 'inputChem' missing data", {
   
 })
 
+#   Test that there are no chemistry data for any dead roots
+testthat::test_that(desc = "Test that there are no carbon data for any dead roots", {
+  testthat::expect_true(object = all(is.na(rctest$carbonPercent[which(rctest$rootStatus=="dead")])))
+})
+testthat::test_that(desc = "Test that there are no 15N data for any dead roots", {
+  testthat::expect_true(object = all(is.na(rctest$d15N[which(rctest$rootStatus=="dead")])))
+})
+
+#   Test that all samples are accounted for
+testthat::test_that(desc = "Test that all samples from original chemistry data are in output", {
+  testthat::expect_true(object = all(testChem$cnSampleID %in% rctest$cnSampleID))
+})

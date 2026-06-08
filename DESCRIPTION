@@ -49,6 +49,10 @@ Imports:
     rlang,
     stringr,
     tibble,
-    tidyr
+    tidyr,
+    tidyselect,
+    RColorBrewer,
+    ggplot2,
+    plotly
 LazyData: true
 Config/roxygen2/version: 8.0.0
