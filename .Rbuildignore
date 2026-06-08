@@ -5,3 +5,5 @@
 ^cran-comments\.md$
 ^dev_scripts$
 ^data-raw$
+^\.positai$
+^\.claude$

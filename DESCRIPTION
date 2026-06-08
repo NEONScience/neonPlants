@@ -1,12 +1,12 @@
 Package: neonPlants
 Title: Tools to access and work with NEON plant data
-Version: 0.0.0.9000
+Version: 0.0.1
 Authors@R: 
-    c(person(given = "Eric",
-             family = "Sokol", 
-             role = c("aut", "cre", "cph"), 
-             email = "esokol@BattelleEcology.org", 
-             comment = c(ORCID = "0000-0001-5923-0917")),
+    c(person(given = "Courtney",
+             family = "Meier",
+             role = c("aut", "cre", "cph"),
+             email = "cmeier@BattelleEcology.org",
+             comment = c(ORCID = "0000-0003-3576-883X")),
       person(given = "Dave",
              family = "Barnett", 
              role = c("aut"),
@@ -15,18 +15,18 @@ Authors@R:
       person(given = "Sam",
              family = "Simkin", 
              role = c("aut"),
-             email = "ssimkin@BattelleEcology.org", 
+             email = "samuel.simkin@gmail.com", 
              comment = c(ORCID = "0000-0003-2418-4265")),
-      person(given = "Courtney",
-             family = "Meier",
-             role = c("aut"),
-             email = "cmeier@BattelleEcology.org",
-             comment = c(ORCID = "0000-0003-3576-883X")),
       person(given = "Katherine",
              family = "Jones",
              role = c("aut"),
-             email = "kjones@BattelleEcology.org",
-             comment = c(ORCID = "0000-0003-1175-5049"))
+             email = "joneseyk@gmail.com",
+             comment = c(ORCID = "0000-0003-1175-5049")),
+      person(given = "Claire",
+             family = "Lunch",
+             role = c("aut"),
+             email = "clunch@BattelleEcology.org",
+             comment = c(ORCID = "0000-0001-8753-6593"))
              )
 Description: Library of R functions to work with NEON plant data.
 License: GPL (>= 3)
@@ -45,8 +45,10 @@ Imports:
     lubridate,
     magrittr,
     methods,
+    purrr,
     rlang,
     stringr,
+    tibble,
     tidyr,
     tidyselect,
     RColorBrewer,

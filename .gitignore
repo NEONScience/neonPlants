@@ -32,3 +32,4 @@ vignettes/*.pdf
 # R Environment Variables
 .Renviron
 dev_scripts/RELEASE-2024/
+.positai

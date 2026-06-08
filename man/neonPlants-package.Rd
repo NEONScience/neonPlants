@@ -9,15 +9,15 @@
 Library of R functions to work with NEON plant data.
 }
 \author{
-\strong{Maintainer}: Eric Sokol \email{esokol@BattelleEcology.org} (\href{https://orcid.org/0000-0001-5923-0917}{ORCID}) [copyright holder]
+\strong{Maintainer}: Courtney Meier \email{cmeier@BattelleEcology.org} (\href{https://orcid.org/0000-0003-3576-883X}{ORCID}) [copyright holder]
 
 Authors:
 \itemize{
-  \item Eric Sokol \email{esokol@BattelleEcology.org} (\href{https://orcid.org/0000-0001-5923-0917}{ORCID}) [copyright holder]
+  \item Courtney Meier \email{cmeier@BattelleEcology.org} (\href{https://orcid.org/0000-0003-3576-883X}{ORCID}) [copyright holder]
   \item Dave Barnett \email{dbarnett@BattelleEcology.org} (\href{https://orcid.org/0000-0002-0485-3567}{ORCID})
-  \item Sam Simkin \email{ssimkin@BattelleEcology.org} (\href{https://orcid.org/0000-0003-2418-4265}{ORCID})
-  \item Courtney Meier \email{cmeier@BattelleEcology.org} (\href{https://orcid.org/0000-0003-3576-883X}{ORCID})
-  \item Katherine Jones \email{kjones@BattelleEcology.org} (\href{https://orcid.org/0000-0003-1175-5049}{ORCID})
+  \item Sam Simkin \email{samuel.simkin@gmail.com} (\href{https://orcid.org/0000-0003-2418-4265}{ORCID})
+  \item Katherine Jones \email{joneseyk@gmail.com} (\href{https://orcid.org/0000-0003-1175-5049}{ORCID})
+  \item Claire Lunch \email{clunch@BattelleEcology.org} (\href{https://orcid.org/0000-0001-8753-6593}{ORCID})
 }
 
 }

@@ -1,18 +1,22 @@
-# estimateHerbProd function tests
-# Samuel M Simkin (2024-12-15)  ssimkin@battelleecology.org
-# Courtney Meier (2025-06-20)   cmeier@BattelleEcology.org
+### Function tests for estimateHerbProd (updated 2026-06-01)
+#   Courtney Meier; cmeier@BattelleEcology.org
+#   Samuel M Simkin
+
+
 
 ### Read in test data ####
-HbpDat <- readRDS(testthat::test_path("testdata", "HbpDat.rds"))
+#--> Test dataset details documented in 'test_hbp_dataset_prep.R' in 'dev_scripts' folder.
+HbpDat <- readRDS(testthat::test_path("testdata", "hbp_testDat.RDS"))
 
 
 
 ### Generate estimateHerbProd outputs ####
-estimateHerbProdOutputs <- estimateHerbProd(inputDataList = HbpDat)
+estimateHerbProdOutputs <- neonPlants::estimateHerbProd(inputDataList = HbpDat)
 
 
 
 ### Output type tests ####
+
 ### Test: Function generates expected output type
 testthat::test_that(desc = "Output type", {
   testthat::expect_type(object = estimateHerbProd(inputDataList = HbpDat),
@@ -21,7 +25,7 @@ testthat::test_that(desc = "Output type", {
 
 
 
-### Test: Function generates expected output class
+### Tests: Function generates expected output class for all output list objects
 #   Check 'herb_ANPP_site' output table is a data frame
 testthat::test_that(desc = "Output class 'herb_ANPP_site'", {
   testthat::expect_s3_class(object = estimateHerbProdOutputs$herb_ANPP_site,
@@ -34,88 +38,157 @@ testthat::test_that(desc = "Output class 'herb_ANPP_plot'", {
                             class = "data.frame")
 })
 
-#   Check that 'herb_ANPP_plot_herbGroup' output table is a data frame
-testthat::test_that(desc = "Output class 'herb_ANPP_plot_herbgroup'", {
-  testthat::expect_s3_class(object = estimateHerbProdOutputs$herb_ANPP_plot_herbgroup,
+#   Check that 'herb_ANPP_grazed_extra' output table is a data frame
+testthat::test_that(desc = "Output class 'herb_ANPP_grazed_extra'", {
+  testthat::expect_s3_class(object = estimateHerbProdOutputs$herb_ANPP_grazed_extra,
+                            class = "data.frame")
+})
+
+#   Check that 'herb_grazed_consumption' output table is a data frame
+testthat::test_that(desc = "Output class 'herb_ANPP_grazed_consumption'", {
+  testthat::expect_s3_class(object = estimateHerbProdOutputs$herb_grazed_consumption,
                             class = "data.frame")
 })
 
 
 
 ### Output dimension tests ####
-### Test: Function generates data frame with expected dimensions using test data and function defaults (plotSubset = "tower")
+
+### Test: Function generates data frame with expected dimensions using test data and function defaults (plotSubset = "all")
 #   Check expected column number of 'herb_ANPP_site' data frame
 testthat::test_that(desc = "Output 'herb_ANPP_site' column number", {
   testthat::expect_identical(object = ncol(estimateHerbProdOutputs$herb_ANPP_site),
-                             expected = as.integer(19))
+                             expected = as.integer(11))
 })
 
 #   Check expected row number of 'herb_ANPP_site' data frame
 testthat::test_that(desc = "Output 'herb_ANPP_site' row number", {
   testthat::expect_identical(object = nrow(estimateHerbProdOutputs$herb_ANPP_site),
-                             expected = as.integer(13))
+                             expected = as.integer(18))
 })
 
 #   Check expected column number of 'herb_ANPP_plot' data frame
 testthat::test_that(desc = "Output 'herb_ANPP_plot' column number", {
   testthat::expect_identical(object = ncol(estimateHerbProdOutputs$herb_ANPP_plot),
-                             expected = as.integer(16))
+                             expected = as.integer(27))
 })
 
 #   Check expected row number of 'herb_ANPP_plot' data frame
 testthat::test_that(desc = "Output 'herb_ANPP_plot' row number", {
   testthat::expect_identical(object = nrow(estimateHerbProdOutputs$herb_ANPP_plot),
-                             expected = as.integer(14))
+                             expected = as.integer(228))
 })
 
-#   Check expected column number of 'herb_ANPP_plot_groups' data frame
-testthat::test_that(desc = "Output 'herb_ANPP_plot_herbgroup' column number", {
-  testthat::expect_identical(object = ncol(estimateHerbProdOutputs$herb_ANPP_plot_herbgroup),
-                             expected = as.integer(16))
+#   Check expected column number of 'herb_ANPP_grazed_extra' data frame
+testthat::test_that(desc = "Output 'herb_ANPP_grazed_extra' column number", {
+  testthat::expect_identical(object = ncol(estimateHerbProdOutputs$herb_ANPP_grazed_extra),
+                             expected = as.integer(24))
 })
 
-#   Check expected row number of 'herb_ANPP_plot' data frame
-testthat::test_that(desc = "Output 'herb_ANPP_plot_herbgroup' row number", {
-  testthat::expect_identical(object = nrow(estimateHerbProdOutputs$herb_ANPP_plot_herbgroup),
-                             expected = as.integer(70))
+#   Check expected row number of 'herb_ANPP_grazed_extra' data frame
+testthat::test_that(desc = "Output 'herb_ANPP_grazed_extra' row number", {
+  testthat::expect_identical(object = nrow(estimateHerbProdOutputs$herb_ANPP_grazed_extra),
+                             expected = as.integer(10))
 })
 
-
-
-### Output value tests ####
-#   Check output 'herb_ANPP_site' value is as expected
-testthat::test_that(desc = "Output 'herb_ANPP_site' table value as expected", {
-  test <- estimateHerbProd(inputDataList = HbpDat)
-  testthat::expect_equal(object = test$herb_ANPP_site$herbANPP_Mghayr[1],
-                         expected = 0.72)
+#   Check expected column number of 'herb_grazed_consumption' data frame
+testthat::test_that(desc = "Output 'herb_grazed_consumption' column number", {
+  testthat::expect_identical(object = ncol(estimateHerbProdOutputs$herb_grazed_consumption),
+                             expected = as.integer(15))
 })
 
-#   Check output 'herb_ANPP_plot' value is as expected
-testthat::test_that(desc = "Output 'herb_ANPP_plot' table value as expected", {
-  test <- estimateHerbProd(inputDataList = HbpDat)
-  testthat::expect_equal(object = test$herb_ANPP_plot$herbANPP_gm2yr[1],
-                         expected = 72.38)
-})
-
-#   Check output 'herb_ANPP_plot_herbgroup' value is as expected
-testthat::test_that(desc = "Output 'herb_ANPP_plot_herbgroup' table value as expected", {
-  test <- estimateHerbProd(inputDataList = HbpDat)
-  testthat::expect_equal(object = test$herb_ANPP_plot_herbgroup$herbANPP_gm2yr[2],
-                         expected = 70.03)
+#   Check expected row number of 'herb_grazed_consumption' data frame
+testthat::test_that(desc = "Output 'herb_grazed_consumption' row number", {
+  testthat::expect_identical(object = nrow(estimateHerbProdOutputs$herb_grazed_consumption),
+                             expected = as.integer(41))
 })
 
 
 
-### Expected error tests: Generate expected errors for input arguments ####
+
+
+### Error handling tests ####
+
+### Tests: Generate expected errors for 'inputDataList' and 'plotSubset' arguments
 #   Check that error is produced when inputDataList argument is not a list
 testthat::test_that(desc = "Argument 'inputDataList' is list object", {
-  testthat::expect_error(object = estimateHerbProd(inputDataList = HbpDat$hbp_perbout),
+  testthat::expect_error(object = neonPlants::estimateHerbProd(inputDataList = HbpDat$hbp_perbout),
                          regexp = "The inputDataList argument is expected to be a list")
 })
 
 #   Check that 'plotSubset' error is produced when expected
 testthat::test_that(desc = "Argument 'plotSubset' is valid", {
-  testthat::expect_error(object = estimateHerbProd(inputDataList = HbpDat,
-                                                   plotSubset = "fish"),
+  testthat::expect_error(object = neonPlants::estimateHerbProd(inputDataList = HbpDat,
+                                                               plotSubset = "fish"),
                          regexp = "The only valid plotSubset options are 'all', 'tower', 'distributed'")
+})
+
+
+
+
+
+### Output value tests ####
+
+##  Check output 'herb_ANPP_site' value is as expected
+testthat::test_that(desc = "Output 'herb_ANPP_site' table value as expected", {
+  testthat::expect_equal(object = estimateHerbProdOutputs$herb_ANPP_site$herbProd_Mghayr[1],
+                         expected = 4.64)
+})
+
+
+##  Check output 'herb_ANPP_plot' value is as expected
+testthat::test_that(desc = "Output 'herb_ANPP_plot' table value as expected", {
+  testthat::expect_equal(object = estimateHerbProdOutputs$herb_ANPP_plot$herbProd_Mghayr[1],
+                         expected = 5.02)
+})
+
+
+##  Check output 'herb_ANPP_grazed_extra' value is as expected
+testthat::test_that(desc = "Output 'herb_ANPP_grazed_extra' table value as expected", {
+  testthat::expect_equal(object = estimateHerbProdOutputs$herb_ANPP_grazed_extra$grazedProd_gm2yr[3],
+                         expected = 293.03)
+})
+
+
+##  Check output 'herb_grazed_consumption' value is as expected
+testthat::test_that(desc = "Output 'herb_grazed_consumption' table value as expected", {
+  testthat::expect_equal(object = estimateHerbProdOutputs$herb_grazed_consumption$consumMean_gm2[10],
+                         expected = 32.75)
+})
+
+
+##  Check that sites in input data exist across aggregate site- and plot-level output tables
+testthat::test_that(desc = "Output sites in site- and plot-level tables as expected", {
+
+  inputSites <- sort(unique(HbpDat$hbp_perbout$siteID))
+  outputSites <- sort(unique(estimateHerbProdOutputs$herb_ANPP_site$siteID))
+
+  testthat::expect_identical(object = outputSites,
+                             expected = inputSites)
+
+})
+
+
+##  Check number of site-years in input data is equivalent to row number of 'hbp_ANPP_site' output
+testthat::test_that(desc = "Rows in 'hbp_ANPP_site' equal to number of site-years in input data", {
+
+  #   Identify number of site-years in hbp_perbout input table
+  inputSiteYears <- HbpDat$hbp_perbout %>%
+    dplyr::mutate(year = as.numeric(stringr::str_extract(string = .data$eventID,
+                                                         pattern = "20[0-9]{2}")),
+                  .before = "eventID") %>%
+
+    dplyr::mutate(collectDate = as.Date(.data$collectDate),
+                  year = dplyr::case_when(.data$siteID == "SJER" &
+                                            .data$collectDate < as.Date(glue::glue("{.data$year}-07-15")) ~
+                                            (.data$year - 1),
+                                          TRUE ~ .data$year)) %>%
+
+    dplyr::mutate(siteYear = paste(.data$siteID, .data$year, sep = "-")) %>%
+    dplyr::distinct(.data$siteYear)
+
+  #   Check identical objects
+  testthat::expect_identical(object = nrow(estimateHerbProdOutputs$herb_ANPP_site),
+                             expected = nrow(inputSiteYears))
+
 })

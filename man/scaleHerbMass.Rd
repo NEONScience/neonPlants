@@ -2,13 +2,13 @@
 % Please edit documentation in R/scaleHerbMass.R
 \name{scaleHerbMass}
 \alias{scaleHerbMass}
-\title{Scale herbaceous biomass by functional group data to mass per area}
+\title{Scale NEON herbaceous biomass data to mass per area}
 \usage{
 scaleHerbMass(
   inputDataList,
   inputBout = NA,
   inputMass = NA,
-  plotSubset = "tower"
+  plotSubset = "all"
 )
 }
 \arguments{
@@ -20,23 +20,25 @@ scaleHerbMass(
 \item{inputMass}{The 'hbp_massdata' table for the site x month combination(s) of interest
 (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 
-\item{plotSubset}{The options are "all" (all tower and distributed plots), the default of "tower" (all plots in the tower airshed but no distributed plots), and "distributed" (all distributed plots, which are sampled on a 5-year interval and are spatially representative of the NLCD classes at a site). \link{character}}
+\item{plotSubset}{The options are the default of "all" (all Tower and Distributed plots), "tower" (all plots in the Tower airshed but no Distributed plots), and "distributed" (all Distributed plots, which are sampled on a 5-year interval and are spatially representative of the NLCD classes at a site, and no Tower plots). \link{character}}
 }
 \value{
-A list that includes biomass summary data at multiple scales. Output tables include:
+A list that includes herbaceous biomass per unit area data at multiple scales. Output tables include:
 \itemize{
-\item hbp_agb - Summarizes above-ground herbaceous biomass for each sampleID in the input data ("g/m2").
-\item hbp_plot - Summarizes above-ground herbaceous biomass for each plot by year combination (both "g/m2" and "Mg/ha").
-\item hbp_site - Summarizes above-ground herbaceous biomass for each site by year combination (both "g/m2" and "Mg/ha").
+\item hbp_agb - Above-ground herbaceous biomass for each sampled clip strip in the input data ("g/m2").
+\item hbp_plot - Plot-level peak above-ground herbaceous standing biomass for all sites not planted with crops in a given year (both "g/m2" and "Mg/ha").
+\item hbp_plot_extra - Peak above-ground herbaceous standing biomass for plots at grazed sites that were not subject to grazing management (i.e., the Tower plots at a grazed sites were not all managed for grazing) and with peak biomass occurring in a different eventID than the peak biomass eventID associated with the grazed plots (both "g/m2" and "Mg/ha").
+\item hbp_plot_crop - Peak above-ground herbaceous standing biomass for plots at sites planted with an agricultural crop in at least one plot in a given year (both "g/m2" and "Mg/ha"). Peak biomass is reported on a per plot basis and it is not assumed there is a single sampling eventID that represents "peak biomass".
+\item hbp_site - Above-ground herbaceous peak standing biomass for each site by year combination (both "g/m2" and "Mg/ha"). Output is derived from the single sampling eventID with the greatest biomass and does not include sites planted with agricultural crops. At grazed sites, the peak biomass estimate does not include those Tower plots not managed for grazing AND that achieve peak biomass in a different eventID than that identified for grazed plots.
 }
 }
 \description{
-Join NEON Herbaceous Clip Harvest data tables (DP1.10023.001) to calculate herbaceous biomass by functional group per unit area as well as total herbaceous biomass per unit area. Biomass outputs can be used in the neonPlants estimateMass() function, and the estimateHerbProd() productivity function.
+Join NEON Herbaceous Clip Harvest data tables (DP1.10023.001) to calculate herbaceous biomass per unit area, at spatial scales of the sampling cell, plot, and site. Biomass outputs can be used with the estimateHerbProd() productivity function.
 
 Data inputs are "Herbaceous clip harvest" data (DP1.10023.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input tables with an equivalent structure and representing the same site x month combinations.
 }
 \details{
-Input data can be filtered by plot subset. Herbaceous biomass data are scaled to an area basis at the hierarchical levels of sampling cell, plot, and site. Input data may be provided either as a list or as individual tables. However, if both list and table inputs are provided at the same time the function will error out. For all output data, columns with the same name as input data have identical units and definitions; where needed, new columns contain new units information.
+Input data can be filtered by plot subset. Herbaceous biomass data are scaled to an area basis at the hierarchical levels of sampling cell, plot, and site. Input data may be provided either as a list or as individual tables. However, if both list and table inputs are provided at the same time the function will error out. For all output data, columns with the same name as input data have identical units and definitions; where needed, new column names contain units information. At the scale of the sampling cell and the plot, outputs include total herbaceous biomass as well as biomass of individual functional groups (e.g., forbs, cool season graminoids, warm season graminoids, etc.). Functional group biomass is not reported for site-level outputs.
 
 NEON weighs a minimum of 5\% of samples a second time so that data users can estimate the uncertainty associated with different technicians weighing dried herbaceous biomass; QA samples of this nature are identified via qaDryMass == "Y". The function calculates the mean when QA masses exist. Samples with Sampling Impractical values other than "OK" are removed prior to generating output data.
 }
@@ -57,6 +59,5 @@ inputMass = NA
 
 }
 \author{
-Samuel M Simkin \email{ssimkin@battelleecology.org} \cr
 Courtney Meier \email{cmeier@BattelleEcology.org} \cr
 }
