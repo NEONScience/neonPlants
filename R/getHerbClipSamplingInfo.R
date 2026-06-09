@@ -38,7 +38,7 @@ getHerbClipSamplingInfo <- function(sites = NA_character_,
 
   ### Input exception handling
   #   Check 'sites' is not NA
-  if(is.na(sites)) {
+  if(all(is.na(sites))) {
     stop("The 'sites' variable is required for this function.")
   }
 
