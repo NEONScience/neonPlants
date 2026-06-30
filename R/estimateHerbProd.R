@@ -66,7 +66,7 @@ estimateHerbProd = function(inputDataList,
 
 
 
-  ### Generate scaleHerbMass outputs and unlist
+  ### Generate scaleHerbMass outputs and unlist ####
   scaleHerbMassOutput <- neonPlants::scaleHerbMass(inputDataList = inputDataList,
                                                    plotSubset = plotSubset)
 
@@ -76,13 +76,28 @@ estimateHerbProd = function(inputDataList,
 
 
 
+  ### Remove D09 sites and generate message: Temporary fix ####
+  if ("D09" %in% hbp_agb$domainID) {
 
-  ### Verify scaleHerbMassOutputs tables contain required columns and data ####
+    hbp_agb <- hbp_agb |>
+      dplyr::filter(.data$domainID != "D09")
 
-  ### Verify scaleHerbMass output table 'hbp_agb' contains required data
-  #   Check for data
+    message("Current function logic does not support herbaceous productivity estimation at D09 sites: DCFS, NOGP, WOOD. Logic for these sites will be included in a future version of neonPlants.")
+
+  }
+
+
+
+  ### Check scaleHerbMassOutputs tables and stop/warn if necessary ####
+
+  #   Verify scaleHerbMass output table 'hbp_agb' contains required data
   if (!nrow(hbp_agb)) {
     stop(glue::glue("Table from scaleHerbMass() output 'hbp_agb' has no data."))
+  }
+
+  #   Warn about non-standard SJER growing season if applicable
+  if ("SJER" %in% hbp_agb$siteID) {
+    message("D17 SJER site included in input data: The growing season 'year' for SJER is October-June. To accurately estimate productivity for an SJER 'year', input data should be downloaded from August of the year of interest to July of the following year.")
   }
 
 
