@@ -36,6 +36,13 @@ getHerbClipSamplingInfo <- function(sites = NA_character_,
 
 
 
+  ### Session: Set session behavior for dplyr::summarise ####
+  sessionInform <- getOption("dplyr.summarise.inform", default = TRUE)
+  options(dplyr.summarise.inform = FALSE)
+  on.exit(options(dplyr.summarise.inform = sessionInform), add = TRUE)
+
+
+
   ### Input exception handling
   #   Check 'sites' is not NA
   if(all(is.na(sites))) {

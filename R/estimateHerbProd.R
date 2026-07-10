@@ -47,7 +47,12 @@
 estimateHerbProd = function(inputDataList,
                             plotSubset = "all") {
 
+
+
+  ### Session: Set session behavior for dplyr::summarise ####
+  sessionInform <- getOption("dplyr.summarise.inform", default = TRUE)
   options(dplyr.summarise.inform = FALSE)
+  on.exit(options(dplyr.summarise.inform = sessionInform), add = TRUE)
 
 
 

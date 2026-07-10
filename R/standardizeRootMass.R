@@ -43,7 +43,16 @@
 standardizeRootMass <- function(inputDataList,
                                 inputMass = NA) {
 
-  ### Test that user has supplied arguments as required by function ####
+
+
+  ### Session: Set session behavior for dplyr::summarise ####
+  sessionInform <- getOption("dplyr.summarise.inform", default = TRUE)
+  options(dplyr.summarise.inform = FALSE)
+  on.exit(options(dplyr.summarise.inform = sessionInform), add = TRUE)
+
+
+
+  ### Input check: Test that user has supplied arguments as required by function ####
 
   ### Verify user-supplied inputDataList object contains correct data if not NA
   if (!missing(inputDataList)) {

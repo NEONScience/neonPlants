@@ -64,6 +64,15 @@ scaleRootMass <- function(inputDataList,
                           inputDilution = NA,
                           includeFragInTotal = FALSE) {
 
+
+
+  ### Session: Set session behavior for dplyr::summarise ####
+  sessionInform <- getOption("dplyr.summarise.inform", default = TRUE)
+  options(dplyr.summarise.inform = FALSE)
+  on.exit(options(dplyr.summarise.inform = sessionInform), add = TRUE)
+
+
+
   ### Test that user has supplied arguments as required by function ####
 
   ### Verify 'includeDilution' and 'includeFragInTotal' are of type logical
