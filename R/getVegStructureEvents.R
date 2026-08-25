@@ -1,13 +1,13 @@
-#' @title Find vegetation structure sampling bouts
+#' @title Find NEON Vegetation Structure Sampling Bouts
 #'
-#' @author Claire Lunch \email{clunch@battelleecology.org} \cr
+#' @author Claire K Lunch \email{clunch@battelleecology.org} \cr
 #'
 #' @description Vegetation structure (DP1.10098.001) data are collected annually at NEON terrestrial sites with qualifying vegetation, but different plots are sampled in different years. This function returns a table of which types of sampling events occurred in each year.
 #'
 #' @details Vegetation structure event types are:
-#'    towerSubset: The subset of plots in the tower airshed that are measured annually.
-#'    allTowerPlots: All plots in the tower airshed, including the annual subset. Tower plots not in the annual subset are measured every 5-6 years, in a different year from the distributed plots.
-#'    distributedAndTowerSubset: The annual plots in the tower airshed plus the distributed plots. Distributed plots are measured every 5-6 years.
+#'    * towerSubset: The subset of plots (n=5) in the Tower airshed that are sampled annually.
+#'    * allTowerPlots: All plots in the Tower airshed, including the annual subset. Tower plots not in the annual subset are sampled every 5-6 years, and always in a different year from the Distributed plots.
+#'    * distributedAndTowerSubset: The annual plots in the Tower airshed plus the Distributed plots. Distributed plots are sampled every 5-6 years.
 #'
 #'  Trees are typically measured outside of the growing season. It is not unusual for sampling bouts to begin in one year and end in the next, so check the start and end date when choosing the date range of data for your analysis.
 #'
@@ -15,7 +15,7 @@
 #' @param includePlots Include plotIDs for the plots sampled in each event? Defaults to FALSE. [logical]
 #' @param token NEON API token [character]
 #'
-#' @return A table listing the sampling event type for each year and eventID, and the start and end date of each sampling event. If includePlots=T, the table also includes the list of plots measured in each event. Start and end date are the start and end date of the entire event, not specific to a given plot. For the most recent year of data, it is possible not all data collection has been completed; in this case the end date reflects the end date of data in the database, but more may be pending.
+#' @return A table listing the sampling event type for each year and eventID, and the start and end date of each sampling event. If includePlots = TRUE, the table also includes the list of plots sampled in each event. Start and end date are the start and end date of the entire event, not specific to a given plot. For the most recent year of data, it is possible not all data collection has been completed; in this case the end date reflects the end date of data in the database, but publication of more data may be pending.
 #'
 #' @references
 #' License: GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007
@@ -45,7 +45,7 @@ getVegStructureEvents <- function(site = NA_character_,
                                           progress=FALSE))
 
   pppy <- vegpppy$vst_perplotperyear
-  
+
   if(isFALSE(includePlots)) {
     vevents <- unique(pppy[which(pppy$samplingImpractical=="OK" | is.na(pppy$samplingImpractical)),
                            c("eventID","eventType")])
@@ -53,9 +53,9 @@ getVegStructureEvents <- function(site = NA_character_,
     vevents <- unique(pppy[which(pppy$samplingImpractical=="OK" | is.na(pppy$samplingImpractical)),
                            c("eventID","eventType","plotID")])
   }
-  
+
   # get year from eventID
-  vevents$eventYear <- base::regmatches(vevents$eventID, 
+  vevents$eventYear <- base::regmatches(vevents$eventID,
                                         base::regexpr("20[0-9]{2}", vevents$eventID))
 
   # get date range for apparent individual table
