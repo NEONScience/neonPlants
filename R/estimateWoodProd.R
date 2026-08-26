@@ -149,17 +149,17 @@ estimateWoodProd <- function(inputDataList,
 
   # Error if invalid plotSubset option selected
   if (!plotSubset %in% c("all", "towerAll", "towerAnnualSubset", "distributed")) {
-    stop("The only valid plotSubset options are 'all', 'towerAll', 'towerAnnualSubset', and 'distributed'.")
-  }
-
-  # Error if invalid 'missing' option selected
-  if (!missing %in% c("filter", "retain")) {
-    stop("The only valid 'missing' options are 'filter', 'retain'.")
+    stop("The 'plotSubset' argument must be one of: 'all', 'towerAll', 'towerAnnualSubset', 'distributed'")
   }
 
   # Error if invalid 'flagged' option selected
   if (!flagged %in% c("filter", "retain")) {
-    stop("The only valid 'flagged' options are 'filter', 'retain'.")
+    stop("The 'flagged' argument must be one of: 'filter', 'retain'")
+  }
+
+  # Error if invalid 'missing' option selected
+  if (!missing %in% c("filter", "retain")) {
+    stop("The 'missing' argument must be one of: 'filter', 'retain'")
   }
 
 

@@ -177,15 +177,84 @@ testthat::test_that(desc = "Output data frame row number 'missing'", {
 
 ### Error handling tests ####
 
-
-#--> Focus only on those checks within woodProd function...
 ### Tests: Generate expected errors for 'inputDataList'
 #   Test 'inputDataList' is a list
 testthat::test_that(desc = "Argument 'inputDataList' is list object", {
-  testthat::expect_error(object = neonPlants::estimateWoodMass(inputDataList = vstTestDF$vst_apparentindividual),
+  testthat::expect_error(object = neonPlants::estimateWoodProd(inputDataList = testInput$vst_apparentindividual),
                          regexp = "Argument 'inputDataList' must be a list object from neonUtilities::loadByProduct()")
 })
 
+#   Test 'inputDataList' contains all required tables
+testthat::test_that(desc = "The'inputDataList' object contains required tables", {
+  temp <- testInput
+  temp$vst_mappingandtagging <- NULL
+
+  testthat::expect_error(object = neonPlants::estimateWoodProd(inputDataList = temp),
+                         regexp = "Required tables missing from 'inputDataList'")
+})
+
+#   Test 'inputDataList' contains only one siteID
+testthat::test_that(desc = "Input data contains a single siteID", {
+  testthat::expect_error(object = neonPlants::estimateWoodProd(inputDataList = vstTestDF),
+                         regexp = "Woody productivity may only be estimated for one siteID at a time")
+})
+
+
+
+### Test: Generate expected errors for issues with input arguments
+#   Test for unexpected 'plotSubset' argument
+testthat::test_that(desc = "Unexpected 'plotSubset' argument", {
+  testthat::expect_error(object = neonPlants::estimateWoodProd(inputDataList = testInput,
+                                                               plotSubset = "fromage"),
+                         regexp = "The 'plotSubset' argument must be one of: 'all', 'towerAll', 'towerAnnualSubset', 'distributed'")
+})
+
+#   Test for unexpected 'flagged' argument
+testthat::test_that(desc = "Unexpected 'flagged' argument", {
+  testthat::expect_error(object = neonPlants::estimateWoodProd(inputDataList = testInput,
+                                                               flagged = "apostate"),
+                         regexp = "The 'flagged' argument must be one of: 'filter', 'retain'")
+})
+
+#   Test for unexpected 'missing' argument
+testthat::test_that(desc = "Unexpected 'missing' argument", {
+  testthat::expect_error(object = neonPlants::estimateWoodProd(inputDataList = testInput,
+                                                               missing = "armadillo"),
+                         regexp = "The 'missing' argument must be one of: 'filter', 'retain'")
+})
+
+
+
+
+
+
+### Output value tests ####
+
+### Tests: Generate expected values in output data frames
+
+#   Test: Check for expected 'vst_ANPP_indiv' value
+testthat::test_that(desc = "Output 'vst_ANPP_indiv' value as expected", {
+  testthat::expect_equal(object = woodProdOutputs$vst_ANPP_indiv$agb_kg[5],
+                         expected = 29.41)
+})
+
+#   Test: Check for expected 'vst_ANPP_plot' value
+testthat::test_that(desc = "Output 'vst_ANPP_plot' value as expected", {
+  testthat::expect_equal(object = woodProdOutputs$vst_ANPP_plot$woodProd_Mghayr[2],
+                         expected = 11.79)
+})
+
+#   Test: Check for expected 'vst_ANPP_site' value
+testthat::test_that(desc = "Output 'vst_ANPP_site' value as expected", {
+  testthat::expect_equal(object = woodProdOutputs$vst_ANPP_site$woodProd_Mghayr[2],
+                         expected = 2.05)
+})
+
+#   Test: Check for expected 'duplicates' value
+testthat::test_that(desc = "Output 'duplicates' value as expected", {
+  testthat::expect_equal(object = woodProdOutputs$duplicates$individualID[1],
+                         expected = "NEON.PLA.D16.ABBY.00021")
+})
 
 
 
