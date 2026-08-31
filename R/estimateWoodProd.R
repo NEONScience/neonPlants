@@ -143,6 +143,11 @@ estimateWoodProd <- function(inputDataList,
 
   }
 
+  #   Message to user if PUUM data are supplied
+  if ("PUUM" %in% perPlot$siteID) {
+    message("ANPP estimates for the PUUM site do not currently include tree ferns")
+  }
+
 
 
   ### Verify optional input arguments meet requirements

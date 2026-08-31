@@ -235,6 +235,8 @@ estimateWoodMass = function(inputDataList,
 
 
   ##  Join with plot priority data; the 'specificModuleSamplingPriority' field is used to optionally filter only to plots with priority 1-5 when user-supplied 'plotSubset' == "towerAnnualSubset"
+  data("priority_plots", envir = environment())
+
   priority_plots <- priority_plots %>%
     dplyr::select("plotID",
                   "specificModuleSamplingPriority")

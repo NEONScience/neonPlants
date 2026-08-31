@@ -7,7 +7,7 @@
 #'
 #' @details This is a helper function for the estimateWoodMass() function.
 #'
-#' @param nwTable Table (generated in estimateWoodMass()) containing records for qualifying stems of non-woody individuals.
+#' @param nonWoodyTable Table (generated in estimateWoodMass()) containing records for qualifying stems of non-woody individuals.
 #'
 #' @param growthFormSubset Select Vegetation Structure growth forms for biomass estimation. The options are "tree", which enables biomass estimation only for palm trees and large tree ferns with a DBH ≥ 10 cm, and the default of "all", which includes "tree" individuals, and also small palms, small tree ferns, ferns, ocotillo, and xerophyllum individuals. [character]
 #'

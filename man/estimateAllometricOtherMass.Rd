@@ -7,9 +7,9 @@
 estimateAllometricOtherMass(nonWoodyTable, growthFormSubset = NA)
 }
 \arguments{
-\item{growthFormSubset}{Select Vegetation Structure growth forms for biomass estimation. The options are "tree", which enables biomass estimation only for palm trees and large tree ferns with a DBH ≥ 10 cm, and the default of "all", which includes "tree" individuals, and also small palms, small tree ferns, ferns, ocotillo, and xerophyllum individuals. \link{character}}
+\item{nonWoodyTable}{Table (generated in estimateWoodMass()) containing records for qualifying stems of non-woody individuals.}
 
-\item{nwTable}{Table (generated in estimateWoodMass()) containing records for qualifying stems of non-woody individuals.}
+\item{growthFormSubset}{Select Vegetation Structure growth forms for biomass estimation. The options are "tree", which enables biomass estimation only for palm trees and large tree ferns with a DBH ≥ 10 cm, and the default of "all", which includes "tree" individuals, and also small palms, small tree ferns, ferns, ocotillo, and xerophyllum individuals. \link{character}}
 }
 \value{
 A table with biomass estimates:

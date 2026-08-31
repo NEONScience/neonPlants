@@ -7,9 +7,9 @@
 \format{
 A data frame with 35 rows and 10 variables:
 \describe{
-\item{allometryID}{allometryID name developed in Chojnacky et al. 2014}
+\item{allometry_ID}{Allometry ID name developed in Chojnacky et al. 2014}
 \item{Group}{High-level group for which allometry parameters are applicable: either conifer, hardwood, or woodland}
-\item{subGroup}{Sub-group for which allometry parameters are applicable - e.g., family, wood density range, etc."}
+\item{subgroup}{Sub-group for which allometry parameters are applicable - e.g., family, wood density range, etc."}
 \item{Median.specific.gravity}{specific gravity of wood on green volume to dry-weight basis}
 \item{b0}{Chojnacky parameter b0}
 \item{b1}{Chojnacky parameter b1}

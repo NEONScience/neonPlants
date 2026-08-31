@@ -300,7 +300,7 @@ testthat::test_that(desc = "Output 'plot-events' match input 'plot-events'", {
 
 
   ##  Derive expected 'plot-events' from output data set
-  outputPlotEvent <- vst_ANPP_plot %>%
+  outputPlotEvent <- woodProdOutputs$vst_ANPP_plot %>%
     dplyr::mutate(plotEvent = paste(.data$plotID, .data$eventID, sep = "-")) %>%
     dplyr::distinct(.data$plotEvent) %>%
     dplyr::arrange(.data$plotEvent)
@@ -311,6 +311,44 @@ testthat::test_that(desc = "Output 'plot-events' match input 'plot-events'", {
   ##  Conduct identical plot-event test
   testthat::expect_identical(object = outputPlotEvent,
                              expected = inputPlotEvent)
+})
+
+
+
+### Test: Verify unique individualIDs in input data are accounted for across multiple output tables
+testthat::test_that(desc = "Output 'individualIDs' match input 'individualIDs'", {
+
+  ##  Derive expected 'individualIDs' from input data set
+  inputIndividual <- appInd %>%
+    dplyr::filter(.data$growthForm %in% c("single bole tree", "multi-bole tree")) %>%
+    dplyr::distinct(.data$individualID) %>%
+    dplyr::arrange(.data$individualID)
+
+
+  ##  Derive expected 'individualIDs' from output data set
+  #   Get individualIDs from 'vst_ANPP_indiv' table
+  outputIndividual <- woodProdOutputs$vst_ANPP_indiv %>%
+    dplyr::filter(!is.na(.data$individualID)) %>%
+    dplyr::distinct(.data$individualID)
+
+  #   Get individualIds from 'duplicates' table
+  dupeIndiv <- woodProdOutputs$duplicates %>%
+    dplyr::distinct(.data$individualID)
+
+  #   Get individualIds from 'missing' table
+  missingIndiv <- woodProdOutputs$missing %>%
+    dplyr::distinct(.data$individualID)
+
+  outputIndividual <- dplyr::bind_rows(outputIndividual,
+                                       dupeIndiv,
+                                       missingIndiv) %>%
+    dplyr::distinct(.data$individualID) %>%
+    dplyr::arrange(.data$individualID)
+
+
+  ##  Conduct identical plot-event test
+  testthat::expect_identical(object = outputIndividual$individualID,
+                             expected = inputIndividual$individualID)
 })
 
 

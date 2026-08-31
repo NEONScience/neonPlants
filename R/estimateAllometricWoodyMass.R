@@ -50,7 +50,9 @@ estimateAllometricWoodyMass <- function(appIndTable,
   ### Load external data required to assign Chojnacky parameters to taxonID
 
   #   Read in the Chojnacky et al 2014 parameters for each of their 35 defined allometric groups
-  chojParam <- parameters %>%
+  data("parameters", envir = environment())
+
+  parameters <- parameters %>%
     dplyr::select("allometry_ID",
                   "b0",
                   "b1",
@@ -58,20 +60,19 @@ estimateAllometricWoodyMass <- function(appIndTable,
                   "maxDiameter")
 
   #   Load wood density, veg type, and other taxon-specific data needed to assign species to Chojnacky allometry groups
-  taxonData <- taxon_fields
+  data("taxon_fields", envir = environment())
 
   #   Load USDA Plants characteristics to get PLANTS.Floristic.Area and Native.Status: Filtered to records that have PLANTS.Floristic.Area, Native.Status, or both
-  #plantIntTrop <- plantIntTrop #--> rename to 'usdaData'
-  usdaData <- plantIntTrop
+  data("plantIntTrop", envir = environment())
 
 
 
   ### Associate input taxonID data with wood density, USDA native/introduced data, etc., and assign Chojnacky allometryID
   ##  Join all taxonomic data
   inputTaxonDF <- dplyr::left_join(inputTaxonDF,
-                                   taxonData,
+                                   taxon_fields,
                                    by = "taxonID") %>%
-    dplyr::left_join(usdaData,
+    dplyr::left_join(plantIntTrop,
                      by = "taxonID")
 
 
@@ -156,7 +157,7 @@ estimateAllometricWoodyMass <- function(appIndTable,
 
   ##  Assign Chojnacky parameters to taxa based on allometryID
   inputTaxonDF <- dplyr::left_join(inputTaxonDF,
-                                   chojParam,
+                                   parameters,
                                    by = c("allometryID" = "allometry_ID"))
 
 

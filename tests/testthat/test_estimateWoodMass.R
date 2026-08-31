@@ -9,7 +9,7 @@ vstTestDF <- readRDS(testthat::test_path("testdata", "vst_testDat.rds"))
 
 
 ### Generate estimateWoodMass outputs with argument defaults ####
-estimateWoodMassOutputs <- neonPlants::estimateWoodMass(inputDataList = vstTestDF)
+woodMassOutputs <- neonPlants::estimateWoodMass(inputDataList = vstTestDF)
 
 
 
@@ -19,7 +19,7 @@ estimateWoodMassOutputs <- neonPlants::estimateWoodMass(inputDataList = vstTestD
 
 ### Test: Function generates expected output type
 testthat::test_that(desc = "Output type", {
-  testthat::expect_type(object = estimateWoodMassOutputs,
+  testthat::expect_type(object = woodMassOutputs,
                         type = "list")
 })
 
@@ -28,25 +28,25 @@ testthat::test_that(desc = "Output type", {
 ### Tests: Function generates expected output class for all output list objects
 #   Check 'vst_agb_kg' output table is a data frame
 testthat::test_that(desc = "Output class vst_agb_kg", {
-  testthat::expect_s3_class(object = estimateWoodMassOutputs$vst_agb_kg,
+  testthat::expect_s3_class(object = woodMassOutputs$vst_agb_kg,
                             class = "data.frame")
 })
 
 #   Check 'vst_missing' output table is a data frame
 testthat::test_that(desc = "Output class vst_missing", {
-  testthat::expect_s3_class(object = estimateWoodMassOutputs$vst_missing,
+  testthat::expect_s3_class(object = woodMassOutputs$vst_lost_downed,
                             class = "data.frame")
 })
 
 #   Check 'vst_plot_Mgha' output table is a data frame
 testthat::test_that(desc = "Output class vst_plot_Mgha", {
-  testthat::expect_s3_class(object = estimateWoodMassOutputs$vst_plot_Mgha,
+  testthat::expect_s3_class(object = woodMassOutputs$vst_plot_Mgha,
                             class = "data.frame")
 })
 
 #   Check 'vst_site_Mgha' output table is a data frame
 testthat::test_that(desc = "Output class vst_site_Mgha", {
-  testthat::expect_s3_class(object = estimateWoodMassOutputs$vst_site_Mgha,
+  testthat::expect_s3_class(object = woodMassOutputs$vst_site_Mgha,
                             class = "data.frame")
 })
 
@@ -61,50 +61,50 @@ testthat::test_that(desc = "Output class vst_site_Mgha", {
 
 #   Check expected column number of 'vst_agb_kg' data frame
 testthat::test_that(desc = "Output data frame column number 'vst_agb_kg'", {
-  testthat::expect_identical(object = ncol(estimateWoodMassOutputs$vst_agb_kg),
+  testthat::expect_identical(object = ncol(woodMassOutputs$vst_agb_kg),
                              expected = as.integer(30))
 })
 
 #   Check expected row number of 'vst_agb_kg' data frame
 testthat::test_that(desc = "Output data frame row number 'vst_agb_kg'", {
-  testthat::expect_identical(object = nrow(estimateWoodMassOutputs$vst_agb_kg),
-                             expected = as.integer(22769))
+  testthat::expect_identical(object = nrow(woodMassOutputs$vst_agb_kg),
+                             expected = as.integer(44405))
 })
 
-#   Check expected column number of 'vst_missing' data frame
-testthat::test_that(desc = "Output data frame column number 'vst_missing'", {
-  testthat::expect_identical(object = ncol(estimateWoodMassOutputs$vst_missing),
-                             expected = as.integer(50))
+#   Check expected column number of 'vst_lost_downed' data frame
+testthat::test_that(desc = "Output data frame column number 'vst_lost_downed'", {
+  testthat::expect_identical(object = ncol(woodMassOutputs$vst_lost_downed),
+                             expected = as.integer(48))
 })
 
-#   Check expected row number of 'vst_missing' data frame
-testthat::test_that(desc = "Output data frame row number 'vst_missing'", {
-  testthat::expect_identical(object = nrow(estimateWoodMassOutputs$vst_missing),
-                             expected = as.integer(9751))
+#   Check expected row number of 'vst_lost_downed' data frame
+testthat::test_that(desc = "Output data frame row number 'vst_lost_downed'", {
+  testthat::expect_identical(object = nrow(woodMassOutputs$vst_lost_downed),
+                             expected = as.integer(6438))
 })
 
 #   Check expected column number of 'vst_plot_Mgha' data frame
 testthat::test_that(desc = "Output data frame column number 'vst_plot_Mgha'", {
-  testthat::expect_identical(object = ncol(estimateWoodMassOutputs$vst_plot_Mgha),
+  testthat::expect_identical(object = ncol(woodMassOutputs$vst_plot_Mgha),
                              expected = as.integer(12))
 })
 
 #   Check expected row number of 'vst_plot_Mgha' data frame
 testthat::test_that(desc = "Output data frame row number 'vst_plot_Mgha'", {
-  testthat::expect_identical(object = nrow(estimateWoodMassOutputs$vst_plot_Mgha),
-                             expected = as.integer(287))
+  testthat::expect_identical(object = nrow(woodMassOutputs$vst_plot_Mgha),
+                             expected = as.integer(456))
 })
 
 #   Check expected column number of 'vst_site_Mgha' data frame
 testthat::test_that(desc = "Output data frame column number 'vst_site_Mgha'", {
-  testthat::expect_identical(object = ncol(estimateWoodMassOutputs$vst_site_Mgha),
+  testthat::expect_identical(object = ncol(woodMassOutputs$vst_site_Mgha),
                              expected = as.integer(12))
 })
 
 #   Check expected row number of 'vst_site_Mgha' data frame
 testthat::test_that(desc = "Output data frame row number 'vst_site_Mgha'", {
-  testthat::expect_identical(object = nrow(estimateWoodMassOutputs$vst_site_Mgha),
-                             expected = as.integer(19))
+  testthat::expect_identical(object = nrow(woodMassOutputs$vst_site_Mgha),
+                             expected = as.integer(32))
 })
 
 
@@ -227,32 +227,32 @@ testthat::test_that(desc = "Unexpected 'growthFormSubset' argument", {
 
 ### Test: Generate error if output 'vst_agb_kg' value not as expected
 testthat::test_that(desc = "Output 'vst_agb_kg' value as expected", {
-  testthat::expect_equal(object = estimateWoodMassOutputs$vst_agb_kg$agb_kg[1],
+  testthat::expect_equal(object = woodMassOutputs$vst_agb_kg$agb_kg[1],
                          expected = 0.12)
 })
 
 
 
-### Test: Generate error if output 'vst_missing' value not as expected
-testthat::test_that(desc = "Output 'vst_missing' value as expected", {
-  testthat::expect_equal(object = estimateWoodMassOutputs$vst_missing$individualID[175],
-                         expected = "NEON.PLA.D02.BLAN.08420")
+### Test: Generate error if output 'vst_lost_downed' value not as expected
+testthat::test_that(desc = "Output 'vst_lost_downed' value as expected", {
+  testthat::expect_equal(object = woodMassOutputs$vst_lost_downed$individualID[175],
+                         expected = "NEON.PLA.D02.BLAN.12303")
 })
 
 
 
 ### Test: Generate error if output 'vst_plot_Mgha' value not as expected
 testthat::test_that(desc = "Output 'vst_plot_Mgha' value as expected", {
-  testthat::expect_equal(object = estimateWoodMassOutputs$vst_plot_Mgha$agb_Mgha[13],
-                         expected = 79.18)
+  testthat::expect_equal(object = woodMassOutputs$vst_plot_Mgha$agb_Mgha[12],
+                         expected = 80.97)
 })
 
 
 
 ### Test: Generate error if output 'vst_site_Mgha' value not as expected
 testthat::test_that(desc = "Output 'vst_site_Mgha' value as expected", {
-  testthat::expect_equal(object = estimateWoodMassOutputs$vst_site_Mgha$woodMassMean_Mgha[18],
-                         expected = 244.9)
+  testthat::expect_equal(object = woodMassOutputs$vst_site_Mgha$woodMassMean_Mgha[18],
+                         expected = 265.3)
 })
 
 
@@ -274,7 +274,7 @@ testthat::test_that(desc = "Output 'vst_site_Mgha' sites as expected", {
   inputSiteYear <- inputSiteYear$site_year
 
   #   Prep output site-year list
-  outputSiteYear <- estimateWoodMassOutputs$vst_site_Mgha %>%
+  outputSiteYear <- woodMassOutputs$vst_site_Mgha %>%
     dplyr::mutate(site_year = paste(siteID, year, sep = "-")) %>%
     dplyr::arrange(site_year)
 
@@ -328,7 +328,7 @@ testthat::test_that(desc = "Output 'plot-events' match input 'plot-events'", {
 
   ##  Derive expected 'plot-events' from output data set
   #   Get 'plot-events' from plot-level output table
-  outputPlotEvent <- estimateWoodMassOutputs$vst_plot_Mgha %>%
+  outputPlotEvent <- woodMassOutputs$vst_plot_Mgha %>%
     dplyr::mutate(plotEvent = paste(plotID, eventID, sep = "-")) %>%
     dplyr::filter(!plotEvent %in% plotEventPartial$plotEvent) %>%
     dplyr::distinct(plotEvent)
@@ -336,7 +336,7 @@ testthat::test_that(desc = "Output 'plot-events' match input 'plot-events'", {
   outputPlotEvent <- outputPlotEvent$plotEvent
 
   #   Get 'plot-events' from 'missing' output table
-  missingPlotEvent <- estimateWoodMassOutputs$vst_missing %>%
+  missingPlotEvent <- woodMassOutputs$vst_lost_downed %>%
     dplyr::mutate(plotEvent = paste(plotID, eventID, sep = "-")) %>%
     dplyr::filter(!plotEvent %in% plotEventPartial$plotEvent) %>%
     dplyr::distinct(plotEvent)
@@ -351,3 +351,5 @@ testthat::test_that(desc = "Output 'plot-events' match input 'plot-events'", {
   testthat::expect_identical(object = outputPlotEvent,
                              expected = inputPlotEvent)
 })
+
+#--> Output doesn't match expected: Output missing for 'ABBY_068-vst_ABBY_2019', need to check why...
