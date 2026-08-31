@@ -256,7 +256,61 @@ testthat::test_that(desc = "Output 'duplicates' value as expected", {
                          expected = "NEON.PLA.D16.ABBY.00021")
 })
 
+#   Test: Check for expected 'flagged' value
+testthat::test_that(desc = "Output 'flagged' value as expected", {
+  testthat::expect_equal(object = woodProdOutputs$flagged$agb_kg[2],
+                         expected = 241.54)
+})
+
+#   Test: Check for expected 'missing' value
+testthat::test_that(desc = "Output 'missing' value as expected", {
+  testthat::expect_equal(object = woodProdOutputs$missing$individualID[1],
+                         expected = "NEON.PLA.D16.ABBY.00034")
+})
 
 
+
+### Test: Verify eventIDs in input data exist in 'vst_ANPP_site' output
+testthat::test_that(desc = "Output 'vst_ANPP_site' contains eventIDs as expected", {
+
+  #   Prep input eventID list
+  inputEvents <- sort(unique(perPlot$eventID))
+
+  #   Prep output eventID list
+  outputEvents <- sort(unique(woodProdOutputs$vst_ANPP_site$eventID))
+
+  #   Check identical
+  testthat::expect_identical(object = outputEvents,
+                             expected = inputEvents)
+})
+
+
+
+### Test: Verify unique plot-events in input data exist in 'vst_ANPP_plot' output
+testthat::test_that(desc = "Output 'plot-events' match input 'plot-events'", {
+
+  ##  Derive expected 'plot-events' from input data set
+  inputPlotEvent <- perPlot %>%
+    dplyr::filter(.data$samplingImpractical == "OK" | is.na(.data$samplingImpractical)) %>%
+    dplyr::mutate(plotEvent = paste(.data$plotID, .data$eventID, sep = "-")) %>%
+    dplyr::distinct(.data$plotEvent) %>%
+    dplyr::arrange(.data$plotEvent)
+
+  inputPlotEvent <- inputPlotEvent$plotEvent
+
+
+  ##  Derive expected 'plot-events' from output data set
+  outputPlotEvent <- vst_ANPP_plot %>%
+    dplyr::mutate(plotEvent = paste(.data$plotID, .data$eventID, sep = "-")) %>%
+    dplyr::distinct(.data$plotEvent) %>%
+    dplyr::arrange(.data$plotEvent)
+
+  outputPlotEvent <- outputPlotEvent$plotEvent
+
+
+  ##  Conduct identical plot-event test
+  testthat::expect_identical(object = outputPlotEvent,
+                             expected = inputPlotEvent)
+})
 
 
