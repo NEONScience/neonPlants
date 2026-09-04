@@ -745,7 +745,7 @@ estimateWoodMass = function(inputDataList,
 
         #   Sum 'agb_kg' across stems to get total biomass of individual
         agb_kg = ifelse(!all(is.na(.data$agb_kg)),
-                        round(sum(.data$agb_kg, na.rm = TRUE), digits = 2),
+                        round(sum(.data$agb_kg, na.rm = TRUE), digits = 4),
                         NA_real_),
 
         #   Calculate single equivalent diameter for multiple stems

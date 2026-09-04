@@ -306,9 +306,11 @@ testthat::test_that(desc = "Output 'plot-events' match input 'plot-events'", {
   inputPlotEvent <- inputPlotEvent$plotEvent
 
   #   Identify fully sampled plots in input NW data
+  #--> Remove ABBY_068-vst_ABBY_2019 because data error causes it to be dropped (missing totalSampledAreaFerns)
   nwPlotEvent <- vstTestDF$`vst_non-woody` %>%
     dplyr::mutate(plotEvent = paste(plotID, eventID, sep = "-")) %>%
-    dplyr::filter(!plotEvent %in% plotEventPartial$plotEvent) %>%
+    dplyr::filter(!plotEvent %in% plotEventPartial$plotEvent,
+                  plotEvent != "ABBY_068-vst_ABBY_2019") %>%
     dplyr::distinct(plotEvent)
 
   nwPlotEvent <- nwPlotEvent$plotEvent
@@ -352,4 +354,3 @@ testthat::test_that(desc = "Output 'plot-events' match input 'plot-events'", {
                              expected = inputPlotEvent)
 })
 
-#--> Output doesn't match expected: Output missing for 'ABBY_068-vst_ABBY_2019', need to check why...

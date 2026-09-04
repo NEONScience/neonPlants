@@ -80,10 +80,10 @@ estimateAllometricOtherMass <- function(nonWoodyTable,
 
         agb_frn_kg = dplyr::case_when(
           .data$growthForm == "fern" & .data$taxonID == "POMU" ~
-            round((-2.5695 + 0.0643 * (.data$leafNumber * .data$meanLeafLength)) / 1000, digits = 2),
+            round((-2.5695 + 0.0643 * (.data$leafNumber * .data$meanLeafLength)) / 1000, digits = 4),
 
           .data$growthForm == "fern" & .data$taxonID == "PTAQ" ~
-            round((3.1703 + 2.1433 * .data$basalStemDiameter) / 1000, digits = 2),
+            round((3.1703 + 2.1433 * .data$basalStemDiameter) / 1000, digits = 4),
 
           TRUE ~ NA_real_
         ),
