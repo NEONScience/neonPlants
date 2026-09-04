@@ -1,0 +1,316 @@
+﻿function,table,field,description,units
+estimateWoodMass,vst_agb_kg,plot_eventID,,
+estimateWoodMass,vst_agb_kg,domainID,Unique identifier of the NEON domain,
+estimateWoodMass,vst_agb_kg,siteID,NEON site code,
+estimateWoodMass,vst_agb_kg,year,,
+estimateWoodMass,vst_agb_kg,eventID,,
+estimateWoodMass,vst_agb_kg,date,,
+estimateWoodMass,vst_agb_kg,nlcdClass,,
+estimateWoodMass,vst_agb_kg,plotType,NEON plot type in which sampling occurred: tower or distributed,
+estimateWoodMass,vst_agb_kg,eventType,,
+estimateWoodMass,vst_agb_kg,dataCollected,,
+estimateWoodMass,vst_agb_kg,plotID,Plot identifier (NEON site code_XXX),
+estimateWoodMass,vst_agb_kg,subplotID,,
+estimateWoodMass,vst_agb_kg,taxonID,,
+estimateWoodMass,vst_agb_kg,scientificName,,
+estimateWoodMass,vst_agb_kg,individualID,,
+estimateWoodMass,vst_agb_kg,plantStatus2,,
+estimateWoodMass,vst_agb_kg,growthForm,,
+estimateWoodMass,vst_agb_kg,source,,
+estimateWoodMass,vst_agb_kg,agb_kg,,
+estimateWoodMass,vst_agb_kg,sampledArea_m2,,
+estimateWoodMass,vst_missing,plot_eventID,,
+estimateWoodMass,vst_missing,domainID,Unique identifier of the NEON domain,
+estimateWoodMass,vst_missing,siteID,NEON site code,
+estimateWoodMass,vst_missing,year,,
+estimateWoodMass,vst_missing,eventID,,
+estimateWoodMass,vst_missing,date,,
+estimateWoodMass,vst_missing,plotType,NEON plot type in which sampling occurred: tower or distributed,
+estimateWoodMass,vst_missing,eventType,,
+estimateWoodMass,vst_missing,dataCollected,,
+estimateWoodMass,vst_missing,plotID,,
+estimateWoodMass,vst_missing,subplotID,,
+estimateWoodMass,vst_missing,taxonID,,
+estimateWoodMass,vst_missing,scientificName,,
+estimateWoodMass,vst_missing,individualID,,
+estimateWoodMass,vst_missing,plantStatus,,
+estimateWoodMass,vst_missing,growthForm,,
+estimateWoodMass,vst_missing,measurementHeight,,
+estimateWoodMass,vst_missing,stemDiameter,,
+estimateWoodMass,vst_missing,basalStemDiameter,,
+estimateWoodMass,vst_missing,height,,
+estimateWoodMass,vst_missing,stemLength,,
+estimateWoodMass,vst_missing,maxCrownDiameter,,
+estimateWoodMass,vst_missing,ninetyCrownDiameter,,
+estimateWoodMass,vst_missing,source,,
+estimateWoodMass,vst_missing,agb_kg,,
+estimateWoodMass,vst_plot_Mgha,plot_eventID,,
+estimateWoodMass,vst_plot_Mgha,domainID,Unique identifier of the NEON domain,
+estimateWoodMass,vst_plot_Mgha,siteID,NEON site code,
+estimateWoodMass,vst_plot_Mgha,year,,
+estimateWoodMass,vst_plot_Mgha,eventID,,
+estimateWoodMass,vst_plot_Mgha,nlcdClass,,
+estimateWoodMass,vst_plot_Mgha,plotType,NEON plot type in which sampling occurred: tower or distributed,
+estimateWoodMass,vst_plot_Mgha,eventType,,
+estimateWoodMass,vst_plot_Mgha,dataCollected,,
+estimateWoodMass,vst_plot_Mgha,plotID,,
+estimateWoodMass,vst_plot_Mgha,agb_Mgha,,
+estimateWoodMass,vst_plot_Mgha,live_Mgha,,
+estimateWoodMass,vst_plot_Mgha,dead_Mgha,,
+estimateWoodMass,vst_site,domainID,Unique identifier of the NEON domain,
+estimateWoodMass,vst_site,siteID,NEON site code,
+estimateWoodMass,vst_site,year,,
+estimateWoodMass,vst_site,woodPlotNum,,
+estimateWoodMass,vst_site,woodMassMean_Mgha,,
+estimateWoodMass,vst_site,woodMassSD_Mgha,,
+estimateWoodMass,vst_site,woodLiveMassMean_Mgha,,
+estimateWoodMass,vst_site,woodLiveMassSD_Mgha,,
+estimateWoodMass,vst_site,woodDeadMassMean_Mgha,,
+estimateWoodMass,vst_site,woodDeadMassSD_Mgha,,
+estimateWoodProd,vst_ANPP_site,siteID,NEON site code,
+estimateWoodProd,vst_ANPP_site,year,Time 2 yearBoutBegan,
+estimateWoodProd,vst_ANPP_site,eventID1,eventID at time 1,
+estimateWoodProd,vst_ANPP_site,eventID2,eventID at time 2,
+estimateWoodProd,vst_ANPP_site,woodPlotNum,number of plots contributing to woodANPPMean_Mghayr,
+estimateWoodProd,vst_ANPP_site,woodANPPSD_Mghayr,Site-level std. dev. of woodANPP_Mghayr plot-level values from vst_ANPP plot,Mg/ha/yr
+estimateWoodProd,vst_ANPP_site,woodANPPMean_Mghayr,Site-level mean of woodANPP_Mghayr plot-level values from vst_ANPP plot contributing to woodANPPMean_Mghayr,Mg/ha/yr
+estimateWoodProd,vst_ANPP_plot,plotID,Plot identifier (NEON site code_XXX),
+estimateWoodProd,vst_ANPP_plot,year,year that sampling bout began,
+estimateWoodProd,vst_ANPP_plot,eventID1,eventID at time 1,
+estimateWoodProd,vst_ANPP_plot,eventID2,eventID at time 2,
+estimateWoodProd,vst_ANPP_plot,siteID,NEON site code,
+estimateWoodProd,vst_ANPP_plot,plotType,NEON plot type in which sampling occurred: tower or distributed,
+estimateWoodProd,vst_ANPP_plot,samplingInterval,number of years between time 1 and 2 (typically either 1 or 5),years
+estimateWoodProd,vst_ANPP_plot,missing1Count,Number of individuals missing at time 1.,
+estimateWoodProd,vst_ANPP_plot,missing2Count,Number of individuals missing at time 2.,
+estimateWoodProd,vst_ANPP_plot,increment_Mghayr,plot-scale aboveground tree (DP1.10098.001) increment,Mg/ha/yr
+estimateWoodProd,vst_ANPP_plot,mortality_Mghayr,plot-scale aboveground tree (DP1.10098.001) mortality,Mg/ha/yr
+estimateWoodProd,vst_ANPP_plot,recruitment_Mghayr,plot-scale aboveground tree (DP1.10098.001) recruitment,Mg/ha/yr
+estimateWoodProd,vst_ANPP_plot,woodANPP_Mghayr,plot-scale aboveground tree (DP1.10098.001) productivity: increment_Mghayr + mortality_Mghayr ‚Äì recruitment_Mghayr,Mg/ha/yr
+estimateWoodProd,mortality,plotID,Plot identifier (NEON site code_XXX),
+estimateWoodProd,mortality,year1,Time 1 yearBoutBegan,
+estimateWoodProd,mortality,year2,Time 2 yearBoutBegan,
+estimateWoodProd,mortality,eventID1,eventID at time 1,
+estimateWoodProd,mortality,eventID2,eventID at time 2,
+estimateWoodProd,mortality,siteID,NEON 4-letter terrestrial site ID,
+estimateWoodProd,mortality,plotType,NEON plot type in which sampling occurred: tower or distributed,
+estimateWoodProd,mortality,individualID,Domain-level unique identifier for an individual: NEON.PLA.D##.######,
+estimateWoodProd,mortality,plantStatus1,status of plant at time 1 (always ‚ÄúLive‚Äù),
+estimateWoodProd,mortality,plantStatus2,"status of plant at time 2 (‚ÄúDead_or_lost‚Äù, or NA if mortality argument = ‚Äúall‚Äù)",
+estimateWoodProd,mortality,stemDiameter,Cross-sectional stem diameter at time 1,centimeter
+estimateWoodProd,mortality,height,Highest point of an individual or average height of a patch,meter
+estimateWoodProd,mortality,taxonID,"Species code, based on one or more sources",
+estimateWoodProd,mortality,biomassWhenLive,biomass of individual at time 1 when it was alive,kilogram
+estimateWoodProd,recruitment,plotID,Plot identifier (NEON site code_XXX),
+estimateWoodProd,recruitment,year1,Time 1 yearBoutBegan,
+estimateWoodProd,recruitment,year2,Time 2 yearBoutBegan,
+estimateWoodProd,recruitment,eventID1,eventID at time 1,
+estimateWoodProd,recruitment,eventID2,eventID at time 2,
+estimateWoodProd,recruitment,siteID,NEON site code,
+estimateWoodProd,recruitment,plotType,NEON plot type in which sampling occurred: tower or distributed,
+estimateWoodProd,recruitment,individualID,Domain-level unique identifier for an individual: NEON.PLA.D##.######,
+estimateWoodProd,recruitment,plantStatus1,Status of plant at time 1 (always NA),
+estimateWoodProd,recruitment,plantStatus2,Status of plant at time 2 (always ‚ÄúLive‚Äù),
+estimateWoodProd,recruitment,stemDiameter,Cross-sectional stem diameter at time 2,centimeter
+estimateWoodProd,recruitment,height,Highest point of an individual or average height of a patch,meter
+estimateWoodProd,recruitment,taxonID,"Species code, based on one or more sources",
+estimateWoodProd,recruitment,biomassAtThreshold,biomass of individual at minimum diameter threshold,kilogram
+estimateWoodProd,missing,plotID,Plot identifier (NEON site code_XXX),
+estimateWoodProd,missing,year1,Time 1 yearBoutBegan,
+estimateWoodProd,missing,year2,Time 2 yearBoutBegan,
+estimateWoodProd,missing,eventID1,eventID at time 1,
+estimateWoodProd,missing,eventID2,eventID at time 2,
+estimateWoodProd,missing,siteID,NEON site code,
+estimateWoodProd,missing,plotType,NEON plot type in which sampling occurred: tower or distributed,
+estimateWoodProd,missing,individualID,Domain-level unique identifier for an individual: NEON.PLA.D##.######,
+estimateWoodProd,missing,plantStatus1,Status of plant at time 1 (if not missing),
+estimateWoodProd,missing,plantStatus2,Status of plant at time 2 (if not missing),
+estimateWoodProd,missing,stemDiameter,Cross-sectional stem diameter,centimeter
+estimateWoodProd,missing,height,Highest point of an individual or average height of a patch,meter
+estimateWoodProd,missing,taxonID,"Species code, based on one or more sources",
+estimateWoodProd,missing,biomass1,biomass of individual at time 1 (if not missing),kilogram
+estimateWoodProd,missing,biomass2,biomass of individual at time 2 (if not missing),kilogram
+scaleHerbMass,hbp_site,domainID,Unique identifier of the NEON domain,
+scaleHerbMass,hbp_site,siteID,NEON site code,
+scaleHerbMass,hbp_site,year,The calendar year in which the growing season began,
+scaleHerbMass,hbp_site,herbEventID,Grouping variable linking all plots in a scheduled sampling bout; identifies the bout(s) associated with peak biomass,
+scaleHerbMass,hbp_site,herbPlotCount,The number of plots contributing to the site-level peak herbaceous biomass estimate,count
+scaleHerbMass,hbp_site,herbPlotType,NEON plot type in which sampling occurred: tower or distributed or both,
+scaleHerbMass,hbp_site,herbStartDate,The start date of the collection event,date
+scaleHerbMass,hbp_site,herbEndDate,The completion date of the collection event,date
+scaleHerbMass,hbp_site,herbTotalMean_Mgha,Site-level mean peak herbaceous biomass,Mg/ha
+scaleHerbMass,hbp_site,herbTotalSD_Mgha,Site-level standard deviation of peak herbaceous biomass,Mg/ha
+scaleHerbMass,hbp_site,herbTotalSEM_Mgha,Site-level standard error of the mean of peak herbaceous biomass,Mg/ha
+scaleHerbMass,hbp_site,herbTotalMean_gm2,Site-level mean peak herbaceous biomass,g/m2
+scaleHerbMass,hbp_site,herbTotalSD_gm2,Site-level standard deviation of peak herbaceous biomass,g/m2
+scaleHerbMass,hbp_site,herbTotalSEM_gm2,Site-level standard error of the mean of peak herbaceous biomass,g/m2
+scaleHerbMass,hbp_plot,domainID,Unique identifier of the NEON domain,
+scaleHerbMass,hbp_plot,siteID,NEON site code,
+scaleHerbMass,hbp_plot,plotID,Plot identifier (NEON site code_XXX),
+scaleHerbMass,hbp_plot,nlcdClass,National Land Cover Database Vegetation Type Name,
+scaleHerbMass,hbp_plot,plotType,NEON plot type in which sampling occurred: tower or distributed,
+scaleHerbMass,hbp_plot,plotSize,Size (in square meters) of the plot,m2
+scaleHerbMass,hbp_plot,plotManagement,Indicator of management activities occurring in the plot,
+scaleHerbMass,hbp_plot,collectDate,Date of the collection event,date
+scaleHerbMass,hbp_plot,year,The calendar year in which the growing season began,
+scaleHerbMass,hbp_plot,eventID,Grouping variable linking all plots in a scheduled sampling bout; identifies the bout associated with peak biomass,
+scaleHerbMass,hbp_plot,herbTotalMass_Mgha,Total plot-level peak herbaceous biomass,Mg/ha
+scaleHerbMass,hbp_plot,herbTotalMass_gm2,Total plot-level peak herbaceous biomass,g/m2
+scaleHerbMass,hbp_plot,herbCoolSeasonGram_gm2,Cool season graminoid biomass at the time of peak herbaceous biomass,g/m2
+scaleHerbMass,hbp_plot,herbForbs_gm2,Forb biomass at the time of peak herbaceous biomass,g/m2
+scaleHerbMass,hbp_plot,herbNFixing_gm2,N-Fixing biomass at the time of peak herbaceous biomass,g/m2
+scaleHerbMass,hbp_plot,herbWarmSeasonGram_gm2,Warm season graminoid biomass at the time of peak herbaceous biomass,g/m2
+scaleHerbMass,hbp_plot,herbWoodyPlants_gm2,Small woody plant biomass (ddh < 1 cm) at the time of peak herbaceous biomass,g/m2
+scaleHerbMass,hbp_plot_crop,domainID,Unique identifier of the NEON domain,
+scaleHerbMass,hbp_plot_crop,siteID,NEON site code,
+scaleHerbMass,hbp_plot_crop,year,The calendar year in which the growing season began,
+scaleHerbMass,hbp_plot_crop,plotID,Plot identifier (NEON site code_XXX),
+scaleHerbMass,hbp_plot_crop,nlcdClass,National Land Cover Database Vegetation Type Name,
+scaleHerbMass,hbp_plot_crop,plotType,NEON plot type in which sampling occurred: tower or distributed,
+scaleHerbMass,hbp_plot_crop,plotSize,Size (in square meters) of the plot,m2
+scaleHerbMass,hbp_plot_crop,plotManagement,Indicator of management activities occurring in the plot,
+scaleHerbMass,hbp_plot_crop,eventID,Grouping variable linking all plots in a scheduled sampling bout; identifies the bout associated with plot-specific peak biomass,
+scaleHerbMass,hbp_plot_crop,collectDate,Date of the collection event,date
+scaleHerbMass,hbp_plot_crop,herbTotalMass_Mgha,Total plot-level peak herbaceous biomass,Mg/ha
+scaleHerbMass,hbp_plot_crop,herbTotalMass_gm2,Total plot-level peak herbaceous biomass,g/m2
+scaleHerbMass,hbp_plot_crop,herbCoolSeasonGram_gm2,Cool season graminoid biomass at the time of peak herbaceous biomass,g/m2
+scaleHerbMass,hbp_plot_crop,herbForbs_gm2,Forb biomass at the time of peak herbaceous biomass,g/m2
+scaleHerbMass,hbp_plot_crop,herbNFixing_gm2,N-Fixing biomass at the time of peak herbaceous biomass,g/m2
+scaleHerbMass,hbp_plot_crop,herbWarmSeasonGram_gm2,Warm season graminoid biomass at the time of peak herbaceous biomass,g/m2
+scaleHerbMass,hbp_plot_crop,herbWoodyPlants_gm2,Small woody plant biomass (ddh < 1 cm) at the time of peak herbaceous biomass,g/m2
+scaleHerbMass,hbp_plot_crop,Barley_gm2,Barley biomass at the time of plot-level peak herbaceous biomass,g/m2
+scaleHerbMass,hbp_plot_crop,Corn_gm2,Corn biomass at the time of plot-level peak herbaceous biomass,g/m2
+scaleHerbMass,hbp_plot_crop,Millet_gm2,Millet biomass at the time of plot-level peak herbaceous biomass,g/m2
+scaleHerbMass,hbp_plot_crop,Oat_gm2,Oat biomass at the time of plot-level peak herbaceous biomass,g/m2
+scaleHerbMass,hbp_plot_crop,OrchardGrass_gm2,Orchard Grass biomass at the time of plot-level peak herbaceous biomass,g/m2
+scaleHerbMass,hbp_plot_crop,Rye_gm2,Rye biomass at the time of plot-level peak herbaceous biomass,g/m2
+scaleHerbMass,hbp_plot_crop,Sorghum_gm2,Sorghum biomass at the time of plot-level peak herbaceous biomass,g/m2
+scaleHerbMass,hbp_plot_crop,Soybean_gm2,Soybean biomass at the time of plot-level peak herbaceous biomass,g/m2
+scaleHerbMass,hbp_plot_crop,Sunflower_gm2,Sunflower biomass at the time of plot-level peak herbaceous biomass,g/m2
+scaleHerbMass,hbp_plot_crop,Wheat_gm2,Wheat biomass at the time of plot-level peak herbaceous biomass,g/m2
+scaleHerbMass,hbp_plot_extra,domainID,Unique identifier of the NEON domain,
+scaleHerbMass,hbp_plot_extra,siteID,NEON site code,
+scaleHerbMass,hbp_plot_extra,plotID,Plot identifier (NEON site code_XXX),
+scaleHerbMass,hbp_plot_extra,nlcdClass,National Land Cover Database Vegetation Type Name,
+scaleHerbMass,hbp_plot_extra,plotType,NEON plot type in which sampling occurred: tower or distributed,
+scaleHerbMass,hbp_plot_extra,plotSize,Size (in square meters) of the plot,m2
+scaleHerbMass,hbp_plot_extra,plotManagement,Indicator of management activities occurring in the plot,
+scaleHerbMass,hbp_plot_extra,collectDate,Date of the collection event,date
+scaleHerbMass,hbp_plot_extra,year,The calendar year in which the growing season began,
+scaleHerbMass,hbp_plot_extra,eventID,Grouping variable linking all plots in a scheduled sampling bout; identifies the bout associated with peak biomass,
+scaleHerbMass,hbp_plot_extra,herbTotalMass_Mgha,Total peak herbaceous biomass,Mg/ha
+scaleHerbMass,hbp_plot_extra,herbTotalMass_gm2,Total peak herbaceous biomass,g/m2
+scaleHerbMass,hbp_plot_extra,herbCoolSeasonGram_gm2,Cool season graminoid biomass at the time of peak herbaceous biomass,g/m2
+scaleHerbMass,hbp_plot_extra,herbForbs_gm2,Forb biomass at the time of peak herbaceous biomass,g/m2
+scaleHerbMass,hbp_plot_extra,herbNFixing_gm2,N-Fixing biomass at the time of peak herbaceous biomass,g/m2
+scaleHerbMass,hbp_plot_extra,herbWarmSeasonGram_gm2,Warm season graminoid biomass at the time of peak herbaceous biomass,g/m2
+scaleHerbMass,hbp_plot_extra,herbWoodyPlants_gm2,Small woody plant biomass (ddh < 1 cm) at the time of peak herbaceous biomass,g/m2
+scaleHerbMass,hbp_agb,domainID,Unique identifier of the NEON domain,
+scaleHerbMass,hbp_agb,siteID,NEON site code,
+scaleHerbMass,hbp_agb,plotID,Plot identifier (NEON site code_XXX),
+scaleHerbMass,hbp_agb,subplotID,Identifier for the NEON subplot,
+scaleHerbMass,hbp_agb,clipID,Unique identifier for the clip-harvest location within the plot,
+scaleHerbMass,hbp_agb,nlcdClass,National Land Cover Database Vegetation Type Name,
+scaleHerbMass,hbp_agb,plotType,NEON plot type in which sampling occurred: tower or distributed,
+scaleHerbMass,hbp_agb,plotSize,Size (in square meters) of the plot,m2
+scaleHerbMass,hbp_agb,plotManagement,Indicator of management activities occurring in the plot,
+scaleHerbMass,hbp_agb,collectDate,Date of the collection event,date
+scaleHerbMass,hbp_agb,year,The calendar year in which the growing season began,
+scaleHerbMass,hbp_agb,eventID,Grouping variable linking all plots in a scheduled sampling bout; identifies the bout associated with peak biomass,
+scaleHerbMass,hbp_agb,targetTaxaPresent,Indicator of whether the sample contained individuals of the target taxa,
+scaleHerbMass,hbp_agb,sampleID,Identifier for sample,
+scaleHerbMass,hbp_agb,clipArea,Total area sampled within the selected clipID,m2
+scaleHerbMass,hbp_agb,exclosure,Identifies whether clip harvest took place in an area protected by a grazing exclosure,
+scaleHerbMass,hbp_agb,TotalMass_gm2,Total herbaceous biomass per unit area,g/m2
+scaleHerbMass,hbp_agb,CoolSeasonGram_gm2,Cool season graminoid biomass per unit area,g/m2
+scaleHerbMass,hbp_agb,Forbs_gm2,Forb biomass per unit area,g/m2
+scaleHerbMass,hbp_agb,Nfixing_gm2,N-Fixing biomass per unit area,g/m2
+scaleHerbMass,hbp_agb,WarmSeasonGram_gm2,Warm season graminoid biomass per unit area,g/m2
+scaleHerbMass,hbp_agb,WoodyPlants_gm2,Small woody plant biomass (ddh < 1 cm) per unit area,g/m2
+scaleHerbMass,hbp_agb,Barley_gm2,Barley biomass per unit area,g/m2
+scaleHerbMass,hbp_agb,Corn_gm2,Corn biomass per unit area,g/m2
+scaleHerbMass,hbp_agb,Millet_gm2,Millet biomass per unit area,g/m2
+scaleHerbMass,hbp_agb,Oat_gm2,Oat biomass per unit area,g/m2
+scaleHerbMass,hbp_agb,OrchardGrass_gm2,Orchard Grass biomass per unit area,g/m2
+scaleHerbMass,hbp_agb,Rye_gm2,Rye biomass per unit area,g/m2
+scaleHerbMass,hbp_agb,Sorghum_gm2,Sorghum biomass per unit area,g/m2
+scaleHerbMass,hbp_agb,Soybean_gm2,Soybean biomass per unit area,g/m2
+scaleHerbMass,hbp_agb,Sunflower_gm2,Sunflower biomass per unit area,g/m2
+scaleHerbMass,hbp_agb,Wheat_gm2,Wheat biomass per unit area,g/m2
+estimateHerbProd,herb_ANPP_site,domainID,Unique identifier of the NEON domain,
+estimateHerbProd,herb_ANPP_site,siteID,NEON site code,
+estimateHerbProd,herb_ANPP_site,year,The calendar year in which the growing season began,
+estimateHerbProd,herb_ANPP_site,plotType,NEON plot type in which sampling occurred: tower or distributed or both,
+estimateHerbProd,herb_ANPP_site,plotManagement,Indicator of management activities occurring in the plot,
+estimateHerbProd,herb_ANPP_site,plotCount,The number of plots contributing to the annual site-level herbaceous ANPP estimate,
+estimateHerbProd,herb_ANPP_site,totalClipCount,"The number of biomass clips (i.e., clipIDs) contributing to the annual site-level herbaceous ANPP estimate",
+estimateHerbProd,herb_ANPP_site,herbProd_Mghayr,Annual total herbaceous above-ground net primary productivity per unit area,Mg/ha/yr
+estimateHerbProd,herb_ANPP_site,herbProdSD_Mghayr,Standard deviation for annual total herbaceous above-ground net primary productivity per unit area,Mg/ha/yr
+estimateHerbProd,herb_ANPP_site,herbProd_gm2yr,Annual total herbaceous above-ground net primary productivity per unit area,g/m2/yr
+estimateHerbProd,herb_ANPP_site,herbProdSD_gm2yr,Standard deviation for annual total herbaceous above-ground net primary productivity per unit area,g/m2/yr
+estimateHerbProd,herb_ANPP_plot,domainID,Unique identifier of the NEON domain,
+estimateHerbProd,herb_ANPP_plot,siteID,NEON site code,
+estimateHerbProd,herb_ANPP_plot,year,The calendar year in which the growing season began,
+estimateHerbProd,herb_ANPP_plot,plotID,Plot identifier (NEON site code_XXX),
+estimateHerbProd,herb_ANPP_plot,nlcdClass,National Land Cover Database Vegetation Type Name,
+estimateHerbProd,herb_ANPP_plot,plotType,NEON plot type in which sampling occurred: tower or distributed,
+estimateHerbProd,herb_ANPP_plot,plotSize,Size (in square meters) of the plot,m2
+estimateHerbProd,herb_ANPP_plot,plotManagement,Indicator of management activities occurring in the plot,
+estimateHerbProd,herb_ANPP_plot,collectDate,Date of the collection event,date
+estimateHerbProd,herb_ANPP_plot,clipCount,"The number of biomass clips (i.e., clipIDs) averaged for the plot-level herbaceous ANPP estimate",count
+estimateHerbProd,herb_ANPP_plot,herbProd_Mghayr,Annual total herbaceous above-ground net primary productivity per unit area,Mg/ha/yr
+estimateHerbProd,herb_ANPP_plot,herbProd_gm2yr,Annual total herbaceous above-ground net primary productivity per unit area,g/m2/yr
+estimateHerbProd,herb_ANPP_plot,CoolSeasonGram_gm2yr,Annual cool season graminoid ANPP per unit area,g/m2/yr
+estimateHerbProd,herb_ANPP_plot,Forbs_gm2yr,Annual forb ANPP per unit area,g/m2/yr
+estimateHerbProd,herb_ANPP_plot,NFixing_gm2yr,Annual N-Fixing ANPP per unit area,g/m2/yr
+estimateHerbProd,herb_ANPP_plot,WarmSeasonGram_gm2yr,Annual warm season graminoid ANPP per unit area,g/m2/yr
+estimateHerbProd,herb_ANPP_plot,WoodyPlants_gm2yr,Annual small woody plant ANPP (ddh < 1 cm) per unit area,g/m2/yr
+estimateHerbProd,herb_ANPP_plot,Barley_gm2yr,Annual barley ANPP per unit area,g/m2/yr
+estimateHerbProd,herb_ANPP_plot,Corn_gm2yr,Annual corn ANPP per unit area,g/m2/yr
+estimateHerbProd,herb_ANPP_plot,Millet_gm2yr,Annual millet ANPP per unit area,g/m2/yr
+estimateHerbProd,herb_ANPP_plot,Oat_gm2yr,Annual oat ANPP per unit area,g/m2/yr
+estimateHerbProd,herb_ANPP_plot,OrchardGrass_gm2yr,Annual orchard grass ANPP per unit area,g/m2/yr
+estimateHerbProd,herb_ANPP_plot,Rye_gm2yr,Annual rye ANPP per unit area,g/m2/yr
+estimateHerbProd,herb_ANPP_plot,Sorghum_gm2yr,Annual sorghum ANPP per unit area,g/m2/yr
+estimateHerbProd,herb_ANPP_plot,Soybean_gm2yr,Annual soybean ANPP per unit area,g/m2/yr
+estimateHerbProd,herb_ANPP_plot,Sunflower_gm2yr,Annual sunflower ANPP per unit area,g/m2/yr
+estimateHerbProd,herb_ANPP_plot,Wheat_gm2yr,Annual wheat ANPP per unit area,g/m2/yr
+estimateHerbProd,herb_ANPP_grazed_extra,domainID,Unique identifier of the NEON domain,
+estimateHerbProd,herb_ANPP_grazed_extra,siteID,NEON site code,
+estimateHerbProd,herb_ANPP_grazed_extra,year,The calendar year in which the growing season began,
+estimateHerbProd,herb_ANPP_grazed_extra,plotType,NEON plot type in which sampling occurred: tower or distributed,
+estimateHerbProd,herb_ANPP_grazed_extra,plotManagement,Indicator of management activities occurring in the plot,
+estimateHerbProd,herb_ANPP_grazed_extra,totalClipCount,"The number of biomass clips (i.e., clipIDs) contributing to the site-level herbaceous ANPP estimate",count
+estimateHerbProd,herb_ANPP_grazed_extra,herbProd_Mghayr,Annual total herbaceous above-ground net primary productivity per unit area,Mg/ha/yr
+estimateHerbProd,herb_ANPP_grazed_extra,herbProdSD_Mghayr,Standard deviation for annual total herbaceous above-ground net primary productivity per unit area,Mg/ha/yr
+estimateHerbProd,herb_ANPP_grazed_extra,herbProd_gm2yr,Annual total herbaceous above-ground net primary productivity per unit area,g/m2/yr
+estimateHerbProd,herb_ANPP_grazed_extra,herbProdSD_gm2yr,Standard deviation for annual total herbaceous above-ground net primary productivity per unit area,g/m2/yr
+estimateHerbProd,herb_ANPP_grazed_extra,grazedClipCount,The number of biomass clips from grazed plots contributing to the annual site-level herbaceous ANPP estimate,count
+estimateHerbProd,herb_ANPP_grazed_extra,grazedProd_gm2yr,Annual total herbaceous above-ground net primary productivity per unit area contributed from grazed plots,g/m2/yr
+estimateHerbProd,herb_ANPP_grazed_extra,grazedProdSD_gm2yr,Standard deviation for annual total herbaceous above-ground net primary productivity per unit area from grazed plots,g/m2/yr
+estimateHerbProd,herb_ANPP_grazed_extra,consumEventCount,The number of eventIDs contributing to the annual consumption estimate from grazed plots,count
+estimateHerbProd,herb_ANPP_grazed_extra,consumClipCount,The number of biomass clips from grazed plots contributing to the site-level consumption estimate,count
+estimateHerbProd,herb_ANPP_grazed_extra,consumption_gm2yr,Annual above-ground herbaceous productivity consumed by grazers per unit area,g/m2/yr
+estimateHerbProd,herb_ANPP_grazed_extra,consumptionSD_gm2yr,Standard deviation for annual above-ground herbaceous production consumed by grazers per unit area,g/m2/yr
+estimateHerbProd,herb_ANPP_grazed_extra,finalEventID,The end-of-season eventID from which final standing biomass per unit area is derived for grazed plots,
+estimateHerbProd,herb_ANPP_grazed_extra,finalClipCount,"The number of biomass clips (i.e., clipIDs) from the final eventID for grazed plots",count
+estimateHerbProd,herb_ANPP_grazed_extra,finalStandingMass_gm2yr,Final standing biomass per unit area from the end-of-season eventID for grazed plots,g/m2/yr
+estimateHerbProd,herb_ANPP_grazed_extra,finalStandingSD_gm2yr,Standard deviation for final standing biomass per unit area from the end-of-season eventID for grazed plots,g/m2/yr
+estimateHerbProd,herb_ANPP_grazed_extra,ungrazedClipCount,"The number of biomass clips (i.e., clipIDs) from ungrazed Tower plots at sites where a subset of plots are grazed",count
+estimateHerbProd,herb_ANPP_grazed_extra,ungrazedProd_gm2yr,Annual total herbaceous above-ground net primary productivity per unit area contributed from ungrazed plots,g/m2/yr
+estimateHerbProd,herb_ANPP_grazed_extra,ungrazedProdSD_gm2yr,Standard deviation for annual total herbaceous above-ground net primary productivity per unit area from ungrazed plots,g/m2/yr
+estimateHerbProd,herb_grazed_consumption,domainID,Unique identifier of the NEON domain,
+estimateHerbProd,herb_grazed_consumption,siteID,NEON site code,
+estimateHerbProd,herb_grazed_consumption,year,The calendar year in which the growing season began,
+estimateHerbProd,herb_grazed_consumption,eventID,Grouping variable linking all plots in a scheduled sampling bout; identifies the bout contributing to the consumption estimate,
+estimateHerbProd,herb_grazed_consumption,plotType,NEON plot type in which sampling occurred: tower or distributed,
+estimateHerbProd,herb_grazed_consumption,plotManagement,Indicator of management activities occurring in the plot,
+estimateHerbProd,herb_grazed_consumption,consumClipCount,"The number of biomass clips (i.e., clipIDs) bout-level consumption estimate",count
+estimateHerbProd,herb_grazed_consumption,consumMean_gm2,Mean bout-level consumption per unit area from grazed plots,g/m2
+estimateHerbProd,herb_grazed_consumption,consumSD_gm2,Standard deviation for bout-level consumption per unit area from grazed plots,g/m2
+estimateHerbProd,herb_grazed_consumption,clipCount_exclN,"The number of ambient biomass clips (i.e., clipIDs) from grazed plots, where exclosure = ""N""",count
+estimateHerbProd,herb_grazed_consumption,clipCount_exclY,"The number of exclosed biomass clips from grazed plots, where exclosure = ""Y""",count
+estimateHerbProd,herb_grazed_consumption,agbMean_gm2_exclN,"Mean bout-level above-ground biomass per unit area from ambient clips in grazed plots, where exclosure = ""N""",g/m2
+estimateHerbProd,herb_grazed_consumption,agbMean_gm2_exclY,"Mean bout-level above-ground biomass per unit area from exclosure clips in grazed plots, where exclosure = ""Y""",g/m2
+estimateHerbProd,herb_grazed_consumption,agbSD_gm2_exclN,"Standard deviation for bout-level above-ground biomass per unit area from ambient clips in grazed plots, where exclosure = ""N""",g/m2
+estimateHerbProd,herb_grazed_consumption,agbSD_gm2_exclY,"Standard deviation for bout-level above-ground biomass per unit area from exclosure clips in grazed plots, where exclosure = ""Y""",g/m2
