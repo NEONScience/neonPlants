@@ -24,3 +24,4 @@ importFrom(stats,
   C,
   family
 )
+importFrom(utils,data)

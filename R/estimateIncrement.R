@@ -103,8 +103,8 @@ estimateIncrement <- function(biomassTable,
 
 
   ##  Create biomass estimates with allometric wood mass function
-  recruitDF <- neonPlants:::estimateAllometricWoodyMass(appIndTable = temp,
-                                                        growthFormSubset = "tree")
+  recruitDF <- estimateAllometricWoodyMass(appIndTable = temp,
+                                           growthFormSubset = "tree")
 
   recruitDF <- recruitDF %>%
     dplyr::rename("recruit_kg" = "agb_kg")

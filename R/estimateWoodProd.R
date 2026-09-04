@@ -176,7 +176,7 @@ estimateWoodProd <- function(inputDataList,
   treeDupes <- appInd %>%
     dplyr::filter(.data$growthForm %in% c("single bole tree", "multi-bole tree")) %>%
     dplyr::mutate(indivEventID = paste(.data$individualID, .data$eventID, sep = "-")) %>%
-    dplyr::filter(duplicated(indivEventID))
+    dplyr::filter(duplicated(.data$indivEventID))
 
   #   Extract all duplicated individualID x eventID records; 'treeDupes' only contains one of each pair
   treeDupeDF <- appInd %>%
@@ -229,8 +229,8 @@ estimateWoodProd <- function(inputDataList,
 
   if (nrow(agb) > 0) {
 
-    transitions <- neonPlants:::calculateTransitions(biomassTable = agb,
-                                                     plotYearTable = perPlot)
+    transitions <- calculateTransitions(biomassTable = agb,
+                                        plotYearTable = perPlot)
 
   } else {
 
@@ -243,9 +243,9 @@ estimateWoodProd <- function(inputDataList,
 
   ### CALCULATE BIOMASS CHANGES FROM INCREMENT, RECRUITMENT, AND MORTALITY ####
 
-  increment <- neonPlants:::estimateIncrement(biomassTable = transitions,
-                                              missing = missing,
-                                              flagged = flagged)
+  increment <- estimateIncrement(biomassTable = transitions,
+                                 missing = missing,
+                                 flagged = flagged)
 
   agbIncrDF <- increment$agbIncrDF
   missingDF <- increment$missingDF

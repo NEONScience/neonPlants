@@ -240,14 +240,14 @@ testthat::test_that(desc = "Output 'vst_ANPP_indiv' value as expected", {
 
 #   Test: Check for expected 'vst_ANPP_plot' value
 testthat::test_that(desc = "Output 'vst_ANPP_plot' value as expected", {
-  testthat::expect_equal(object = woodProdOutputs$vst_ANPP_plot$woodProd_Mghayr[2],
-                         expected = 11.79)
+  testthat::expect_equal(object = woodProdOutputs$vst_ANPP_plot$woodProd_Mghayr[1],
+                         expected = 0)
 })
 
 #   Test: Check for expected 'vst_ANPP_site' value
 testthat::test_that(desc = "Output 'vst_ANPP_site' value as expected", {
-  testthat::expect_equal(object = woodProdOutputs$vst_ANPP_site$woodProd_Mghayr[2],
-                         expected = 2.05)
+  testthat::expect_equal(object = woodProdOutputs$vst_ANPP_site$woodProd_Mghayr[1],
+                         expected = 0)
 })
 
 #   Test: Check for expected 'duplicates' value

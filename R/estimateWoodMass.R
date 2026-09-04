@@ -51,6 +51,8 @@
 #'
 #' }
 #'
+#' @importFrom utils data
+#'
 #' @export estimateWoodMass
 
 
@@ -480,8 +482,8 @@ estimateWoodMass = function(inputDataList,
   ### Estimate woody biomass: Calculate biomass for individuals in vst_apparentindividual table ############################
 
   ### Get allometric estimates of woody biomass
-  agbWoody_kg <- neonPlants:::estimateAllometricWoodyMass(appIndTable = appInd,
-                                                          growthFormSubset = growthFormSubset)
+  agbWoody_kg <- estimateAllometricWoodyMass(appIndTable = appInd,
+                                             growthFormSubset = growthFormSubset)
 
 
 
@@ -678,8 +680,8 @@ estimateWoodMass = function(inputDataList,
   ##  Get allometric estimates of 'other' non-woody biomass
   if (methods::is(nonWoody, class = "data.frame" )) {
 
-    agbOther_kg <- neonPlants:::estimateAllometricOtherMass(nonWoodyTable = nonWoody,
-                                                            growthFormSubset = growthFormSubset)
+    agbOther_kg <- estimateAllometricOtherMass(nonWoodyTable = nonWoody,
+                                               growthFormSubset = growthFormSubset)
 
   }
 

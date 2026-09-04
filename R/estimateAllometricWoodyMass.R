@@ -16,7 +16,7 @@
 #'    * For shrubs, small shrubs, and saplings: One record for each qualifying individual at each time point it was measured. For multi-stem individuals, input records for multiple stems are combined into a single live and dead biomass estimate per individual.
 #'
 #' @keywords internal
-#'
+
 
 estimateAllometricWoodyMass <- function(appIndTable,
                                         growthFormSubset = NA) {
