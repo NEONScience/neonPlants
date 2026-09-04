@@ -60,3 +60,18 @@
 #' }
 #' @source Internal NEON dataset
 "taxon_fields"
+
+#' Dataset Title: Function output variables, units, and definitions
+#'
+#' List of novel variables created by neonPlants functions; does not include variables already defined for existing data products
+#'
+#' @format A data frame with 215 rows and 5 columns:
+#' \describe{
+#'   \item{functionName}{Name of neonPlants function}
+#'   \item{table}{Name of function output table}
+#'   \item{field}{Name of column in output table}
+#'   \item{units}{Column units}
+#'   \item{description}{Description of column in output table}
+#' }
+#' @source Internal NEON dataset
+"variables"

@@ -1,8 +1,9 @@
-# Author: Samuel M Simkin
-# email: ssimkin@battelleecology.org
-# orig create date: 2024-10-02
+#   Author: Samuel M Simkin, Courtney L Meier
+#   email: samuel.simkin@gmail.com, cmeier@BattelleEcology.org
 
-# save these objects as internal data ----
+
+#   Save data frames as part of package
+#--> CM note: Source files are missing
 usethis::use_data(parameters,
                   plantIntTrop,
                   priority_plots,
@@ -10,3 +11,12 @@ usethis::use_data(parameters,
                   internal = FALSE,
                   overwrite = TRUE,
                   version = 2)
+
+
+
+### Process and save 'variables' data
+variables <- read.csv("data-raw/variables.csv", header = TRUE, stringsAsFactors = FALSE)
+
+usethis::use_data(variables,
+                  internal = FALSE,
+                  overwrite = TRUE)

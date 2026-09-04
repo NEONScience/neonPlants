@@ -27,11 +27,13 @@ scaleRootMass(
 \item{includeFragInTotal}{Indicator for whether mass of root fragments < 1 cm length calculated from dilution sampling should be included when summing across sizeCategory to calculate the 'totalDryMass'. Defaults to FALSE. If set to TRUE and 'inputDataList' is missing, the 'bbc_dilution' table must be provided to the 'inputDilution' argument. \link{logical}}
 }
 \value{
-Three tables are produced containing root mass data at varying spatial scales. The first "coreRootMass" table contains root mass data at the scale of the field-collected core, reported for three sizeCategories (< 1mm, 1-2mm, and 2-10mm) as per unit area ("g/m2") and per unit volume ("g/m3"), as well as total fine root biomass summed across all sizeCategories (separate columns for "g/m2", "g/m3", and "Mg/ha"). Output no longer contains the 'rootStatus' field, and QA dryMass samples are averaged.
-
-The second "plotRootMass" table contains mean root mass data at the scale of the plot for each eventID in the data, reported for three sizeCategories (< 1mm, 1-2mm, and 2-10mm) as per unit area ("g/m2") and per unit volume ("g/m3"), as well as total fine root biomass summed across all sizeCategories (separate columns for "g/m2", "Mg/ha", and "g/m3"). Uncertainty at the plot scale is not reported because intra-plot replication is frequently insufficient and not required by the sampling design, but the number of core samples used to calculate the mean is reported. The startDate and endDate indicate the start/end dates of core collection for a given plotID within a bout.
-
-The third "siteRootMass" table provides mean site-level total root mass data for each year (i.e., eventID) in the data, calculated from plot-level data and reported per unit area ("g/m2", "Mg/ha") and per unit volume ("g/m3"). The standard deviation across plots is calculated and the number of plots for each siteID x year combination is reported.
+A list containing the following output tables:
+\itemize{
+\item bbc_core - Contains root mass data at the scale of the field-collected core, reported for three sizeCategories (< 1mm, 1-2mm, and 2-10mm) as per unit area ("g/m2") and per unit volume ("g/m3"), as well as total fine root biomass summed across all sizeCategories (separate columns for "g/m2", "g/m3", and "Mg/ha"). Output no longer contains the 'rootStatus' field, and QA dryMass samples are averaged.
+\item bbc_plot - Contains mean root mass data at the scale of the plot for each eventID in the data, reported for three sizeCategories (< 1mm, 1-2mm, and 2-10mm) as per unit area ("g/m2") and per unit volume ("g/m3"), as well as total fine root biomass summed across all sizeCategories (separate columns for "g/m2", "Mg/ha", and "g/m3"). Uncertainty at the plot scale is not reported because intra-plot replication is frequently insufficient and not required by the sampling design, but the number of core samples used to calculate the mean is reported.
+\item bbc_site - Provides mean site-level total root mass data for each year (i.e., eventID) in the data, calculated from plot-level data and reported per unit area ("g/m2", "Mg/ha") and per unit volume ("g/m3").
+\item variables - Units and definitions of novel variables created by the function that are not already defined in the Plant Belowground Biomass data product.
+}
 }
 \description{
 Join NEON Plant Belowground Biomass data tables (DP1.10067.001) to calculate fine root biomass by sizeCategory as well as total fine root biomass per unit area and per unit soil volume. Fine root fragment mass (root fragments < 1 cm length) can optionally be calculated for the subset of cores for which it is generated, and fragment mass can optionally be included in the summed total fine root biomass.

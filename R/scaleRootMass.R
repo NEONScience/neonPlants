@@ -24,11 +24,11 @@
 #'
 #' @param includeFragInTotal Indicator for whether mass of root fragments < 1 cm length calculated from dilution sampling should be included when summing across sizeCategory to calculate the 'totalDryMass'. Defaults to FALSE. If set to TRUE and 'inputDataList' is missing, the 'bbc_dilution' table must be provided to the 'inputDilution' argument. [logical]
 #'
-#' @return Three tables are produced containing root mass data at varying spatial scales. The first "coreRootMass" table contains root mass data at the scale of the field-collected core, reported for three sizeCategories (< 1mm, 1-2mm, and 2-10mm) as per unit area ("g/m2") and per unit volume ("g/m3"), as well as total fine root biomass summed across all sizeCategories (separate columns for "g/m2", "g/m3", and "Mg/ha"). Output no longer contains the 'rootStatus' field, and QA dryMass samples are averaged.
-#'
-#' The second "plotRootMass" table contains mean root mass data at the scale of the plot for each eventID in the data, reported for three sizeCategories (< 1mm, 1-2mm, and 2-10mm) as per unit area ("g/m2") and per unit volume ("g/m3"), as well as total fine root biomass summed across all sizeCategories (separate columns for "g/m2", "Mg/ha", and "g/m3"). Uncertainty at the plot scale is not reported because intra-plot replication is frequently insufficient and not required by the sampling design, but the number of core samples used to calculate the mean is reported. The startDate and endDate indicate the start/end dates of core collection for a given plotID within a bout.
-#'
-#' The third "siteRootMass" table provides mean site-level total root mass data for each year (i.e., eventID) in the data, calculated from plot-level data and reported per unit area ("g/m2", "Mg/ha") and per unit volume ("g/m3"). The standard deviation across plots is calculated and the number of plots for each siteID x year combination is reported.
+#' @return A list containing the following output tables:
+#'   * bbc_core - Contains root mass data at the scale of the field-collected core, reported for three sizeCategories (< 1mm, 1-2mm, and 2-10mm) as per unit area ("g/m2") and per unit volume ("g/m3"), as well as total fine root biomass summed across all sizeCategories (separate columns for "g/m2", "g/m3", and "Mg/ha"). Output no longer contains the 'rootStatus' field, and QA dryMass samples are averaged.
+#'   * bbc_plot - Contains mean root mass data at the scale of the plot for each eventID in the data, reported for three sizeCategories (< 1mm, 1-2mm, and 2-10mm) as per unit area ("g/m2") and per unit volume ("g/m3"), as well as total fine root biomass summed across all sizeCategories (separate columns for "g/m2", "Mg/ha", and "g/m3"). Uncertainty at the plot scale is not reported because intra-plot replication is frequently insufficient and not required by the sampling design, but the number of core samples used to calculate the mean is reported.
+#'   * bbc_site - Provides mean site-level total root mass data for each year (i.e., eventID) in the data, calculated from plot-level data and reported per unit area ("g/m2", "Mg/ha") and per unit volume ("g/m3").
+#'   * variables - Units and definitions of novel variables created by the function that are not already defined in the Plant Belowground Biomass data product.
 #'
 #' @examples
 #' \dontrun{
@@ -246,7 +246,7 @@ scaleRootMass <- function(inputDataList,
 
 
 
-  ### Standardize rootMass data to current sizeCategory definitions and average qaDryMass = Y
+  ### Standardize rootMass data to current sizeCategory definitions and average qaDryMass = Y ####
   rootMass <- neonPlants::standardizeRootMass(inputMass = rootMass)
 
   #   Collapse mycorrhizaeVisible and massRemarks to single string per sampleID to avoid downstream
@@ -274,7 +274,7 @@ scaleRootMass <- function(inputDataList,
 
 
 
-  ### Join rootMass data with rootCore data
+  ### Join rootMass data with rootCore data ####
   rootCore <- dplyr::filter(.data = rootCore,
                             .data$samplingImpractical == "OK")
 
@@ -293,7 +293,7 @@ scaleRootMass <- function(inputDataList,
 
 
 
-  ### Calculate dilution sampling fragment mass, if applicable
+  ### Calculate dilution sampling fragment mass, if applicable ####
   if (is.data.frame(rootDilution)) {
 
     rootDilution <- rootDilution %>%
@@ -334,7 +334,9 @@ scaleRootMass <- function(inputDataList,
 
 
 
-  ### Pivot sizeCategory masses wider and sum to calculate total fine root biomass by sampleID
+  ### Calculate total fine root biomass by sampleID ####
+
+  #   Pivot sizeCategory masses wider and sum
   coreMass <- tidyr::pivot_wider(data = coreMass,
                                  names_from = "sizeCategory",
                                  values_from = "dryMass",
@@ -396,7 +398,7 @@ scaleRootMass <- function(inputDataList,
 
 
 
-  ### Scale core-level dryMass values to "g/m2", "g/cm3", and "Mg/ha"
+  ### Core scale: Calculate core-level dryMass ("g/m2", "g/cm3", and "Mg/ha") ####
   coreMass <- dplyr::rowwise(data = coreMass) %>%
     dplyr::mutate(dryMass1_gm2 = round(.data$dryMass1 / .data$rootSampleArea,
                                        digits = 1),
@@ -424,7 +426,7 @@ scaleRootMass <- function(inputDataList,
 
 
 
-  ### Scale dryMass values from core to plot-level ("g/m2", "g/m3", and "Mg/ha")
+  ### Plot scale: Calculate plot-level dryMass ("g/m2", "g/m3", and "Mg/ha") ####
   plotMass <- coreMass %>%
     dplyr::group_by(.data$domainID,
                     .data$siteID,
@@ -455,7 +457,7 @@ scaleRootMass <- function(inputDataList,
 
 
 
-  ### Scale total dryMass values from plot to site-level ("g/m2", "g/m3", "Mg/ha")
+  ### Site scale: Calculate site-level total dryMass ("g/m2", "g/m3", "Mg/ha") ####
   siteMass <- plotMass %>%
     dplyr::group_by(.data$domainID,
                     .data$siteID,
@@ -484,10 +486,19 @@ scaleRootMass <- function(inputDataList,
 
 
 
-  ### Return output
-  output <- list(coreRootMass = coreMass,
-                 plotRootMass = plotMass,
-                 siteRootMass = siteMass)
+  ### Variables: Process function-specific variables for output ####
+  data("variables", envir = environment())
+
+  variables <- variables %>%
+    dplyr::filter(.data$functionName == "scaleRootMass")
+
+
+
+  ### Return output ####
+  output <- list(bbc_core = coreMass,
+                 bbc_plot = plotMass,
+                 bbc_site = siteMass,
+                 variables = variables)
 
   return(output)
 

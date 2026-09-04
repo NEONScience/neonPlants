@@ -2,8 +2,10 @@
 ### POC: Courtney Meier, cmeier@BattelleEcology.org
 
 ### Read in test data
-testList <- readRDS(testthat::test_path("testdata", "rootdatalist-201807.RDS"))
+testList <- readRDS(testthat::test_path("testdata", "bbc_testDat.rds"))
+
 testMass <- testList$bbc_rootmass
+
 testrs <- standardizeRootMass(inputDataList = testList)
 testrsti <- standardizeRootMass(inputMass = testMass)
 
@@ -19,7 +21,7 @@ testthat::test_that(desc = "Output type list input", {
 
 #   Test table input
 testthat::test_that(desc = "Output type table input", {
-  
+
   testthat::expect_type(object = testrsti,
                         type = "list")
 })
@@ -37,7 +39,7 @@ testthat::test_that(desc = "Output class list input", {
 
 #   Test table input
 testthat::test_that(desc = "Output class table input", {
-  
+
   testthat::expect_s3_class(object = testrsti,
                             class = "data.frame")
 })
@@ -64,21 +66,21 @@ testthat::test_that(desc = "Output data frame column number", {
 ### Test: Generate expected errors for 'inputDataList'
 #   Test 'inputDataList' is a list
 testthat::test_that(desc = "Argument 'inputDataList' is list object", {
-  
+
   testthat::expect_error(object = standardizeRootMass(inputDataList = testMass),
                          regexp = "Argument 'inputDataList' must be a list object")
 })
 
 #   Test 'inputDataList' contains required tables
 testthat::test_that(desc = "Required tables present in 'inputDataList' input", {
-  
+
   testthat::expect_error(object = standardizeRootMass(inputDataList = testList[3:5]),
                          regexp = "Required tables missing from 'inputDataList'")
 })
 
 #   Test 'inputMass' is NA if 'inputDataList' supplied
 testthat::test_that(desc = "Table inputs NA when required", {
-  
+
   testthat::expect_error(object = standardizeRootMass(inputDataList = testList,
                                                       inputMass = testMass),
                          regexp = "When 'inputDataList' is supplied the 'inputMass' argument must be NA")
@@ -89,17 +91,17 @@ testthat::test_that(desc = "Table inputs NA when required", {
 ### Test: Generate expected errors for 'inputMass'
 #   Test 'inputMass' is data frame if 'inputDataList' is missing
 testthat::test_that(desc = "Table input is data frame when required", {
-  
+
   testthat::expect_error(object = standardizeRootMass(inputMass = testList),
                          regexp = "A data frame must be supplied for 'inputMass' if 'inputDataList' is not provided")
 })
 
 
 
-### Tests: Generate expected errors with table inputs 
+### Tests: Generate expected errors with table inputs
 # Test when inputMass lacks required column
 testthat::test_that(desc = "Table 'inputMass' missing column", {
-  
+
   testthat::expect_error(object = standardizeRootMass(inputMass = testMass %>%
                                                         dplyr::select(-dryMass)),
                          regexp = "Required columns missing from 'inputMass': dryMass")
@@ -107,7 +109,7 @@ testthat::test_that(desc = "Table 'inputMass' missing column", {
 
 #   Test when inputMass has no data
 testthat::test_that(desc = "Table 'inputMass' missing data", {
-  
+
   testthat::expect_error(object = standardizeRootMass(inputMass = testMass %>%
                                                         dplyr::filter(uid == "mangrove")),
                          regexp = "Table 'inputMass' has no data.")

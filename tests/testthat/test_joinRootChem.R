@@ -2,10 +2,12 @@
 ### POC: Courtney Meier, cmeier@BattelleEcology.org
 
 ### Read in test data
-testList <- readRDS(testthat::test_path("testdata", "rootdatalist-201807.RDS"))
+testList <- readRDS(testthat::test_path("testdata", "bbc_testDat.rds"))
+
 testMass <- testList$bbc_rootmass
 testPool <- testList$bbc_chemistryPooling
 testChem <- testList$bbc_rootChemistry
+
 rctest <- joinRootChem(inputDataList = testList)
 rctestti <- joinRootChem(inputMass = testMass,
                          inputPool = testPool,
@@ -22,7 +24,7 @@ testthat::test_that(desc = "Output type list input", {
 
 #   Test table input
 testthat::test_that(desc = "Output type table input", {
-  
+
   testthat::expect_type(object = rctestti,
                         type = "list")
 })
@@ -39,7 +41,7 @@ testthat::test_that(desc = "Output class list input", {
 
 #   Test table input
 testthat::test_that(desc = "Output class table input", {
-  
+
   testthat::expect_s3_class(object = rctestti,
                             class = "data.frame")
 })
@@ -67,14 +69,14 @@ testthat::test_that(desc = "Output data frame column number list input", {
 ##  Test table inputs
 #   Check expected row number of output
 testthat::test_that(desc = "Output data frame row number table input", {
-  
+
   testthat::expect_identical(object = nrow(rctestti),
                              expected = as.integer(477))
 })
 
 #   Check expected column number of output
 testthat::test_that(desc = "Output data frame row number table input", {
-  
+
   testthat::expect_identical(object = ncol(rctestti),
                              expected = as.integer(35))
 })
@@ -84,21 +86,21 @@ testthat::test_that(desc = "Output data frame row number table input", {
 ### Tests: Generate expected errors for 'inputDataList' ####
 #   Test 'inputDataList' is a list
 testthat::test_that(desc = "Argument 'inputDataList' is list object", {
-  
+
   testthat::expect_error(object = joinRootChem(inputDataList = testMass),
                          regexp = "Argument 'inputDataList' must be a list object")
 })
 
 #   Test 'inputDataList' contains required tables
 testthat::test_that(desc = "Required tables present in 'inputDataList' input", {
-  
+
   testthat::expect_error(object = joinRootChem(inputDataList = testList[1:3]),
                          regexp = "Required tables missing from 'inputDataList'")
 })
 
 #   Test table inputs are NA if 'inputDataList' supplied
 testthat::test_that(desc = "Table inputs NA when required", {
-  
+
   testthat::expect_error(object = joinRootChem(inputDataList = testList,
                                                inputMass = testMass),
                          regexp = "When 'inputDataList' is supplied all table input arguments must be NA")
@@ -108,7 +110,7 @@ testthat::test_that(desc = "Table inputs NA when required", {
 
 ### Tests: Generate expected errors with table inputs ####
 testthat::test_that(desc = "Table inputs are data frames when required", {
-  
+
   testthat::expect_error(object = joinRootChem(inputMass = testList,
                                                inputPool = testPool,
                                                inputChem = testChem),
@@ -130,7 +132,7 @@ testthat::test_that(desc = "Table 'inputMass' missing column", {
 
 #   Test when inputMass has no data
 testthat::test_that(desc = "Table 'inputMass' missing data", {
-  
+
   testthat::expect_error(object = joinRootChem(inputMass = testMass %>%
                                                  dplyr::filter(uid == "coconut"),
                                                inputPool = testPool,
@@ -143,24 +145,24 @@ testthat::test_that(desc = "Table 'inputMass' missing data", {
 ### Test: Generate expected errors for issues with inputPool table (works for inputDataList or inputPool source)
 #   Test when inputPool lacks required column
 testthat::test_that(desc = "Table 'inputPool' missing column", {
-  
+
   testthat::expect_error(object = joinRootChem(inputMass = testMass,
                                                inputPool = testPool %>%
                                                  dplyr::select(-cnSampleID),
                                                inputChem = testChem),
                          regexp = "Required columns missing from 'inputPool': cnSampleID")
-  
+
 })
 
 #   Test when inputPool has no data
 testthat::test_that(desc = "Table 'inputPool' missing data", {
-  
+
   testthat::expect_error(object = joinRootChem(inputMass = testMass,
                                                inputPool = testPool %>%
                                                  dplyr::filter(uid == "doppelganger"),
                                                inputChem = testChem),
                          regexp = "Table 'inputPool' has no data.")
-  
+
 })
 
 
@@ -168,24 +170,24 @@ testthat::test_that(desc = "Table 'inputPool' missing data", {
 ### Test: Generate expected errors for issues with inputChem table
 #   Test when inputChem lacks required column
 testthat::test_that(desc = "Table 'inputChem' missing column", {
-  
+
   testthat::expect_error(object = joinRootChem(inputMass = testMass,
                                                inputPool = testPool,
                                                inputChem = testChem %>%
                                                  dplyr::select(-d15N)),
                          regexp = "Required columns missing from 'inputChem': d15N")
-  
+
 })
 
 #   Test when inputChem has no data
 testthat::test_that(desc = "Table 'inputChem' missing data", {
-  
+
   testthat::expect_error(object = joinRootChem(inputMass = testMass,
                                                inputPool = testPool,
                                                inputChem = testChem %>%
                                                  dplyr::filter(uid == "ministry")),
                          regexp = "Table 'inputChem' has no data.")
-  
+
 })
 
 #   Test that there are no chemistry data for any dead roots
