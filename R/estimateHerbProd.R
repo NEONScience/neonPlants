@@ -84,7 +84,7 @@ estimateHerbProd = function(inputDataList,
   ### Remove D09 sites and generate message: Temporary fix ####
   if ("D09" %in% hbp_agb$domainID) {
 
-    hbp_agb <- hbp_agb |>
+    hbp_agb <- hbp_agb %>%
       dplyr::filter(.data$domainID != "D09")
 
     message("Current function logic does not support herbaceous productivity estimation at D09 sites: DCFS, NOGP, WOOD. Logic for these sites will be included in a future version of neonPlants.")
