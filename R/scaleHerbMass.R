@@ -3,21 +3,17 @@
 #' @author
 #' Courtney Meier \email{cmeier@BattelleEcology.org} \cr
 #'
-#' @description Join NEON Herbaceous Clip Harvest data tables (DP1.10023.001) to calculate herbaceous biomass per unit area, at spatial scales of the sampling cell, plot, and site. Biomass outputs can be used with the estimateHerbProd() productivity function.
+#' @description Calculate herbaceous biomass per unit area at spatial scales of the sampling cell, plot, and site using NEON Herbaceous Clip Harvest data tables (DP1.10023.001). Data inputs are in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input tables with an equivalent structure and representing the same site x month combinations.
 #'
-#' Data inputs are "Herbaceous clip harvest" data (DP1.10023.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input tables with an equivalent structure and representing the same site x month combinations.
-#'
-#' @details Input data can be filtered by plot subset. Herbaceous biomass data are scaled to an area basis at the hierarchical levels of sampling cell, plot, and site. Input data may be provided either as a list or as individual tables. However, if both list and table inputs are provided at the same time the function will error out. For all output data, columns with the same name as input data have identical units and definitions; where needed, new column names contain units information. At the scale of the sampling cell and the plot, outputs include total herbaceous biomass as well as biomass of individual functional groups (e.g., forbs, cool season graminoids, warm season graminoids, etc.). Functional group biomass is not reported for site-level outputs.
+#' @details Input data can be filtered by plot subset. Herbaceous biomass data are scaled to an area basis at the hierarchical levels of sampling cell, plot, and site. Input data may be provided either as a list or as individual tables. However, only list or table inputs are allowed (not a mix of both). At the scale of the sampling cell and the plot, outputs include total herbaceous biomass as well as biomass of individual functional groups (e.g., forbs, cool season graminoids, warm season graminoids, etc.). Functional group biomass is not reported for site-level outputs.
 #'
 #' NEON weighs a minimum of 5% of samples a second time so that data users can estimate the uncertainty associated with different technicians weighing dried herbaceous biomass; QA samples of this nature are identified via qaDryMass == "Y". The function calculates the mean when QA masses exist. Samples with Sampling Impractical values other than "OK" are removed prior to generating output data.
 #'
 #' @param inputDataList A list object comprised of "Herbaceous clip harvest" tables (DP1.10023.001) downloaded using the neonUtilities::loadByProduct() function. If list input is provided, the table input arguments must all be NA; similarly, if list input is missing, table inputs must be provided for 'inputBout', and 'inputMass' arguments. [list]
 #'
-#' @param inputBout The 'hbp_perbout' table for the site x month combination(s) of interest
-#' (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
+#' @param inputBout The 'hbp_perbout' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
 #'
-#' @param inputMass The 'hbp_massdata' table for the site x month combination(s) of interest
-#' (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
+#' @param inputMass The 'hbp_massdata' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
 #'
 #' @param plotSubset The options are the default of "all" (all Tower and Distributed plots), "tower" (all plots in the Tower airshed but no Distributed plots), and "distributed" (all Distributed plots, which are sampled on a 5-year interval and are spatially representative of the NLCD classes at a site, and no Tower plots). [character]
 #'
@@ -973,16 +969,21 @@ scaleHerbMass = function(inputDataList,
 
 
 
+  ### Variables: Process function-specific variables for output ####
+  data("variables", envir = environment())
+
+  variables <- variables %>%
+    dplyr::filter(.data$functionName == "scaleHerbMass")
 
 
 
-  ### Return results: Bundle output as list and return ####
-
+  ### Return output ####
   output <- list(hbp_agb = clipDF,
                  hbp_plot = plotDF,
                  hbp_plot_extra = grazedWildDF,
                  hbp_plot_crop = cropDF,
-                 hbp_site = siteDF)
+                 hbp_site = siteDF,
+                 variables = variables)
 
   return(output)
 }

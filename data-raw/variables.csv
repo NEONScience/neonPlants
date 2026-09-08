@@ -1,6 +1,4 @@
 ﻿functionName,table,field,units,description
-scaleHerbMass,hbp_site,domainID,,Unique identifier of the NEON domain
-scaleHerbMass,hbp_site,siteID,,NEON site code
 scaleHerbMass,hbp_site,year,,The calendar year in which the growing season began
 scaleHerbMass,hbp_site,herbEventID,,Grouping variable linking all plots in a scheduled sampling bout; identifies the bout(s) associated with peak biomass
 scaleHerbMass,hbp_site,herbPlotCount,count,The number of plots contributing to the site-level peak herbaceous biomass estimate
@@ -13,40 +11,22 @@ scaleHerbMass,hbp_site,herbTotalSEM_Mgha,Mg/ha,Site-level standard error of the 
 scaleHerbMass,hbp_site,herbTotalMean_gm2,g/m2,Site-level mean peak herbaceous biomass
 scaleHerbMass,hbp_site,herbTotalSD_gm2,g/m2,Site-level standard deviation of peak herbaceous biomass
 scaleHerbMass,hbp_site,herbTotalSEM_gm2,g/m2,Site-level standard error of the mean of peak herbaceous biomass
-scaleHerbMass,hbp_plot,domainID,,Unique identifier of the NEON domain
-scaleHerbMass,hbp_plot,siteID,,NEON site code
-scaleHerbMass,hbp_plot,plotID,,Plot identifier (NEON site code_XXX)
-scaleHerbMass,hbp_plot,nlcdClass,,National Land Cover Database Vegetation Type Name
-scaleHerbMass,hbp_plot,plotType,,NEON plot type in which sampling occurred: tower or distributed
-scaleHerbMass,hbp_plot,plotSize,m2,Size (in square meters) of the plot
-scaleHerbMass,hbp_plot,plotManagement,,Indicator of management activities occurring in the plot
-scaleHerbMass,hbp_plot,collectDate,date,Date of the collection event
 scaleHerbMass,hbp_plot,year,,The calendar year in which the growing season began
-scaleHerbMass,hbp_plot,eventID,,Grouping variable linking all plots in a scheduled sampling bout; identifies the bout associated with peak biomass
 scaleHerbMass,hbp_plot,herbTotalMass_Mgha,Mg/ha,Total plot-level peak herbaceous biomass
 scaleHerbMass,hbp_plot,herbTotalMass_gm2,g/m2,Total plot-level peak herbaceous biomass
 scaleHerbMass,hbp_plot,herbCoolSeasonGram_gm2,g/m2,Cool season graminoid biomass at the time of peak herbaceous biomass
 scaleHerbMass,hbp_plot,herbForbs_gm2,g/m2,Forb biomass at the time of peak herbaceous biomass
 scaleHerbMass,hbp_plot,herbNFixing_gm2,g/m2,N-Fixing biomass at the time of peak herbaceous biomass
 scaleHerbMass,hbp_plot,herbWarmSeasonGram_gm2,g/m2,Warm season graminoid biomass at the time of peak herbaceous biomass
-scaleHerbMass,hbp_plot,herbWoodyPlants_gm2,g/m2,Small woody plant biomass (ddh < 1 cm) at the time of peak herbaceous biomass
-scaleHerbMass,hbp_plot_crop,domainID,,Unique identifier of the NEON domain
-scaleHerbMass,hbp_plot_crop,siteID,,NEON site code
+scaleHerbMass,hbp_plot,herbWoodyPlants_gm2,g/m2,Small woody plant biomass (ddh < 1 cm) produced in the current year at the time of peak herbaceous biomass
 scaleHerbMass,hbp_plot_crop,year,,The calendar year in which the growing season began
-scaleHerbMass,hbp_plot_crop,plotID,,Plot identifier (NEON site code_XXX)
-scaleHerbMass,hbp_plot_crop,nlcdClass,,National Land Cover Database Vegetation Type Name
-scaleHerbMass,hbp_plot_crop,plotType,,NEON plot type in which sampling occurred: tower or distributed
-scaleHerbMass,hbp_plot_crop,plotSize,m2,Size (in square meters) of the plot
-scaleHerbMass,hbp_plot_crop,plotManagement,,Indicator of management activities occurring in the plot
-scaleHerbMass,hbp_plot_crop,eventID,,Grouping variable linking all plots in a scheduled sampling bout; identifies the bout associated with plot-specific peak biomass
-scaleHerbMass,hbp_plot_crop,collectDate,date,Date of the collection event
 scaleHerbMass,hbp_plot_crop,herbTotalMass_Mgha,Mg/ha,Total plot-level peak herbaceous biomass
 scaleHerbMass,hbp_plot_crop,herbTotalMass_gm2,g/m2,Total plot-level peak herbaceous biomass
 scaleHerbMass,hbp_plot_crop,herbCoolSeasonGram_gm2,g/m2,Cool season graminoid biomass at the time of peak herbaceous biomass
 scaleHerbMass,hbp_plot_crop,herbForbs_gm2,g/m2,Forb biomass at the time of peak herbaceous biomass
 scaleHerbMass,hbp_plot_crop,herbNFixing_gm2,g/m2,N-Fixing biomass at the time of peak herbaceous biomass
 scaleHerbMass,hbp_plot_crop,herbWarmSeasonGram_gm2,g/m2,Warm season graminoid biomass at the time of peak herbaceous biomass
-scaleHerbMass,hbp_plot_crop,herbWoodyPlants_gm2,g/m2,Small woody plant biomass (ddh < 1 cm) at the time of peak herbaceous biomass
+scaleHerbMass,hbp_plot_crop,herbWoodyPlants_gm2,g/m2,Small woody plant biomass (ddh < 1 cm) produced in the current year at the time of peak herbaceous biomass
 scaleHerbMass,hbp_plot_crop,Barley_gm2,g/m2,Barley biomass at the time of plot-level peak herbaceous biomass
 scaleHerbMass,hbp_plot_crop,Corn_gm2,g/m2,Corn biomass at the time of plot-level peak herbaceous biomass
 scaleHerbMass,hbp_plot_crop,Millet_gm2,g/m2,Millet biomass at the time of plot-level peak herbaceous biomass
@@ -57,45 +37,21 @@ scaleHerbMass,hbp_plot_crop,Sorghum_gm2,g/m2,Sorghum biomass at the time of plot
 scaleHerbMass,hbp_plot_crop,Soybean_gm2,g/m2,Soybean biomass at the time of plot-level peak herbaceous biomass
 scaleHerbMass,hbp_plot_crop,Sunflower_gm2,g/m2,Sunflower biomass at the time of plot-level peak herbaceous biomass
 scaleHerbMass,hbp_plot_crop,Wheat_gm2,g/m2,Wheat biomass at the time of plot-level peak herbaceous biomass
-scaleHerbMass,hbp_plot_extra,domainID,,Unique identifier of the NEON domain
-scaleHerbMass,hbp_plot_extra,siteID,,NEON site code
-scaleHerbMass,hbp_plot_extra,plotID,,Plot identifier (NEON site code_XXX)
-scaleHerbMass,hbp_plot_extra,nlcdClass,,National Land Cover Database Vegetation Type Name
-scaleHerbMass,hbp_plot_extra,plotType,,NEON plot type in which sampling occurred: tower or distributed
-scaleHerbMass,hbp_plot_extra,plotSize,m2,Size (in square meters) of the plot
-scaleHerbMass,hbp_plot_extra,plotManagement,,Indicator of management activities occurring in the plot
-scaleHerbMass,hbp_plot_extra,collectDate,date,Date of the collection event
 scaleHerbMass,hbp_plot_extra,year,,The calendar year in which the growing season began
-scaleHerbMass,hbp_plot_extra,eventID,,Grouping variable linking all plots in a scheduled sampling bout; identifies the bout associated with peak biomass
 scaleHerbMass,hbp_plot_extra,herbTotalMass_Mgha,Mg/ha,Total peak herbaceous biomass
 scaleHerbMass,hbp_plot_extra,herbTotalMass_gm2,g/m2,Total peak herbaceous biomass
 scaleHerbMass,hbp_plot_extra,herbCoolSeasonGram_gm2,g/m2,Cool season graminoid biomass at the time of peak herbaceous biomass
 scaleHerbMass,hbp_plot_extra,herbForbs_gm2,g/m2,Forb biomass at the time of peak herbaceous biomass
 scaleHerbMass,hbp_plot_extra,herbNFixing_gm2,g/m2,N-Fixing biomass at the time of peak herbaceous biomass
 scaleHerbMass,hbp_plot_extra,herbWarmSeasonGram_gm2,g/m2,Warm season graminoid biomass at the time of peak herbaceous biomass
-scaleHerbMass,hbp_plot_extra,herbWoodyPlants_gm2,g/m2,Small woody plant biomass (ddh < 1 cm) at the time of peak herbaceous biomass
-scaleHerbMass,hbp_agb,domainID,,Unique identifier of the NEON domain
-scaleHerbMass,hbp_agb,siteID,,NEON site code
-scaleHerbMass,hbp_agb,plotID,,Plot identifier (NEON site code_XXX)
-scaleHerbMass,hbp_agb,subplotID,,Identifier for the NEON subplot
-scaleHerbMass,hbp_agb,clipID,,Unique identifier for the clip-harvest location within the plot
-scaleHerbMass,hbp_agb,nlcdClass,,National Land Cover Database Vegetation Type Name
-scaleHerbMass,hbp_agb,plotType,,NEON plot type in which sampling occurred: tower or distributed
-scaleHerbMass,hbp_agb,plotSize,m2,Size (in square meters) of the plot
-scaleHerbMass,hbp_agb,plotManagement,,Indicator of management activities occurring in the plot
-scaleHerbMass,hbp_agb,collectDate,date,Date of the collection event
+scaleHerbMass,hbp_plot_extra,herbWoodyPlants_gm2,g/m2,Small woody plant biomass (ddh < 1 cm) produced in the current year at the time of peak herbaceous biomass
 scaleHerbMass,hbp_agb,year,,The calendar year in which the growing season began
-scaleHerbMass,hbp_agb,eventID,,Grouping variable linking all plots in a scheduled sampling bout; identifies the bout associated with peak biomass
-scaleHerbMass,hbp_agb,targetTaxaPresent,,Indicator of whether the sample contained individuals of the target taxa
-scaleHerbMass,hbp_agb,sampleID,,Identifier for sample
-scaleHerbMass,hbp_agb,clipArea,m2,Total area sampled within the selected clipID
-scaleHerbMass,hbp_agb,exclosure,,Identifies whether clip harvest took place in an area protected by a grazing exclosure
 scaleHerbMass,hbp_agb,TotalMass_gm2,g/m2,Total herbaceous biomass per unit area
 scaleHerbMass,hbp_agb,CoolSeasonGram_gm2,g/m2,Cool season graminoid biomass per unit area
 scaleHerbMass,hbp_agb,Forbs_gm2,g/m2,Forb biomass per unit area
 scaleHerbMass,hbp_agb,Nfixing_gm2,g/m2,N-Fixing biomass per unit area
 scaleHerbMass,hbp_agb,WarmSeasonGram_gm2,g/m2,Warm season graminoid biomass per unit area
-scaleHerbMass,hbp_agb,WoodyPlants_gm2,g/m2,Small woody plant biomass (ddh < 1 cm) per unit area
+scaleHerbMass,hbp_agb,WoodyPlants_gm2,g/m2,Small woody plant biomass (ddh < 1 cm) produced in the current year per unit area
 scaleHerbMass,hbp_agb,Barley_gm2,g/m2,Barley biomass per unit area
 scaleHerbMass,hbp_agb,Corn_gm2,g/m2,Corn biomass per unit area
 scaleHerbMass,hbp_agb,Millet_gm2,g/m2,Millet biomass per unit area
