@@ -1,5 +1,5 @@
 ### Function tests for estimateWoodMass ####
-#   Courtney Meier; cmeier@BattelleEcology.org
+#   Courtney L Meier; cmeier@BattelleEcology.org
 
 
 
@@ -26,29 +26,22 @@ testthat::test_that(desc = "Output type", {
 
 
 ### Tests: Function generates expected output class for all output list objects
-#   Check 'vst_agb_kg' output table is a data frame
-testthat::test_that(desc = "Output class vst_agb_kg", {
+#   Check all output tables are data frames
+testthat::test_that(desc = "Output class list objects", {
+
   testthat::expect_s3_class(object = woodMassOutputs$vst_agb_kg,
                             class = "data.frame")
-})
 
-#   Check 'vst_missing' output table is a data frame
-testthat::test_that(desc = "Output class vst_missing", {
   testthat::expect_s3_class(object = woodMassOutputs$vst_lost_downed,
                             class = "data.frame")
-})
 
-#   Check 'vst_plot_Mgha' output table is a data frame
-testthat::test_that(desc = "Output class vst_plot_Mgha", {
   testthat::expect_s3_class(object = woodMassOutputs$vst_plot_Mgha,
                             class = "data.frame")
-})
 
-#   Check 'vst_site_Mgha' output table is a data frame
-testthat::test_that(desc = "Output class vst_site_Mgha", {
   testthat::expect_s3_class(object = woodMassOutputs$vst_site_Mgha,
                             class = "data.frame")
 })
+
 
 
 
@@ -59,53 +52,46 @@ testthat::test_that(desc = "Output class vst_site_Mgha", {
 ### Test: Function generates data frames with expected dimensions using test data and function defaults
 #--> Defaults: plotSubset = "all", growthFormSubset = "all"
 
-#   Check expected column number of 'vst_agb_kg' data frame
-testthat::test_that(desc = "Output data frame column number 'vst_agb_kg'", {
+#   Check expected column and row numbers of 'vst_agb_kg' data frame
+testthat::test_that(desc = "Output data frame column and row numbers 'vst_agb_kg'", {
+
   testthat::expect_identical(object = ncol(woodMassOutputs$vst_agb_kg),
                              expected = as.integer(30))
-})
 
-#   Check expected row number of 'vst_agb_kg' data frame
-testthat::test_that(desc = "Output data frame row number 'vst_agb_kg'", {
   testthat::expect_identical(object = nrow(woodMassOutputs$vst_agb_kg),
                              expected = as.integer(44405))
 })
 
 #   Check expected column number of 'vst_lost_downed' data frame
 testthat::test_that(desc = "Output data frame column number 'vst_lost_downed'", {
+
   testthat::expect_identical(object = ncol(woodMassOutputs$vst_lost_downed),
                              expected = as.integer(48))
-})
 
-#   Check expected row number of 'vst_lost_downed' data frame
-testthat::test_that(desc = "Output data frame row number 'vst_lost_downed'", {
   testthat::expect_identical(object = nrow(woodMassOutputs$vst_lost_downed),
                              expected = as.integer(6438))
 })
 
 #   Check expected column number of 'vst_plot_Mgha' data frame
 testthat::test_that(desc = "Output data frame column number 'vst_plot_Mgha'", {
+
   testthat::expect_identical(object = ncol(woodMassOutputs$vst_plot_Mgha),
                              expected = as.integer(12))
-})
 
-#   Check expected row number of 'vst_plot_Mgha' data frame
-testthat::test_that(desc = "Output data frame row number 'vst_plot_Mgha'", {
   testthat::expect_identical(object = nrow(woodMassOutputs$vst_plot_Mgha),
                              expected = as.integer(456))
 })
 
 #   Check expected column number of 'vst_site_Mgha' data frame
 testthat::test_that(desc = "Output data frame column number 'vst_site_Mgha'", {
+
   testthat::expect_identical(object = ncol(woodMassOutputs$vst_site_Mgha),
                              expected = as.integer(12))
-})
 
-#   Check expected row number of 'vst_site_Mgha' data frame
-testthat::test_that(desc = "Output data frame row number 'vst_site_Mgha'", {
   testthat::expect_identical(object = nrow(woodMassOutputs$vst_site_Mgha),
                              expected = as.integer(32))
 })
+
 
 
 

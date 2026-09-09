@@ -1,5 +1,5 @@
 ﻿functionName,table,field,units,description
-scaleHerbMass,hbp_site,year,,The calendar year in which the growing season began
+scaleHerbMass,hbp_site,year,year,The calendar year in which the growing season began
 scaleHerbMass,hbp_site,herbEventID,,Grouping variable linking all plots in a scheduled sampling bout; identifies the bout(s) associated with peak biomass
 scaleHerbMass,hbp_site,herbPlotCount,count,The number of plots contributing to the site-level peak herbaceous biomass estimate
 scaleHerbMass,hbp_site,herbPlotType,,NEON plot type in which sampling occurred: tower or distributed or both
@@ -11,7 +11,7 @@ scaleHerbMass,hbp_site,herbTotalSEM_Mgha,Mg/ha,Site-level standard error of the 
 scaleHerbMass,hbp_site,herbTotalMean_gm2,g/m2,Site-level mean peak herbaceous biomass
 scaleHerbMass,hbp_site,herbTotalSD_gm2,g/m2,Site-level standard deviation of peak herbaceous biomass
 scaleHerbMass,hbp_site,herbTotalSEM_gm2,g/m2,Site-level standard error of the mean of peak herbaceous biomass
-scaleHerbMass,hbp_plot,year,,The calendar year in which the growing season began
+scaleHerbMass,hbp_plot,year,year,The calendar year in which the growing season began
 scaleHerbMass,hbp_plot,herbTotalMass_Mgha,Mg/ha,Total plot-level peak herbaceous biomass
 scaleHerbMass,hbp_plot,herbTotalMass_gm2,g/m2,Total plot-level peak herbaceous biomass
 scaleHerbMass,hbp_plot,herbCoolSeasonGram_gm2,g/m2,Cool season graminoid biomass at the time of peak herbaceous biomass
@@ -19,7 +19,7 @@ scaleHerbMass,hbp_plot,herbForbs_gm2,g/m2,Forb biomass at the time of peak herba
 scaleHerbMass,hbp_plot,herbNFixing_gm2,g/m2,N-Fixing biomass at the time of peak herbaceous biomass
 scaleHerbMass,hbp_plot,herbWarmSeasonGram_gm2,g/m2,Warm season graminoid biomass at the time of peak herbaceous biomass
 scaleHerbMass,hbp_plot,herbWoodyPlants_gm2,g/m2,Small woody plant biomass (ddh < 1 cm) produced in the current year at the time of peak herbaceous biomass
-scaleHerbMass,hbp_plot_crop,year,,The calendar year in which the growing season began
+scaleHerbMass,hbp_plot_crop,year,year,The calendar year in which the growing season began
 scaleHerbMass,hbp_plot_crop,herbTotalMass_Mgha,Mg/ha,Total plot-level peak herbaceous biomass
 scaleHerbMass,hbp_plot_crop,herbTotalMass_gm2,g/m2,Total plot-level peak herbaceous biomass
 scaleHerbMass,hbp_plot_crop,herbCoolSeasonGram_gm2,g/m2,Cool season graminoid biomass at the time of peak herbaceous biomass
@@ -37,7 +37,7 @@ scaleHerbMass,hbp_plot_crop,Sorghum_gm2,g/m2,Sorghum biomass at the time of plot
 scaleHerbMass,hbp_plot_crop,Soybean_gm2,g/m2,Soybean biomass at the time of plot-level peak herbaceous biomass
 scaleHerbMass,hbp_plot_crop,Sunflower_gm2,g/m2,Sunflower biomass at the time of plot-level peak herbaceous biomass
 scaleHerbMass,hbp_plot_crop,Wheat_gm2,g/m2,Wheat biomass at the time of plot-level peak herbaceous biomass
-scaleHerbMass,hbp_plot_extra,year,,The calendar year in which the growing season began
+scaleHerbMass,hbp_plot_extra,year,year,The calendar year in which the growing season began
 scaleHerbMass,hbp_plot_extra,herbTotalMass_Mgha,Mg/ha,Total peak herbaceous biomass
 scaleHerbMass,hbp_plot_extra,herbTotalMass_gm2,g/m2,Total peak herbaceous biomass
 scaleHerbMass,hbp_plot_extra,herbCoolSeasonGram_gm2,g/m2,Cool season graminoid biomass at the time of peak herbaceous biomass
@@ -45,7 +45,7 @@ scaleHerbMass,hbp_plot_extra,herbForbs_gm2,g/m2,Forb biomass at the time of peak
 scaleHerbMass,hbp_plot_extra,herbNFixing_gm2,g/m2,N-Fixing biomass at the time of peak herbaceous biomass
 scaleHerbMass,hbp_plot_extra,herbWarmSeasonGram_gm2,g/m2,Warm season graminoid biomass at the time of peak herbaceous biomass
 scaleHerbMass,hbp_plot_extra,herbWoodyPlants_gm2,g/m2,Small woody plant biomass (ddh < 1 cm) produced in the current year at the time of peak herbaceous biomass
-scaleHerbMass,hbp_agb,year,,The calendar year in which the growing season began
+scaleHerbMass,hbp_agb,year,year,The calendar year in which the growing season began
 scaleHerbMass,hbp_agb,TotalMass_gm2,g/m2,Total herbaceous biomass per unit area
 scaleHerbMass,hbp_agb,CoolSeasonGram_gm2,g/m2,Cool season graminoid biomass per unit area
 scaleHerbMass,hbp_agb,Forbs_gm2,g/m2,Forb biomass per unit area
@@ -62,27 +62,15 @@ scaleHerbMass,hbp_agb,Sorghum_gm2,g/m2,Sorghum biomass per unit area
 scaleHerbMass,hbp_agb,Soybean_gm2,g/m2,Soybean biomass per unit area
 scaleHerbMass,hbp_agb,Sunflower_gm2,g/m2,Sunflower biomass per unit area
 scaleHerbMass,hbp_agb,Wheat_gm2,g/m2,Wheat biomass per unit area
-estimateHerbProd,herb_ANPP_site,domainID,,Unique identifier of the NEON domain
-estimateHerbProd,herb_ANPP_site,siteID,,NEON site code
-estimateHerbProd,herb_ANPP_site,year,,The calendar year in which the growing season began
-estimateHerbProd,herb_ANPP_site,plotType,,NEON plot type in which sampling occurred: tower or distributed or both
-estimateHerbProd,herb_ANPP_site,plotManagement,,Indicator of management activities occurring in the plot
-estimateHerbProd,herb_ANPP_site,plotCount,,The number of plots contributing to the annual site-level herbaceous ANPP estimate
-estimateHerbProd,herb_ANPP_site,totalClipCount,,"The number of biomass clips (i.e., clipIDs) contributing to the annual site-level herbaceous ANPP estimate"
+estimateHerbProd,herb_ANPP_site,year,year,Calendar year in which the growing season began
+estimateHerbProd,herb_ANPP_site,plotCount,count,Number of plots contributing to the annual site-level herbaceous ANPP estimate
+estimateHerbProd,herb_ANPP_site,totalClipCount,count,"Number of biomass clips (i.e., clipIDs) contributing to the annual site-level herbaceous ANPP estimate"
 estimateHerbProd,herb_ANPP_site,herbProd_Mghayr,Mg/ha/yr,Annual total herbaceous above-ground net primary productivity per unit area
 estimateHerbProd,herb_ANPP_site,herbProdSD_Mghayr,Mg/ha/yr,Standard deviation for annual total herbaceous above-ground net primary productivity per unit area
 estimateHerbProd,herb_ANPP_site,herbProd_gm2yr,g/m2/yr,Annual total herbaceous above-ground net primary productivity per unit area
 estimateHerbProd,herb_ANPP_site,herbProdSD_gm2yr,g/m2/yr,Standard deviation for annual total herbaceous above-ground net primary productivity per unit area
-estimateHerbProd,herb_ANPP_plot,domainID,,Unique identifier of the NEON domain
-estimateHerbProd,herb_ANPP_plot,siteID,,NEON site code
-estimateHerbProd,herb_ANPP_plot,year,,The calendar year in which the growing season began
-estimateHerbProd,herb_ANPP_plot,plotID,,Plot identifier (NEON site code_XXX)
-estimateHerbProd,herb_ANPP_plot,nlcdClass,,National Land Cover Database Vegetation Type Name
-estimateHerbProd,herb_ANPP_plot,plotType,,NEON plot type in which sampling occurred: tower or distributed
-estimateHerbProd,herb_ANPP_plot,plotSize,m2,Size (in square meters) of the plot
-estimateHerbProd,herb_ANPP_plot,plotManagement,,Indicator of management activities occurring in the plot
-estimateHerbProd,herb_ANPP_plot,collectDate,date,Date of the collection event
-estimateHerbProd,herb_ANPP_plot,clipCount,count,"The number of biomass clips (i.e., clipIDs) averaged for the plot-level herbaceous ANPP estimate"
+estimateHerbProd,herb_ANPP_plot,year,year,Calendar year in which the growing season began
+estimateHerbProd,herb_ANPP_plot,clipCount,count,"Number of biomass clips (i.e., clipIDs) averaged for the plot-level herbaceous ANPP estimate"
 estimateHerbProd,herb_ANPP_plot,herbProd_Mghayr,Mg/ha/yr,Annual total herbaceous above-ground net primary productivity per unit area
 estimateHerbProd,herb_ANPP_plot,herbProd_gm2yr,g/m2/yr,Annual total herbaceous above-ground net primary productivity per unit area
 estimateHerbProd,herb_ANPP_plot,CoolSeasonGram_gm2yr,g/m2/yr,Annual cool season graminoid ANPP per unit area
@@ -100,41 +88,32 @@ estimateHerbProd,herb_ANPP_plot,Sorghum_gm2yr,g/m2/yr,Annual sorghum ANPP per un
 estimateHerbProd,herb_ANPP_plot,Soybean_gm2yr,g/m2/yr,Annual soybean ANPP per unit area
 estimateHerbProd,herb_ANPP_plot,Sunflower_gm2yr,g/m2/yr,Annual sunflower ANPP per unit area
 estimateHerbProd,herb_ANPP_plot,Wheat_gm2yr,g/m2/yr,Annual wheat ANPP per unit area
-estimateHerbProd,herb_ANPP_grazed_extra,domainID,,Unique identifier of the NEON domain
-estimateHerbProd,herb_ANPP_grazed_extra,siteID,,NEON site code
-estimateHerbProd,herb_ANPP_grazed_extra,year,,The calendar year in which the growing season began
-estimateHerbProd,herb_ANPP_grazed_extra,plotType,,NEON plot type in which sampling occurred: tower or distributed
-estimateHerbProd,herb_ANPP_grazed_extra,plotManagement,,Indicator of management activities occurring in the plot
-estimateHerbProd,herb_ANPP_grazed_extra,totalClipCount,count,"The number of biomass clips (i.e., clipIDs) contributing to the site-level herbaceous ANPP estimate"
+estimateHerbProd,herb_ANPP_grazed_extra,year,year,The calendar year in which the growing season began
+estimateHerbProd,herb_ANPP_grazed_extra,totalClipCount,count,"Number of biomass clips (i.e., clipIDs) contributing to the site-level herbaceous ANPP estimate"
 estimateHerbProd,herb_ANPP_grazed_extra,herbProd_Mghayr,Mg/ha/yr,Annual total herbaceous above-ground net primary productivity per unit area
 estimateHerbProd,herb_ANPP_grazed_extra,herbProdSD_Mghayr,Mg/ha/yr,Standard deviation for annual total herbaceous above-ground net primary productivity per unit area
 estimateHerbProd,herb_ANPP_grazed_extra,herbProd_gm2yr,g/m2/yr,Annual total herbaceous above-ground net primary productivity per unit area
 estimateHerbProd,herb_ANPP_grazed_extra,herbProdSD_gm2yr,g/m2/yr,Standard deviation for annual total herbaceous above-ground net primary productivity per unit area
-estimateHerbProd,herb_ANPP_grazed_extra,grazedClipCount,count,The number of biomass clips from grazed plots contributing to the annual site-level herbaceous ANPP estimate
+estimateHerbProd,herb_ANPP_grazed_extra,grazedClipCount,count,Number of biomass clips from grazed plots contributing to the annual site-level herbaceous ANPP estimate
 estimateHerbProd,herb_ANPP_grazed_extra,grazedProd_gm2yr,g/m2/yr,Annual total herbaceous above-ground net primary productivity per unit area contributed from grazed plots
 estimateHerbProd,herb_ANPP_grazed_extra,grazedProdSD_gm2yr,g/m2/yr,Standard deviation for annual total herbaceous above-ground net primary productivity per unit area from grazed plots
-estimateHerbProd,herb_ANPP_grazed_extra,consumEventCount,count,The number of eventIDs contributing to the annual consumption estimate from grazed plots
-estimateHerbProd,herb_ANPP_grazed_extra,consumClipCount,count,The number of biomass clips from grazed plots contributing to the site-level consumption estimate
+estimateHerbProd,herb_ANPP_grazed_extra,consumEventCount,count,Number of eventIDs contributing to the annual consumption estimate from grazed plots
+estimateHerbProd,herb_ANPP_grazed_extra,consumClipCount,count,Number of biomass clips from grazed plots contributing to the site-level consumption estimate
 estimateHerbProd,herb_ANPP_grazed_extra,consumption_gm2yr,g/m2/yr,Annual above-ground herbaceous productivity consumed by grazers per unit area
-estimateHerbProd,herb_ANPP_grazed_extra,consumptionSD_gm2yr,g/m2/yr,Standard deviation for annual above-ground herbaceous production consumed by grazers per unit area
+estimateHerbProd,herb_ANPP_grazed_extra,consumptionSD_gm2yr,g/m2/yr,Standard deviation for annual above-ground herbaceous consumption estimate per unit area
 estimateHerbProd,herb_ANPP_grazed_extra,finalEventID,,The end-of-season eventID from which final standing biomass per unit area is derived for grazed plots
-estimateHerbProd,herb_ANPP_grazed_extra,finalClipCount,count,"The number of biomass clips (i.e., clipIDs) from the final eventID for grazed plots"
+estimateHerbProd,herb_ANPP_grazed_extra,finalClipCount,count,"Number of biomass clips (i.e., clipIDs) from the final eventID for grazed plots"
 estimateHerbProd,herb_ANPP_grazed_extra,finalStandingMass_gm2yr,g/m2/yr,Final standing biomass per unit area from the end-of-season eventID for grazed plots
 estimateHerbProd,herb_ANPP_grazed_extra,finalStandingSD_gm2yr,g/m2/yr,Standard deviation for final standing biomass per unit area from the end-of-season eventID for grazed plots
-estimateHerbProd,herb_ANPP_grazed_extra,ungrazedClipCount,count,"The number of biomass clips (i.e., clipIDs) from ungrazed Tower plots at sites where a subset of plots are grazed"
+estimateHerbProd,herb_ANPP_grazed_extra,ungrazedClipCount,count,"Number of biomass clips (i.e., clipIDs) from ungrazed Tower plots at sites where a subset of plots are grazed"
 estimateHerbProd,herb_ANPP_grazed_extra,ungrazedProd_gm2yr,g/m2/yr,Annual total herbaceous above-ground net primary productivity per unit area contributed from ungrazed plots
 estimateHerbProd,herb_ANPP_grazed_extra,ungrazedProdSD_gm2yr,g/m2/yr,Standard deviation for annual total herbaceous above-ground net primary productivity per unit area from ungrazed plots
-estimateHerbProd,herb_grazed_consumption,domainID,,Unique identifier of the NEON domain
-estimateHerbProd,herb_grazed_consumption,siteID,,NEON site code
-estimateHerbProd,herb_grazed_consumption,year,,The calendar year in which the growing season began
-estimateHerbProd,herb_grazed_consumption,eventID,,Grouping variable linking all plots in a scheduled sampling bout; identifies the bout contributing to the consumption estimate
-estimateHerbProd,herb_grazed_consumption,plotType,,NEON plot type in which sampling occurred: tower or distributed
-estimateHerbProd,herb_grazed_consumption,plotManagement,,Indicator of management activities occurring in the plot
-estimateHerbProd,herb_grazed_consumption,consumClipCount,count,"The number of biomass clips (i.e., clipIDs) bout-level consumption estimate"
+estimateHerbProd,herb_grazed_consumption,year,year,Calendar year in which the growing season began
+estimateHerbProd,herb_grazed_consumption,consumClipCount,count,"Number of biomass clips (i.e., clipIDs) contributing to the bout-level consumption estimate"
 estimateHerbProd,herb_grazed_consumption,consumMean_gm2,g/m2,Mean bout-level consumption per unit area from grazed plots
 estimateHerbProd,herb_grazed_consumption,consumSD_gm2,g/m2,Standard deviation for bout-level consumption per unit area from grazed plots
-estimateHerbProd,herb_grazed_consumption,clipCount_exclN,count,"The number of ambient biomass clips (i.e., clipIDs) from grazed plots, where exclosure = ""N"""
-estimateHerbProd,herb_grazed_consumption,clipCount_exclY,count,"The number of exclosed biomass clips from grazed plots, where exclosure = ""Y"""
+estimateHerbProd,herb_grazed_consumption,clipCount_exclN,count,"Number of bout-level ambient biomass clips (i.e., clipIDs) from grazed plots, where exclosure = ""N"""
+estimateHerbProd,herb_grazed_consumption,clipCount_exclY,count,"Number of bout-level biomass biomass clips under exclosures from grazed plots, where exclosure = ""Y"""
 estimateHerbProd,herb_grazed_consumption,agbMean_gm2_exclN,g/m2,"Mean bout-level above-ground biomass per unit area from ambient clips in grazed plots, where exclosure = ""N"""
 estimateHerbProd,herb_grazed_consumption,agbMean_gm2_exclY,g/m2,"Mean bout-level above-ground biomass per unit area from exclosure clips in grazed plots, where exclosure = ""Y"""
 estimateHerbProd,herb_grazed_consumption,agbSD_gm2_exclN,g/m2,"Standard deviation for bout-level above-ground biomass per unit area from ambient clips in grazed plots, where exclosure = ""N"""
@@ -170,3 +149,4 @@ scaleRootMass,bbc_site,rootMassSD_gm3,g/m3,Site-level standard deviation of tota
 scaleRootMass,bbc_site,rootMassMean_Mgha,Mg/ha,"Mean site-level total mass of all root diameter classes per unit area, optionally including fragment mass"
 scaleRootMass,bbc_site,rootMassSD_Mgha,Mg/ha,Site-level standard deviation of total root mass per unit area
 scaleRootMass,bbc_site,rootPlotNum,count,Number of plots sampled per site
+estimateWoodMass,,,,

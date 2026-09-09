@@ -29,6 +29,7 @@
 #'   * vst_missing - Individuals with 'plantStatus' values of "removed", "lost" of some type, "no longer qualifies", and "downed", and also those individuals for which an allometry was missing or for which an above-ground biomass estimate is missing for some other reason.
 #'   * vst_plot_Mgha - Summary of above-ground total, live, and dead standing woody biomass for each plotID x eventID combination ("Mg/ha"). If argument growthFormSubset == "tree", plots with smaller woody biomass but no trees will have zero biomass in this data frame.
 #'   * vst_site_Mgha - Summary of above-ground total, live, and dead standing woody biomass for each siteID x year combination in the data ("Mg/ha").
+#'   * variables - Units and definitions of novel variables created by the function that are not already defined in the Vegetation Structure data product.
 #'
 #' @examples
 #' \dontrun{
