@@ -32,19 +32,20 @@
 #'
 #' @examples
 #' \dontrun{
-#' #   Obtain NEON Plant Belowground Biomass core data
-#' bbc <- neonUtilities::loadByProduct(
+#' #   Obtain NEON Plant Belowground Biomass core data; note that a token is required and may be obtained after creating a NEON user account
+#' bbcDF <- neonUtilities::loadByProduct(
 #' dpID = "DP1.10067.001",
 #' site = "all",
 #' startdate = "2022-07",
 #' enddate = "2022-08",
 #' tabl = "all",
-#' check.size = FALSE
+#' check.size = FALSE,
+#' token = "my_NEON_token"
 #' )
 #'
 #' #   Calculate root mass per unit area and per unit volume
 #' df <- neonPlants::scaleRootMass(
-#' inputDataList = bbc,
+#' inputDataList = bbcDF,
 #' includeDilution = TRUE,
 #' inputCore = NA,
 #' inputMass = NA,

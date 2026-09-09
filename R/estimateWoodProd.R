@@ -46,8 +46,8 @@
 #'
 #' @examples
 #' \dontrun{
-#' # Obtain NEON Vegetation structure for a single site
-#' VstDat <- neonUtilities::loadByProduct(
+#' # Obtain NEON Vegetation structure for a single site; note that a token is required and may be obtained after creating a NEON user account
+#' vstDF <- neonUtilities::loadByProduct(
 #' dpID = "DP1.10098.001",
 #' site = "ABBY",
 #' package = "basic",
@@ -55,7 +55,7 @@
 #' token = "my_NEON_token"
 #' )
 #'
-#' woodProdOutput <- neonPlants::estimateWoodProd(inputDataList = VstDat)
+#' woodProdOutput <- neonPlants::estimateWoodProd(inputDataList = vstDF)
 #'
 #' }
 #'

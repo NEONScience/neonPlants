@@ -40,13 +40,17 @@ NEON weighs a minimum of 5\% of samples a second time so that data users can est
 }
 \examples{
 \dontrun{
-# Obtain NEON Herbaceous clip harvest data
-HbpDat <- neonUtilities::loadByProduct(dpID = "DP1.10023.001",
-     package = "basic", check.size = FALSE)
+# Obtain NEON Herbaceous clip harvest data; note that a token is required and may be obtained after creating a NEON user account
+hbpDF <- neonUtilities::loadByProduct(
+dpID = "DP1.10023.001",
+package = "basic",
+check.size = FALSE,
+token = "my_NEON_token"
+)
 
 # example with arguments at default values
 df <- neonPlants::scaleHerbMass(
-inputDataList = HbpDat,
+inputDataList = hbpDF,
 inputBout = NA,
 inputMass = NA
 )

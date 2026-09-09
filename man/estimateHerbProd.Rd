@@ -17,7 +17,7 @@ A list that includes productivity summary outputs and additional productivity de
 \item herb_ANPP_site - Summarizes herbaceous ANPP for each site x year combination ("Mg/ha/yr" and "g/m2/yr").
 \item herb_ANPP_plot - Summarizes herbaceous ANPP for each plot x year combination ("Mg/ha/yr" and "g/m2/yr"). Plot-level summaries are not returned for grazed Tower plots, for the reason outlined in the 'details' section above.
 \item herb_ANPP_grazed_extra - Provides summary information about each of the components required to calculate herbaceous ANPP from Tower plots at grazed sites - i.e., total estimated consumption across all bouts and final standing biomass from grazed Tower plots, as well as the mean productivity contributed from ungrazed Tower plots at grazed sites.
-\item herb_grazed_consumption - Detailed per bout mass data from exclosure = "Y" and exclosure = "N" clip harvests ("g/m2/yr"), and derived bout-level consumption data for each grazed site ("g/m2/yr"). These data are useful to understand how consumption estimates and total herbaceous ANPP at grazed sites was derived.
+\item herb_grazed_consumption - Detailed per bout mass data from exclosure = "Y" and exclosure = "N" clip harvests ("g/m2/yr"), and derived bout-level consumption data for each grazed site ("g/m2/yr"). These data are useful to understand how consumption estimates and total herbaceous ANPP at grazed sites were derived.
 }
 }
 \description{
@@ -34,12 +34,13 @@ At sites where crops are planted, productivity in cropped plots is determined on
 }
 \examples{
 \dontrun{
-# Obtain NEON Herbaceous clip harvest data
+# Obtain NEON Herbaceous clip harvest data; note that a token is required and may be obtained after creating a NEON user account
 hbpDF <- neonUtilities::loadByProduct(
 dpID = "DP1.10023.001",
 site = c("HARV", "CPER")
 package = "basic",
-check.size = FALSE
+check.size = FALSE,
+token = "my_NEON_token"
 )
 
 # Example with arguments at default values

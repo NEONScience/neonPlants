@@ -18,19 +18,20 @@
 #'
 #' @examples
 #' \dontrun{
-#' #   Obtain NEON Plant Belowground Biomass data
-#' bbc <- neonUtilities::loadByProduct(
+#' #   Obtain NEON Plant Belowground Biomass data; note that a token is required and may be obtained after creating a NEON user account
+#' bbcDF <- neonUtilities::loadByProduct(
 #' dpID = "DP1.10067.001",
 #' site = "all",
 #' startdate = "2022-07",
 #' enddate = "2022-08",
 #' tabl = "all",
-#' check.size = FALSE
+#' check.size = FALSE,
+#' token = "my_NEON_token"
 #' )
 #'
 #' #   Standardize downloaded root data to current sizeCategories and rootStatus
 #' df <- neonPlants::standardizeRootMass(
-#' inputDataList = bbc,
+#' inputDataList = bbcDF,
 #' inputMass = NA
 #' )
 #'

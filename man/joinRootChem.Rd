@@ -28,19 +28,20 @@ In the joined output table, 'rootChemistryDataQF' and 'rootChemistryRemarks' are
 }
 \examples{
 \dontrun{
-#   Obtain NEON Plant Belowground Biomass data
-bbc <- neonUtilities::loadByProduct(
+#   Obtain NEON Plant Belowground Biomass data; note that a token is required and may be obtained after creating a NEON user account
+bbcDF <- neonUtilities::loadByProduct(
 dpID = "DP1.10067.001",
 site = "LENO",
 startdate = "2018-07",
 enddate = "2018-08",
 tabl = "all",
-check.size = FALSE
+check.size = FALSE,
+token = "my_NEON_token"
 )
 
 #   Join downloaded root data
 df <- neonPlants::joinRootChem(
-inputDataList = bbc,
+inputDataList = bbcDF,
 inputMass = NA,
 inputPool = NA,
 inputChem = NA

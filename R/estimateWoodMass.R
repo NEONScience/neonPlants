@@ -32,11 +32,12 @@
 #'
 #' @examples
 #' \dontrun{
-#' #  Obtain NEON Vegetation structure data
+#' #  Obtain NEON Vegetation structure data; note that a token is required and may be obtained after creating a NEON user account
 #' vstDF <- neonUtilities::loadByProduct(
 #' dpID = "DP1.10098.001",
 #' package = "basic",
-#' check.size = FALSE
+#' check.size = FALSE,
+#' token = "my_NEON_token"
 #' )
 #'
 #' #  Example with arguments at default values
