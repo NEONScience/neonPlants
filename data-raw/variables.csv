@@ -1,10 +1,10 @@
 ﻿functionName,table,field,units,description
 scaleHerbMass,hbp_site,year,year,The calendar year in which the growing season began
 scaleHerbMass,hbp_site,herbEventID,,Grouping variable linking all plots in a scheduled sampling bout; identifies the bout(s) associated with peak biomass
-scaleHerbMass,hbp_site,herbPlotCount,count,The number of plots contributing to the site-level peak herbaceous biomass estimate
+scaleHerbMass,hbp_site,herbPlotCount,count,Number of plots contributing to the site-level peak herbaceous biomass estimate
 scaleHerbMass,hbp_site,herbPlotType,,NEON plot type in which sampling occurred: tower or distributed or both
-scaleHerbMass,hbp_site,herbStartDate,date,The start date of the collection event
-scaleHerbMass,hbp_site,herbEndDate,date,The completion date of the collection event
+scaleHerbMass,hbp_site,herbStartDate,date,Start date of the collection event
+scaleHerbMass,hbp_site,herbEndDate,date,Completion date of the collection event
 scaleHerbMass,hbp_site,herbTotalMean_Mgha,Mg/ha,Site-level mean peak herbaceous biomass
 scaleHerbMass,hbp_site,herbTotalSD_Mgha,Mg/ha,Site-level standard deviation of peak herbaceous biomass
 scaleHerbMass,hbp_site,herbTotalSEM_Mgha,Mg/ha,Site-level standard error of the mean of peak herbaceous biomass
@@ -19,7 +19,7 @@ scaleHerbMass,hbp_plot,herbForbs_gm2,g/m2,Forb biomass at the time of peak herba
 scaleHerbMass,hbp_plot,herbNFixing_gm2,g/m2,N-Fixing biomass at the time of peak herbaceous biomass
 scaleHerbMass,hbp_plot,herbWarmSeasonGram_gm2,g/m2,Warm season graminoid biomass at the time of peak herbaceous biomass
 scaleHerbMass,hbp_plot,herbWoodyPlants_gm2,g/m2,Small woody plant biomass (ddh < 1 cm) produced in the current year at the time of peak herbaceous biomass
-scaleHerbMass,hbp_plot_crop,year,year,The calendar year in which the growing season began
+scaleHerbMass,hbp_plot_crop,year,year,Calendar year in which the growing season began
 scaleHerbMass,hbp_plot_crop,herbTotalMass_Mgha,Mg/ha,Total plot-level peak herbaceous biomass
 scaleHerbMass,hbp_plot_crop,herbTotalMass_gm2,g/m2,Total plot-level peak herbaceous biomass
 scaleHerbMass,hbp_plot_crop,herbCoolSeasonGram_gm2,g/m2,Cool season graminoid biomass at the time of peak herbaceous biomass
@@ -149,4 +149,25 @@ scaleRootMass,bbc_site,rootMassSD_gm3,g/m3,Site-level standard deviation of tota
 scaleRootMass,bbc_site,rootMassMean_Mgha,Mg/ha,"Mean site-level total mass of all root diameter classes per unit area, optionally including fragment mass"
 scaleRootMass,bbc_site,rootMassSD_Mgha,Mg/ha,Site-level standard deviation of total root mass per unit area
 scaleRootMass,bbc_site,rootPlotNum,count,Number of plots sampled per site
-estimateWoodMass,,,,
+estimateWoodMass,vst_agb_kg,year,year,Calendar year in which the growing season began
+estimateWoodMass,vst_agb_kg,liveDeadStatus,,Indicator of whether an individual is live or dead at the time of measurement
+estimateWoodMass,vst_agb_kg,sampledArea_m2,m2,Total area sampled within the plot for the growthForm assigned to the individual
+estimateWoodMass,vst_agb_kg,source,,Literature citation for the allometry assigned to the individual
+estimateWoodMass,vst_agb_kg,agb_kg,kg,Allometrically estimated above-ground biomass of the individual
+estimateWoodMass,lost_downed,year,year,Calendar year in which the growing season began
+estimateWoodMass,lost_downed,liveDeadStatus,,Indicator of whether an individual is live or dead at the time of measurement
+estimateWoodMass,lost_downed,sampledArea_m2,m2,Total area sampled within the plot for the growthForm assigned to the individual
+estimateWoodMass,vst_plot_Mgha,year,year,Calendar year in which the growing season began
+estimateWoodMass,vst_plot_Mgha,agb_Mgha,Mg/ha,Total plot-level above-ground woody biomass
+estimateWoodMass,vst_plot_Mgha,agbLive_Mgha,Mg/ha,Live plot-level above-ground woody biomass
+estimateWoodMass,vst_plot_Mgha,agbDead_Mgha,Mg/ha,Dead plot-level above-ground woody biomass
+estimateWoodMass,vst_site_Mgha,year,year,Calendar year in which the growing season began
+estimateWoodMass,vst_site_Mgha,woodPlotNum,count,Number of plots contributing to the site-level above-ground woody biomass estimate
+estimateWoodMass,vst_site_Mgha,woodPlotType,,Type(s) of plots contributing to the site-level above-ground woody biomass estimate
+estimateWoodMass,vst_site_Mgha,woodEventType,,Type of sampling event associated with the site-level above-ground woody biomass estimate
+estimateWoodMass,vst_site_Mgha,woodMassMean_Mgha,Mg/ha,Mean site-level total above-ground woody biomass per unit area
+estimateWoodMass,vst_site_Mgha,woodMassSD_Mgha,Mg/ha,Standard deviation of site-level total above-ground woody biomass per unit area
+estimateWoodMass,vst_site_Mgha,woodLiveMassMean_Mgha,Mg/ha,Mean site-level live above-ground woody biomass per unit area
+estimateWoodMass,vst_site_Mgha,woodLiveMassSD_Mgha,Mg/ha,Standard deviation of site-level live above-ground woody biomass per unit area
+estimateWoodMass,vst_site_Mgha,woodDeadMassMean_Mgha,Mg/ha,Mean site-level dead above-ground woody biomass per unit area
+estimateWoodMass,vst_site_Mgha,woodDeadMassSD_Mgha,Mg/ha,Standard deviation of site-level dead above-ground woody biomass per unit area

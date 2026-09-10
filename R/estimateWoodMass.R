@@ -971,14 +971,23 @@ estimateWoodMass = function(inputDataList,
 
 
 
-  ### Bundle and return output ############################################################################
+  ### Variables: Process function-specific variables for output ############################################
+  data("variables", envir = environment())
+
+  variables <- variables %>%
+    dplyr::filter(.data$functionName == "estimateWoodMass")
+
+
+
+  ### Return output ########################################################################################
   agbDF <- agbDF %>%
     dplyr::select(-"plot_eventID")
 
   output <- list(vst_agb_kg = agbDF,
                  vst_lost_downed = lostDownedDF,
                  vst_plot_Mgha = agbPlotDF,
-                 vst_site_Mgha = agbSiteDF)
+                 vst_site_Mgha = agbSiteDF,
+                 variables = variables)
 
   return(output)
 
