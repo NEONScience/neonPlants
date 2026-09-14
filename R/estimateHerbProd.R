@@ -18,10 +18,10 @@
 #' @param plotSubset The options are the default "all" (all Tower and Distributed plots), "tower" (all plots in the Tower airshed but no Distributed plots), and "distributed" (all Distributed plots, which are sampled on a 5-year interval and are spatially representative of the dominant NLCD classes at a site, and no Tower plots). [character]
 #'
 #' @return A list that includes productivity summary outputs and additional productivity details from grazed sites. Output tables include:
-#'   * herb_ANPP_site - Summarizes herbaceous ANPP for each site x year combination ("Mg/ha/yr" and "g/m2/yr").
-#'   * herb_ANPP_plot - Summarizes herbaceous ANPP for each plot x year combination ("Mg/ha/yr" and "g/m2/yr"). Plot-level summaries are not returned for grazed Tower plots, for the reason outlined in the 'details' section above.
-#'   * herb_ANPP_grazed_extra - Provides summary information about each of the components required to calculate herbaceous ANPP from Tower plots at grazed sites - i.e., total estimated consumption across all bouts and final standing biomass from grazed Tower plots, as well as the mean productivity contributed from ungrazed Tower plots at grazed sites.
-#'   * herb_grazed_consumption - Detailed per bout mass data from exclosure = "Y" and exclosure = "N" clip harvests ("g/m2/yr"), and derived bout-level consumption data for each grazed site ("g/m2/yr"). These data are useful to understand how consumption estimates and total herbaceous ANPP at grazed sites were derived.
+#'   * hbp_ANPP_plot - Summarizes herbaceous ANPP for each plot x year combination ("Mg/ha/yr" and "g/m2/yr"). Plot-level summaries are not returned for grazed Tower plots, for the reason outlined in the 'details' section above.
+#'   * hbp_ANPP_site - Summarizes herbaceous ANPP for each site x year combination ("Mg/ha/yr" and "g/m2/yr").
+#'   * hbp_ANPP_grazed_extra - Provides summary information about each of the components required to calculate herbaceous ANPP from Tower plots at grazed sites - i.e., total estimated consumption across all bouts and final standing biomass from grazed Tower plots, as well as the mean productivity contributed from ungrazed Tower plots at grazed sites.
+#'   * hbp_ANPP_consumption - Detailed per bout mass data from exclosure = "Y" and exclosure = "N" clip harvests ("g/m2/yr"), and derived bout-level consumption data for each grazed site ("g/m2/yr"). These data are useful to understand how consumption estimates and total herbaceous ANPP at grazed sites were derived.
 #'   * variables - Units and definitions of novel variables created by the function that are not already defined in the Herbaceous Clip Harvest data product.
 #'
 #' @examples
@@ -1289,10 +1289,10 @@ estimateHerbProd = function(inputDataList,
 
 
   ### Return output ####
-  output <- list(herb_ANPP_plot = herb_ANPP_plot,
-                 herb_ANPP_site = herb_ANPP_site,
-                 herb_ANPP_grazed_extra = grazedSiteYearDF,
-                 herb_grazed_consumption = consumptionDF,
+  output <- list(hbp_ANPP_plot = herb_ANPP_plot,
+                 hbp_ANPP_site = herb_ANPP_site,
+                 hbp_ANPP_grazed_extra = grazedSiteYearDF,
+                 hbp_ANPP_consumption = consumptionDF,
                  variables = variables)
 
   return(output)

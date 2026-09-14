@@ -25,9 +25,9 @@
 #' @param includeFragInTotal Indicator for whether mass of root fragments < 1 cm length calculated from dilution sampling should be included when summing across sizeCategory to calculate the 'totalDryMass'. Defaults to FALSE. If set to TRUE and 'inputDataList' is missing, the 'bbc_dilution' table must be provided to the 'inputDilution' argument. [logical]
 #'
 #' @return A list containing the following output tables:
-#'   * bbc_core - Contains root mass data at the scale of the field-collected core, reported for three sizeCategories (< 1mm, 1-2mm, and 2-10mm) as per unit area ("g/m2") and per unit volume ("g/m3"), as well as total fine root biomass summed across all sizeCategories (separate columns for "g/m2", "g/m3", and "Mg/ha"). Output no longer contains the 'rootStatus' field, and QA dryMass samples are averaged.
-#'   * bbc_plot - Contains mean root mass data at the scale of the plot for each eventID in the data, reported for three sizeCategories (< 1mm, 1-2mm, and 2-10mm) as per unit area ("g/m2") and per unit volume ("g/m3"), as well as total fine root biomass summed across all sizeCategories (separate columns for "g/m2", "Mg/ha", and "g/m3"). Uncertainty at the plot scale is not reported because intra-plot replication is frequently insufficient and not required by the sampling design, but the number of core samples used to calculate the mean is reported.
-#'   * bbc_site - Provides mean site-level total root mass data for each year (i.e., eventID) in the data, calculated from plot-level data and reported per unit area ("g/m2", "Mg/ha") and per unit volume ("g/m3").
+#'   * bbc_BGB_core - Contains root mass data at the scale of the field-collected core, reported for three sizeCategories (< 1mm, 1-2mm, and 2-10mm) as per unit area ("g/m2") and per unit volume ("g/m3"), as well as total fine root biomass summed across all sizeCategories (separate columns for "g/m2", "g/m3", and "Mg/ha"). Output no longer contains the 'rootStatus' field, and QA dryMass samples are averaged.
+#'   * bbc_BGB_plot - Contains mean root mass data at the scale of the plot for each eventID in the data, reported for three sizeCategories (< 1mm, 1-2mm, and 2-10mm) as per unit area ("g/m2") and per unit volume ("g/m3"), as well as total fine root biomass summed across all sizeCategories (separate columns for "g/m2", "Mg/ha", and "g/m3"). Uncertainty at the plot scale is not reported because intra-plot replication is frequently insufficient and not required by the sampling design, but the number of core samples used to calculate the mean is reported.
+#'   * bbc_BGB_site - Provides mean site-level total root mass data for each year (i.e., eventID) in the data, calculated from plot-level data and reported per unit area ("g/m2", "Mg/ha") and per unit volume ("g/m3").
 #'   * variables - Units and definitions of novel variables created by the function that are not already defined in the Plant Belowground Biomass data product.
 #'
 #' @examples
@@ -496,9 +496,9 @@ scaleRootMass <- function(inputDataList,
 
 
   ### Return output ####
-  output <- list(bbc_core = coreMass,
-                 bbc_plot = plotMass,
-                 bbc_site = siteMass,
+  output <- list(bbc_BGB_core = coreMass,
+                 bbc_BGB_plot = plotMass,
+                 bbc_BGB_site = siteMass,
                  variables = variables)
 
   return(output)

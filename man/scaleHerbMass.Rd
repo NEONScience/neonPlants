@@ -23,11 +23,11 @@ scaleHerbMass(
 \value{
 A list that includes herbaceous biomass per unit area data at multiple scales. Output tables include:
 \itemize{
-\item hbp_agb - Above-ground herbaceous biomass for each sampled clip strip in the input data ("g/m2").
-\item hbp_plot - Plot-level peak above-ground herbaceous standing biomass for all sites not planted with crops in a given year (both "g/m2" and "Mg/ha").
-\item hbp_plot_extra - Peak above-ground herbaceous standing biomass for plots at grazed sites that were not subject to grazing management (i.e., the Tower plots at a grazed sites were not all managed for grazing) and with peak biomass occurring in a different eventID than the peak biomass eventID associated with the grazed plots (both "g/m2" and "Mg/ha").
-\item hbp_plot_crop - Peak above-ground herbaceous standing biomass for plots at sites planted with an agricultural crop in at least one plot in a given year (both "g/m2" and "Mg/ha"). Peak biomass is reported on a per plot basis and it is not assumed there is a single sampling eventID that represents "peak biomass".
-\item hbp_site - Above-ground herbaceous peak standing biomass for each site by year combination (both "g/m2" and "Mg/ha"). Output is derived from the single sampling eventID with the greatest biomass and does not include sites planted with agricultural crops. At grazed sites, the peak biomass estimate does not include those Tower plots not managed for grazing AND that achieve peak biomass in a different eventID than that identified for grazed plots.
+\item hbp_AGB_clip - Above-ground herbaceous biomass for each sampled clip strip in the input data ("g/m2").
+\item hbp_AGB_plot - Plot-level peak above-ground herbaceous standing biomass for all sites not planted with crops in a given year (both "g/m2" and "Mg/ha").
+\item hbp_AGB_plot_extra - Peak above-ground herbaceous standing biomass for plots at grazed sites that were not subject to grazing management (i.e., the Tower plots at a grazed sites were not all managed for grazing) and with peak biomass occurring in a different eventID than the peak biomass eventID associated with the grazed plots (both "g/m2" and "Mg/ha").
+\item hbp_AGB_plot_crop - Peak above-ground herbaceous standing biomass for plots at sites planted with an agricultural crop in at least one plot in a given year (both "g/m2" and "Mg/ha"). Peak biomass is reported on a per plot basis and it is not assumed there is a single sampling eventID that represents "peak biomass".
+\item hbp_AGB_site - Above-ground herbaceous peak standing biomass for each site by year combination (both "g/m2" and "Mg/ha"). Output is derived from the single sampling eventID with the greatest biomass and does not include sites planted with agricultural crops. At grazed sites, the peak biomass estimate does not include those Tower plots not managed for grazing AND that achieve peak biomass in a different eventID than that identified for grazed plots.
 \item variables - Units and definitions of novel variables created by the function that are not already defined in the Herbaceous Clip Harvest data product.
 }
 }

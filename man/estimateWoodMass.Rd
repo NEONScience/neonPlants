@@ -32,10 +32,10 @@ estimateWoodMass(
 \value{
 A list that includes individual-level biomass, plot-level summary biomass, site-level summary biomass, and a table of individuals for which biomass could not be estimated for various reasons. Output tables include:
 \itemize{
-\item vst_agb_kg - Above-ground live and dead standing woody biomass reported for each individual ("kg").
-\item vst_missing - Individuals with 'plantStatus' values of "removed", "lost" of some type, "no longer qualifies", and "downed", and also those individuals for which an allometry was missing or for which an above-ground biomass estimate is missing for some other reason.
-\item vst_plot_Mgha - Summary of above-ground total, live, and dead standing woody biomass for each plotID x eventID combination ("Mg/ha"). If argument growthFormSubset == "tree", plots with smaller woody biomass but no trees will have zero biomass in this data frame.
-\item vst_site_Mgha - Summary of above-ground total, live, and dead standing woody biomass for each siteID x year combination in the data ("Mg/ha").
+\item vst_AGB_indiv - Above-ground live and dead standing woody biomass reported for each individual ("kg").
+\item vst_AGB_plot - Summary of above-ground total, live, and dead standing woody biomass for each plotID x eventID combination ("Mg/ha"). If argument growthFormSubset == "tree", plots with smaller woody biomass but no trees will have zero biomass in this data frame.
+\item vst_AGB_site - Summary of above-ground total, live, and dead standing woody biomass for each siteID x year combination in the data ("Mg/ha").
+\item vst_lost_downed - Individuals with 'plantStatus' values of "removed", "lost" of some type, "no longer qualifies", and "downed", and also those individuals for which an allometry was missing or for which an above-ground biomass estimate is missing for some other reason.
 \item variables - Units and definitions of novel variables created by the function that are not already defined in the Vegetation Structure data product.
 }
 }

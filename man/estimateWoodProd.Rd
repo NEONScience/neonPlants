@@ -42,9 +42,10 @@ A list that includes productivity summary data frames. Output tables are:
 \item vst_ANPP_indiv - Woody ANPP for each individual at each time step for which data exist ("Mg/ha/yr").
 \item vst_ANPP_plot - Summarizes woody ANPP for each plot x year combination ("Mg/ha/yr").
 \item vst_ANPP_site - Summarizes woody ANPP for each site x year combination ("Mg/ha/yr").
-\item duplicates -
-\item flagged - Individuals flagged for changes in stemDiameter > 3.5 cm/yr; includes records from all time points for flagged individuals. By default, the 'flagged' argument is "retain" and the records in this table are included in the productivity calculation.
-\item missing - Individuals that were missed during a sampling event; table is populated only when the 'missing' argument is set to "filter" (default).
+\item vst_ANPP_duplicates - Duplicated single- or multi-bole tree individualIDs within a given sampling event (i.e., "eventID"). The individualID should be unique for single- and multi-bole tree growthForms within an eventID; duplicates are removed before productivity calculations are carried out.
+\item vst_ANPP_flagged - Individuals flagged for changes in stemDiameter > 3.5 cm/yr; includes records from all time points for flagged individuals. By default, the 'flagged' argument is "retain" and the records in this table are included in the productivity calculation.
+\item vst_ANPP_missing - Individuals that were missed during a sampling event; table is populated only when the 'missing' argument is set to "filter" (default).
+\item variables - Units and definitions of novel variables created by the function that are not already defined in the Vegetation Structure data product.
 }
 }
 \description{

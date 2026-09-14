@@ -40,9 +40,10 @@
 #'   * vst_ANPP_indiv - Woody ANPP for each individual at each time step for which data exist ("Mg/ha/yr").
 #'   * vst_ANPP_plot - Summarizes woody ANPP for each plot x year combination ("Mg/ha/yr").
 #'   * vst_ANPP_site - Summarizes woody ANPP for each site x year combination ("Mg/ha/yr").
-#'   * duplicates -
-#'   * flagged - Individuals flagged for changes in stemDiameter > 3.5 cm/yr; includes records from all time points for flagged individuals. By default, the 'flagged' argument is "retain" and the records in this table are included in the productivity calculation.
-#'   * missing - Individuals that were missed during a sampling event; table is populated only when the 'missing' argument is set to "filter" (default).
+#'   * vst_ANPP_duplicates - Duplicated single- or multi-bole tree individualIDs within a given sampling event (i.e., "eventID"). The individualID should be unique for single- and multi-bole tree growthForms within an eventID; duplicates are removed before productivity calculations are carried out.
+#'   * vst_ANPP_flagged - Individuals flagged for changes in stemDiameter > 3.5 cm/yr; includes records from all time points for flagged individuals. By default, the 'flagged' argument is "retain" and the records in this table are included in the productivity calculation.
+#'   * vst_ANPP_missing - Individuals that were missed during a sampling event; table is populated only when the 'missing' argument is set to "filter" (default).
+#'   * variables - Units and definitions of novel variables created by the function that are not already defined in the Vegetation Structure data product.
 #'
 #' @examples
 #' \dontrun{
@@ -345,15 +346,24 @@ estimateWoodProd <- function(inputDataList,
 
 
 
+  ### VARIABLES: PROCESS FUNCTION-SPECIFIC VARIABLES FOR OUTPUT ################
+  data("variables", envir = environment())
+
+  variables <- variables %>%
+    dplyr::filter(.data$functionName == "estimateWoodProd")
+
+
+
   ### OUTPUT ###################################################################
 
   output <- list(
     vst_ANPP_indiv = agbIncrDF,
     vst_ANPP_plot = plotDF,
     vst_ANPP_site = siteDF,
-    duplicates = treeDupeDF,
-    flagged = flaggedDF,
-    missing = missingDF
+    vst_ANPP_duplicates = treeDupeDF,
+    vst_ANPP_flagged = flaggedDF,
+    vst_ANPP_missing = missingDF,
+    variables = variables
   )
 
   return(output)

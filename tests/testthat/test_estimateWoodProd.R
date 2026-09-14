@@ -52,38 +52,24 @@ testthat::test_that(desc = "Output type", {
 
 
 ### Tests: Function generates expected output class for all output list objects
-#   Check 'vst_ANPP_indiv' output table is a data frame
-testthat::test_that(desc = "Output class vst_ANPP_indiv", {
+#   Check all output tables are data frames
+testthat::test_that(desc = "Output class list objects", {
+
   testthat::expect_s3_class(object = woodProdOutputs$vst_ANPP_indiv,
                             class = "data.frame")
-})
 
-#   Check 'vst_ANPP_plot' output table is a data frame
-testthat::test_that(desc = "Output class vst_ANPP_plot", {
   testthat::expect_s3_class(object = woodProdOutputs$vst_ANPP_plot,
                             class = "data.frame")
-})
 
-#   Check 'vst_ANPP_site' output table is a data frame
-testthat::test_that(desc = "Output class vst_ANPP_site", {
   testthat::expect_s3_class(object = woodProdOutputs$vst_ANPP_site,
                             class = "data.frame")
-})
 
-#   Check 'duplicates' output table is a data frame
-testthat::test_that(desc = "Output class duplicates", {
   testthat::expect_s3_class(object = woodProdOutputs$duplicates,
                             class = "data.frame")
-})
 
-#   Check 'flagged' output table is a data frame
-testthat::test_that(desc = "Output class flagged", {
   testthat::expect_s3_class(object = woodProdOutputs$flagged,
                             class = "data.frame")
-})
 
-#   Check 'missing' output table is a data frame
-testthat::test_that(desc = "Output class missing", {
   testthat::expect_s3_class(object = woodProdOutputs$missing,
                             class = "data.frame")
 })
@@ -98,74 +84,62 @@ testthat::test_that(desc = "Output class missing", {
 ### Test: Function generates data frames with expected dimensions using test data and function defaults
 #--> Defaults: plotSubset = "all", flagged = "retain", missing = "filter"
 
-#   Check expected column number of 'vst_ANPP_indiv' data frame
-testthat::test_that(desc = "Output data frame column number 'vst_ANPP_indiv'", {
+#   Check expected column and row numbers of 'vst_ANPP_indiv' data frame
+testthat::test_that(desc = "Output data frame dimensions for 'vst_ANPP_indiv'", {
+
   testthat::expect_identical(object = ncol(woodProdOutputs$vst_ANPP_indiv),
                              expected = as.integer(36))
-})
 
-#   Check expected row number of 'vst_ANPP_indiv' data frame
-testthat::test_that(desc = "Output data frame row number 'vst_ANPP_indiv'", {
   testthat::expect_identical(object = nrow(woodProdOutputs$vst_ANPP_indiv),
                              expected = as.integer(5400))
 })
 
-#   Check expected column number of 'vst_ANPP_plot' data frame
-testthat::test_that(desc = "Output data frame column number 'vst_ANPP_plot'", {
+#   Check expected column and row numbers of 'vst_ANPP_plot' data frame
+testthat::test_that(desc = "Output data frame dimensions for 'vst_ANPP_plot'", {
+
   testthat::expect_identical(object = ncol(woodProdOutputs$vst_ANPP_plot),
                              expected = as.integer(11))
-})
 
-#   Check expected row number of 'vst_ANPP_plot' data frame
-testthat::test_that(desc = "Output data frame row number 'vst_ANPP_plot'", {
   testthat::expect_identical(object = nrow(woodProdOutputs$vst_ANPP_plot),
                              expected = as.integer(142))
 })
 
-#   Check expected column number of 'vst_ANPP_site' data frame
-testthat::test_that(desc = "Output data frame column number 'vst_ANPP_site'", {
+#   Check expected column and row numbers of 'vst_ANPP_site' data frame
+testthat::test_that(desc = "Output data frame dimensions for 'vst_ANPP_site'", {
+
   testthat::expect_identical(object = ncol(woodProdOutputs$vst_ANPP_site),
                              expected = as.integer(9))
-})
 
-#   Check expected row number of 'vst_ANPP_site' data frame
-testthat::test_that(desc = "Output data frame row number 'vst_ANPP_site'", {
   testthat::expect_identical(object = nrow(woodProdOutputs$vst_ANPP_site),
                              expected = as.integer(9))
 })
 
-#   Check expected column number of 'duplicates' data frame
-testthat::test_that(desc = "Output data frame column number 'duplicates'", {
+#   Check expected column and row numbers of 'duplicates' data frame
+testthat::test_that(desc = "Output data frame dimensions for 'duplicates'", {
+
   testthat::expect_identical(object = ncol(woodProdOutputs$duplicates),
                              expected = as.integer(28))
-})
 
-#   Check expected row number of 'duplicates' data frame
-testthat::test_that(desc = "Output data frame row number 'duplicates'", {
   testthat::expect_identical(object = nrow(woodProdOutputs$duplicates),
                              expected = as.integer(63))
 })
 
-#   Check expected column number of 'flagged' data frame
-testthat::test_that(desc = "Output data frame column number 'flagged'", {
+#   Check expected column and row numbers of 'flagged' data frame
+testthat::test_that(desc = "Output data frame dimensions for 'flagged'", {
+
   testthat::expect_identical(object = ncol(woodProdOutputs$flagged),
                              expected = as.integer(32))
-})
 
-#   Check expected row number of 'flagged' data frame
-testthat::test_that(desc = "Output data frame row number 'flagged'", {
   testthat::expect_identical(object = nrow(woodProdOutputs$flagged),
                              expected = as.integer(245))
 })
 
-#   Check expected column number of 'missing' data frame
-testthat::test_that(desc = "Output data frame column number 'missing'", {
+#   Check expected column and row numbers of 'missing' data frame
+testthat::test_that(desc = "Output data frame dimensions for 'missing'", {
+
   testthat::expect_identical(object = ncol(woodProdOutputs$missing),
                              expected = as.integer(31))
-})
 
-#   Check expected row number of 'missing' data frame
-testthat::test_that(desc = "Output data frame row number 'missing'", {
   testthat::expect_identical(object = nrow(woodProdOutputs$missing),
                              expected = as.integer(31))
 })

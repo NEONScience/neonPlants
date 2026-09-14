@@ -18,11 +18,11 @@
 #' @param plotSubset The options are the default of "all" (all Tower and Distributed plots), "tower" (all plots in the Tower airshed but no Distributed plots), and "distributed" (all Distributed plots, which are sampled on a 5-year interval and are spatially representative of the NLCD classes at a site, and no Tower plots). [character]
 #'
 #' @return A list that includes herbaceous biomass per unit area data at multiple scales. Output tables include:
-#'   * hbp_agb - Above-ground herbaceous biomass for each sampled clip strip in the input data ("g/m2").
-#'   * hbp_plot - Plot-level peak above-ground herbaceous standing biomass for all sites not planted with crops in a given year (both "g/m2" and "Mg/ha").
-#'   * hbp_plot_extra - Peak above-ground herbaceous standing biomass for plots at grazed sites that were not subject to grazing management (i.e., the Tower plots at a grazed sites were not all managed for grazing) and with peak biomass occurring in a different eventID than the peak biomass eventID associated with the grazed plots (both "g/m2" and "Mg/ha").
-#'   * hbp_plot_crop - Peak above-ground herbaceous standing biomass for plots at sites planted with an agricultural crop in at least one plot in a given year (both "g/m2" and "Mg/ha"). Peak biomass is reported on a per plot basis and it is not assumed there is a single sampling eventID that represents "peak biomass".
-#'   * hbp_site - Above-ground herbaceous peak standing biomass for each site by year combination (both "g/m2" and "Mg/ha"). Output is derived from the single sampling eventID with the greatest biomass and does not include sites planted with agricultural crops. At grazed sites, the peak biomass estimate does not include those Tower plots not managed for grazing AND that achieve peak biomass in a different eventID than that identified for grazed plots.
+#'   * hbp_AGB_clip - Above-ground herbaceous biomass for each sampled clip strip in the input data ("g/m2").
+#'   * hbp_AGB_plot - Plot-level peak above-ground herbaceous standing biomass for all sites not planted with crops in a given year (both "g/m2" and "Mg/ha").
+#'   * hbp_AGB_plot_extra - Peak above-ground herbaceous standing biomass for plots at grazed sites that were not subject to grazing management (i.e., the Tower plots at a grazed sites were not all managed for grazing) and with peak biomass occurring in a different eventID than the peak biomass eventID associated with the grazed plots (both "g/m2" and "Mg/ha").
+#'   * hbp_AGB_plot_crop - Peak above-ground herbaceous standing biomass for plots at sites planted with an agricultural crop in at least one plot in a given year (both "g/m2" and "Mg/ha"). Peak biomass is reported on a per plot basis and it is not assumed there is a single sampling eventID that represents "peak biomass".
+#'   * hbp_AGB_site - Above-ground herbaceous peak standing biomass for each site by year combination (both "g/m2" and "Mg/ha"). Output is derived from the single sampling eventID with the greatest biomass and does not include sites planted with agricultural crops. At grazed sites, the peak biomass estimate does not include those Tower plots not managed for grazing AND that achieve peak biomass in a different eventID than that identified for grazed plots.
 #'   * variables - Units and definitions of novel variables created by the function that are not already defined in the Herbaceous Clip Harvest data product.
 #'
 #' @examples
@@ -983,11 +983,11 @@ scaleHerbMass = function(inputDataList,
 
 
   ### Return output ####
-  output <- list(hbp_agb = clipDF,
-                 hbp_plot = plotDF,
-                 hbp_plot_extra = grazedWildDF,
-                 hbp_plot_crop = cropDF,
-                 hbp_site = siteDF,
+  output <- list(hbp_AGB_clip = clipDF,
+                 hbp_AGB_plot = plotDF,
+                 hbp_AGB_plot_extra = grazedWildDF,
+                 hbp_AGB_plot_crop = cropDF,
+                 hbp_AGB_site = siteDF,
                  variables = variables)
 
   return(output)

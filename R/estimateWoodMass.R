@@ -25,10 +25,10 @@
 #' @param growthFormSubset Select Vegetation Structure growth forms for biomass estimation. The options are "tree", which enables biomass estimation only for single- and multi-bole trees, palm trees, and large tree ferns with a DBH ≥ 10 cm, and the default of "all", which includes "tree" individuals, and also small trees, single shrubs, small shrubs, lianas, small palms, small tree ferns, ocotillo, and xerophyllum individuals. Consult the Vegetation Structure Quick Start Guide and/or the Data Product User Guide for more growth form information. [character]
 #'
 #' @return A list that includes individual-level biomass, plot-level summary biomass, site-level summary biomass, and a table of individuals for which biomass could not be estimated for various reasons. Output tables include:
-#'   * vst_agb_kg - Above-ground live and dead standing woody biomass reported for each individual ("kg").
-#'   * vst_missing - Individuals with 'plantStatus' values of "removed", "lost" of some type, "no longer qualifies", and "downed", and also those individuals for which an allometry was missing or for which an above-ground biomass estimate is missing for some other reason.
-#'   * vst_plot_Mgha - Summary of above-ground total, live, and dead standing woody biomass for each plotID x eventID combination ("Mg/ha"). If argument growthFormSubset == "tree", plots with smaller woody biomass but no trees will have zero biomass in this data frame.
-#'   * vst_site_Mgha - Summary of above-ground total, live, and dead standing woody biomass for each siteID x year combination in the data ("Mg/ha").
+#'   * vst_AGB_indiv - Above-ground live and dead standing woody biomass reported for each individual ("kg").
+#'   * vst_AGB_plot - Summary of above-ground total, live, and dead standing woody biomass for each plotID x eventID combination ("Mg/ha"). If argument growthFormSubset == "tree", plots with smaller woody biomass but no trees will have zero biomass in this data frame.
+#'   * vst_AGB_site - Summary of above-ground total, live, and dead standing woody biomass for each siteID x year combination in the data ("Mg/ha").
+#'   * vst_lost_downed - Individuals with 'plantStatus' values of "removed", "lost" of some type, "no longer qualifies", and "downed", and also those individuals for which an allometry was missing or for which an above-ground biomass estimate is missing for some other reason.
 #'   * variables - Units and definitions of novel variables created by the function that are not already defined in the Vegetation Structure data product.
 #'
 #' @examples
@@ -983,10 +983,10 @@ estimateWoodMass = function(inputDataList,
   agbDF <- agbDF %>%
     dplyr::select(-"plot_eventID")
 
-  output <- list(vst_agb_kg = agbDF,
+  output <- list(vst_AGB_indiv = agbDF,
+                 vst_AGB_plot = agbPlotDF,
+                 vst_AGB_site = agbSiteDF,
                  vst_lost_downed = lostDownedDF,
-                 vst_plot_Mgha = agbPlotDF,
-                 vst_site_Mgha = agbSiteDF,
                  variables = variables)
 
   return(output)
