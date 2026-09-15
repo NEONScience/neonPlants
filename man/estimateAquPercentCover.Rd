@@ -27,17 +27,19 @@ estimateAquPercentCover(
 \item{barPlots}{If TRUE, will produce a list of plots, one for each site/date in the data provided.}
 }
 \value{
-Two tables are produced containing point count summary data. The first "apc_percentCover" table contains estimated percent cover for each observed species and/or substrate class on aquatic plant transects. This table includes a 'type' column indicating whether the estimate corresponds to a taxon or substrate class, and a 'substrateOrTaxonID' column which provides the corresponding taxonID or substrate identifier.
-
-The second "apc_transectMetrics" table contains summary information including the length, habitatType, and total number of points sampled at each transect.
-
-If barPlots = TRUE, a list containing plots for each site x date combination is also produced.
+Two tables are produced containing point count summary data:
+\itemize{
+\item apc_percentCover - Contains estimated percent cover for each observed species and/or substrate class on aquatic plant transects.
+\item apc_transectMetrics - Contains summary information including the length, habitatType, and total number of points sampled at each transect.
+\item apc_barPlots - (Optional) If barPlots = TRUE, a list containing plots for each site x date combination is also produced.
+\item variables - Units and definitions of novel variables created by the function that are not already defined in the Aquatic Plant Point Count data product.
+}
 }
 \description{
 Data inputs are NEON Aquatic Plant, Bryophyte, Lichen, and Macroalgae Point Counts in Wadeable Streams (DP1.20072.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input data tables with an equivalent structure and representing the same site x month combinations. The estimateAquPercentCover() function joins taxonomy information across point count tables and aggregates occurrence data to estimate percent cover at the transect level.
 }
 \details{
-Input data may be provided either as a list generated from the neonUtilities::laodByProduct() function or as individual tables. However, if both list and table inputs are provided at the same time the function will error.
+Input data may be provided either as a list generated from the neonUtilities::laodByProduct() function or as individual tables. However, only list or table inputs are allowed (not a mix of both).
 
 Percent cover is calculated using the equation from Bowden et al. 2006:
 
@@ -53,19 +55,20 @@ Note: This calculation can generate percent cover values >100\% if there is vert
 }
 \examples{
 \dontrun{
-#   Obtain NEON Aquatic Plant Point Count data
-apc <- neonUtilities::loadByProduct(
+#   Obtain NEON Aquatic Plant Point Count data; note that a token is required and may be obtained after creating a NEON user account
+apcDF <- neonUtilities::loadByProduct(
 dpID = "DP1.20072.001",
 site = "all",
 startdate = "2018-07",
 enddate = "2018-08",
 tabl = "all",
-check.size = FALSE
+check.size = FALSE,
+token = "my_NEON_token"
 )
 
 #   Calculate percent cover for downloaded data
-list <- neonPlants::estimateAquPercentCover(
-inputDataList = apc,
+df <- neonPlants::estimateAquPercentCover(
+inputDataList = apcDF,
 inputPoint = NA,
 inputPerTax = NA,
 inputTaxonomy = NA,

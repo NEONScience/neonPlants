@@ -2,32 +2,34 @@
 
 #' @author Madaline Ritter \email{ritterm1@battelleecology.org} \cr
 
-#' @description Join the 'apc_pointTransect', 'apc_perTaxon', 'apc_taxonomy' (Processed or Raw) and 'apc_morphospecies' tables to generate a single table that contains point count data with taxonomic identifications for each sampleID. Data inputs are NEON Aquatic Plant, Bryophyte, Lichen, and Macroalgae Point Counts in Wadeable Streams (DP1.20072.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input data tables with an equivalent structure and representing the same site x month combinations. 
+#' @description Join the 'apc_pointTransect', 'apc_perTaxon', 'apc_taxonomy' (Processed or Raw) and 'apc_morphospecies' tables to generate a single table that contains point count data with taxonomic identifications for each sampleID. Data inputs are NEON Aquatic Plant, Bryophyte, Lichen, and Macroalgae Point Counts in Wadeable Streams (DP1.20072.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input data tables with an equivalent structure and representing the same site x month combinations.
 #'
-#' @details Input data may be provided either as a list or as individual tables. However, if both list and table inputs are provided at the same time the function will error out. For table joining to be successful, inputs must contain data from the same site x month combination(s) for all tables. If both processed and raw taxonomy tables are provided as list inputs, the function will default to the 'apc_taxonomyProcessed' table for joining. If the 'apc_morphospecies' table is not provided, the function will proceed with joining point count data and per taxon identifications without incorporating morphospecies identifications.
-#' 
+#' @details Input data may be provided either as a list or as individual tables. However, only list or table inputs are allowed (not a mix of both). For table joining to be successful, inputs must contain data from the same site x month combination(s) for all tables. If both processed and raw taxonomy tables are provided as list inputs, the function will default to the 'apc_taxonomyProcessed' table for joining. If the 'apc_morphospecies' table is not provided, the function will proceed with joining point count data and per taxon identifications without incorporating morphospecies identifications.
+#'
 #' In the joined output table, the 'acceptedTaxonID' and associated taxonomic fields are populated from the first available identification in the following order: 'apc_taxonomyProcessed', 'apc_taxonomyRaw', 'apc_perTaxon', or 'apc_morphospecies'. For samples identified both in the field and by an expert taxonomist, the expert identification is retained in the output. A new field, 'taxonIDSourceTable', is included in the output and indicates the source table for each sample's identification.
-#' 
+#'
 #' If a single sample in 'apc_taxonomyProcessed' contains multiple macroalgae species, each species will be represented as a separate row in 'apc_pointTransect' for every point associated with that sampleID.
-#' 
+#'
 #' @param inputDataList A list object comprised of Aquatic Plant, Bryophyte, Lichen, and Macroalgae Point Count tables (DP1.20072.001) downloaded using the neonUtilities::loadByProduct() function. If list input is provided, the table input arguments must all be NA; similarly, if list input is missing, table inputs must be provided. [list]
 #'
 #' @param inputPoint The 'apc_pointTransect' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
-#' 
+#'
 #' @param inputPerTax The 'apc_perTaxon' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
-#' 
+#'
 #' @param inputTaxonomy The 'apc_taxonomyProcessed' or 'apc_taxonomyRaw' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
-#' 
+#'
 #' @param inputMorph The 'apc_morphospecies' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
-#' 
-#' @return A table containing point transect data joined with taxonomic identifications. For points where targetTaxaPresent == 'Y', taxonomic information is joined from the first available source table.
-#' 
+#'
+#' @return Two tables are returned:
+#'   * apc_pointCount - Contains point transect data joined with taxonomic identifications. For points where targetTaxaPresent == 'Y', taxonomic information is joined from the first available source table.
+#'   * variables - Units and definitions of novel variables created by the function that are not already defined in the Aquatic Plant Point Count data product.
+#'
 #' @references
 #' License: GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007
-#' 
+#'
 #' @examples
 #' \dontrun{
-#' #   Obtain NEON Aquatic Plant Point Count data
+#' #   Obtain NEON Aquatic Plant Point Count data; note that a token is required and may be obtained after creating a NEON user account
 #' apc <- neonUtilities::loadByProduct(
 #' dpID = "DP1.20072.001",
 #' site = "all",
@@ -35,9 +37,10 @@
 #' enddate = "2018-05",
 #' tabl = "all",
 #' package = 'expanded',
-#' check.size = FALSE
+#' check.size = FALSE,
+#' token = "my_NEON_token"
 #' )
-#' 
+#'
 #' #   Join downloaded point count data
 #' df <- neonPlants::joinAquPointCount(
 #' inputDataList = apc,
@@ -48,7 +51,7 @@
 #' )
 #'
 #' }
-#' 
+#'
 #' @export joinAquPointCount
 
 
@@ -59,7 +62,7 @@ joinAquPointCount <- function(inputDataList,
                               inputTaxonomy = NA,
                               inputMorph = NA) {
   ### Test that user has supplied arguments as required by function ####
-  
+
   ### Verify user-supplied inputDataList object contains correct data if not NA
   if (!missing(inputDataList)) {
     #   Check that input is a list
@@ -71,10 +74,10 @@ joinAquPointCount <- function(inputDataList,
         )
       )
     }
-    
+
     #   Check that required tables within list match expected names
     listExpNames <- c("apc_pointTransect", "apc_perTaxon")
-    
+
     #   Determine dataType or stop with appropriate message
     if (length(setdiff(listExpNames, names(inputDataList))) > 0) {
       stop(
@@ -87,10 +90,10 @@ joinAquPointCount <- function(inputDataList,
     }
   } else {
     inputDataList <- NULL
-    
+
   } # end missing conditional
-  
-  
+
+
   ### Verify table inputs are NA if inputDataList is supplied
   if (!is.null(inputDataList)) {
     if (!isTRUE(is.na(inputPoint)) || !isTRUE(is.na(inputPerTax)) ||
@@ -98,18 +101,18 @@ joinAquPointCount <- function(inputDataList,
       stop("When 'inputDataList' is supplied, all table input arguments must be NA.")
     }
   }
-  
-  
+
+
   ### Verify all table inputs are data frames if inputDataList is NA
   if (is.null(inputDataList) &
       (
         !is.data.frame(inputPoint) || !is.data.frame(inputPerTax)
       )) {
     stop("Data frames must be supplied for table inputs if 'inputDataList' is missing")
-    
+
   }
-  
-  
+
+
   ### Conditionally define input tables ####
   if (inherits(inputDataList, "list")) {
     apPoint <- inputDataList$apc_pointTransect
@@ -130,7 +133,7 @@ joinAquPointCount <- function(inputDataList,
     } else{
       apMorph <- NA
     }
-    
+
   } else {
     apPoint <- inputPoint
     apPerTax <- inputPerTax
@@ -143,13 +146,13 @@ joinAquPointCount <- function(inputDataList,
       apTax <- dplyr::rename(apTax, acceptedTaxonID = "taxonID")
     }
     apMorph <- inputMorph
-    
+
   }
-  
-  
-  
+
+
+
   ### Verify input tables contain required columns and data ####
-  
+
   ### Verify 'apPoint' table contains required data
   #   Check for required columns
   pointExpCols <- c(
@@ -161,7 +164,7 @@ joinAquPointCount <- function(inputDataList,
     "eventID",
     "remarks"
   )
-  
+
   if (length(setdiff(pointExpCols, colnames(apPoint))) > 0) {
     stop(
       glue::glue(
@@ -174,14 +177,14 @@ joinAquPointCount <- function(inputDataList,
     # apPoint$collectDate <- as.POSIXct(apPoint$collectDate, format = "%Y%m%dT%H%M%SZ", tz = "UTC")
     apPoint$collectDate <- as.POSIXct(apPoint$collectDate, format = "%Y-%m-%d %H:%M:%S", tz = "UTC")
   }
-  
+
   #   Check for data
   if (nrow(apPoint) == 0) {
     stop(glue::glue("Table 'inputPoint' has no data."))
   }
-  
-  
-  
+
+
+
   ### Verify 'apPerTax' table contains required data
   #   Check for required columns
   perTaxExpCols <- c(
@@ -214,7 +217,7 @@ joinAquPointCount <- function(inputDataList,
     "identifiedDate",
     "uid"
   )
-  
+
   if (length(setdiff(perTaxExpCols, colnames(apPerTax))) > 0) {
     stop(
       glue::glue(
@@ -224,14 +227,14 @@ joinAquPointCount <- function(inputDataList,
       )
     )
   }
-  
+
   #   Check for data
   if (nrow(apPerTax) == 0) {
     stop(glue::glue("Table 'inputPerTax' has no data."))
   }
-  
-  
-  
+
+
+
   ### Verify 'apTax' table contains required data if data exists
   expertTaxExpCols <- c(
     "sampleID",
@@ -268,7 +271,7 @@ joinAquPointCount <- function(inputDataList,
     "collectDate",
     "Table"
   )
-  
+
   #   Check for data
   if (is.data.frame(apTax)) {
     if (nrow(apTax) == 0) {
@@ -290,8 +293,8 @@ joinAquPointCount <- function(inputDataList,
       }
     }
   }
-  
-  
+
+
   ### Verify 'apMorph' table contains required data if data exists
   morphExpCols <- c(
     "taxonID",
@@ -303,8 +306,8 @@ joinAquPointCount <- function(inputDataList,
     "morphospeciesResolvedDate",
     "dataQF"
   )
-  
-  
+
+
   #   Check for data
   if (is.data.frame(apMorph)) {
     if (nrow(apMorph) == 0) {
@@ -324,13 +327,13 @@ joinAquPointCount <- function(inputDataList,
       }
     }
   }
-  
-  
-  
-  
-  
+
+
+
+
+
   ### Join apPerTax and apTax tables ####
-  
+
   if (is.data.frame(apTax) && nrow(apTax) > 0) {
     #   Select needed columns from apTax
     apTax <- apTax %>%
@@ -343,16 +346,16 @@ joinAquPointCount <- function(inputDataList,
         -"morphospeciesID"
       ) %>%
       dplyr::rename(taxonID = "acceptedTaxonID")
-    
+
     #   Columns conditionally replaced with expertTax data
     join1_cols <- c(
-      "scientificName", 
+      "scientificName",
       "phylum", "division", "class", "order",
       "family", "genus", "section", "specificEpithet", "infraspecificEpithet",
       "variety", "form", "scientificNameAuthorship", "identificationQualifier", "identificationReferences",
       "taxonRank", "identifiedBy", "identifiedDate"
     )
-    
+
     #   Update expert taxonomist identifications
     apJoin1 <- apPerTax %>%
       dplyr::left_join(
@@ -413,8 +416,8 @@ joinAquPointCount <- function(inputDataList,
             is.na(.data$remarks_perTax) ~ paste0("expertTax remarks - ", .data$remarks_expertTax),
           TRUE ~ NA
         )
-      ) 
-    
+      )
+
     for (col in join1_cols) {
       expertTax_col <- paste0(col, "_expertTax")
       perTax_col <- paste0(col, "_perTax")
@@ -424,12 +427,12 @@ joinAquPointCount <- function(inputDataList,
         if (perTax_col %in% names(apJoin1)) as.character(apJoin1[[perTax_col]]) else NA_character_
       )
     }
-    
+
     apJoin1 <- apJoin1 %>%
       dplyr::select(-"uid", -"targetTaxaPresent",
                     -dplyr::matches("_expertTax"),-dplyr::matches("_perTax"))
-    
-    
+
+
   } else {
     message("No data joined from apc_taxonomyProcessed table.")
     #   rename columns if no expertTax join
@@ -448,13 +451,13 @@ joinAquPointCount <- function(inputDataList,
              -"publicationDate",
              -"uid")
   }
-  
-  
-  
-  
-  
+
+
+
+
+
   ### Join apJoin1 and apMorph tables ####
-  
+
   #   Select needed columns from apMorph
   if (is.data.frame(apMorph) && nrow(apMorph) > 0) {
     apMorph <- apMorph %>%
@@ -480,9 +483,9 @@ joinAquPointCount <- function(inputDataList,
         "form",
         "taxonRank",
         "dataQF"
-      ) %>% 
+      ) %>%
       dplyr::rename(identifiedDate="morphospeciesResolvedDate")
-    
+
     apJoin2 <- apJoin1 %>%
       dplyr::mutate(morphospeciesID = dplyr::if_else(
         !is.na(.data$morphospeciesID),
@@ -494,14 +497,14 @@ joinAquPointCount <- function(inputDataList,
                        suffix = c("_perTax", "_morph")) %>%
       dplyr::mutate(
         taxonIDSourceTable = dplyr::if_else(
-          !is.na(.data$taxonID) & .data$tempTaxonID %in% c("2PLANT", "UNKALG"), 
+          !is.na(.data$taxonID) & .data$tempTaxonID %in% c("2PLANT", "UNKALG"),
           "apc_morphospecies", .data$taxonIDSourceTable),
         acceptedTaxonID = dplyr::if_else(
-          !is.na(.data$taxonID) & .data$tempTaxonID %in% c("2PLANT", "UNKALG"), 
+          !is.na(.data$taxonID) & .data$tempTaxonID %in% c("2PLANT", "UNKALG"),
           .data$taxonID, .data$tempTaxonID),
         morphospeciesDataQF = .data$dataQF
       )
-    
+
     #   Columns conditionally replaced with morph data
     join2_cols <- c(
       "scientificName", "identificationQualifier", "identificationReferences",
@@ -511,7 +514,7 @@ joinAquPointCount <- function(inputDataList,
       "family", "genus", "section", "specificEpithet", "infraspecificEpithet",
       "variety", "form", "taxonRank"
     )
-    
+
     for (col in join2_cols) {
       morph_col <- paste0(col, "_morph")
       perTax_col <- paste0(col, "_perTax")
@@ -521,33 +524,33 @@ joinAquPointCount <- function(inputDataList,
         if (perTax_col %in% names(apJoin2)) as.character(apJoin2[[perTax_col]]) else NA_character_
       )
     }
-    
+
     apJoin2 <- apJoin2 %>%
       dplyr::select(
         -"taxonID", -"tempTaxonID", -"dataQF",
         -dplyr::matches("_morph"),-dplyr::matches("_perTax"))
-    
-    
+
+
   } else {
     message("No data joined from apc_morphospecies table.")
-    
-    apJoin2 <- apJoin1 %>% 
-      dplyr::mutate(acceptedTaxonID = .data$tempTaxonID) %>% 
+
+    apJoin2 <- apJoin1 %>%
+      dplyr::mutate(acceptedTaxonID = .data$tempTaxonID) %>%
       dplyr::select(-"tempTaxonID")
   }
-  
-  
-  
-  
-  
+
+
+
+
+
   ### Join apPoint and apPerTax tables ####
-  
+
   apc_joinPointCounts <- apPoint %>%
     dplyr::rename(
       pointPublicationDate = "publicationDate",
       pointRelease = "release",
       pointDataQF = "dataQF"
-      ) %>% 
+      ) %>%
     dplyr::left_join(
       apJoin2,
       by = c(
@@ -573,28 +576,41 @@ joinAquPointCount <- function(inputDataList,
         is.na(.data$remarks_perTax) &
           !is.na(.data$remarks_point) ~ paste0("pointTransect remarks - ", .data$remarks_point),
         TRUE ~ NA
-      )) %>% 
+      )) %>%
     dplyr::select(-"remarks_perTax", -"remarks_point", -"Table")
-  
-  
+
+
   ###  Re-format date columns ####
   apc_joinPointCounts$identifiedDate <- as.Date(apc_joinPointCounts$identifiedDate)
-  
-  apc_joinPointCounts$collectDate <- as.POSIXct(apc_joinPointCounts$collectDate, 
+
+  apc_joinPointCounts$collectDate <- as.POSIXct(apc_joinPointCounts$collectDate,
     format = "%Y-%m-%dT%H:%MZ", tz = "UTC")
-  
-  apc_joinPointCounts$pointPublicationDate <- as.POSIXct(apc_joinPointCounts$pointPublicationDate, 
+
+  apc_joinPointCounts$pointPublicationDate <- as.POSIXct(apc_joinPointCounts$pointPublicationDate,
     format = "%Y%m%dT%H%M%SZ", tz = "UTC")
-  
-  apc_joinPointCounts$perTaxonPublicationDate <- as.POSIXct(apc_joinPointCounts$perTaxonPublicationDate, 
+
+  apc_joinPointCounts$perTaxonPublicationDate <- as.POSIXct(apc_joinPointCounts$perTaxonPublicationDate,
     format = "%Y%m%dT%H%M%SZ", tz = "UTC")
-  
+
   if (is.data.frame(apTax) && nrow(apTax) > 0) {
-    apc_joinPointCounts$expertTaxPublicationDate <- as.POSIXct(apc_joinPointCounts$expertTaxPublicationDate, 
+    apc_joinPointCounts$expertTaxPublicationDate <- as.POSIXct(apc_joinPointCounts$expertTaxPublicationDate,
       format = "%Y%m%dT%H%M%SZ", tz = "UTC")
   }
 
-  
-  return(apc_joinPointCounts)
-  
+
+
+  ### Variables: Process function-specific variables for output ####
+  data("variables", envir = environment())
+
+  variables <- variables %>%
+    dplyr::filter(.data$functionName == "joinAquPointCount")
+
+
+
+  ### Return output ####
+  output <- list(apc_pointCount = apc_joinPointCounts,
+                 variables = variables)
+
+  return(output)
+
 } #function closer

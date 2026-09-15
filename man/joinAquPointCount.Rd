@@ -24,13 +24,17 @@ joinAquPointCount(
 \item{inputMorph}{The 'apc_morphospecies' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 }
 \value{
-A table containing point transect data joined with taxonomic identifications. For points where targetTaxaPresent == 'Y', taxonomic information is joined from the first available source table.
+Two tables are returned:
+\itemize{
+\item apc_pointCount - Contains point transect data joined with taxonomic identifications. For points where targetTaxaPresent == 'Y', taxonomic information is joined from the first available source table.
+\item variables - Units and definitions of novel variables created by the function that are not already defined in the Aquatic Plant Point Count data product.
+}
 }
 \description{
 Join the 'apc_pointTransect', 'apc_perTaxon', 'apc_taxonomy' (Processed or Raw) and 'apc_morphospecies' tables to generate a single table that contains point count data with taxonomic identifications for each sampleID. Data inputs are NEON Aquatic Plant, Bryophyte, Lichen, and Macroalgae Point Counts in Wadeable Streams (DP1.20072.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input data tables with an equivalent structure and representing the same site x month combinations.
 }
 \details{
-Input data may be provided either as a list or as individual tables. However, if both list and table inputs are provided at the same time the function will error out. For table joining to be successful, inputs must contain data from the same site x month combination(s) for all tables. If both processed and raw taxonomy tables are provided as list inputs, the function will default to the 'apc_taxonomyProcessed' table for joining. If the 'apc_morphospecies' table is not provided, the function will proceed with joining point count data and per taxon identifications without incorporating morphospecies identifications.
+Input data may be provided either as a list or as individual tables. However, only list or table inputs are allowed (not a mix of both). For table joining to be successful, inputs must contain data from the same site x month combination(s) for all tables. If both processed and raw taxonomy tables are provided as list inputs, the function will default to the 'apc_taxonomyProcessed' table for joining. If the 'apc_morphospecies' table is not provided, the function will proceed with joining point count data and per taxon identifications without incorporating morphospecies identifications.
 
 In the joined output table, the 'acceptedTaxonID' and associated taxonomic fields are populated from the first available identification in the following order: 'apc_taxonomyProcessed', 'apc_taxonomyRaw', 'apc_perTaxon', or 'apc_morphospecies'. For samples identified both in the field and by an expert taxonomist, the expert identification is retained in the output. A new field, 'taxonIDSourceTable', is included in the output and indicates the source table for each sample's identification.
 
@@ -38,7 +42,7 @@ If a single sample in 'apc_taxonomyProcessed' contains multiple macroalgae speci
 }
 \examples{
 \dontrun{
-#   Obtain NEON Aquatic Plant Point Count data
+#   Obtain NEON Aquatic Plant Point Count data; note that a token is required and may be obtained after creating a NEON user account
 apc <- neonUtilities::loadByProduct(
 dpID = "DP1.20072.001",
 site = "all",
@@ -46,7 +50,8 @@ startdate = "2018-03",
 enddate = "2018-05",
 tabl = "all",
 package = 'expanded',
-check.size = FALSE
+check.size = FALSE,
+token = "my_NEON_token"
 )
 
 #   Join downloaded point count data

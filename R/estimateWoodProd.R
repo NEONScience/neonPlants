@@ -204,7 +204,7 @@ estimateWoodProd <- function(inputDataList,
 
 
   ##  Extract required estimateWoodMass output tables
-  agb <- woodMassOutput$vst_agb_kg
+  agb <- woodMassOutput$vst_AGB_indiv
   lostDowned <- woodMassOutput$vst_lost_downed
 
 

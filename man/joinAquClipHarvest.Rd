@@ -24,15 +24,18 @@ joinAquClipHarvest(
 \item{inputMorph}{The 'apc_morphospecies' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 }
 \value{
-Two tables are produced containing joined clip harvest data. The first "apl_joinBiomass" table contains one row per sampleID in 'apl_biomass'. A single sampleID in 'apl_biomass' may correspond to more than one taxa in 'apl_taxonomyProcessed'. When tables are joined, the taxon with the greatest 'algalParameterValue' in 'apl_taxonomyProcessed' will be listed as the 'acceptedTaxonID' and a new field, 'additionalTaxa', appears in the output and includes all other taxa associated with the sampleID. If more than one taxon shares the same max 'algalParameterValue', the first row in the input table is returned as the 'acceptedTaxonID'. Detailed taxonomic information for any additionalTaxa can be found in the input 'apl_taxonomyProcessed' table.
-
-The second "apl_fieldTaxonomy" table joins taxonomic identifications across tables to 'apl_clipHarvest' by fieldID. Joining may result in one or many unique rows per sampleID.
+Two tables are produced containing joined clip harvest data:
+\itemize{
+\item apl_joinBiomass - Contains one row per sampleID in the 'apl_biomass' input table. A single sampleID in 'apl_biomass' may correspond to more than one taxon in the 'apl_taxonomyProcessed' table. When tables are joined, the taxon with the greatest 'algalParameterValue' in the 'apl_taxonomyProcessed' table will be listed as the 'acceptedTaxonID', and a new 'additionalTaxa' field appears in the output and includes all other taxa associated with the sampleID. If more than one taxon shares the same max 'algalParameterValue', the first row in the input table is returned as the 'acceptedTaxonID'. Detailed taxonomic information for any 'additionalTaxa' reported can be found in the input 'apl_taxonomyProcessed' table.
+\item apl_fieldTaxonomy - Joins taxonomic identifications across tables to 'apl_clipHarvest' by fieldID. Joining may result in one or many unique rows per sampleID.
+\item variables - Units and definitions of novel variables created by the function that are not already defined in the Aquatic Plant Clip Harvest data product.
+}
 }
 \description{
 Join the 'apl_clipHarvest', 'apl_biomass', 'apl_taxonomyProcessed' and 'apc_morphospecies' tables to generate two joined output tables that contain clip harvest data with merged taxonomic identifications. Data inputs are NEON Aquatic Plant Bryophyte Macroalgae Clip Harvest (DP1.20066.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input data tables with an equivalent structure and representing the same site x month combinations.
 }
 \details{
-Input data may be provided either as a list or as individual tables. However, if both list and table inputs are provided at the same time the function will error out. For table joining to be successful, inputs must contain data from the same site x month combination(s) for all tables.
+Input data may be provided either as a list or as individual tables. However, only list or table inputs are allowed (not a mix of both).
 
 Only data from bout 2 (midsummer sampling) is returned in the joined output tables, as other bouts do not include taxonomy data. If the input does not include any bout 2 data, the function will error out.
 
@@ -40,18 +43,19 @@ In the joined output tables, the 'acceptedTaxonID' and associated taxonomic fiel
 }
 \examples{
 \dontrun{
-#   Obtain NEON Aquatic Plant Clip Harvest data
+#   Obtain NEON Aquatic Plant Clip Harvest data; note that a token is required and may be obtained after creating a NEON user account
 apl <- neonUtilities::loadByProduct(
 dpID = "DP1.20066.001",
 site = "all",
 startdate = "2018-07",
 enddate = "2018-08",
 tabl = "all",
-check.size = FALSE
+check.size = FALSE,
+token = "my_NEON_token"
 )
 
 #   Join downloaded clip harvest data
-list <- neonPlants::joinAquClipHarvest(
+df <- neonPlants::joinAquClipHarvest(
 inputDataList = apl,
 inputBio = NA,
 inputClip = NA,

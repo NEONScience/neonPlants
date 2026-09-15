@@ -190,3 +190,53 @@ estimateWoodProd,vst_ANPP_site,year,year,Calendar year in which the growing seas
 estimateWoodProd,vst_ANPP_site,plotCount,count,Number of plots contributing to the annual site-level ANPP estimate
 estimateWoodProd,vst_ANPP_site,woodProd_Mghayr,Mg/ha/yr,Mean site-level woody annual above-ground net primary production per unit area
 estimateWoodProd,vst_ANPP_site,woodProdSD_Mghayr,Mg/ha/yr,Standard deviation of site-level woody annual above-ground net primary production per unit area
+estimateWoodProd,vst_ANPP_duplicates,indivEventID,,Combination of the individualID and the eventID that should be unique for a single- or multi-bole tree
+estimateWoodProd,vst_ANPP_flagged,year,year,Calendar year in which the growing season began
+estimateWoodProd,vst_ANPP_flagged,liveDeadStatus,,Indicator of whether an individual is live or dead at the time of measurement
+estimateWoodProd,vst_ANPP_flagged,transitionStatus,,"Indicator of whether an individual was recruited, died, or experienced no change in liveDeadStatus from one sampling event to the next"
+estimateWoodProd,vst_ANPP_flagged,statusFlag,,Indicator that the transitionStatus for a missed individual was inferred for a given sampling event based consistent status data in prior and subsequent years
+estimateWoodProd,vst_ANPP_flagged,agb_kg,kg,Allometrically estimated above-ground biomass for an individual
+estimateWoodProd,vst_ANPP_flagged,massFlag,,Indicator that the 'agb_kg' value was interpolated for a missed individual or estimated for a recruited individual with DBH = 10 cm
+estimateWoodProd,vst_ANPP_flagged,incrementFlag,,Indicator that the change in stemDiameter for an individual was > 3.5 cm/yr from one sampling event to the next
+estimateWoodProd,vst_ANPP_flagged,source,,Literature citation for the allometry assigned to the individual
+estimateWoodProd,vst_ANPP_missing,year,year,Calendar year in which the growing season began
+estimateWoodProd,vst_ANPP_missing,liveDeadStatus,,Indicator of whether an individual is live or dead at the time of measurement
+estimateWoodProd,vst_ANPP_missing,transitionStatus,,"Indicator of whether an individual was recruited, died, or experienced no change in liveDeadStatus from one sampling event to the next"
+estimateWoodProd,vst_ANPP_missing,statusFlag,,Indicator that the transitionStatus for a missed individual was inferred for a given sampling event based consistent status data in prior and subsequent years
+estimateWoodProd,vst_ANPP_missing,agb_kg,kg,Allometrically estimated above-ground biomass for an individual
+estimateWoodProd,vst_ANPP_missing,massFlag,,Indicator that the 'agb_kg' value was interpolated for a missed individual or estimated for a recruited individual with DBH = 10 cm
+estimateWoodProd,vst_ANPP_missing,source,,Literature citation for the allometry assigned to the individual
+estimateAquPercentCover,apc_percentCover,type,,Indicator of whether the percent_cover estimate corresponds to a taxon or substrate class
+estimateAquPercentCover,apc_percentCover,substrateOrTaxonID,,The taxonID or substrate identifier associated with the percent_cover estimate
+estimateAquPercentCover,apc_percentCover,percent_cover,percent,Estimated percent cover for a given taxonID or substrate
+estimateAquPercentCover,apc_transectMetrics,transectLength_m,meters,Length of the aquatic plant point count transect
+estimateAquPercentCover,apc_transectMetrics,totalPoints,count,Total number of points assessed along the transect
+estimateAquPercentCover,apc_transectMetrics,pointsWithTaxaPresent,count,Total number of points with taxa present along the transect
+joinAquClipHarvest,apl_joinBiomass,taxonIDSourceTable,,Input table from which the acceptedTaxonID is derived
+joinAquClipHarvest,apl_joinBiomass,biomassDataQF,,The value of the dataQF field from the apl_biomass input table
+joinAquClipHarvest,apl_joinBiomass,expertTaxDataQF,,The value of the dataQF field from the apl_taxonomyProcessed input table
+joinAquClipHarvest,apl_joinBiomass,biomassPublicationDate,date,The publication date from the apl_biomass input table
+joinAquClipHarvest,apl_joinBiomass,expertTaxPublicationDate,date,The publication date from the apl_taxonomyProcessed input table
+joinAquClipHarvest,apl_joinBiomass,biomassRelease,,The NEON data RELEASE from the apl_biomass input table
+joinAquClipHarvest,apl_joinBiomass,expertTaxRelease,,The NEON data RELEASE from the apl_taxonomyProcessed input table
+joinAquClipHarvest,apl_joinBiomass,additionalTaxa,,Taxa associated with the sampleID in addition to the acceptedTaxonID
+joinAquClipHarvest,apl_joinBiomass,morphospeciesDataQF,,The value of the dataQF field from the apc_morphospecies input table
+joinAquClipHarvest,apl_joinBiomass,clipDataQF,,The value of the dataQF field from the apl_clipHarvest input table
+joinAquClipHarvest,apl_joinBiomass,clipPublicationDate,date,The publication date from the apl_clipHarvest input table
+joinAquClipHarvest,apl_joinBiomass,clipRelease,,The NEON data RELEASE from the apl_clipHarvest input table
+joinAquClipHarvest,apl_fieldTaxonomy,taxonIDSourceTable,,Input table from which the acceptedTaxonID is derived
+joinAquClipHarvest,apl_fieldTaxonomy,clipDataQF,,The value of the dataQF field from the apl_clipHarvest input table
+joinAquClipHarvest,apl_fieldTaxonomy,expertTaxDataQF,,The value of the dataQF field from the apl_taxonomyProcessed input table
+joinAquClipHarvest,apl_fieldTaxonomy,clipPublicationDate,date,The publication date from the apl_clipHarvest input table
+joinAquClipHarvest,apl_fieldTaxonomy,expertTaxPublicationDate,date,The publication date from the apl_taxonomyProcessed input table
+joinAquPointCount,apc_pointCount,pointDataQF,,The value of the dataQF field from the apc_pointTransect input table
+joinAquPointCount,apc_pointCount,pointPublicationDate,date,The publication date from the apc_pointTransect input table
+joinAquPointCount,apc_pointCount,pointRelease,,The NEON data RELEASE from the apc_pointTransect input table
+joinAquPointCount,apc_pointCount,taxonIDSourceTable,,Input table from which the acceptedTaxonID is derived
+joinAquPointCount,apc_pointCount,perTaxonDataQF,,The value of the dataQF field from the apc_perTaxon input table
+joinAquPointCount,apc_pointCount,expertTaxDataQF,,The value of the dataQF field from the apc_taxonomyProcessed input table
+joinAquPointCount,apc_pointCount,perTaxonPublicationDate,date,The publication date from the apc_perTaxon input table
+joinAquPointCount,apc_pointCount,expertTaxPublicationDate,date,The publication date from the apc_taxonomyProcessed input table
+joinAquPointCount,apc_pointCount,expertTaxRelease,,The NEON data RELEASE from the apc_taxonomyProcessed input table
+joinAquPointCount,apc_pointCount,perTaxonRelease,,The NEON data RELEASE from the apc_perTaxon input table
+joinAquPointCount,apc_pointCount,morphospeciesDataQF,,The value of the dataQF field from the apc_morphospecies input table
