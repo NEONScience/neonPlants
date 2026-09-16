@@ -29,7 +29,7 @@
 #'
 #' @param barPlots If TRUE, will produce a list of plots, one for each site/date in the data provided.
 #'
-#' @return Two tables are produced containing point count summary data:
+#' @return Percent cover data derived from point counts are returned, along with summary data from sampled transects. In addition, optional graphical output may be returned:
 #'   * apc_percentCover - Contains estimated percent cover for each observed species and/or substrate class on aquatic plant transects.
 #'   * apc_transectMetrics - Contains summary information including the length, habitatType, and total number of points sampled at each transect.
 #'   * apc_barPlots - (Optional) If barPlots = TRUE, a list containing plots for each site x date combination is also produced.

@@ -240,3 +240,24 @@ joinAquPointCount,apc_pointCount,expertTaxPublicationDate,date,The publication d
 joinAquPointCount,apc_pointCount,expertTaxRelease,,The NEON data RELEASE from the apc_taxonomyProcessed input table
 joinAquPointCount,apc_pointCount,perTaxonRelease,,The NEON data RELEASE from the apc_perTaxon input table
 joinAquPointCount,apc_pointCount,morphospeciesDataQF,,The value of the dataQF field from the apc_morphospecies input table
+estimatePheTransByTag,phe_transition_tag,year,year,Calendar year in which the phenophase transition occurred
+estimatePheTransByTag,phe_transition_tag,yearPhenophaseBegan,year,Calendar year of phenophase onset for a particular individual x phenophase combination
+estimatePheTransByTag,phe_transition_tag,transitionType,,"Type of phenophase transition, either ""onset"" or ""end"""
+estimatePheTransByTag,phe_transition_tag,nthTransition,count,"Count of onset events per individualID x phenophase combination within a given year - either calendar year or year phenophase began, depending on the value of 'began' argument"
+estimatePheTransByTag,phe_transition_tag,dateIntervalStart,date,Start date of the phenophase transition interval
+estimatePheTransByTag,phe_transition_tag,doyIntervalStart,day of year,Day of year of the start of the phenophase transition interval
+estimatePheTransByTag,phe_transition_tag,dateIntervalEnd,date,End date of the phenophase transition interval
+estimatePheTransByTag,phe_transition_tag,doyIntervalEnd,day of year,Day of year of the end of the phenophase transition interval
+estimatePheTransByTag,phe_transition_tag,dateTransition,date,Date of the estimated phenophase transition
+estimatePheTransByTag,phe_transition_tag,doyTransition,day of year,Day of year of the estimated phenophase transition
+estimatePheTransByTag,phe_transition_tag,samplingInterval,days,Number of days between the two observation dates that bound the estimated phenophase transition date.
+estimatePheTransByTag,phe_transition_tag,precisionDays,days,"Uncertainty associated with estimated phenophase transition date - i.e., samplingInterval / 2"
+estimatePheDurationByTag,phe_duration_tag,yearPhenophaseBegan,year,Calendar year of the estimated onset of the phenophase
+estimatePheDurationByTag,phe_duration_tag,nthTransition,count,Number of onset events per individualID x phenophase name for each yearPhenophaseBegan
+estimatePheDurationByTag,phe_duration_tag,dateTransitionStart,date,Date of the estimated phenophase onset
+estimatePheDurationByTag,phe_duration_tag,doyTransitionStart,day of year,Day of year of the estimated phenophase onset
+estimatePheDurationByTag,phe_duration_tag,dateTransitionEnd,date,Date of the estimated phenophase end
+estimatePheDurationByTag,phe_duration_tag,doyTransitionEnd,day of year,Day of year of the estimated phenophase end
+estimatePheDurationByTag,phe_duration_tag,duration,days,Duration in days from the onset to the end of the phenophase
+estimatePheDurationByTag,phe_duration_tag,precisionDuration,days,Sum of precisionDays for estimated onset and end of the phenophase; precisionDays is calculated by the estimatePheTransByTag function
+estimatePheDurationByTag,phe_duration_tag,transitionType,,Indicator that output is for phenophase duration

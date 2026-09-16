@@ -27,7 +27,7 @@ estimateAquPercentCover(
 \item{barPlots}{If TRUE, will produce a list of plots, one for each site/date in the data provided.}
 }
 \value{
-Two tables are produced containing point count summary data:
+Percent cover data derived from point counts are returned, along with summary data from sampled transects. In addition, optional graphical output may be returned:
 \itemize{
 \item apc_percentCover - Contains estimated percent cover for each observed species and/or substrate class on aquatic plant transects.
 \item apc_transectMetrics - Contains summary information including the length, habitatType, and total number of points sampled at each transect.
