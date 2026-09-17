@@ -6,6 +6,26 @@ library(neonUtilities)
 
 
 
+### Check how samplingImpractical is implemented in older data ####
+#--> Need to ensure that filtering of older data is appropriate
+temp <- neonUtilities::loadByProduct(dpID = "DP1.10067.001",
+                                     site = "all",
+                                     tabl = "bbc_percore",
+                                     check.size = FALSE,
+                                     token = Sys.getenv("NEON_TOKEN"))
+
+perCore <- temp$bbc_percore
+
+siSummary <- perCore %>%
+  dplyr::group_by(domainID,
+                  siteID,
+                  eventID,
+                  samplingImpractical) %>%
+  dplyr::summarise(recordCount = n())
+#--> Everything good, samplingImpractical populated for all older records, no need to account for SI = "" or is.na(SI)
+
+
+
 ### Create test dataset in list form for testing with new list input ####
 #   Retrieve test data for LENO (site with fewest records in this site x month)
 bbcTest <- neonUtilities::loadByProduct(dpID = "DP1.10067.001",
@@ -131,7 +151,7 @@ testDataPath <- "tests/testthat/testdata"
 saveRDS(object = rootCore2,
         file = paste(testDataPath, "valid-rootcore-201807.RDS", sep = "/"))
 
-saveRDS(object = rootMass2, 
+saveRDS(object = rootMass2,
         file = paste(testDataPath, "valid-rootmass-201807.RDS", sep = "/"))
 
 saveRDS(object = rootPool2,

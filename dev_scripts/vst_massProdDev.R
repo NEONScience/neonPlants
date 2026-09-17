@@ -1,6 +1,21 @@
 ### Scratchpad for estimateWoodMass and estimateWoodProd dev ####
 
 
+### Testing: Run all VST data through estimateWoodMass function
+#--> Run all data for all time by domain
+
+vstD01 <- neonUtilities::loadByProduct(dpID = "DP1.10098.001",
+                                       site = c("BART", "HARV"),
+                                       release = "LATEST",
+                                       check.size = FALSE,
+                                       token = Sys.getenv("NEON_TOKEN"))
+
+pmdD01 <- vstD01$vst_perplotperyear
+
+
+
+
+
 
 ### Investigate why perPlot input has one more row than wood_ANPP_plot
 temp1 <- perPlot %>%

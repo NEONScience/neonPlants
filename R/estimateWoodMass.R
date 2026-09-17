@@ -281,45 +281,27 @@ estimateWoodMass = function(inputDataList,
 
   plot_eventID_list <- plot_eventID_list$plot_eventID
 
-  #   Identify 'plot_eventIDs' where *full* sampling took place; need to conditionally account for fact that dataCollected == "partial" is effectively full sampling when argument growthFormSubset == "tree".
+  #   Identify 'plot_eventIDs' where *full* sampling took place; need to conditionally account for fact that dataCollected == "treesOnly" | "woodyOnly" is effectively full sampling when argument growthFormSubset == "tree".
   plot_eventID_full <- perPlot
 
   if (growthFormSubset == "all") {
-    plot_eventID_full <- plot_eventID_full[which((plot_eventID_full$samplingImpractical %in% c("", "OK") |
-                                                   is.na(plot_eventID_full$samplingImpractical)) &
-                                                   !plot_eventID_full$dataCollected %in% c("dendrometerOnly", "partial")),]
+    plot_eventID_full <- plot_eventID_full[which(
+      (plot_eventID_full$samplingImpractical %in% c("", "OK") | is.na(plot_eventID_full$samplingImpractical)) &
+        !plot_eventID_full$dataCollected %in% c("dendrometerOnly", "nonWoodyOnly", "treesOnly")
+    ),]
   }
 
   if (growthFormSubset == "tree") {
-    plot_eventID_full <- plot_eventID_full[which((plot_eventID_full$samplingImpractical %in% c("", "OK") |
-                                                    is.na(plot_eventID_full$samplingImpractical)) &
-                                                   plot_eventID_full$dataCollected != "dendrometerOnly"),]
+    plot_eventID_full <- plot_eventID_full[which(
+      (plot_eventID_full$samplingImpractical %in% c("", "OK") | is.na(plot_eventID_full$samplingImpractical)) &
+        !plot_eventID_full$dataCollected %in% c("dendrometerOnly", "nonWoodyOnly")
+    ),]
   }
 
   plot_eventID_full <- plot_eventID_full %>%
     dplyr::distinct(.data$plot_eventID)
 
   plot_eventID_full <- plot_eventID_full$plot_eventID
-
-  #   Identify 'plot_eventIDs' for dataCollected == "dendrometerOnly | partial"; list needed to remove these records from 'appInd' table and identify plots that are true "zeros" for woody biomass. Need to conditionally account for fact that dataCollected == "partial" is effectively full sampling when argument growthFormSubset == "tree"
-  plot_eventID_partial <- perPlot
-
-  if (growthFormSubset == "all") {
-    plot_eventID_partial <- plot_eventID_partial[which((plot_eventID_partial$samplingImpractical %in% c("", "OK") |
-                                                    is.na(plot_eventID_partial$samplingImpractical)) &
-                                                   plot_eventID_partial$dataCollected %in% c("dendrometerOnly", "partial")),]
-  }
-
-  if (growthFormSubset == "tree") {
-    plot_eventID_partial <- plot_eventID_partial[which((plot_eventID_partial$samplingImpractical %in% c("", "OK") |
-                                                    is.na(plot_eventID_partial$samplingImpractical)) &
-                                                   plot_eventID_partial$dataCollected == "dendrometerOnly"),]
-  }
-
-  plot_eventID_partial <- plot_eventID_partial %>%
-    dplyr::distinct(.data$plot_eventID)
-
-  plot_eventID_partial <- plot_eventID_partial$plot_eventID
 
 
   ##  Retain subset of columns in "perPlot" data; 'dataCollected' needed to identify plots for which biomass cannot be accurately estimated on an areal basis because not all trees were sampled.
