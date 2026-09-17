@@ -21,69 +21,65 @@ stackPlantPresence(
 \item{totalSampledAreaFilter}{The subplot or plot size for which data are returned (in meters squared). Default (NA) will return data for all subplot and plot sizes. If a valid filter integer is provided, the returned data are filtered to the desired subplot or plot size. Input options are NA, 1, 10, 100, 400. \link{integer}}
 }
 \value{
-A data frame that aggregates plant species lists across all subplots (or those subplots defined in 'totalSampledAreaFilter' argument) and for the entire plot where subplotID is '400' (see Data Product documentation for subplot description). The column 'totalSampledArea' is also created to reflect the size of the subplot or plot in square meters in which a given taxon was detected. Description of other columns can be found in the Data Product User Guide.
+The following objects are returned as a list:
+\itemize{
+\item div_stackedPresence - A data frame that aggregates plant species lists across all subplots (or those subplots defined in 'totalSampledAreaFilter' argument), and for the entire plot where subplotID suffix is '400' (see Data Product documentation for subplot description).
+\item variables - Units and definitions of novel variables created by the function that are not already defined in the Plant Presence and Percent Cover data product.
+}
 }
 \description{
-Data inputs are NEON Plant Presence and Percent Cover data (DP1.10058.001) retrieved with the neonUtilities::loadByProduct() function (preferred), data downloaded from the NEON Data Portal, or input data tables with an equivalent structure and representing the same site x month combinations. The stackPlantPresence() function aggregates the occurrence data from the Plant Presence and Percent Cover data product to return all plant species present at the scale of each subplot sampled (1m2, 10m2, and 100m2) as well as the plot scale (400m2). In contrast, data downloaded from the NEON data portal report species in 10m2 and 100m2 subplots only if those species are not encountered in smaller-scale subplots, and a list of species present within the entire 400m2 scale plot is not provided.
+Aggregate occurrence data from the Plant Presence and Percent Cover data product to return all plant species present at the scale of each subplot sampled (1m2, 10m2, and 100m2) as well as the plot scale (400m2). In contrast, data downloaded from the NEON data portal report species in 10m2 and 100m2 subplots only if those species are not encountered in smaller-scale subplots, and a list of species present within the entire 400m2 scale plot is not provided. Data inputs are NEON Plant Presence and Percent Cover data (DP1.10058.001) retrieved with the neonUtilities::loadByProduct() function (preferred), data downloaded from the NEON Data Portal, or input data tables with an equivalent structure and representing the same site x month combinations.
 }
 \details{
-Input data may be provided either as a list generated from the neonUtilities::laodByProduct() function or as individual tables. However, if both list and table inputs are provided at the same time the function will error.
+Input data may be provided either as a list generated from the neonUtilities::laodByProduct() function or as individual tables. However, only list or table inputs are allowed (not a mix of both).
 }
 \examples{
 \dontrun{
 
-# load additional packages for these examples
-library(neonUtilities)
-library(dplyr)
-
-# get data
-allDiv <- loadByProduct(
+#   Obtain NEON Plant Presence and Percent Cover data; note that a token is required and may be obtained after creating a NEON user accounts get data
+div <- neonUtilities::loadByProduct(
   dpID = "DP1.10058.001",
   site = "SRER",
   startdate = "2010-01",
   package = "basic",
-  check.size = FALSE)
+  check.size = FALSE,
+  token = "my_NEON_token"
+  )
 
+#   Stack the data by using the list returned by neonUtilities::loadByProduct as an input
+data_stacked <- neonPlants::stackPlantPresence(
+  inputDataList = div)
 
-# stack the data by sending the list returned by neonUtilities::loadByProduct
-data_stacked <- stackPlantPresence(
-  inputDataList = allDiv)
+#   Send list of data using pipe
+data_stacked <- div \%>\%
+  neonPlants::stackPlantPresence()
 
+#   Filter to 10m plots
+data_stacked_10 <- div \%>\%
+  neonPlants::stackPlantPresence(totalSampledAreaFilter = 10)
 
-# send list of data using pipe
-data_stacked <- allDiv \%>\%
-  stackPlantPresence()
+#   Filter to 10m plots outside of the stackPlantPresence function
+data_stacked_10 <- div \%>\%
+  neonPlants::stackPlantPresence() \%>\%
+  dplyr::filter(totalSampledArea == 10)
 
+#   Make your own list and stack the data
+my_1m_data <- div$div_1m2Data
+my_10_100m_data <- div$div_10m2Data100m2Data
 
-# filter to 10m plots
-data_stacked_10 <- allDiv \%>\%
-  stackPlantPresence(totalSampledAreaFilter = 10)
-
-
-# filter to 10m plots outside of the stackPlantPresence function
-data_stacked_10 <- allDiv \%>\%
-  stackPlantPresence() \%>\%
-  filter(totalSampledArea == 10)
-
-
-# make your own list and stack the data
-my_1m_data <- allDiv$div_1m2Data
-my_10_100m_data <- allDiv$div_10m2Data100m2Data
-
-data_stacked <- stackPlantPresence(
+data_stacked <- neonPlants::stackPlantPresence(
   inputDataList = list(
     div_1m2Data = my_1m_data,
     div_10m2Data100m2Data = my_10_100m_data))
 
-
-# filter tables to a single plot, then stack the data
+#   Filter tables to a single plot, then stack the data
 my_1m_data_SRER_43 <- my_1m_data \%>\%
-  filter(namedLocation == "SRER_043.basePlot.div")
+  dplyr::filter(namedLocation == "SRER_043.basePlot.div")
 
 my_10_100m_data_SRER_43 <- my_10_100m_data \%>\%
-  filter(namedLocation == "SRER_043.basePlot.div")
+  dplyr::filter(namedLocation == "SRER_043.basePlot.div")
 
-data_stacked_SRER_43 <- stackPlantPresence(
+data_stacked_SRER_43 <- neonPlants::stackPlantPresence(
   inputDataList = list(
     div_1m2Data = my_1m_data_SRER_43,
     div_10m2Data100m2Data = my_10_100m_data_SRER_43))
@@ -94,6 +90,6 @@ data_stacked_SRER_43 <- stackPlantPresence(
 License: GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007
 }
 \author{
-Dave T Barnett \email{dbarnettl@battelleecology.org} \cr
-Eric Sokol \email{esokol@battelleecology.org} \cr
+Dave T Barnett \email{dbarnettl@BattelleEcology.org} \cr
+Eric Sokol \email{esokol@BattelleEcology.org} \cr
 }

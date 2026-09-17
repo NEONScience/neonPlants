@@ -261,3 +261,4 @@ estimatePheDurationByTag,phe_duration_tag,doyTransitionEnd,day of year,Day of ye
 estimatePheDurationByTag,phe_duration_tag,duration,days,Duration in days from the onset to the end of the phenophase
 estimatePheDurationByTag,phe_duration_tag,precisionDuration,days,Sum of precisionDays for estimated onset and end of the phenophase; precisionDays is calculated by the estimatePheTransByTag function
 estimatePheDurationByTag,phe_duration_tag,transitionType,,Indicator that output is for phenophase duration
+stackPlantPresence,div_stackedPresence,totalSampledArea,m2,Area of the subplot or plot in which a given taxon was detected
