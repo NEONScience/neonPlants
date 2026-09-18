@@ -5,6 +5,47 @@ library(tidyverse)
 library(neonUtilities)
 
 
+### BBC QC: All data through all root functions ####
+#   Retrieve all root data
+temp <- neonUtilities::loadByProduct(dpID = "DP1.10067.001",
+                                     site = "all",
+                                     tabl = "all",
+                                     release = "LATEST",
+                                     check.size = FALSE,
+                                     token = Sys.getenv("NEON_TOKEN"))
+
+
+
+### Run joinRootChem function
+testJoin <- neonPlants::joinRootChem(inputDataList = temp)
+#--> No errors; updated to add 'variables' output
+
+
+
+### Run standardizeRootMass function
+testStdize <- neonPlants::standardizeRootMass(inputDataList = temp)
+#--> No errors; no updates needed
+
+
+
+### Run scaleRootMass function
+testScale <- neonPlants::scaleRootMass(inputDataList = temp)
+#--> No errors on function run
+#--> bbc_BGB_core table: Unexpected dryMassNA column created in output table
+test <- coreMass %>%
+  dplyr::filter(is.na(sizeCategory))
+#--> a number of cores with no dryMass or sizeCategory, sometimes due to lab mishap but mostly unknown why; updated code to filter out
+
+
+#--> bbc_BGB_plot table: No apparent issues
+#--> bbc_BGB_site table: No apparent issues
+
+
+
+
+
+
+
 
 ### Check how samplingImpractical is implemented in older data ####
 #--> Need to ensure that filtering of older data is appropriate

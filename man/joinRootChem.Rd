@@ -16,7 +16,11 @@ joinRootChem(inputDataList, inputMass = NA, inputPool = NA, inputChem = NA)
 \item{inputChem}{The 'bbc_rootChemistry' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
 }
 \value{
-A table containing both root mass and root chemistry data in the same row for different root sizeCategories (i.e., subsampleIDs) within a sampleID. The subsampleIDs in older data with rootStatus == "dead" do not have root chemistry data, and the function returns these rows with no chemistry data.
+A list containing the following objects:
+\itemize{
+\item bbc_joinedMassChem - A table containing both root mass and root chemistry data in the same row for different root sizeCategories (i.e., subsampleIDs) within a sampleID (i.e., core sample). The subsampleIDs in older data with rootStatus == "dead" do not have root chemistry data, and the function returns these rows with no chemistry data.
+\item variables - Units and definitions of novel variables created by the function that are not already defined in the Plant Belowground Biomass data product.
+}
 }
 \description{
 Join the 'bbc_rootmass', 'bbc_chemistryPooling', and 'bbc_rootChemistry' tables to generate a single table that contains both mass and chemistry data for each sampleID and subsampleID (i.e., sizeCategory). Data inputs are NEON Plant Belowground Biomass data (DP1.10067.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input data tables with an equivalent structure and representing the same site x month combinations.
@@ -29,7 +33,7 @@ In the joined output table, 'rootChemistryDataQF' and 'rootChemistryRemarks' are
 \examples{
 \dontrun{
 #   Obtain NEON Plant Belowground Biomass data; note that a token is required and may be obtained after creating a NEON user account
-bbcDF <- neonUtilities::loadByProduct(
+bbc <- neonUtilities::loadByProduct(
 dpID = "DP1.10067.001",
 site = "LENO",
 startdate = "2018-07",
@@ -40,8 +44,8 @@ token = "my_NEON_token"
 )
 
 #   Join downloaded root data
-df <- neonPlants::joinRootChem(
-inputDataList = bbcDF,
+out <- neonPlants::joinRootChem(
+inputDataList = bbc,
 inputMass = NA,
 inputPool = NA,
 inputChem = NA

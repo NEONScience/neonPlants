@@ -16,12 +16,14 @@
 #'
 #' @param inputChem The 'bbc_rootChemistry' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
 #'
-#' @return A table containing both root mass and root chemistry data in the same row for different root sizeCategories (i.e., subsampleIDs) within a sampleID. The subsampleIDs in older data with rootStatus == "dead" do not have root chemistry data, and the function returns these rows with no chemistry data.
+#' @return A list containing the following objects:
+#'   * bbc_joinedMassChem - A table containing both root mass and root chemistry data in the same row for different root sizeCategories (i.e., subsampleIDs) within a sampleID (i.e., core sample). The subsampleIDs in older data with rootStatus == "dead" do not have root chemistry data, and the function returns these rows with no chemistry data.
+#'   * variables - Units and definitions of novel variables created by the function that are not already defined in the Plant Belowground Biomass data product.
 #'
 #' @examples
 #' \dontrun{
 #' #   Obtain NEON Plant Belowground Biomass data; note that a token is required and may be obtained after creating a NEON user account
-#' bbcDF <- neonUtilities::loadByProduct(
+#' bbc <- neonUtilities::loadByProduct(
 #' dpID = "DP1.10067.001",
 #' site = "LENO",
 #' startdate = "2018-07",
@@ -32,8 +34,8 @@
 #' )
 #'
 #' #   Join downloaded root data
-#' df <- neonPlants::joinRootChem(
-#' inputDataList = bbcDF,
+#' out <- neonPlants::joinRootChem(
+#' inputDataList = bbc,
 #' inputMass = NA,
 #' inputPool = NA,
 #' inputChem = NA
@@ -270,7 +272,18 @@ joinRootChem <- function(inputDataList,
 
 
 
-  ### Return function output
-  return(rootMass)
+  ### Variables: Process function-specific variables for output ####
+  data("variables", envir = environment())
+
+  variables <- variables %>%
+    dplyr::filter(.data$functionName == "joinRootChem")
+
+
+
+  ### Return output ####
+  output <- list(bbc_joinedMassChem = rootMass,
+                 variables = variables)
+
+  return(output)
 
 } # end function

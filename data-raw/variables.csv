@@ -118,6 +118,9 @@ estimateHerbProd,hbp_ANPP_consumption,agbMean_gm2_exclN,g/m2,"Mean bout-level ab
 estimateHerbProd,hbp_ANPP_consumption,agbMean_gm2_exclY,g/m2,"Mean bout-level above-ground biomass per unit area from exclosure clips in grazed plots, where exclosure = ""Y"""
 estimateHerbProd,hbp_ANPP_consumption,agbSD_gm2_exclN,g/m2,"Standard deviation for bout-level above-ground biomass per unit area from ambient clips in grazed plots, where exclosure = ""N"""
 estimateHerbProd,hbp_ANPP_consumption,agbSD_gm2_exclY,g/m2,"Standard deviation for bout-level above-ground biomass per unit area from exclosure clips in grazed plots, where exclosure = ""Y"""
+joinRootChem,bbc_joinedMassChem,analyticalRepCount,count,Number of analytical replicates informing reported chemistry data
+joinRootChem,bbc_joinedMassChem,rootChemistryDataQF,,The value(s) of the dataQF field from the bbc_rootChemistry input table
+joinRootChem,bbc_joinedMassChem,rootChemistryRemarks,,The value(s) of the remarks field from the bbc_rootChemistry input table
 scaleRootMass,bbc_BGB_core,dryMass1,g,Oven-dried mass of 0-1 mm diameter roots
 scaleRootMass,bbc_BGB_core,dryMass2,g,Oven-dried mass of 1-2 mm diameter roots
 scaleRootMass,bbc_BGB_core,dryMass10,g,Oven-dried mass of 2-10 mm diameter roots

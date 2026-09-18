@@ -250,8 +250,7 @@ scaleRootMass <- function(inputDataList,
   ### Standardize rootMass data to current sizeCategory definitions and average qaDryMass = Y ####
   rootMass <- neonPlants::standardizeRootMass(inputMass = rootMass)
 
-  #   Collapse mycorrhizaeVisible and massRemarks to single string per sampleID to avoid downstream
-  #   dupes when pivot_wider() is used; these will be re-joined by sampleID after wide table is created
+  #   Collapse mycorrhizaeVisible and massRemarks to single string per sampleID to avoid downstream dupes when pivot_wider() is used; these will be re-joined by sampleID after wide table is created
   stringMassCols <- dplyr::select(.data = rootMass,
                                   "sampleID",
                                   "mycorrhizaeVisible",
@@ -284,13 +283,15 @@ scaleRootMass <- function(inputDataList,
                                by = c("domainID", "siteID", "plotID", "collectDate", "sampleID")) %>%
     dplyr::rename(coreRemarks = "remarks")
 
-  coreMass <- dplyr::arrange(.data = coreMass,
-                             .data$domainID,
-                             .data$siteID,
-                             .data$eventID,
-                             .data$plotID,
-                             .data$sampleID,
-                             .data$sizeCategory)
+  #   Remove rows from cores for which no sorting was completed and arrange
+  coreMass <- coreMass %>%
+    dplyr::filter(!is.na(.data$sizeCategory)) %>%
+    dplyr::arrange(.data$domainID,
+                   .data$siteID,
+                   .data$eventID,
+                   .data$plotID,
+                   .data$sampleID,
+                   .data$sizeCategory)
 
 
 
@@ -319,9 +320,7 @@ scaleRootMass <- function(inputDataList,
                                      by = c("domainID", "siteID", "plotID", "collectDate", "sampleID")) %>%
       dplyr::rename(coreRemarks = "remarks")
 
-    #   Bind standard mass rows with dilution mass rows; split out massRemarks then re-join since value is
-    #   always 'NA' for dilution rows and causes dupes when pivot_wider() is used and a value exists for
-    #   standard masses.
+    #   Bind standard mass rows with dilution mass rows
     coreMass <- dplyr::bind_rows(coreMass,
                                  coreDilMass) %>%
       dplyr::arrange(.data$domainID,

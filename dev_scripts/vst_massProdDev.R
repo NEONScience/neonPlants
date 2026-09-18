@@ -4,6 +4,9 @@
 ### Testing: Run all VST data through estimateWoodMass function
 #--> Run all data for all time by domain
 
+#--> Need to wait for additional ML edits to make it to Portal in vst_perplotperyear table
+#--> Also need to re-assemble test dataset with edited data so that updated "partial" logic works with RELEASE-2027 onward
+
 vstD01 <- neonUtilities::loadByProduct(dpID = "DP1.10098.001",
                                        site = c("BART", "HARV"),
                                        release = "LATEST",

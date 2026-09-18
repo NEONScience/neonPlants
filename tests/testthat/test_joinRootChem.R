@@ -13,17 +13,12 @@ rctestti <- joinRootChem(inputMass = testMass,
                          inputPool = testPool,
                          inputChem = testChem)
 
-### Test: Function generates expected output type
-#   Test list input
+### Test: Function generates expected output types
 testthat::test_that(desc = "Output type list input", {
 
+  #   Test list input
   testthat::expect_type(object = rctest,
                         type = "list")
-
-})
-
-#   Test table input
-testthat::test_that(desc = "Output type table input", {
 
   testthat::expect_type(object = rctestti,
                         type = "list")
@@ -32,52 +27,27 @@ testthat::test_that(desc = "Output type table input", {
 
 
 ### Test: Function generates expected output class
-#   Test list input
 testthat::test_that(desc = "Output class list input", {
 
-  testthat::expect_s3_class(object = rctest,
+  #   Test list input
+  testthat::expect_s3_class(object = rctest$bbc_joinedMassChem,
                             class = "data.frame")
-})
 
-#   Test table input
-testthat::test_that(desc = "Output class table input", {
-
-  testthat::expect_s3_class(object = rctestti,
+  #   Test table input
+  testthat::expect_s3_class(object = rctestti$bbc_joinedMassChem,
                             class = "data.frame")
 })
 
 
 
 ### Test: Function generates data frame with expected dimensions using test data
-##  Test list input
-#   Check expected row number of output
-testthat::test_that(desc = "Output data frame row number list input", {
+#   Check expected dimensions of output
+testthat::test_that(desc = "Output data frame dimensions", {
 
-  testthat::expect_identical(object = nrow(rctest),
+  testthat::expect_identical(object = nrow(rctest$bbc_joinedMassChem),
                              expected = as.integer(477))
-})
 
-
-#   Check expected column number of output
-testthat::test_that(desc = "Output data frame column number list input", {
-
-  testthat::expect_identical(object = ncol(rctest),
-                             expected = as.integer(35))
-})
-
-
-##  Test table inputs
-#   Check expected row number of output
-testthat::test_that(desc = "Output data frame row number table input", {
-
-  testthat::expect_identical(object = nrow(rctestti),
-                             expected = as.integer(477))
-})
-
-#   Check expected column number of output
-testthat::test_that(desc = "Output data frame row number table input", {
-
-  testthat::expect_identical(object = ncol(rctestti),
+  testthat::expect_identical(object = ncol(rctest$bbc_joinedMassChem),
                              expected = as.integer(35))
 })
 
@@ -191,14 +161,15 @@ testthat::test_that(desc = "Table 'inputChem' missing data", {
 })
 
 #   Test that there are no chemistry data for any dead roots
-testthat::test_that(desc = "Test that there are no carbon data for any dead roots", {
-  testthat::expect_true(object = all(is.na(rctest$carbonPercent[which(rctest$rootStatus=="dead")])))
-})
-testthat::test_that(desc = "Test that there are no 15N data for any dead roots", {
-  testthat::expect_true(object = all(is.na(rctest$d15N[which(rctest$rootStatus=="dead")])))
+testthat::test_that(desc = "Test that there are no chemistry data for dead roots", {
+
+  testthat::expect_true(object = all(is.na(rctest$bbc_joinedMassChem$carbonPercent[which(rctest$bbc_joinedMassChem$rootStatus == "dead")])))
+
+  testthat::expect_true(object = all(is.na(rctest$bbc_joinedMassChem$d15N[which(rctest$bbc_joinedMassChem$rootStatus == "dead")])))
 })
 
 #   Test that all samples are accounted for
 testthat::test_that(desc = "Test that all samples from original chemistry data are in output", {
-  testthat::expect_true(object = all(testChem$cnSampleID %in% rctest$cnSampleID))
+
+  testthat::expect_true(object = all(testChem$cnSampleID %in% rctest$bbc_joinedMassChem$cnSampleID))
 })

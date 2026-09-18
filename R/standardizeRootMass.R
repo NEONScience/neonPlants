@@ -215,8 +215,3 @@ standardizeRootMass <- function(inputDataList,
   return(rootMass)
 
 } # end function
-
-
-
-
-
