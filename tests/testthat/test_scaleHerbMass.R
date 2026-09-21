@@ -31,31 +31,31 @@ testthat::test_that(desc = "Output type", {
 ### Tests: Function generates expected output class for all output list objects
 #   Check 'hbp_agb' output table is a data frame
 testthat::test_that(desc = "Output class hbp_agb", {
-  testthat::expect_s3_class(object = herbMassOutputs$hbp_agb,
+  testthat::expect_s3_class(object = herbMassOutputs$hbp_AGB_clip,
                             class = "data.frame")
 })
 
 #   Check 'hbp_plot' output table is a data frame
 testthat::test_that(desc = "Output class hbp_plot", {
-  testthat::expect_s3_class(object = herbMassOutputs$hbp_plot,
+  testthat::expect_s3_class(object = herbMassOutputs$hbp_AGB_plot,
                             class = "data.frame")
 })
 
 #   Check 'hbp_plot_extra' output table is a data frame
 testthat::test_that(desc = "Output class hbp_plot_extra", {
-  testthat::expect_s3_class(object = herbMassOutputs$hbp_plot_extra,
+  testthat::expect_s3_class(object = herbMassOutputs$hbp_AGB_plot_extra,
                             class = "data.frame")
 })
 
 #   Check 'hbp_plot_crop' output table is a data frame
 testthat::test_that(desc = "Output class hbp_plot_crop", {
-  testthat::expect_s3_class(object = herbMassOutputs$hbp_plot_crop,
+  testthat::expect_s3_class(object = herbMassOutputs$hbp_AGB_plot_crop,
                             class = "data.frame")
 })
 
 #   Check 'hbp_site' output table is a data frame
 testthat::test_that(desc = "Output class hbp_site", {
-  testthat::expect_s3_class(object = herbMassOutputs$hbp_site,
+  testthat::expect_s3_class(object = herbMassOutputs$hbp_AGB_site,
                             class = "data.frame")
 })
 
@@ -69,50 +69,50 @@ testthat::test_that(desc = "Output class hbp_site", {
 #   Check expected column and row number for 'hbp_agb' data frame
 testthat::test_that(desc = "Output data frame column and row numbers for 'hbp_agb'", {
 
-  testthat::expect_identical(object = ncol(herbMassOutputs$hbp_agb),
+  testthat::expect_identical(object = ncol(herbMassOutputs$hbp_AGB_clip),
                              expected = as.integer(32))
 
-  testthat::expect_identical(object = nrow(herbMassOutputs$hbp_agb),
+  testthat::expect_identical(object = nrow(herbMassOutputs$hbp_AGB_clip),
                              expected = as.integer(1806))
 })
 
 #   Check expected column and row numbers for 'hbp_plot' data frame
 testthat::test_that(desc = "Output data frame column and row numbers for 'hbp_plot'", {
 
-  testthat::expect_identical(object = ncol(herbMassOutputs$hbp_plot),
+  testthat::expect_identical(object = ncol(herbMassOutputs$hbp_AGB_plot),
                              expected = as.integer(17))
 
-  testthat::expect_identical(object = nrow(herbMassOutputs$hbp_plot),
+  testthat::expect_identical(object = nrow(herbMassOutputs$hbp_AGB_plot),
                              expected = as.integer(372))
 })
 
 #   Check expected column and row numbers for 'hbp_plot_crop' data frame
 testthat::test_that(desc = "Output data frame column and row numbers for 'hbp_plot_crop'", {
 
-  testthat::expect_identical(object = ncol(herbMassOutputs$hbp_plot_crop),
+  testthat::expect_identical(object = ncol(herbMassOutputs$hbp_AGB_plot_crop),
                              expected = as.integer(27))
 
-  testthat::expect_identical(object = nrow(herbMassOutputs$hbp_plot_crop),
+  testthat::expect_identical(object = nrow(herbMassOutputs$hbp_AGB_plot_crop),
                              expected = as.integer(55))
 })
 
 #   Check expected column and row numbers for 'hbp_plot_extra' data frame
 testthat::test_that(desc = "Output data frame column and row numbers for 'hbp_plot_extra'", {
 
-  testthat::expect_identical(object = ncol(herbMassOutputs$hbp_plot_extra),
+  testthat::expect_identical(object = ncol(herbMassOutputs$hbp_AGB_plot_extra),
                              expected = as.integer(17))
 
-  testthat::expect_identical(object = nrow(herbMassOutputs$hbp_plot_extra),
+  testthat::expect_identical(object = nrow(herbMassOutputs$hbp_AGB_plot_extra),
                              expected = as.integer(35))
 })
 
 #   Check expected column and row numbers for 'hbp_site' data frame
 testthat::test_that(desc = "Output data frame column and row numbers for 'hbp_site'", {
 
-  testthat::expect_identical(object = ncol(herbMassOutputs$hbp_site),
+  testthat::expect_identical(object = ncol(herbMassOutputs$hbp_AGB_site),
                              expected = as.integer(14))
 
-  testthat::expect_identical(object = nrow(herbMassOutputs$hbp_site),
+  testthat::expect_identical(object = nrow(herbMassOutputs$hbp_AGB_site),
                              expected = as.integer(16))
 })
 
@@ -195,35 +195,35 @@ testthat::test_that(desc = "Table 'hbp_massdata' missing data", {
 
 ##  Test: Generate error if output 'hbp_agb' value not as expected
 testthat::test_that(desc = "Output 'hbp_agb' value as expected", {
-  testthat::expect_equal(object = herbMassOutputs$hbp_agb$TotalMass_gm2[12],
+  testthat::expect_equal(object = herbMassOutputs$hbp_AGB_clip$TotalMass_gm2[12],
                          expected = 257.7)
 })
 
 
 ##  Test: Generate error if output hbp_plot value not as expected
 testthat::test_that(desc = "Output 'hbp_plot' value as expected", {
-  testthat::expect_equal(object = herbMassOutputs$hbp_plot$herbTotalMass_Mgha[7],
+  testthat::expect_equal(object = herbMassOutputs$hbp_AGB_plot$herbTotalMass_Mgha[7],
                          expected = 0.26)
 })
 
 
 ##  Test: Generate error if output hbp_plot value not as expected
 testthat::test_that(desc = "Output 'hbp_plot_crop' value as expected", {
-  testthat::expect_equal(object = herbMassOutputs$hbp_plot_crop$herbTotalMass_Mgha[21],
+  testthat::expect_equal(object = herbMassOutputs$hbp_AGB_plot_crop$herbTotalMass_Mgha[21],
                          expected = 0)
 })
 
 
 ##  Test: Generate error if output hbp_plot_extra value not as expected
 testthat::test_that(desc = "Output 'hbp_plot_extra' value as expected", {
-  testthat::expect_equal(object = herbMassOutputs$hbp_plot_extra$herbTotalMass_Mgha[29],
+  testthat::expect_equal(object = herbMassOutputs$hbp_AGB_plot_extra$herbTotalMass_Mgha[29],
                          expected = 1.04)
 })
 
 
 ##  Test: Generate error if output hbp_site value not as expected
 testthat::test_that(desc = "Output 'hbp_site' value as expected", {
-  testthat::expect_equal(object = herbMassOutputs$hbp_site$herbTotalMean_Mgha[1],
+  testthat::expect_equal(object = herbMassOutputs$hbp_AGB_site$herbTotalMean_Mgha[1],
                          expected = 0.25)
 })
 
@@ -232,7 +232,7 @@ testthat::test_that(desc = "Output 'hbp_site' value as expected", {
 testthat::test_that(desc = "Output 'hbp_agb' sites as expected", {
 
   inputSites <- sort(unique(hbpTestDF$hbp_perbout$siteID))
-  outputSites <- sort(unique(herbMassOutputs$hbp_agb$siteID))
+  outputSites <- sort(unique(herbMassOutputs$hbp_AGB_clip$siteID))
 
   testthat::expect_identical(object = outputSites,
                              expected = inputSites)
@@ -244,9 +244,9 @@ testthat::test_that(desc = "Output 'hbp_agb' sites as expected", {
 testthat::test_that(desc = "Output sites in plot-level tables as expected", {
 
   inputSites <- sort(unique(hbpTestDF$hbp_perbout$siteID))
-  plotOutputSites <- unique(herbMassOutputs$hbp_plot$siteID)
-  cropOutputSites <- unique(herbMassOutputs$hbp_plot_crop$siteID)
-  extraOutputSites <- unique(herbMassOutputs$hbp_plot_extra$siteID)
+  plotOutputSites <- unique(herbMassOutputs$hbp_AGB_plot$siteID)
+  cropOutputSites <- unique(herbMassOutputs$hbp_AGB_plot_crop$siteID)
+  extraOutputSites <- unique(herbMassOutputs$hbp_AGB_plot_extra$siteID)
   outputSites <- sort(unique(c(plotOutputSites, cropOutputSites, extraOutputSites)))
 
   testthat::expect_identical(object = outputSites,
@@ -274,7 +274,7 @@ testthat::test_that(desc = "Rows in 'hbp_site' equal to number of site-years in 
     dplyr::distinct(.data$siteYear)
 
   #   Check identical objects
-  testthat::expect_identical(object = nrow(herbMassOutputs$hbp_site),
+  testthat::expect_identical(object = nrow(herbMassOutputs$hbp_AGB_site),
                              expected = nrow(inputSiteYears))
 
 })

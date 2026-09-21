@@ -64,13 +64,13 @@ testthat::test_that(desc = "Output class list objects", {
   testthat::expect_s3_class(object = woodProdOutputs$vst_ANPP_site,
                             class = "data.frame")
 
-  testthat::expect_s3_class(object = woodProdOutputs$duplicates,
+  testthat::expect_s3_class(object = woodProdOutputs$vst_ANPP_duplicates,
                             class = "data.frame")
 
-  testthat::expect_s3_class(object = woodProdOutputs$flagged,
+  testthat::expect_s3_class(object = woodProdOutputs$vst_ANPP_flagged,
                             class = "data.frame")
 
-  testthat::expect_s3_class(object = woodProdOutputs$missing,
+  testthat::expect_s3_class(object = woodProdOutputs$vst_ANPP_missing,
                             class = "data.frame")
 })
 
@@ -117,30 +117,30 @@ testthat::test_that(desc = "Output data frame dimensions for 'vst_ANPP_site'", {
 #   Check expected column and row numbers of 'duplicates' data frame
 testthat::test_that(desc = "Output data frame dimensions for 'duplicates'", {
 
-  testthat::expect_identical(object = ncol(woodProdOutputs$duplicates),
+  testthat::expect_identical(object = ncol(woodProdOutputs$vst_ANPP_duplicates),
                              expected = as.integer(28))
 
-  testthat::expect_identical(object = nrow(woodProdOutputs$duplicates),
+  testthat::expect_identical(object = nrow(woodProdOutputs$vst_ANPP_duplicates),
                              expected = as.integer(63))
 })
 
 #   Check expected column and row numbers of 'flagged' data frame
 testthat::test_that(desc = "Output data frame dimensions for 'flagged'", {
 
-  testthat::expect_identical(object = ncol(woodProdOutputs$flagged),
+  testthat::expect_identical(object = ncol(woodProdOutputs$vst_ANPP_flagged),
                              expected = as.integer(32))
 
-  testthat::expect_identical(object = nrow(woodProdOutputs$flagged),
+  testthat::expect_identical(object = nrow(woodProdOutputs$vst_ANPP_flagged),
                              expected = as.integer(245))
 })
 
 #   Check expected column and row numbers of 'missing' data frame
 testthat::test_that(desc = "Output data frame dimensions for 'missing'", {
 
-  testthat::expect_identical(object = ncol(woodProdOutputs$missing),
+  testthat::expect_identical(object = ncol(woodProdOutputs$vst_ANPP_missing),
                              expected = as.integer(31))
 
-  testthat::expect_identical(object = nrow(woodProdOutputs$missing),
+  testthat::expect_identical(object = nrow(woodProdOutputs$vst_ANPP_missing),
                              expected = as.integer(31))
 })
 
@@ -226,19 +226,19 @@ testthat::test_that(desc = "Output 'vst_ANPP_site' value as expected", {
 
 #   Test: Check for expected 'duplicates' value
 testthat::test_that(desc = "Output 'duplicates' value as expected", {
-  testthat::expect_equal(object = woodProdOutputs$duplicates$individualID[1],
+  testthat::expect_equal(object = woodProdOutputs$vst_ANPP_duplicates$individualID[1],
                          expected = "NEON.PLA.D16.ABBY.00021")
 })
 
 #   Test: Check for expected 'flagged' value
 testthat::test_that(desc = "Output 'flagged' value as expected", {
-  testthat::expect_equal(object = woodProdOutputs$flagged$agb_kg[2],
+  testthat::expect_equal(object = woodProdOutputs$vst_ANPP_flagged$agb_kg[2],
                          expected = 241.54)
 })
 
 #   Test: Check for expected 'missing' value
 testthat::test_that(desc = "Output 'missing' value as expected", {
-  testthat::expect_equal(object = woodProdOutputs$missing$individualID[1],
+  testthat::expect_equal(object = woodProdOutputs$vst_ANPP_missing$individualID[1],
                          expected = "NEON.PLA.D16.ABBY.00034")
 })
 
@@ -306,11 +306,11 @@ testthat::test_that(desc = "Output 'individualIDs' match input 'individualIDs'",
     dplyr::distinct(.data$individualID)
 
   #   Get individualIds from 'duplicates' table
-  dupeIndiv <- woodProdOutputs$duplicates %>%
+  dupeIndiv <- woodProdOutputs$vst_ANPP_duplicates %>%
     dplyr::distinct(.data$individualID)
 
   #   Get individualIds from 'missing' table
-  missingIndiv <- woodProdOutputs$missing %>%
+  missingIndiv <- woodProdOutputs$vst_ANPP_missing %>%
     dplyr::distinct(.data$individualID)
 
   outputIndividual <- dplyr::bind_rows(outputIndividual,

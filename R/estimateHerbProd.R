@@ -77,7 +77,7 @@ estimateHerbProd = function(inputDataList,
   scaleHerbMassOutput <- neonPlants::scaleHerbMass(inputDataList = inputDataList,
                                                    plotSubset = plotSubset)
 
-  hbp_agb <- scaleHerbMassOutput$hbp_agb
+  hbp_agb <- scaleHerbMassOutput$hbp_AGB_clip
 
   rm(scaleHerbMassOutput)
 
