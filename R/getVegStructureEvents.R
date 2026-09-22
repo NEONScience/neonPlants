@@ -2,7 +2,7 @@
 #'
 #' @author Claire K Lunch \email{clunch@battelleecology.org} \cr
 #'
-#' @description Vegetation structure (DP1.10098.001) data are collected annually at NEON terrestrial sites with qualifying vegetation, but different plots are sampled in different years. This function returns a table of which types of sampling events occurred in each year.
+#' @description Vegetation structure (DP1.10098.001) data are collected annually at NEON terrestrial sites with qualifying vegetation, but different plots are sampled in different years. This function returns a table describing which types of sampling events occurred in each year, and the dates of sampling.
 #'
 #' @details Vegetation structure event types are:
 #'    * towerSubset: The subset of plots (n=5) in the Tower airshed that are sampled annually.
