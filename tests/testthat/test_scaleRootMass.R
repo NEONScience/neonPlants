@@ -35,22 +35,22 @@ testthat::test_that(desc = "Output type table input", {
 #   Test list input
 testthat::test_that(desc = "Output class list input", {
 
-  testthat::expect_s3_class(object = rmtest$bbc_core,
+  testthat::expect_s3_class(object = rmtest$bbc_BGB_core,
                             class = "data.frame")
-  testthat::expect_s3_class(object = rmtest$bbc_plot,
+  testthat::expect_s3_class(object = rmtest$bbc_BGB_plot,
                             class = "data.frame")
-  testthat::expect_s3_class(object = rmtest$bbc_site,
+  testthat::expect_s3_class(object = rmtest$bbc_BGB_site,
                             class = "data.frame")
 })
 
 #   Test table input
 testthat::test_that(desc = "Output class table input", {
 
-  testthat::expect_s3_class(object = rmtestti$bbc_core,
+  testthat::expect_s3_class(object = rmtestti$bbc_BGB_core,
                             class = "data.frame")
-  testthat::expect_s3_class(object = rmtestti$bbc_plot,
+  testthat::expect_s3_class(object = rmtestti$bbc_BGB_plot,
                             class = "data.frame")
-  testthat::expect_s3_class(object = rmtestti$bbc_site,
+  testthat::expect_s3_class(object = rmtestti$bbc_BGB_site,
                             class = "data.frame")
 })
 
@@ -61,14 +61,14 @@ testthat::test_that(desc = "Output class table input", {
 #   Check expected row number of data frame
 testthat::test_that(desc = "Output 'bbc_core' row number with defaults", {
 
-  testthat::expect_identical(object = nrow(rmtest$bbc_core),
+  testthat::expect_identical(object = nrow(rmtest$bbc_BGB_core),
                              expected = as.integer(53))
 })
 
 #   Check expected column number of data frame
 testthat::test_that(desc = "Output 'bbc_core' column number with defaults", {
 
-  testthat::expect_identical(object = ncol(rmtest$bbc_core),
+  testthat::expect_identical(object = ncol(rmtest$bbc_BGB_core),
                              expected = as.integer(51))
 })
 
@@ -80,10 +80,10 @@ testthat::test_that(desc = "Output 'bbc_core' row and col number includeDilution
   temp <- scaleRootMass(inputDataList = testList,
                         includeDilution = FALSE)
 
-  testthat::expect_identical(object = nrow(temp$bbc_core),
+  testthat::expect_identical(object = nrow(temp$bbc_BGB_core),
                              expected = as.integer(53))
 
-  testthat::expect_identical(object = ncol(temp$bbc_core),
+  testthat::expect_identical(object = ncol(temp$bbc_BGB_core),
                              expected = as.integer(50))
 })
 
@@ -94,10 +94,10 @@ testthat::test_that(desc = "Output 'bbc_core' row and col number includeDilution
 #   Check expected row and column numbers of data frame
 testthat::test_that(desc = "Output 'bbc_plot' row and col number with defaults", {
 
-  testthat::expect_identical(object = nrow(rmtest$bbc_plot),
+  testthat::expect_identical(object = nrow(rmtest$bbc_BGB_plot),
                              expected = as.integer(20))
 
-  testthat::expect_identical(object = ncol(rmtest$bbc_plot),
+  testthat::expect_identical(object = ncol(rmtest$bbc_BGB_plot),
                              expected = as.integer(16))
 })
 
@@ -108,10 +108,10 @@ testthat::test_that(desc = "Output 'bbc_plot' row and col number with defaults",
 #   Check expected row and column numbers of data frame
 testthat::test_that(desc = "Output 'bbc_site' row and col numbers with defaults", {
 
-  testthat::expect_identical(object = nrow(rmtest$bbc_site),
+  testthat::expect_identical(object = nrow(rmtest$bbc_BGB_site),
                              expected = as.integer(1))
 
-  testthat::expect_identical(object = ncol(rmtest$bbc_site),
+  testthat::expect_identical(object = ncol(rmtest$bbc_BGB_site),
                              expected = as.integer(13))
 })
 
@@ -121,7 +121,7 @@ testthat::test_that(desc = "Output 'bbc_site' row and col numbers with defaults"
 #   Check totalDryMass does not contain fragment mass with function defaults; row 3 has frag mass data
 testthat::test_that(desc = "Output 'bbc_core.totalDryMass' with includeFragInTotal FALSE", {
 
-  testthat::expect_equal(object = rmtest$bbc_core$totalDryMass[3],
+  testthat::expect_equal(object = rmtest$bbc_BGB_core$totalDryMass[3],
                          expected = 8.1535)
 })
 
@@ -132,16 +132,16 @@ testthat::test_that(desc = "Output 'bbc_core.totalDryMass' with includeFragInTot
                         includeDilution = TRUE,
                         includeFragInTotal = TRUE)
 
-  testthat::expect_equal(object = temp$bbc_core$totalDryMass[3],
+  testthat::expect_equal(object = temp$bbc_BGB_core$totalDryMass[3],
                          expected = 9.1953)
 })
 
 #   Test that plot mass is close to mean of core mass
 testthat::test_that(desc = "Test that plot mass is close to mean of core mass", {
-  testthat::expect_equal(object = mean(rmtest$bbc_core$totalMass_gm3
-                                      [which(rmtest$bbc_core$plotID=="DEJU_047")]),
-                         expected = mean(rmtest$bbc_plot$totalMass_gm3
-                                         [which(rmtest$bbc_plot$plotID=="DEJU_047")]),
+  testthat::expect_equal(object = mean(rmtest$bbc_BGB_core$totalMass_gm3
+                                      [which(rmtest$bbc_BGB_core$plotID=="DEJU_047")]),
+                         expected = mean(rmtest$bbc_BGB_plot$totalMass_gm3
+                                         [which(rmtest$bbc_BGB_plot$plotID=="DEJU_047")]),
                          tolerance = 0.5)
 })
 
@@ -342,7 +342,7 @@ testthat::test_that(desc = "Output 'sampleIDs' match input 'sampleIDs'", {
 
 
   ##  Derive expected 'sampleIDs' from output data set
-  outputSample <- rmtest$bbc_core %>%
+  outputSample <- rmtest$bbc_BGB_core %>%
     dplyr::distinct(.data$sampleID) %>%
     dplyr::arrange(.data$sampleID)
 
@@ -366,7 +366,7 @@ testthat::test_that(desc = "Output 'plot-events' match input 'plot-events'", {
 
 
   ##  Derive expected 'plot-events' from output data set
-  outputPlotEvent <- rmtest$bbc_plot %>%
+  outputPlotEvent <- rmtest$bbc_BGB_plot %>%
     dplyr::mutate(plotEvent = paste(.data$plotID, .data$eventID, sep = "-")) %>%
     dplyr::distinct(.data$plotEvent) %>%
     dplyr::arrange(.data$plotEvent)
@@ -391,7 +391,7 @@ testthat::test_that(desc = "Output 'site-events' match input 'site-events'", {
 
 
   ##  Derive expected 'site-events' from output data set
-  outputSiteEvent <- rmtest$bbc_site %>%
+  outputSiteEvent <- rmtest$bbc_BGB_site %>%
     dplyr::mutate(siteEvent = paste(.data$siteID, .data$eventID, sep = "-")) %>%
     dplyr::distinct(.data$siteEvent) %>%
     dplyr::arrange(.data$siteEvent)

@@ -29,16 +29,16 @@ testthat::test_that(desc = "Output type", {
 #   Check all output tables are data frames
 testthat::test_that(desc = "Output class list objects", {
 
-  testthat::expect_s3_class(object = woodMassOutputs$vst_agb_kg,
+  testthat::expect_s3_class(object = woodMassOutputs$vst_AGB_indiv,
                             class = "data.frame")
 
   testthat::expect_s3_class(object = woodMassOutputs$vst_lost_downed,
                             class = "data.frame")
 
-  testthat::expect_s3_class(object = woodMassOutputs$vst_plot_Mgha,
+  testthat::expect_s3_class(object = woodMassOutputs$vst_AGB_plot,
                             class = "data.frame")
 
-  testthat::expect_s3_class(object = woodMassOutputs$vst_site_Mgha,
+  testthat::expect_s3_class(object = woodMassOutputs$vst_AGB_site,
                             class = "data.frame")
 })
 
@@ -55,10 +55,10 @@ testthat::test_that(desc = "Output class list objects", {
 #   Check expected column and row numbers of 'vst_agb_kg' data frame
 testthat::test_that(desc = "Output data frame column and row numbers 'vst_agb_kg'", {
 
-  testthat::expect_identical(object = ncol(woodMassOutputs$vst_agb_kg),
+  testthat::expect_identical(object = ncol(woodMassOutputs$vst_AGB_indiv),
                              expected = as.integer(30))
 
-  testthat::expect_identical(object = nrow(woodMassOutputs$vst_agb_kg),
+  testthat::expect_identical(object = nrow(woodMassOutputs$vst_AGB_indiv),
                              expected = as.integer(44405))
 })
 
@@ -75,20 +75,20 @@ testthat::test_that(desc = "Output data frame column number 'vst_lost_downed'", 
 #   Check expected column number of 'vst_plot_Mgha' data frame
 testthat::test_that(desc = "Output data frame column number 'vst_plot_Mgha'", {
 
-  testthat::expect_identical(object = ncol(woodMassOutputs$vst_plot_Mgha),
+  testthat::expect_identical(object = ncol(woodMassOutputs$vst_AGB_plot),
                              expected = as.integer(12))
 
-  testthat::expect_identical(object = nrow(woodMassOutputs$vst_plot_Mgha),
+  testthat::expect_identical(object = nrow(woodMassOutputs$vst_AGB_plot),
                              expected = as.integer(456))
 })
 
 #   Check expected column number of 'vst_site_Mgha' data frame
 testthat::test_that(desc = "Output data frame column number 'vst_site_Mgha'", {
 
-  testthat::expect_identical(object = ncol(woodMassOutputs$vst_site_Mgha),
+  testthat::expect_identical(object = ncol(woodMassOutputs$vst_AGB_site),
                              expected = as.integer(12))
 
-  testthat::expect_identical(object = nrow(woodMassOutputs$vst_site_Mgha),
+  testthat::expect_identical(object = nrow(woodMassOutputs$vst_AGB_site),
                              expected = as.integer(32))
 })
 
@@ -212,8 +212,8 @@ testthat::test_that(desc = "Unexpected 'growthFormSubset' argument", {
 ### Output value tests ####
 
 ### Test: Generate error if output 'vst_agb_kg' value not as expected
-testthat::test_that(desc = "Output 'vst_agb_kg' value as expected", {
-  testthat::expect_equal(object = woodMassOutputs$vst_agb_kg$agb_kg[1],
+testthat::test_that(desc = "Output 'vst_AGB_indiv' value as expected", {
+  testthat::expect_equal(object = woodMassOutputs$vst_AGB_indiv$agb_kg[1],
                          expected = 0.12)
 })
 
@@ -228,23 +228,23 @@ testthat::test_that(desc = "Output 'vst_lost_downed' value as expected", {
 
 
 ### Test: Generate error if output 'vst_plot_Mgha' value not as expected
-testthat::test_that(desc = "Output 'vst_plot_Mgha' value as expected", {
-  testthat::expect_equal(object = woodMassOutputs$vst_plot_Mgha$agb_Mgha[12],
+testthat::test_that(desc = "Output 'vst_AGB_plot' value as expected", {
+  testthat::expect_equal(object = woodMassOutputs$vst_AGB_plot$agb_Mgha[12],
                          expected = 80.97)
 })
 
 
 
-### Test: Generate error if output 'vst_site_Mgha' value not as expected
-testthat::test_that(desc = "Output 'vst_site_Mgha' value as expected", {
-  testthat::expect_equal(object = woodMassOutputs$vst_site_Mgha$woodMassMean_Mgha[18],
+### Test: Generate error if output 'vst_AGB_site' value not as expected
+testthat::test_that(desc = "Output 'vst_AGB_site' value as expected", {
+  testthat::expect_equal(object = woodMassOutputs$vst_AGB_site$woodMassMean_Mgha[18],
                          expected = 265.3)
 })
 
 
 
-### Test: Verify site-years in input data exist in 'vst_site_Mgha' output
-testthat::test_that(desc = "Output 'vst_site_Mgha' sites as expected", {
+### Test: Verify site-years in input data exist in 'vst_AGB_site' output
+testthat::test_that(desc = "Output 'vst_AGB_site' sites as expected", {
 
   #   Prep input site-year list
   inputSiteYear <- vstTestDF$vst_perplotperyear %>%
@@ -260,7 +260,7 @@ testthat::test_that(desc = "Output 'vst_site_Mgha' sites as expected", {
   inputSiteYear <- inputSiteYear$site_year
 
   #   Prep output site-year list
-  outputSiteYear <- woodMassOutputs$vst_site_Mgha %>%
+  outputSiteYear <- woodMassOutputs$vst_AGB_site %>%
     dplyr::mutate(site_year = paste(siteID, year, sep = "-")) %>%
     dplyr::arrange(site_year)
 
@@ -273,11 +273,11 @@ testthat::test_that(desc = "Output 'vst_site_Mgha' sites as expected", {
 
 
 
-### Test: Verify unique plot-events in input data exist in 'vst_plot_Mgha' output
+### Test: Verify unique plot-events in input data exist in 'vst_AGB_plot' output
 testthat::test_that(desc = "Output 'plot-events' match input 'plot-events'", {
 
   ##  Derive expected 'plot-events' from input data set
-  #   Identify partially sampled plots: These should not be in 'vst_plot_Mgha' output table
+  #   Identify partially sampled plots: These should not be in 'vst_AGB_plot' output table
   plotEventPartial <- vstTestDF$vst_perplotperyear %>%
     dplyr::filter(dataCollected %in% c("dendrometerOnly", "partial")) %>%
     dplyr::mutate(plotEvent = paste(plotID, eventID, sep = "-")) %>%
@@ -316,7 +316,7 @@ testthat::test_that(desc = "Output 'plot-events' match input 'plot-events'", {
 
   ##  Derive expected 'plot-events' from output data set
   #   Get 'plot-events' from plot-level output table
-  outputPlotEvent <- woodMassOutputs$vst_plot_Mgha %>%
+  outputPlotEvent <- woodMassOutputs$vst_AGB_plot %>%
     dplyr::mutate(plotEvent = paste(plotID, eventID, sep = "-")) %>%
     dplyr::filter(!plotEvent %in% plotEventPartial$plotEvent) %>%
     dplyr::distinct(plotEvent)
