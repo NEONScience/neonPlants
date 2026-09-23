@@ -13,7 +13,13 @@ vstD01 <- neonUtilities::loadByProduct(dpID = "DP1.10098.001",
                                        check.size = FALSE,
                                        token = Sys.getenv("NEON_TOKEN"))
 
-pmdD01 <- vstD01$vst_perplotperyear
+massD01 <- neonPlants::estimateWoodMass(inputDataList = vstD01)
+indiv <- massD01$vst_AGB_indiv
+plot <- massD01$vst_AGB_plot
+site <- massD01$vst_AGB_site
+downed <- massD01$vst_lost_downed
+
+#--> All table outputs look reasonable at a glance
 
 
 
