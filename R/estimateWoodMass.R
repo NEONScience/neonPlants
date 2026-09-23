@@ -6,7 +6,7 @@
 #'
 #' @description Allometric equations are used to estimate above-ground biomass for woody individuals reported in the NEON "Vegetation structure" data product (DP1.10098.001). Results are summarized as mass per unit area at scales of the plotID and siteID. Biomass outputs can be used in the companion estimateWoodProd() function.
 #'
-#' Data inputs are either "Vegetation structure" data (DP1.10098.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input tables with an equivalent structure and representing the same site x month combinations.
+#' Data inputs are either "Vegetation structure" data (DP1.10098.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input tables with an equivalent structure.
 #'
 #' @details Input data can be filtered via the 'plotSubset' argument if output for only certain types of plots or sampling intervals is desired. Consult the companion getVegStructureEvents() function for a report of which plot types were sampled in which years at a given NEON site. Input data are combined with taxon specific characteristics (e.g., wood density), and biomass is estimated for each individual using allometric equations. Taxon-specific equations are applied if available, and generalized allometries are used otherwise. The 'growthFormSubset' argument enables biomass estimation for "tree" individuals only (i.e., woody individuals with DBH ≥ 10 cm) or for "all" growth forms excluding "cactus", "ferns", and "yucca". Biomass is summarized on an areal basis at the hierarchical levels of the plotID and siteID.
 #'

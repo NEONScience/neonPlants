@@ -2,7 +2,7 @@
 #'
 #' @author Madaline Ritter \email{ritterm1@battelleecology.org} \cr
 #'
-#' @description Data inputs are NEON Aquatic Plant, Bryophyte, Lichen, and Macroalgae Point Counts in Wadeable Streams (DP1.20072.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input data tables with an equivalent structure and representing the same site x month combinations. The estimateAquPercentCover() function joins taxonomy information across point count tables and aggregates occurrence data to estimate percent cover at the transect level.
+#' @description Data inputs are NEON Aquatic Plant, Bryophyte, Lichen, and Macroalgae Point Counts in Wadeable Streams (DP1.20072.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input data tables with an equivalent structure. The estimateAquPercentCover() function joins taxonomy information across point count tables and aggregates occurrence data to estimate percent cover at the transect level.
 #'
 #' @details Input data may be provided either as a list generated from the neonUtilities::laodByProduct() function or as individual tables. However, only list or table inputs are allowed (not a mix of both).
 #'
@@ -15,7 +15,7 @@
 #' - \eqn{N_i} is the number of observed points in a transect that match class type “i” (i.e., a particular taxonID or substrate)
 #' - \eqn{N_t} is the total number of points observed in the transect
 #'
-#' Note: This calculation can generate percent cover values >100% if there is vertical stacking of plants, or values <100% if 'targetTaxaPresent' is unknown.
+#' Note: This calculation can generate percent cover values >100% if there is vertical stacking of plants, or values <100% if target taxa do not cover the full area.
 #'
 #' @param inputDataList A list object comprised of Aquatic Plant, Bryophyte, Lichen, and Macroalgae Point Count tables (DP1.20072.001) downloaded using the neonUtilities::loadByProduct() function. If list input is provided, the table input arguments must all be NA; similarly, if list input is missing, table inputs must be provided. [list]
 #'
@@ -23,16 +23,16 @@
 #'
 #' @param inputPerTax The 'apc_perTaxon' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
 #'
-#' @param inputTaxonomy The 'apc_taxonomyProcessed' or 'apc_taxonomyRaw'table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
+#' @param inputTaxonomy The 'apc_taxonomyProcessed' or 'apc_taxonomyRaw' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
 #'
 #' @param inputMorph The 'apc_morphospecies' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
 #'
-#' @param barPlots If TRUE, will produce a list of plots, one for each site/date in the data provided.
+#' @param barPlots If TRUE, will produce a set of figures, one for each site/date in the data provided.
 #'
 #' @return Percent cover data derived from point counts are returned, along with summary data from sampled transects. In addition, optional graphical output may be returned:
 #'   * apc_percentCover - Contains estimated percent cover for each observed species and/or substrate class on aquatic plant transects.
 #'   * apc_transectMetrics - Contains summary information including the length, habitatType, and total number of points sampled at each transect.
-#'   * apc_barPlots - (Optional) If barPlots = TRUE, a list containing plots for each site x date combination is also produced.
+#'   * apc_barPlots - (Optional) If barPlots = TRUE, a list containing bar plots for each site x date combination is also produced.
 #'   * variables - Units and definitions of novel variables created by the function that are not already defined in the Aquatic Plant Point Count data product.
 #'
 #' @references

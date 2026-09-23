@@ -23,7 +23,7 @@ A list containing the following objects:
 }
 }
 \description{
-Join the 'bbc_rootmass', 'bbc_chemistryPooling', and 'bbc_rootChemistry' tables to generate a single table that contains both mass and chemistry data for each sampleID and subsampleID (i.e., sizeCategory). Data inputs are NEON Plant Belowground Biomass data (DP1.10067.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input data tables with an equivalent structure and representing the same site x month combinations.
+Join the 'bbc_rootmass', 'bbc_chemistryPooling', and 'bbc_rootChemistry' tables to generate a single table that contains both mass and chemistry data for each sampleID and subsampleID (i.e., sizeCategory). Data inputs are NEON Plant Belowground Biomass data (DP1.10067.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input data tables with an equivalent structure.
 }
 \details{
 Input data may be provided either as a list or as individual tables. However, if both list and table inputs are provided at the same time the function will error out. For table joining to be successful, inputs must contain data from the same site x month combination(s) for all tables. When analytical replicates exist in the 'bbc_rootChemistry' table, the function returns the mean and concatenates analyte-specific QF values, dataQF values, and remarks into a single string for all analytical replicates.

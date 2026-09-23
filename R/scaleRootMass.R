@@ -4,9 +4,9 @@
 
 #' @description Join NEON Plant Belowground Biomass data tables (DP1.10067.001) to calculate fine root biomass by sizeCategory as well as total fine root biomass per unit area and per unit soil volume. Fine root fragment mass (root fragments < 1 cm length) can optionally be calculated for the subset of cores for which it is generated, and fragment mass can optionally be included in the summed total fine root biomass.
 #'
-#' Data inputs are NEON Plant Belowground Biomass data (DP1.10067.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input data tables with an equivalent structure and representing the same site x month combinations.
+#' Data inputs are NEON Plant Belowground Biomass data (DP1.10067.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input data tables with an equivalent structure.
 #'
-#' @details Input data may be provided either as a list or as individual tables. However, if both list and table inputs are provided at the same time the function will error out. For all output data, columns with the same name as input data have identical units and definitions; where needed, new columns contain new units information.
+#' @details Input data may be provided either as a list or as individual tables. However, if both list and table inputs are provided at the same time the function will error out. For all output data, columns with the same name as input data have identical units and definitions; new columns are described in the 'variables' output table.
 #'
 #' If inputMass data collected prior to 2019 are provided, the 0-0.5mm and 0.5-1mm sizeCategories are combined into the current 0-1mm sizeCategory.
 #'

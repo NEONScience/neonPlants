@@ -23,7 +23,7 @@ estimatePheTransByTag(
 \value{
 The following objects are returned as a list:
 \itemize{
-\item phe_transition_tag - Table containing a time series for each phenophase reported for each individual in the data set, including identified  transition dates for beginning and end of a given phenophase, as well as explanatory metrics about that estimate for the time frame provided in the input data frame.
+\item phe_transition_tag - Table containing a time series for each phenophase reported for each individual in the data set, including identified transition dates for beginning and end of a given phenophase, as well as explanatory metrics about that estimate for the time frame provided in the input data frame.
 \item variables - Units and definitions of novel variables created by the function that are not already defined in the Plant Phenology data product.
 }
 }
@@ -31,11 +31,11 @@ The following objects are returned as a list:
 Data from the NEON Plant Phenology Observation data product (DP1.10055.001) are used to calculate phenophase transition dates for each phenophase transition (status = no -> yes or yes -> no) for each tagged plant or patch observed along a NEON phenology transect or within a phenocam plot in the input data set. Additionally, each estimated transition includes fields describing the count of transitions observed during each year for the given individual x phenophase combination and the sampling interval around the estimate. Required inputs are either a list of data frames (inputDataList) as returned from neonUtilities::loadByProduct() that must include a data frame titled "phe_statusintensity" and one titled "phe_perindividual". Alternatively, the function will accept two individual data frames corresponding to the "phe_statusintensity" table and the "phe_perindividual" table.
 }
 \details{
-Input data may be provided either as a list generated from the neonUtilities::laodByProduct() function or as individual tables. However, only list or table inputs are allowed (not a mix of both).
+Input data may be provided either as a list generated from the neonUtilities::loadByProduct() function or as individual tables. However, only list or table inputs are allowed (not a mix of both).
 
 For table joining to be successful, inputs must contain data from the same sites for all tables. When individualID duplicates exist in the "phe_perindividual" table, the function will attempt to resolve them based on the 'editedDate' field.
 
-Phenophases may begin in one year and end in another; for the most part, this happens in southern sites, but users should be alert for this possibility at any site. Function outputs include both year (the calendar year of the phenophase transition) and yearPhenophaseBegan (the calendar year of phenophase onset for a particular individual and phenophase). Calculation of the count of phenophase transitions per year (nthTransition) can be performed based on either year or yearPhenophaseBegan, using the 'began' argument. The default is "year".
+Phenophases may begin in one year and end in another; for the most part, this happens in southern sites, but users should be alert for this possibility at any site. Function outputs include both year (the calendar year of the phenophase transition) and yearPhenophaseBegan (the calendar year of phenophase onset for a particular individual and phenophase). Calculation of the count of phenophase transitions per year (nthTransition) can be performed based on either year or yearPhenophaseBegan, using the "began" argument. The default is "year".
 }
 \examples{
 \dontrun{

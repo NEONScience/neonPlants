@@ -32,7 +32,7 @@ A list that includes herbaceous biomass per unit area data at multiple scales. O
 }
 }
 \description{
-Calculate herbaceous biomass per unit area at spatial scales of the sampling cell, plot, and site using NEON Herbaceous Clip Harvest data tables (DP1.10023.001). Data inputs are in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input tables with an equivalent structure and representing the same site x month combinations.
+Calculate herbaceous biomass per unit area at spatial scales of the sampling cell, plot, and site using NEON Herbaceous Clip Harvest data tables (DP1.10023.001). Data inputs are in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input tables with an equivalent structure.
 }
 \details{
 Input data can be filtered by plot subset. Herbaceous biomass data are scaled to an area basis at the hierarchical levels of sampling cell, plot, and site. Input data may be provided either as a list or as individual tables. However, only list or table inputs are allowed (not a mix of both). At the scale of the sampling cell and the plot, outputs include total herbaceous biomass as well as biomass of individual functional groups (e.g., forbs, cool season graminoids, warm season graminoids, etc.). Functional group biomass is not reported for site-level outputs.

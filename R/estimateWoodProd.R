@@ -8,7 +8,7 @@
 #'
 #' Data inputs are "Vegetation structure" data for a single site (DP1.10098.001) in list format, either provided via the neonUtilities::loadByProduct() function (preferred), as data tables downloaded from the NEON Data Portal, or as input tables with an equivalent structure and representing the same site x month combinations.
 #'
-#' Data must be provided to the function one site at a time, and the 'vst_mappingandtagging' table should include all years of data from the year 2013 to the last year being analyzed.
+#' Data must be provided to the function one site at a time, and the 'vst_mappingandtagging' table should include all years of data from the beginning of collection to the last year being analyzed. Returning the full dataset in 'vst_mappingandtagging' is the default behavior of neonUtilities::loadByProduct().
 #'
 #' @details The input data are passed to the companion estimateWoodMass() function to estimate biomass for qualifying trees, and then aboveground net primary productivity is calculated for live trees at each timepoint. Input data are filtered by the 'plotSubset' argument if output for only certain types of plots or sampling intervals is desired. Productivity is summarized on an areal basis with units "Mg/ha/yr" at the hierarchical level of the plot and site.
 #'

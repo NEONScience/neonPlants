@@ -9,7 +9,7 @@ standardizeRootMass(inputDataList, inputMass = NA)
 \arguments{
 \item{inputDataList}{A list object comprised of Plant Below Ground Biomass tables (DP1.10067.001) downloaded using the neonUtilities::loadByProduct() function (defaults to required). If list input is provided, the table input argument must be NA; similarly, if list input is missing, the 'inputMass' table input must be provided. \link{list}}
 
-\item{inputMass}{The 'bbc_rootmass' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. \link{data.frame}}
+\item{inputMass}{The 'bbc_rootmass' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be omitted. \link{data.frame}}
 }
 \value{
 A table containing root mass data for three sizeCategories (< 1mm, 1-2mm, and 2-10mm) and dryMass values pooled across previously utilized "live/dead" rootStatus categories. The output no longer contains the 'rootStatus' field, and any QA dryMass samples are averaged.
@@ -17,7 +17,7 @@ A table containing root mass data for three sizeCategories (< 1mm, 1-2mm, and 2-
 \description{
 NEON root mass data collected prior to 2019 were sorted to four sizeCategories and were parsed into "live" and "dead" rootStatus categories. Beginning in 2019 the two smallest sizeCategories (< 0.5mm and 0.5-1mm) were combined into a single < 1mm sizeCategory and roots were no longer sorted to "live/dead". This function combines the older smallest two sizeCategories into the current < 1mm category and pools together roots previously categorized as "live" and "dead".
 
-Data inputs are NEON Plant Belowground Biomass data (DP1.10067.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input data tables with an equivalent structure and representing the same site x month combinations.
+Data inputs are NEON Plant Belowground Biomass data (DP1.10067.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input data tables with an equivalent structure.
 }
 \details{
 Input data may be provided either as a list or as individual tables. However, if both list and table inputs are provided at the same time the function will error out.
