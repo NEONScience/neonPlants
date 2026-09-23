@@ -46,6 +46,61 @@ setdiff(temp1$plotEvent, temp2$plotEvent)
 
 
 
+### DEV: Correct "resurrection" trees that occur in the data ####
+#--> Example: individualID = "NEON.PLA.D16.ABBY.00040" in ABBY_073 recorded "dead" in 2018 but "live" all other times
+
+temp <- transFilterDF %>%
+  dplyr::group_by(.data$individualID) %>%
+  dplyr::arrange(.data$year, .by_group = TRUE) %>%
+  dplyr::group_modify(~{
+    df <- .x
+    #   Original liveDeadStatus data as 's0'
+    s0 <- df$liveDeadStatus
+    #   Working copy of liveDeadStatus as 's'
+    s  <- s0
+
+    #   liveDeadStatus rows that are "live" or "dead" (non-NA, non-"lost")
+    nz <- which(!is.na(s) & s != "lost")
+
+    if (length(nz) >= 3) {
+      for (k in seq_len(length(nz) - 2)) {
+        i <- nz[k]
+        j <- nz[k + 1]
+        m <- nz[k + 2]
+
+        # Check for pattern: "live"..."dead"..."live"
+        if (s[i] == "live" &&
+            s[j] == "dead" &&
+            s[m] == "live") {
+
+          # Change the "dead" record to "live"
+          s[j] <- "live"
+
+          # Also fill in any NAs or "lost" values between the first "live" and second "live"
+          gap <- s[(i + 1):(m - 1)]
+          if (any(is.na(gap) | gap == "lost")) {
+            s[(i + 1):(m - 1)] <- "live"
+          }
+        }
+      }
+    }
+
+    df$liveDeadStatus <- s
+
+    #   Flag rows originally NA or "lost" that were changed to either "live" or "dead"
+    df$statusFlag <- ((!is.na(s0) & s0 != s) | (is.na(s0) & !is.na(s)))
+    df
+  })
+
+#   Identify individualIDs with changed rows
+test <- temp %>%
+  dplyr::group_by(.data$individualID) %>%
+  dplyr::filter(any(.data$statusFlag == TRUE))
+
+#--> Appears to correct "dead" records bracketed by "live" and to correctly flag rows with "dead" changed to "live"
+
+
+
 ### DEV: Capture live/dead transitions with row-based approach ####
 
 ### Get wood mass estimates
@@ -262,102 +317,7 @@ transFilterDF <- transFilterDF %>%
 
 
 
-### CL estimateIncrement unused code ######################
 
-# iterating over every record is very inefficient, but I haven't figured out a better way
-# since each measurement has to be compared against a prior measurement of varying distance
-for(i in unique(biomassTable$individualID)) {
-
-  biomassi <- biomassTable[which(biomassTable$individualID==i),]
-  biomassi <- biomassi[order(biomassi$eventYear),]
-  # if an individual is dead (or NA) at every time step, ignore
-  if(identical(unique(biomassi$liveDeadStatus), "dead") |
-     all(unique(biomassi$liveDeadStatus) %in% c(NA, "dead"))) {
-    outList[[i]] <- biomassi
-    next
-  }
-
-  # ordered by year, so can skip first year
-  for(j in 2:nrow(biomassi)) {
-
-    # recruitment
-    if(identical(biomassi$transitionType[j], "recruitment")) {
-      # if biomass estimate is unavailable, NA
-      if(is.na(biomassi$agb_kg[j])) {
-        biomassi$biomassChange[j] <- NA
-      } else {
-        # # otherwise calculate biomass at 10cm diameter
-        # # essentially making a fake data record for the relevant tree
-        # # this doesn't work yet
-        # indinit <- apparentindividuals[which(apparentindividuals$individualID==i &
-        #                                        apparentindividuals$eventID==paste("vst", apparentindividuals$siteID[1], biomassi$eventYear[j], sep="_")),]
-        # indinit$stemDiameter <- 10
-        # indinit$taxonID <- biomassi$taxonID[1]
-        # indinit$scientificName <- biomassi$scientificName[1]
-        # indinit$genus <- biomassi$genus[1]
-        # indinit$family <- biomassi$family[1]
-        # ind10 <- estimateAllometricWoodyMass(indinit)
-
-        # PLACEHOLDER until we have mass code: assume 20kg starting mass
-        biomassi$biomassChange[j] <- biomassi$agb_kg[j] - 20
-        # flag for suspiciously large new trees
-        growthPerYear <- try(I((as.numeric(biomassi$stemDiameter[j])-10)/biomassi$growthInterval[j]),
-                             silent=TRUE)
-        if(inherits(growthPerYear, "try-error") |
-           is.na(growthPerYear)) {
-          biomassi$stemIncrementFlag[j] <- -1
-        } else {
-          if(growthPerYear>3) {
-            biomassi$stemIncrementFlag[j] <- 1
-          }
-        }
-      }
-    }
-
-    # mortality
-    if(identical(biomassi$transitionType[j], "mortality")) {
-      # filter out missing trees if specified
-      if(identical(biomassi$t2Missing[j], "missing") &
-         identical(mortalityMissing, "filterMissing")) {
-        missing <- rbind(missing, biomassi[j,])
-        biomassi$biomassChange[j] <- NA
-      } else {
-        # PLACEHOLDER: assume biomass lost = biomass at last measurement
-        # this is ok for 1 year growth intervals, longer intervals need
-        # estimation of within interval growth
-
-        # check for missing value for biomass at last measurement
-        lastbiomass <- try(biomassi$agb_kg[I(j - biomassi$growthInterval[j])], silent=TRUE)
-        if(inherits(lastbiomass, "try-error") |
-           is.na(lastbiomass)) {
-          biomassi$biomassChange[j] <- NA
-        } else {
-          biomassi$biomassChange[j] <- -lastbiomass
-        }
-      }
-    }
-
-    # live increment
-    if(identical(biomassi$liveDeadStatus[j], "live") &
-       !identical(biomassi$transitionType[j], "recruitment")) {
-      # check for valid measurement at this time step and previous measurement
-      if(is.na(biomassi$agb_kg[j])) {
-        biomassi$biomassChange[j] <- NA
-      } else {
-        lastbiomass <- try(biomassi$agb_kg[I(j - biomassi$growthInterval[j])], silent=TRUE)
-        if(inherits(lastbiomass, "try-error") |
-           is.na(lastbiomass)) {
-          biomassi$biomassChange[j] <- NA
-        } else {
-          biomassi$biomassChange[j] <- biomassi$agb_kg[j] - lastbiomass
-        }
-      }
-    }
-  }
-
-  outList[[i]] <- biomassi
-
-}
 
 
 

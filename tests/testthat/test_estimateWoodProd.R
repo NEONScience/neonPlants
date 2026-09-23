@@ -91,7 +91,7 @@ testthat::test_that(desc = "Output data frame dimensions for 'vst_ANPP_indiv'", 
                              expected = as.integer(36))
 
   testthat::expect_identical(object = nrow(woodProdOutputs$vst_ANPP_indiv),
-                             expected = as.integer(5400))
+                             expected = as.integer(5019))
 })
 
 #   Check expected column and row numbers of 'vst_ANPP_plot' data frame
@@ -101,7 +101,7 @@ testthat::test_that(desc = "Output data frame dimensions for 'vst_ANPP_plot'", {
                              expected = as.integer(11))
 
   testthat::expect_identical(object = nrow(woodProdOutputs$vst_ANPP_plot),
-                             expected = as.integer(142))
+                             expected = as.integer(134))
 })
 
 #   Check expected column and row numbers of 'vst_ANPP_site' data frame
@@ -131,7 +131,7 @@ testthat::test_that(desc = "Output data frame dimensions for 'flagged'", {
                              expected = as.integer(32))
 
   testthat::expect_identical(object = nrow(woodProdOutputs$vst_ANPP_flagged),
-                             expected = as.integer(245))
+                             expected = as.integer(222))
 })
 
 #   Check expected column and row numbers of 'missing' data frame
@@ -141,7 +141,7 @@ testthat::test_that(desc = "Output data frame dimensions for 'missing'", {
                              expected = as.integer(31))
 
   testthat::expect_identical(object = nrow(woodProdOutputs$vst_ANPP_missing),
-                             expected = as.integer(31))
+                             expected = as.integer(36))
 })
 
 
@@ -208,7 +208,7 @@ testthat::test_that(desc = "Unexpected 'missing' argument", {
 
 #   Test: Check for expected 'vst_ANPP_indiv' value
 testthat::test_that(desc = "Output 'vst_ANPP_indiv' value as expected", {
-  testthat::expect_equal(object = woodProdOutputs$vst_ANPP_indiv$agb_kg[5],
+  testthat::expect_equal(object = woodProdOutputs$vst_ANPP_indiv$agb_kg[4],
                          expected = 29.41)
 })
 
@@ -265,7 +265,8 @@ testthat::test_that(desc = "Output 'plot-events' match input 'plot-events'", {
 
   ##  Derive expected 'plot-events' from input data set
   inputPlotEvent <- perPlot %>%
-    dplyr::filter(.data$samplingImpractical == "OK" | is.na(.data$samplingImpractical)) %>%
+    dplyr::filter(.data$samplingImpractical == "OK" | is.na(.data$samplingImpractical),
+                  !is.na(.data$totalSampledAreaTrees)) %>%
     dplyr::mutate(plotEvent = paste(.data$plotID, .data$eventID, sep = "-")) %>%
     dplyr::distinct(.data$plotEvent) %>%
     dplyr::arrange(.data$plotEvent)
@@ -324,5 +325,3 @@ testthat::test_that(desc = "Output 'individualIDs' match input 'individualIDs'",
   testthat::expect_identical(object = outputIndividual$individualID,
                              expected = inputIndividual$individualID)
 })
-
-

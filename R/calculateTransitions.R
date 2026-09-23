@@ -37,7 +37,7 @@ calculateTransitions <- function(biomassTable,
   #   Remove unneeded per plot records
   plotDF <- plotDF %>%
     dplyr::filter(.data$samplingImpractical == "OK" | is.na(.data$samplingImpractical),
-                  .data$dataCollected != "dendrometerOnly" | is.na(.data$dataCollected))
+                  is.na(.data$dataCollected) | .data$dataCollected %in% c("allGrowthForms", "woodyOnly", "treesOnly"))
 
   #   Reduce to needed columns
   plotDF <- plotDF %>%
@@ -190,6 +190,51 @@ calculateTransitions <- function(biomassTable,
                     .before = "eventID") %>%
     dplyr::relocate("statusFlag",
                     .after = "liveDeadStatus")
+
+
+  ##  Infer 'liveDeadStatus' for resurrected individualIDs - i.e., "live" -> "dead" -> "live" with any number of NA rows separating the "live" rows from the "dead" row
+  transFilterDF <- transFilterDF %>%
+    dplyr::group_by(.data$individualID) %>%
+    dplyr::arrange(.data$year, .by_group = TRUE) %>%
+    dplyr::group_modify(~{
+      df <- .x
+      #   Original liveDeadStatus data as 's0'
+      s0 <- df$liveDeadStatus
+      #   Working copy of liveDeadStatus as 's'
+      s  <- s0
+
+      #   liveDeadStatus rows that are "live" or "dead" (non-NA, non-"lost")
+      nz <- which(!is.na(s) & s != "lost")
+
+      if (length(nz) >= 3) {
+        for (k in seq_len(length(nz) - 2)) {
+          i <- nz[k]
+          j <- nz[k + 1]
+          m <- nz[k + 2]
+
+          # Check for pattern: "live"..."dead"..."live"
+          if (s[i] == "live" &&
+              s[j] == "dead" &&
+              s[m] == "live") {
+
+            # Change the "dead" record to "live"
+            s[j] <- "live"
+
+            # Also fill in any NAs or "lost" values between the first "live" and second "live"
+            gap <- s[(i + 1):(m - 1)]
+            if (any(is.na(gap) | gap == "lost")) {
+              s[(i + 1):(m - 1)] <- "live"
+            }
+          }
+        }
+      }
+
+      df$liveDeadStatus <- s
+
+      #   Flag 'liveDeadStatus' rows that have changed status
+      df$statusFlag <- ((!is.na(s0) & s0 != s) | (is.na(s0) & !is.na(s)))
+      df
+    })
 
 
   ##  Determine 'transitionStatus' relative to last time the plot or individual was sampled
