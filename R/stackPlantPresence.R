@@ -4,17 +4,17 @@
 #' Dave T Barnett \email{dbarnettl@BattelleEcology.org} \cr
 #' Eric Sokol \email{esokol@BattelleEcology.org} \cr
 #'
-#' @description Aggregate occurrence data from the Plant Presence and Percent Cover data product to return all plant species present at the scale of each subplot sampled (1m2, 10m2, and 100m2) as well as the plot scale (400m2). In contrast, data downloaded from the NEON data portal report species in 10m2 and 100m2 subplots only if those species are not encountered in smaller-scale subplots, and a list of species present within the entire 400m2 scale plot is not provided. Data inputs are NEON Plant Presence and Percent Cover data (DP1.10058.001) retrieved with the neonUtilities::loadByProduct() function (preferred), data downloaded from the NEON Data Portal, or input data tables with an equivalent structure and representing the same site x month combinations.
+#' @description Aggregate occurrence data from the Plant Presence and Percent Cover data product to return all plant species present at the scale of each subplot sampled (1m2, 10m2, and 100m2) as well as the plot scale (400m2). Data downloaded from the NEON data portal report species in 10m2 and 100m2 subplots only if those species are not encountered in smaller-scale subplots, and a list of species present within the entire 400m2 scale plot is not provided. Data inputs are NEON Plant Presence and Percent Cover data (DP1.10058.001) retrieved with the neonUtilities::loadByProduct() function (preferred), data downloaded from the NEON Data Portal, or input data tables with an equivalent structure
 #'
-#' @details Input data may be provided either as a list generated from the neonUtilities::laodByProduct() function or as individual tables. However, only list or table inputs are allowed (not a mix of both).
+#' @details Input data may be provided either as a list generated from the neonUtilities::loadByProduct() function or as individual tables. However, only list or table inputs are allowed (not a mix of both).
 #'
-#' @param inputDataList A list object comprised of NEON Plant Presence and Percent Cover tables (DP1.10058.001) downloaded with the neonUtilities::loadByProduct() function (defaults to required). If list input is provided, the table input arguments must all be NA; similarly, if list input is missing, table inputs must be provided for the 'input_1m2Data' and 'input_10m2Data100m2Data' arguments.[list]
+#' @param inputDataList A list object comprised of NEON Plant Presence and Percent Cover tables (DP1.10058.001) downloaded with the neonUtilities::loadByProduct() function. If list input is provided, the table input arguments must all be NA; similarly, if list input is missing, table inputs must be provided for the 'input_1m2Data' and 'input_10m2Data100m2Data' arguments.[list]
 #'
 #' @param totalSampledAreaFilter The subplot or plot size for which data are returned (in meters squared). Default (NA) will return data for all subplot and plot sizes. If a valid filter integer is provided, the returned data are filtered to the desired subplot or plot size. Input options are NA, 1, 10, 100, 400. [integer]
 #'
-#' @param input_1m2Data The 'div_1m2Data' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
+#' @param input_1m2Data The 'div_1m2Data' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be omitted. [data.frame]
 #'
-#' @param input_10m2Data100m2Data The 'div_10m2Data100m2Data' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
+#' @param input_10m2Data100m2Data The 'div_10m2Data100m2Data' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be omitted. [data.frame]
 #'
 #' @return The following objects are returned as a list:
 #'   * div_stackedPresence - A data frame that aggregates plant species lists across all subplots (or those subplots defined in 'totalSampledAreaFilter' argument), and for the entire plot where subplotID suffix is '400' (see Data Product documentation for subplot description).

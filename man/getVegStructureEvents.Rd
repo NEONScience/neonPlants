@@ -21,7 +21,7 @@ getVegStructureEvents(
 A table listing the sampling event type for each year and eventID, and the start and end date of each sampling event. If includePlots = TRUE, the table also includes the list of plots sampled in each event. Start and end date are the start and end date of the entire event, not specific to a given plot. For the most recent year of data, it is possible not all data collection has been completed; in this case the end date reflects the end date of data in the database, but publication of more data may be pending.
 }
 \description{
-Vegetation structure (DP1.10098.001) data are collected annually at NEON terrestrial sites with qualifying vegetation, but different plots are sampled in different years. This function returns a table of which types of sampling events occurred in each year.
+Vegetation structure (DP1.10098.001) data are collected annually at NEON terrestrial sites with qualifying vegetation, but different plots are sampled in different years. This function returns a table describing which types of sampling events occurred in each year, and the dates of sampling.
 }
 \details{
 Vegetation structure event types are:

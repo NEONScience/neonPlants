@@ -20,7 +20,7 @@ estimatePheDurationByTag(
 \value{
 The following objects are returned as a list:
 \itemize{
-\item phe_duration_tag - Table containing the duration of each phenophase for each individual for the timeframe provided in hte input data. Phenophase transition dates required for the calculation are derived via the neonPlants::estimatePheTransByTag() function.
+\item phe_duration_tag - Table containing the duration of each phenophase for each individual for the time frame covered by the input data. Phenophase transition dates required for the calculation are derived via the neonPlants::estimatePheTransByTag() function.
 \item variables - Units and definitions of novel variables created by the function that are not already defined in the Plant Phenology data product.
 }
 }
@@ -32,7 +32,7 @@ Input data may be provided either as a list generated from the neonUtilities::la
 
 For table joining to be successful, inputs must contain data from the same sites for all tables. When individualID duplicates exist in the "phe_perindividual" table, the function will attempt to resolve them based on the 'editedDate' field.
 
-Phenophases may begin in one year and end in another; or the most part this happens in southern sites, but users should be alert for this possibility at any site. The estimatePheDurationByTag() function calls estimatePheTransByTag() to find the dates of phenophase transitions, and uses yearPhenophaseBegan for those calculations.
+Phenophases may begin in one year and end in another; for the most part this happens in southern sites, but users should be alert for this possibility at any site. The estimatePheDurationByTag() function calls estimatePheTransByTag() to find the dates of phenophase transitions, and uses yearPhenophaseBegan for those calculations.
 }
 \examples{
 \dontrun{
