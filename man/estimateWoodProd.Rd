@@ -49,9 +49,9 @@ A list that includes productivity summary data frames. Output tables are:
 }
 }
 \description{
-Calculate above-ground net primary productivity of trees reported in the NEON "Vegetation structure" data product (DP1.10098.001). Data must be provided one site at a time. Results are summarized as mass per unit area per year at scales of the plotID and siteID.
+Calculate above-ground net primary productivity of trees reported in the NEON "Vegetation structure" data product (DP1.10098.001). Data must be provided one site at a time, and input data must be NEON RELEASE-2027 or newer.. Results are summarized as mass per unit area per year at scales of the plotID and siteID.
 
-Data inputs are "Vegetation structure" data for a single site (DP1.10098.001) in list format, either provided via the neonUtilities::loadByProduct() function (preferred), as data tables downloaded from the NEON Data Portal, or as input tables with an equivalent structure and representing the same site x month combinations.
+Data inputs are "Vegetation structure" data for a single site (DP1.10098.001) in list format, either provided via the neonUtilities::loadByProduct() function (preferred), as data tables downloaded from the NEON Data Portal, or as input tables with an equivalent structure.
 
 Data must be provided to the function one site at a time, and the 'vst_mappingandtagging' table should include all years of data from the beginning of collection to the last year being analyzed. Returning the full dataset in 'vst_mappingandtagging' is the default behavior of neonUtilities::loadByProduct().
 }

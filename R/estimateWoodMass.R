@@ -4,7 +4,7 @@
 #' Courtney L Meier \email{cmeier@BattelleEcology.org} \cr
 #' Samuel M Simkin \email{samuel.simkin@gmail.com} \cr
 #'
-#' @description Allometric equations are used to estimate above-ground biomass for woody individuals reported in the NEON "Vegetation structure" data product (DP1.10098.001). Results are summarized as mass per unit area at scales of the plotID and siteID. Biomass outputs can be used in the companion estimateWoodProd() function.
+#' @description Allometric equations are used to estimate above-ground biomass for woody individuals reported in the NEON "Vegetation structure" data product (DP1.10098.001). Input data must be NEON RELEASE-2027 or newer. Results are summarized as mass per unit area at scales of the plotID and siteID. Biomass outputs can be used in the companion estimateWoodProd() function.
 #'
 #' Data inputs are either "Vegetation structure" data (DP1.10098.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input tables with an equivalent structure.
 #'
@@ -178,6 +178,30 @@ estimateWoodMass = function(inputDataList,
   if (nrow(perPlot) == 0) {
     stop(glue::glue("Table 'vst_perplotperyear' has no data."))
   }
+
+  #   Check for RELEASE-2027 or more recent
+  if ("release" %in% names(perPlot)) {
+
+    releaseValue <- unique(perPlot$release)
+
+    if (length(releaseValue) > 1) {
+
+      stop("Data from more than one NEON RELEASE detected: Function does not support using data from multiple RELEASES.")
+
+    } else {
+
+      releaseCheck <- dplyr::case_when(releaseValue == "LATEST" ~ TRUE,
+                                       as.numeric(stringr::str_extract(releaseValue, "20[0-9]{2}$")) >= 2027 ~ TRUE,
+                                       TRUE ~ FALSE)
+
+      if (!isTRUE(releaseCheck)) {stop("Input data must be RELEASE-2027 or newer.")}
+
+    }
+
+  } else {
+    warning("Cannot determine the NEON RELEASE for the input data: Outputs may contain known errors if data older than RELEASE-2027 are used.")
+  }
+
 
 
   ### Verify 'vst_apparentindividual' table contains required data

@@ -40,7 +40,7 @@ A list that includes individual-level biomass, plot-level summary biomass, site-
 }
 }
 \description{
-Allometric equations are used to estimate above-ground biomass for woody individuals reported in the NEON "Vegetation structure" data product (DP1.10098.001). Results are summarized as mass per unit area at scales of the plotID and siteID. Biomass outputs can be used in the companion estimateWoodProd() function.
+Allometric equations are used to estimate above-ground biomass for woody individuals reported in the NEON "Vegetation structure" data product (DP1.10098.001). Input data must be NEON RELEASE-2027 or newer. Results are summarized as mass per unit area at scales of the plotID and siteID. Biomass outputs can be used in the companion estimateWoodProd() function.
 
 Data inputs are either "Vegetation structure" data (DP1.10098.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input tables with an equivalent structure.
 }

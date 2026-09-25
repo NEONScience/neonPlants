@@ -227,7 +227,7 @@ testthat::test_that(desc = "Output 'vst_ANPP_site' value as expected", {
 #   Test: Check for expected 'duplicates' value
 testthat::test_that(desc = "Output 'duplicates' value as expected", {
   testthat::expect_equal(object = woodProdOutputs$vst_ANPP_duplicates$individualID[1],
-                         expected = "NEON.PLA.D16.ABBY.00021")
+                         expected = "NEON.PLA.D16.ABBY.02639")
 })
 
 #   Test: Check for expected 'flagged' value

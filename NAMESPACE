@@ -20,6 +20,8 @@ import(rlang)
 importFrom(glue,glue)
 importFrom(lifecycle,deprecated)
 importFrom(magrittr,"%>%")
-importFrom(stats,C)
-importFrom(stats,family)
+importFrom(stats,
+  C,
+  family
+)
 importFrom(utils,data)

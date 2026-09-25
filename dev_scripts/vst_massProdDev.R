@@ -7,6 +7,8 @@
 #--> Need to wait for additional ML edits to make it to Portal in vst_perplotperyear table
 #--> Also need to re-assemble test dataset with edited data so that updated "partial" logic works with RELEASE-2027 onward
 
+
+##  D01 wood mass output check
 vstD01 <- neonUtilities::loadByProduct(dpID = "DP1.10098.001",
                                        site = c("BART", "HARV"),
                                        release = "LATEST",
@@ -22,6 +24,84 @@ downed <- massD01$vst_lost_downed
 #--> All table outputs look reasonable at a glance
 
 
+##  D02 wood mass output check
+vstD02 <- neonUtilities::loadByProduct(dpID = "DP1.10098.001",
+                                       site = c("BLAN", "SCBI", "SERC"),
+                                       release = "LATEST",
+                                       check.size = FALSE,
+                                       token = Sys.getenv("NEON_TOKEN"))
+
+massD02 <- neonPlants::estimateWoodMass(inputDataList = vstD02)
+indiv <- massD02$vst_AGB_indiv
+plot <- massD02$vst_AGB_plot
+site <- massD02$vst_AGB_site
+downed <- massD02$vst_lost_downed
+
+indivSummNoMass <- indiv %>%
+  dplyr::filter(source == "noAllometry") %>%
+  dplyr::group_by(taxonID) %>%
+  dplyr::summarise(count = n())
+
+#--> A number of taxa with "noAllometry" do not have biomass estimates (2581 records all time): e.g., Asimina triloba (paw paw), Tetradium daniellii, Lonicera maackii. Most are Asimina triloba (1842 records).
+#--> Plot-level outputs look plausible
+#--> Site-level outputs look plausible
+#--> Downed output looks plausible
+
+
+##  D03 wood mass output check
+vstD03 <- neonUtilities::loadByProduct(dpID = "DP1.10098.001",
+                                       site = c("DSNY", "JERC", "OSBS"),
+                                       release = "LATEST",
+                                       check.size = FALSE,
+                                       token = Sys.getenv("NEON_TOKEN"))
+
+massD03 <- neonPlants::estimateWoodMass(inputDataList = vstD03)
+indiv <- massD03$vst_AGB_indiv
+plot <- massD03$vst_AGB_plot
+site <- massD03$vst_AGB_site
+downed <- massD03$vst_lost_downed
+
+indivSummNoMass <- indiv %>%
+  dplyr::filter(source == "noAllometry") %>%
+  dplyr::group_by(taxonID) %>%
+  dplyr::summarise(count = n())
+
+#--> 1422 records with "noAllometry"; 500+ are Yucca record, another 218 are Opuntia, another 200+ are Diospyros virginiana L.
+#--> Plot-level records look plausible
+#--> Site-level records look plausible
+#--> Downed records look plausible
+
+
+
+
+### DEV: Verify input data are RELEASE ≥ 2027
+temp <- readRDS(testthat::test_path("testdata", "vst_testDat.rds"))
+
+tempPMD <- temp$vst_perplotperyear
+
+tempPMD$release <- "RELEASE-2028"
+
+if ("release" %in% names(tempPMD)) {
+
+  releaseValue <- unique(tempPMD$release)
+
+  if (length(releaseValue) > 1) {
+
+    stop("Data from more than one NEON RELEASE detected: Function does not support using data from multiple RELEASES.")
+
+  } else {
+
+    releaseCheck <- dplyr::case_when(releaseValue == "LATEST" ~ TRUE,
+                                     as.numeric(stringr::str_extract(releaseValue, "20[0-9]{2}$")) >= 2027 ~ TRUE,
+                                     TRUE ~ FALSE)
+
+    if (!isTRUE(releaseCheck)) {stop("Input data must be RELEASE-2027 or newer.")}
+
+  }
+
+} else {
+  warning("Cannot determine the NEON RELEASE for the input data: Outputs may contain known errors if data older than RELEASE-2027 are used.")
+}
 
 
 
@@ -470,14 +550,14 @@ theEvents <- c("vst_BLAN_2020", "vst_BLAN_2021", "vst_BLAN_2022",
 #   Generate vst_perplotperyear test table
 pppyDF <- temp$vst_perplotperyear %>%
   dplyr::filter(eventID %in% theEvents) %>%
-  dplyr::select("date",
-                "nonwoodyCollectDate",
-                "domainID",
+  dplyr::select("domainID",
                 "siteID",
                 "plotID",
                 "plotType",
                 "nlcdClass",
                 "samplingImpractical",
+                "date",
+                "nonwoodyCollectDate",
                 "eventID",
                 "eventType",
                 "dataCollected",
@@ -493,7 +573,8 @@ pppyDF <- temp$vst_perplotperyear %>%
                 "totalSampledAreaFerns",
                 "totalSampledAreaOther",
                 "remarks",
-                "dataQF")
+                "dataQF",
+                "release")
 
 #   Generate vst_apparentindividual test table
 aiDF <- temp$vst_apparentindividual %>%

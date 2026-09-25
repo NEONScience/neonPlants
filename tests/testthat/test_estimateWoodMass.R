@@ -79,7 +79,7 @@ testthat::test_that(desc = "Output data frame column number 'vst_plot_Mgha'", {
                              expected = as.integer(12))
 
   testthat::expect_identical(object = nrow(woodMassOutputs$vst_AGB_plot),
-                             expected = as.integer(456))
+                             expected = as.integer(454))
 })
 
 #   Check expected column number of 'vst_site_Mgha' data frame
@@ -238,7 +238,7 @@ testthat::test_that(desc = "Output 'vst_AGB_plot' value as expected", {
 ### Test: Generate error if output 'vst_AGB_site' value not as expected
 testthat::test_that(desc = "Output 'vst_AGB_site' value as expected", {
   testthat::expect_equal(object = woodMassOutputs$vst_AGB_site$woodMassMean_Mgha[18],
-                         expected = 265.3)
+                         expected = 265.4)
 })
 
 
@@ -249,7 +249,7 @@ testthat::test_that(desc = "Output 'vst_AGB_site' sites as expected", {
   #   Prep input site-year list
   inputSiteYear <- vstTestDF$vst_perplotperyear %>%
     dplyr::filter(samplingImpractical == "OK" | is.na(samplingImpractical),
-                  !dataCollected %in% c("partial", "dendrometerOnly")) %>%
+                  !dataCollected %in% c("dendrometerOnly", "nonWoodyOnly", "treesOnly")) %>%
     dplyr::distinct(siteID,
                     eventID) %>%
     dplyr::mutate(site_year = paste(siteID,
@@ -277,9 +277,9 @@ testthat::test_that(desc = "Output 'vst_AGB_site' sites as expected", {
 testthat::test_that(desc = "Output 'plot-events' match input 'plot-events'", {
 
   ##  Derive expected 'plot-events' from input data set
-  #   Identify partially sampled plots: These should not be in 'vst_AGB_plot' output table
+  #   Identify partially sampled plots when growthFormSubset = "all": These should not be in 'vst_AGB_plot' output table
   plotEventPartial <- vstTestDF$vst_perplotperyear %>%
-    dplyr::filter(dataCollected %in% c("dendrometerOnly", "partial")) %>%
+    dplyr::filter(dataCollected %in% c("dendrometerOnly", "nonWoodyOnly", "treesOnly")) %>%
     dplyr::mutate(plotEvent = paste(plotID, eventID, sep = "-")) %>%
     dplyr::distinct(plotEvent)
 
@@ -292,11 +292,9 @@ testthat::test_that(desc = "Output 'plot-events' match input 'plot-events'", {
   inputPlotEvent <- inputPlotEvent$plotEvent
 
   #   Identify fully sampled plots in input NW data
-  #--> Remove ABBY_068-vst_ABBY_2019 because data error causes it to be dropped (missing totalSampledAreaFerns)
   nwPlotEvent <- vstTestDF$`vst_non-woody` %>%
     dplyr::mutate(plotEvent = paste(plotID, eventID, sep = "-")) %>%
-    dplyr::filter(!plotEvent %in% plotEventPartial$plotEvent,
-                  plotEvent != "ABBY_068-vst_ABBY_2019") %>%
+    dplyr::filter(!plotEvent %in% plotEventPartial$plotEvent) %>%
     dplyr::distinct(plotEvent)
 
   nwPlotEvent <- nwPlotEvent$plotEvent
@@ -339,4 +337,3 @@ testthat::test_that(desc = "Output 'plot-events' match input 'plot-events'", {
   testthat::expect_identical(object = outputPlotEvent,
                              expected = inputPlotEvent)
 })
-
