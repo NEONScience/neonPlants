@@ -1,0 +1,58 @@
+Package: neonPlants
+Title: Tools to access and work with NEON plant data
+Version: 0.0.1
+Authors@R: 
+    c(person(given = "Courtney",
+             family = "Meier",
+             role = c("aut", "cre", "cph"),
+             email = "cmeier@BattelleEcology.org",
+             comment = c(ORCID = "0000-0003-3576-883X")),
+      person(given = "Dave",
+             family = "Barnett", 
+             role = c("aut"),
+             email = "dbarnett@BattelleEcology.org",
+             comment = c(ORCID = "0000-0002-0485-3567")),
+      person(given = "Sam",
+             family = "Simkin", 
+             role = c("aut"),
+             email = "samuel.simkin@gmail.com", 
+             comment = c(ORCID = "0000-0003-2418-4265")),
+      person(given = "Katherine",
+             family = "Jones",
+             role = c("aut"),
+             email = "joneseyk@gmail.com",
+             comment = c(ORCID = "0000-0003-1175-5049")),
+      person(given = "Claire",
+             family = "Lunch",
+             role = c("aut"),
+             email = "clunch@BattelleEcology.org",
+             comment = c(ORCID = "0000-0001-8753-6593"))
+             )
+Description: Library of R functions to work with NEON plant data.
+License: GPL (>= 3)
+Suggests: 
+    neonUtilities (>= 4.0.2),
+    testthat (>= 3.3.0)
+Config/testthat/edition: 3
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+Depends: 
+    R (>= 4.0.0)
+Imports: 
+    dplyr,
+    glue,
+    lifecycle,
+    lubridate,
+    magrittr,
+    methods,
+    purrr,
+    rlang,
+    stringr,
+    tibble,
+    tidyr,
+    tidyselect,
+    RColorBrewer,
+    ggplot2,
+    plotly
+LazyData: true
+Config/roxygen2/version: 8.1.0

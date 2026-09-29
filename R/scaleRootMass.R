@@ -1,0 +1,505 @@
+#' @title Scale NEON root biomass by size category to mass per area and mass per volume
+
+#' @author Courtney Meier \email{cmeier@battelleecology.org} \cr
+
+#' @description Join NEON Plant Belowground Biomass data tables (DP1.10067.001) to calculate fine root biomass by sizeCategory as well as total fine root biomass per unit area and per unit soil volume. Fine root fragment mass (root fragments < 1 cm length) can optionally be calculated for the subset of cores for which it is generated, and fragment mass can optionally be included in the summed total fine root biomass.
+#'
+#' Data inputs are NEON Plant Belowground Biomass data (DP1.10067.001) in list format retrieved using the neonUtilities::loadByProduct() function (preferred), data tables downloaded from the NEON Data Portal, or input data tables with an equivalent structure.
+#'
+#' @details Input data may be provided either as a list or as individual tables. However, if both list and table inputs are provided at the same time the function will error out. For all output data, columns with the same name as input data have identical units and definitions; new columns are described in the 'variables' output table.
+#'
+#' If inputMass data collected prior to 2019 are provided, the 0-0.5mm and 0.5-1mm sizeCategories are combined into the current 0-1mm sizeCategory.
+#'
+#' NEON weighs a minimum of 5% of samples a second time so that data users can estimate the uncertainty associated with different technicians weighing dried roots; QA samples of this nature are identified via qaDryMass == "Y". The function calculates the mean when QA masses exist and any 'remarks' are concatenated. Samples with Sampling Impractical values other than "OK" are removed prior to generating output data.
+#'
+#' @param inputDataList A list object comprised of Plant Below Ground Biomass tables (DP1.10067.001) downloaded using the neonUtilities::loadByProduct() function. If list input is provided, the table input arguments must all be NA; similarly, if list input is missing, table inputs must be provided for 'inputCore' and 'inputMass' arguments at a minimum. [list]
+#'
+#' @param includeDilution Indicator for whether mass of root fragments < 1 cm length should be calculated, as estimated via the Dilution Sampling method (Defaults to TRUE). If TRUE and 'inputDilution' is NA, the 'bbc_dilution' table will be extracted from the list input. [logical]
+#'
+#' @param inputCore The 'bbc_percore' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
+#'
+#' @param inputMass The 'bbc_rootmass' table for the site x month combination(s) of interest (defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
+#'
+#' @param inputDilution The 'bbc_dilution' table for the site x month combination(s) of interest (optional, defaults to NA). If table input is provided, the 'inputDataList' argument must be missing. [data.frame]
+#'
+#' @param includeFragInTotal Indicator for whether mass of root fragments < 1 cm length calculated from dilution sampling should be included when summing across sizeCategory to calculate the 'totalDryMass'. Defaults to FALSE. If set to TRUE and 'inputDataList' is missing, the 'bbc_dilution' table must be provided to the 'inputDilution' argument. [logical]
+#'
+#' @return A list containing the following output tables:
+#'   * bbc_BGB_core - Contains root mass data at the scale of the field-collected core, reported for three sizeCategories (< 1mm, 1-2mm, and 2-10mm) as per unit area ("g/m2") and per unit volume ("g/m3"), as well as total fine root biomass summed across all sizeCategories (separate columns for "g/m2", "g/m3", and "Mg/ha"). Output no longer contains the 'rootStatus' field, and QA dryMass samples are averaged.
+#'   * bbc_BGB_plot - Contains mean root mass data at the scale of the plot for each eventID in the data, reported for three sizeCategories (< 1mm, 1-2mm, and 2-10mm) as per unit area ("g/m2") and per unit volume ("g/m3"), as well as total fine root biomass summed across all sizeCategories (separate columns for "g/m2", "Mg/ha", and "g/m3"). Uncertainty at the plot scale is not reported because intra-plot replication is frequently insufficient and not required by the sampling design, but the number of core samples used to calculate the mean is reported.
+#'   * bbc_BGB_site - Provides mean site-level total root mass data for each year (i.e., eventID) in the data, calculated from plot-level data and reported per unit area ("g/m2", "Mg/ha") and per unit volume ("g/m3").
+#'   * variables - Units and definitions of novel variables created by the function that are not already defined in the Plant Belowground Biomass data product.
+#'
+#' @examples
+#' \dontrun{
+#' #   Obtain NEON Plant Belowground Biomass core data; note that a token is required and may be obtained after creating a NEON user account
+#' bbcDF <- neonUtilities::loadByProduct(
+#' dpID = "DP1.10067.001",
+#' site = "all",
+#' startdate = "2022-07",
+#' enddate = "2022-08",
+#' tabl = "all",
+#' check.size = FALSE,
+#' token = "my_NEON_token"
+#' )
+#'
+#' #   Calculate root mass per unit area and per unit volume
+#' df <- neonPlants::scaleRootMass(
+#' inputDataList = bbcDF,
+#' includeDilution = TRUE,
+#' inputCore = NA,
+#' inputMass = NA,
+#' inputDilution = NA,
+#' includeFragInTotal = FALSE
+#' )
+#'
+#' }
+#'
+#' @export scaleRootMass
+
+
+scaleRootMass <- function(inputDataList,
+                          includeDilution = TRUE,
+                          inputCore = NA,
+                          inputMass = NA,
+                          inputDilution = NA,
+                          includeFragInTotal = FALSE) {
+
+
+
+  ### Session: Set session behavior for dplyr::summarise ####
+  sessionInform <- getOption("dplyr.summarise.inform", default = TRUE)
+  options(dplyr.summarise.inform = FALSE)
+  on.exit(options(dplyr.summarise.inform = sessionInform), add = TRUE)
+
+
+
+  ### Test that user has supplied arguments as required by function ####
+
+  ### Verify 'includeDilution' and 'includeFragInTotal' are of type logical
+  #   Check 'includeDilution'
+  if (!is.logical(includeDilution)) {
+    stop(glue::glue("Argument 'includeDilution' must be type logical; supplied input is {class(includeDilution)}"))
+  }
+
+  #   Check 'includeFragInTotal'
+  if (!is.logical(includeFragInTotal)) {
+    stop(glue::glue("Argument 'includeFragInTotal' must be type logical; supplied input is {class(includeFragInTotal)}"))
+  }
+
+
+
+  ### Verify user-supplied 'inputDataList' object contains correct data if not missing
+  if (!missing(inputDataList)) {
+
+    #   Check that input is a list
+    if (!inherits(inputDataList, "list")) {
+      stop(glue::glue("Argument 'inputDataList' must be a list object from neonUtilities::loadByProduct();
+                     supplied input object is {class(inputDataList)}"))
+    }
+
+    #   Check that required tables within list match expected names
+    listExpNames <- c("bbc_percore", "bbc_rootmass", "bbc_dilution")
+
+    #   Account for includeDilution argument and whether 'bbc_dilution' is required
+    if (isTRUE(includeDilution)) {
+
+      #   All expected tables required when includeDilution == TRUE
+      if (length(setdiff(listExpNames, names(inputDataList))) > 0) {
+        stop(glue::glue("Required tables missing from 'inputDataList':",
+                        '{paste(setdiff(listExpNames, names(inputDataList)), collapse = ", ")}',
+                        .sep = " "))
+      }
+
+    } else if (isFALSE(includeDilution)) {
+
+      #   Table 'bbc_dilution' not required when includeDilution == FALSE
+      if (length(setdiff(listExpNames[1:2], names(inputDataList))) > 0) {
+        stop(glue::glue("Required tables missing from 'inputDataList':",
+                        '{paste(setdiff(listExpNames, names(inputDataList)), collapse = ", ")}',
+                        .sep = " "))
+      }
+
+    } # end includeDilution conditional
+
+  } else {
+
+    inputDataList <- NULL
+
+  } # end missing conditional
+
+
+
+  ### Verify table inputs are NA if 'inputDataList' is supplied
+  if (inherits(inputDataList, "list") & (!is.logical(inputCore) | !is.logical(inputMass) | !is.logical(inputDilution))) {
+    stop("When 'inputDataList' is supplied all table input arguments must be NA")
+  }
+
+
+
+  ### Verify 'inputCore' and 'inputMass' are data frames if 'inputDataList' is missing
+  if (is.null(inputDataList) &
+      (!inherits(inputCore, "data.frame") | !inherits(inputMass, "data.frame"))) {
+
+    stop("Data frames must be supplied for all table inputs if 'inputDataList' is not provided")
+  }
+
+
+
+  ### Verify 'inputDilution' is a data frame if 'inputDataList' is missing and 'includeDilution' is TRUE
+  if (is.null(inputDataList) & isTRUE(includeDilution) & !inherits(inputDilution, "data.frame")) {
+
+    stop("A data frame must be supplied to 'inputDilution' when 'inputDataList' is not provided and includeDilution is TRUE")
+  }
+
+
+
+  ### Verify 'includeDilution' is TRUE if 'includeFragInTotal' is TRUE
+  if (isTRUE(includeFragInTotal) & isFALSE(includeDilution)) {
+
+    stop("Valid dilution sampling data must be provided and 'includeDilution' must be TRUE when includeFragInTotal is TRUE")
+  }
+
+
+
+  ### Conditionally define input tables ####
+  if (inherits(inputDataList, "list")) {
+
+    rootCore <- inputDataList$bbc_percore
+    rootMass <- inputDataList$bbc_rootmass
+
+    if (isTRUE(includeDilution)) {
+      rootDilution <- inputDataList$bbc_dilution
+    } else {
+      rootDilution <- inputDilution
+    }
+
+  } else if (is.null(inputDataList)) {
+
+    rootCore <- inputCore
+    rootMass <- inputMass
+    rootDilution <- inputDilution
+
+  }
+
+
+
+  ### Verify input tables contain required columns and data ####
+
+  ### Verify 'inputCore' table contains required data
+  #   Check for required columns
+  coreExpCols <- c("domainID", "siteID", "plotID", "clipID", "coreID", "collectDate", "eventID", "sampleID",
+                   "rootSampleArea", "rootSampleDepth")
+
+  if (length(setdiff(coreExpCols, colnames(rootCore))) > 0) {
+    stop(glue::glue("Required columns missing from 'inputCore':", '{paste(setdiff(coreExpCols, colnames(rootCore)), collapse = ", ")}',
+                    .sep = " "))
+  }
+
+  #   Check for data
+  if (nrow(rootCore) == 0) {
+    stop("Table 'inputCore' has no data.")
+  }
+
+
+
+  ### Verify 'inputMass' table contains expected data
+  #   Check for required columns
+  massExpCols <- c("domainID", "siteID", "plotID", "samplingImpractical", "sampleID", "subsampleID",
+                   "sizeCategory", "rootStatus", "dryMass", "qaDryMass", "remarks")
+
+  if (length(setdiff(massExpCols, colnames(rootMass))) > 0) {
+    stop(glue::glue("Required columns missing from 'inputMass':", '{paste(setdiff(massExpCols, colnames(rootMass)), collapse = ", ")}',
+                    .sep = " "))
+  }
+
+  #   Check for data
+  if (nrow(rootMass) == 0) {
+    stop("Table 'inputMass' has no data.")
+  }
+
+
+
+  ### Verify inputDilution table contains expected data, if required
+  if (is.data.frame(rootDilution)) {
+
+    #   Check for required columns
+    dilExpCols <- c("sampleID", "dilutionSubsampleVolume", "sampleVolume", "dryMass")
+
+    if (length(setdiff(dilExpCols, colnames(rootDilution))) > 0) {
+      stop(glue::glue("Required columns missing from 'inputDilution':", '{paste(setdiff(dilExpCols, colnames(rootDilution)), collapse = ", ")}',
+                      .sep = " "))
+    }
+
+    #   Check for data
+    if (nrow(rootDilution) == 0) {
+      stop("Table 'inputDilution' has no data.")
+    }
+
+  } # end inputDilution conditional
+
+
+
+  ### Message if older data were provided with deprecated 0-0.5mm and 0.5-1mm sizeCategories
+  if ("0-05" %in% rootMass$sizeCategory | "05-1" %in% rootMass$sizeCategory) {
+    message("Deprecated '0-0.5mm' or '0.5-1mm' sizeCategories detected, binning output to current '0-1mm' sizeCategory.")
+  }
+
+
+
+  ### Standardize rootMass data to current sizeCategory definitions and average qaDryMass = Y ####
+  rootMass <- neonPlants::standardizeRootMass(inputMass = rootMass)
+
+  #   Collapse mycorrhizaeVisible and massRemarks to single string per sampleID to avoid downstream dupes when pivot_wider() is used; these will be re-joined by sampleID after wide table is created
+  stringMassCols <- dplyr::select(.data = rootMass,
+                                  "sampleID",
+                                  "mycorrhizaeVisible",
+                                  "remarks") %>%
+    dplyr::group_by(.data$sampleID) %>%
+    dplyr::summarise(mycorrhizaeVisible = dplyr::case_when(all(is.na(.data$mycorrhizaeVisible)) ~ NA,
+                                                           dplyr::n_distinct(.data$mycorrhizaeVisible, na.rm = TRUE) == 1 ~
+                                                             paste(unique(.data$mycorrhizaeVisible[!is.na(.data$mycorrhizaeVisible)]), collapse = ", "),
+                                                           TRUE ~ paste(.data$mycorrhizaeVisible, collapse = ", ")),
+                     massRemarks = dplyr::case_when(all(is.na(.data$remarks)) ~ NA,
+                                                    dplyr::n_distinct(.data$remarks, na.rm = TRUE) == 1 ~
+                                                      paste(unique(.data$remarks[!is.na(.data$remarks)]), collapse = ", "),
+                                                    TRUE ~ paste(.data$remarks, collapse = ", ")),
+                     .groups = "drop")
+
+  #   Remove mycorrhizaeVisible and remarks from rootMass for clean downstream pivot_wider() result
+  rootMass <- dplyr::select(.data = rootMass,
+                            -"subsampleID",
+                            -"mycorrhizaeVisible",
+                            -"remarks")
+
+
+
+  ### Join rootMass data with rootCore data ####
+  rootCore <- dplyr::filter(.data = rootCore,
+                            .data$samplingImpractical == "OK")
+
+  coreMass <- dplyr::full_join(x = rootCore,
+                               y = rootMass,
+                               by = c("domainID", "siteID", "plotID", "collectDate", "sampleID")) %>%
+    dplyr::rename(coreRemarks = "remarks")
+
+  #   Remove rows from cores for which no sorting was completed and arrange
+  coreMass <- coreMass %>%
+    dplyr::filter(!is.na(.data$sizeCategory)) %>%
+    dplyr::arrange(.data$domainID,
+                   .data$siteID,
+                   .data$eventID,
+                   .data$plotID,
+                   .data$sampleID,
+                   .data$sizeCategory)
+
+
+
+  ### Calculate dilution sampling fragment mass, if applicable ####
+  if (is.data.frame(rootDilution)) {
+
+    rootDilution <- rootDilution %>%
+      dplyr::filter(!is.na(.data$dryMass)) %>%
+      dplyr::mutate(fragMass = round(.data$dryMass * (.data$sampleVolume / .data$dilutionSubsampleVolume),
+                                     digits = 4),
+                    .before = "dryMass") %>%
+      dplyr::filter(.data$fragMass >= 0) %>%
+      dplyr::group_by(.data$domainID,
+                      .data$siteID,
+                      .data$plotID,
+                      .data$collectDate,
+                      .data$sampleID) %>%
+      dplyr::summarise(dryMass = round(mean(.data$fragMass, na.rm = TRUE), digits = 4),
+                       .groups = "drop") %>%
+      dplyr::mutate(sizeCategory = "frag",
+                    .after = "sampleID")
+
+    #   Join rootDilution data with rootCore data
+    coreDilMass <- dplyr::right_join(x = rootCore,
+                                     y = rootDilution,
+                                     by = c("domainID", "siteID", "plotID", "collectDate", "sampleID")) %>%
+      dplyr::rename(coreRemarks = "remarks")
+
+    #   Bind standard mass rows with dilution mass rows
+    coreMass <- dplyr::bind_rows(coreMass,
+                                 coreDilMass) %>%
+      dplyr::arrange(.data$domainID,
+                     .data$siteID,
+                     .data$eventID,
+                     .data$plotID,
+                     .data$sampleID,
+                     .data$sizeCategory)
+
+  } # end dilution conditional
+
+
+
+  ### Calculate total fine root biomass by sampleID ####
+
+  #   Pivot sizeCategory masses wider and sum
+  coreMass <- tidyr::pivot_wider(data = coreMass,
+                                 names_from = "sizeCategory",
+                                 values_from = "dryMass",
+                                 names_prefix = "dryMass")
+
+  #   Rename dryMass columns to remove hyphens (hyphens require special handling in column names)
+  coreMass <- dplyr::rename(.data = coreMass,
+                            dryMass1 = "dryMass0-1",
+                            dryMass2 = "dryMass1-2",
+                            dryMass10 = "dryMass2-10")
+
+  #   Re-join collapsed strings for mycorrhizaeVisible and massRemarks columns
+  coreMass <- dplyr::left_join(x = coreMass,
+                               y = stringMassCols,
+                               by = "sampleID")
+
+  coreMass <- dplyr::relocate(.data = coreMass,
+                              "mycorrhizaeVisible",
+                              "massRemarks",
+                              .after = "release")
+
+  #   Conditionally rename fragment column if exists
+  if (is.data.frame(rootDilution)) {
+
+    coreMass <- dplyr::rename(.data = coreMass,
+                              dryMassFrag = "dryMassfrag")
+
+  }
+
+
+
+  ### Conditionally calculate 'totalDryMass' dependent on 'includeFragInTotal' argument
+  ##  Default: 'totalDryMass' does not include fragment mass
+  if (isFALSE(includeFragInTotal)) {
+
+    coreMass <- dplyr::rowwise(data = coreMass) %>%
+      dplyr::mutate(totalDryMass = sum(.data$dryMass1, .data$dryMass2, .data$dryMass10,
+                                       na.rm = TRUE)) %>%
+      dplyr::ungroup()
+
+  } # end fragment FALSE conditional
+
+
+  ##  Optional: Include fragment mass in totalDryMass
+  if (isTRUE(includeFragInTotal)) {
+
+    #   Check that inputDilution data frame is provided
+    if (!is.data.frame(rootDilution)) {
+      stop("A valid 'inputDilution' data frame must be provided when 'includeFragInTotal' is TRUE.")
+    }
+
+    #   Sum totalDryMass WITH fragment mass
+    coreMass <- dplyr::rowwise(data = coreMass) %>%
+      dplyr::mutate(totalDryMass = sum(.data$dryMass1, .data$dryMass2, .data$dryMass10, .data$dryMassFrag,
+                                       na.rm = TRUE)) %>%
+      dplyr::ungroup()
+
+  } # end fragment TRUE conditional
+
+
+
+  ### Core scale: Calculate core-level dryMass ("g/m2", "g/cm3", and "Mg/ha") ####
+  coreMass <- dplyr::rowwise(data = coreMass) %>%
+    dplyr::mutate(dryMass1_gm2 = round(.data$dryMass1 / .data$rootSampleArea,
+                                       digits = 1),
+                  dryMass2_gm2 = round(.data$dryMass2 / .data$rootSampleArea,
+                                       digits = 1),
+                  dryMass10_gm2 = round(.data$dryMass10 / .data$rootSampleArea,
+                                        digits = 1),
+                  totalMass_gm2 = round(.data$totalDryMass / .data$rootSampleArea,
+                                        digits = 1)) %>%
+
+    dplyr::mutate(dryMass1_gm3 = round(.data$dryMass1 / (.data$rootSampleArea * (.data$rootSampleDepth/100)),
+                                       digits = 1),
+                  dryMass2_gm3 = round(.data$dryMass2 / (.data$rootSampleArea * (.data$rootSampleDepth/100)),
+                                       digits = 1),
+                  dryMass10_gm3 = round(.data$dryMass10 / (.data$rootSampleArea * (.data$rootSampleDepth/100)),
+                                        digits = 1),
+                  totalMass_gm3 = round(.data$totalDryMass / (.data$rootSampleArea * (.data$rootSampleDepth/100)),
+                                        digits = 1)) %>%
+
+    dplyr::mutate(totalMass_Mgha = round(.data$totalMass_gm2 / 100,
+                                         digits = 4)) %>%
+    dplyr::relocate("totalMass_gm2",
+                    .before = "totalMass_gm3") %>%
+    dplyr::ungroup()
+
+
+
+  ### Plot scale: Calculate plot-level dryMass ("g/m2", "g/m3", and "Mg/ha") ####
+  plotMass <- coreMass %>%
+    dplyr::group_by(.data$domainID,
+                    .data$siteID,
+                    .data$plotID,
+                    .data$eventID) %>%
+    dplyr::summarise(startDate = min(.data$collectDate),
+                     endDate = max(.data$collectDate),
+                     dryMass1_gm2 = round(mean(.data$dryMass1_gm2, na.rm = TRUE),
+                                          digits = 1),
+                     dryMass2_gm2 = round(mean(.data$dryMass2_gm2, na.rm = TRUE),
+                                          digits = 1),
+                     dryMass10_gm2 = round(mean(.data$dryMass10_gm2, na.rm = TRUE),
+                                           digits = 1),
+                     dryMass1_gm3 = round(mean(.data$dryMass1_gm3, na.rm = TRUE),
+                                          digits = 1),
+                     dryMass2_gm3 = round(mean(.data$dryMass2_gm3, na.rm = TRUE),
+                                          digits = 1),
+                     dryMass10_gm3 = round(mean(.data$dryMass10_gm3, na.rm = TRUE),
+                                           digits = 1),
+                     totalMass_gm2 = round(mean(.data$totalMass_gm2, na.rm = TRUE),
+                                           digits = 1),
+                     totalMass_gm3 = round(mean(.data$totalMass_gm3, na.rm = TRUE),
+                                           digits = 1),
+                     totalMass_Mgha = round(mean(.data$totalMass_Mgha, na.rm = TRUE),
+                                            digits = 4),
+                     coreNum = dplyr::n(),
+                     .groups = "drop")
+
+
+
+  ### Site scale: Calculate site-level total dryMass ("g/m2", "g/m3", "Mg/ha") ####
+  siteMass <- plotMass %>%
+    dplyr::group_by(.data$domainID,
+                    .data$siteID,
+                    .data$eventID) %>%
+    dplyr::summarise(startDate = min(.data$startDate),
+                     endDate = max(.data$endDate),
+                     rootMassMean_gm2 = round(mean(.data$totalMass_gm2, na.rm = TRUE),
+                                              digits = 1),
+                     rootMassSD_gm2 = round(stats::sd(.data$totalMass_gm2, na.rm = TRUE),
+                                            digits = 0),
+                     rootMassMean_gm3 = round(mean(.data$totalMass_gm3, na.rm = TRUE),
+                                              digits = 1),
+                     rootMassSD_gm3 = round(stats::sd(.data$totalMass_gm3, na.rm = TRUE),
+                                            digits = 0),
+                     rootMassMean_Mgha = round(mean(.data$totalMass_Mgha, na.rm = TRUE),
+                                               digits = 2),
+                     rootMassSD_Mgha = round(stats::sd(.data$totalMass_Mgha, na.rm = TRUE),
+                                             digits = 2),
+                     rootPlotNum = dplyr::n(),
+                     .groups = "drop") %>%
+
+    #   Create 'year' column for use with biomass umbrella function
+    dplyr::mutate(year = as.integer(stringr::str_extract(string = .data$eventID,
+                                                         pattern = "20[0-9]{2}$")),
+                  .before = "eventID")
+
+
+
+  ### Variables: Process function-specific variables for output ####
+  data("variables", envir = environment())
+
+  variables <- variables %>%
+    dplyr::filter(.data$functionName == "scaleRootMass")
+
+
+
+  ### Return output ####
+  output <- list(bbc_BGB_core = coreMass,
+                 bbc_BGB_plot = plotMass,
+                 bbc_BGB_site = siteMass,
+                 variables = variables)
+
+  return(output)
+
+} # end function

@@ -1,0 +1,339 @@
+### Function tests for estimateWoodMass ####
+#   Courtney L Meier; cmeier@BattelleEcology.org
+
+
+
+### Read in test data ####
+vstTestDF <- readRDS(testthat::test_path("testdata", "vst_testDat.rds"))
+
+
+
+### Generate estimateWoodMass outputs with argument defaults ####
+woodMassOutputs <- neonPlants::estimateWoodMass(inputDataList = vstTestDF)
+
+
+
+
+
+### Output type tests ####
+
+### Test: Function generates expected output type
+testthat::test_that(desc = "Output type", {
+  testthat::expect_type(object = woodMassOutputs,
+                        type = "list")
+})
+
+
+
+### Tests: Function generates expected output class for all output list objects
+#   Check all output tables are data frames
+testthat::test_that(desc = "Output class list objects", {
+
+  testthat::expect_s3_class(object = woodMassOutputs$vst_AGB_indiv,
+                            class = "data.frame")
+
+  testthat::expect_s3_class(object = woodMassOutputs$vst_lost_downed,
+                            class = "data.frame")
+
+  testthat::expect_s3_class(object = woodMassOutputs$vst_AGB_plot,
+                            class = "data.frame")
+
+  testthat::expect_s3_class(object = woodMassOutputs$vst_AGB_site,
+                            class = "data.frame")
+})
+
+
+
+
+
+
+### Output dimension tests ####
+
+### Test: Function generates data frames with expected dimensions using test data and function defaults
+#--> Defaults: plotSubset = "all", growthFormSubset = "all"
+
+#   Check expected column and row numbers of 'vst_agb_kg' data frame
+testthat::test_that(desc = "Output data frame column and row numbers 'vst_agb_kg'", {
+
+  testthat::expect_identical(object = ncol(woodMassOutputs$vst_AGB_indiv),
+                             expected = as.integer(30))
+
+  testthat::expect_identical(object = nrow(woodMassOutputs$vst_AGB_indiv),
+                             expected = as.integer(44405))
+})
+
+#   Check expected column number of 'vst_lost_downed' data frame
+testthat::test_that(desc = "Output data frame column number 'vst_lost_downed'", {
+
+  testthat::expect_identical(object = ncol(woodMassOutputs$vst_lost_downed),
+                             expected = as.integer(48))
+
+  testthat::expect_identical(object = nrow(woodMassOutputs$vst_lost_downed),
+                             expected = as.integer(6438))
+})
+
+#   Check expected column number of 'vst_plot_Mgha' data frame
+testthat::test_that(desc = "Output data frame column number 'vst_plot_Mgha'", {
+
+  testthat::expect_identical(object = ncol(woodMassOutputs$vst_AGB_plot),
+                             expected = as.integer(12))
+
+  testthat::expect_identical(object = nrow(woodMassOutputs$vst_AGB_plot),
+                             expected = as.integer(454))
+})
+
+#   Check expected column number of 'vst_site_Mgha' data frame
+testthat::test_that(desc = "Output data frame column number 'vst_site_Mgha'", {
+
+  testthat::expect_identical(object = ncol(woodMassOutputs$vst_AGB_site),
+                             expected = as.integer(12))
+
+  testthat::expect_identical(object = nrow(woodMassOutputs$vst_AGB_site),
+                             expected = as.integer(32))
+})
+
+
+
+
+
+
+### Error handling tests ####
+
+### Tests: Generate expected errors for 'inputDataList'
+#   Test 'inputDataList' is a list
+testthat::test_that(desc = "Argument 'inputDataList' is list object", {
+  testthat::expect_error(object = neonPlants::estimateWoodMass(inputDataList = vstTestDF$vst_apparentindividual),
+                         regexp = "Argument 'inputDataList' must be a list object from neonUtilities::loadByProduct()")
+})
+
+#   Test 'inputDataList' contains required tables (expect at least 3: appInd, mapandtag, and perplot)
+testthat::test_that(desc = "Required tables present in 'inputDataList' input", {
+  testthat::expect_error(object = neonPlants::estimateWoodMass(inputDataList = vstTestDF[1:2]),
+                         regexp = "Required tables missing from 'inputDataList'")
+})
+
+
+
+### Test: Generate expected errors for issues with vst_apparentindividual table
+#   Test when vst_apparentindividual lacks required column
+testthat::test_that(desc = "Table 'vst_apparentindividual' missing column", {
+
+  temp <- vstTestDF
+  temp$vst_apparentindividual <- temp$vst_apparentindividual %>%
+    dplyr::select(-"stemDiameter")
+
+  testthat::expect_error(object = neonPlants::estimateWoodMass(inputDataList = temp),
+                         regexp = "Required columns missing from 'vst_apparentindividual': stemDiameter")
+})
+
+#   Test when vst_apparentindividual has no data
+testthat::test_that(desc = "Table 'vst_apparentindividual' missing data", {
+
+  temp <- vstTestDF
+  temp$vst_apparentindividual <- temp$vst_apparentindividual %>%
+    dplyr::filter(siteID == "bupkis")
+
+  testthat::expect_error(object = neonPlants::estimateWoodMass(inputDataList = temp),
+                         regexp = "Table 'vst_apparentindividual' has no data.")
+})
+
+
+
+### Test: Generate expected errors for issues with vst_mappingandtagging table
+# Test when vst_mappingandtagging lacks required column
+testthat::test_that(desc = "Table 'vst_mappingandtagging' missing column", {
+
+  temp <- vstTestDF
+  temp$vst_mappingandtagging <- temp$vst_mappingandtagging %>%
+    dplyr::select(-"taxonID")
+
+  testthat::expect_error(object = neonPlants::estimateWoodMass(inputDataList = temp),
+                         regexp = "Required columns missing from 'vst_mappingandtagging': taxonID")
+})
+
+#   Test when vst_mappingandtagging has no data
+testthat::test_that(desc = "Table 'vst_mappingandtagging' missing data", {
+
+  temp <- vstTestDF
+  temp$vst_mappingandtagging <- temp$vst_mappingandtagging %>%
+    dplyr::filter(siteID == "schmendrik")
+
+  testthat::expect_error(object = neonPlants::estimateWoodMass(inputDataList = temp),
+                         regexp = "Table 'vst_mappingandtagging' has no data.")
+})
+
+
+
+### Test: Generate expected errors for issues with vst_perplotperyear table
+#   Test when vst_perplotperyear lacks required column
+testthat::test_that(desc = "Table 'vst_perplotperyear' missing column", {
+
+  temp <- vstTestDF
+  temp$vst_perplotperyear <- temp$vst_perplotperyear %>%
+    dplyr::select(-"totalSampledAreaTrees")
+
+  testthat::expect_error(object = neonPlants::estimateWoodMass(inputDataList = temp),
+                         regexp = "Required columns missing from 'vst_perplotperyear': totalSampledAreaTrees")
+})
+
+#   Test when vst_perplotperyear has no data
+testthat::test_that(desc = "Table 'vst_perplotperyear' missing data", {
+
+  temp <- vstTestDF
+  temp$vst_perplotperyear <- temp$vst_perplotperyear %>%
+    dplyr::filter(siteID == "shlemiel")
+
+  testthat::expect_error(object = neonPlants::estimateWoodMass(inputDataList = temp),
+                         regexp = "Table 'vst_perplotperyear' has no data.")
+})
+
+
+
+### Test: Generate expected errors for issues with input arguments
+#   Test when unexpected value for 'plotSubset' is provided
+testthat::test_that(desc = "Unexpected 'plotSubset' argument", {
+  testthat::expect_error(object = neonPlants::estimateWoodMass(inputDataList = vstTestDF,
+                                                               plotSubset = "poltroon"),
+                         regexp = "The plotSubset argument must be one of: 'all', 'towerAll', 'towerAnnualSubset', 'distributed'")
+})
+
+#   Test when unexpected value for 'growthFormSubset' is provided
+testthat::test_that(desc = "Unexpected 'growthFormSubset' argument", {
+  testthat::expect_error(object = neonPlants::estimateWoodMass(inputDataList = vstTestDF,
+                                                               growthFormSubset = "putz"),
+                         regexp = "The growthFormSubset argument must be one of: 'all', 'tree'")
+})
+
+
+
+
+
+
+### Output value tests ####
+
+### Test: Generate error if output 'vst_agb_kg' value not as expected
+testthat::test_that(desc = "Output 'vst_AGB_indiv' value as expected", {
+  testthat::expect_equal(object = woodMassOutputs$vst_AGB_indiv$agb_kg[1],
+                         expected = 0.12)
+})
+
+
+
+### Test: Generate error if output 'vst_lost_downed' value not as expected
+testthat::test_that(desc = "Output 'vst_lost_downed' value as expected", {
+  testthat::expect_equal(object = woodMassOutputs$vst_lost_downed$individualID[175],
+                         expected = "NEON.PLA.D02.BLAN.12303")
+})
+
+
+
+### Test: Generate error if output 'vst_plot_Mgha' value not as expected
+testthat::test_that(desc = "Output 'vst_AGB_plot' value as expected", {
+  testthat::expect_equal(object = woodMassOutputs$vst_AGB_plot$agb_Mgha[12],
+                         expected = 80.97)
+})
+
+
+
+### Test: Generate error if output 'vst_AGB_site' value not as expected
+testthat::test_that(desc = "Output 'vst_AGB_site' value as expected", {
+  testthat::expect_equal(object = woodMassOutputs$vst_AGB_site$woodMassMean_Mgha[18],
+                         expected = 265.4)
+})
+
+
+
+### Test: Verify site-years in input data exist in 'vst_AGB_site' output
+testthat::test_that(desc = "Output 'vst_AGB_site' sites as expected", {
+
+  #   Prep input site-year list
+  inputSiteYear <- vstTestDF$vst_perplotperyear %>%
+    dplyr::filter(samplingImpractical == "OK" | is.na(samplingImpractical),
+                  !dataCollected %in% c("dendrometerOnly", "nonWoodyOnly", "treesOnly")) %>%
+    dplyr::distinct(siteID,
+                    eventID) %>%
+    dplyr::mutate(site_year = paste(siteID,
+                                     stringr::str_extract(eventID, "[0-9]{4}$"),
+                                     sep = "-")) %>%
+    dplyr::arrange(site_year)
+
+  inputSiteYear <- inputSiteYear$site_year
+
+  #   Prep output site-year list
+  outputSiteYear <- woodMassOutputs$vst_AGB_site %>%
+    dplyr::mutate(site_year = paste(siteID, year, sep = "-")) %>%
+    dplyr::arrange(site_year)
+
+  outputSiteYear <- outputSiteYear$site_year
+
+  #   Check identical
+  testthat::expect_identical(object = outputSiteYear,
+                             expected = inputSiteYear)
+})
+
+
+
+### Test: Verify unique plot-events in input data exist in 'vst_AGB_plot' output
+testthat::test_that(desc = "Output 'plot-events' match input 'plot-events'", {
+
+  ##  Derive expected 'plot-events' from input data set
+  #   Identify partially sampled plots when growthFormSubset = "all": These should not be in 'vst_AGB_plot' output table
+  plotEventPartial <- vstTestDF$vst_perplotperyear %>%
+    dplyr::filter(dataCollected %in% c("dendrometerOnly", "nonWoodyOnly", "treesOnly")) %>%
+    dplyr::mutate(plotEvent = paste(plotID, eventID, sep = "-")) %>%
+    dplyr::distinct(plotEvent)
+
+  #   Identify fully sampled plots in input AI data
+  inputPlotEvent <- vstTestDF$vst_apparentindividual %>%
+    dplyr::mutate(plotEvent = paste(plotID, eventID, sep = "-")) %>%
+    dplyr::filter(!plotEvent %in% plotEventPartial$plotEvent) %>%
+    dplyr::distinct(plotEvent)
+
+  inputPlotEvent <- inputPlotEvent$plotEvent
+
+  #   Identify fully sampled plots in input NW data
+  nwPlotEvent <- vstTestDF$`vst_non-woody` %>%
+    dplyr::mutate(plotEvent = paste(plotID, eventID, sep = "-")) %>%
+    dplyr::filter(!plotEvent %in% plotEventPartial$plotEvent) %>%
+    dplyr::distinct(plotEvent)
+
+  nwPlotEvent <- nwPlotEvent$plotEvent
+
+  #   Identify plot-events with zero biomass (no AI or NW records)
+  zeroPlotEvent <- vstTestDF$vst_perplotperyear %>%
+    dplyr::mutate(plotEvent = paste(plotID, eventID, sep = "-")) %>%
+    dplyr::filter(targetTaxaPresent == "N",
+                  !plotEvent %in% plotEventPartial$plotEvent) %>%
+    dplyr::distinct(plotEvent)
+
+  zeroPlotEvent <- zeroPlotEvent$plotEvent
+
+  #   Consolidate relevant input plot-events
+  inputPlotEvent <- sort(unique(c(inputPlotEvent, nwPlotEvent, zeroPlotEvent)))
+
+
+  ##  Derive expected 'plot-events' from output data set
+  #   Get 'plot-events' from plot-level output table
+  outputPlotEvent <- woodMassOutputs$vst_AGB_plot %>%
+    dplyr::mutate(plotEvent = paste(plotID, eventID, sep = "-")) %>%
+    dplyr::filter(!plotEvent %in% plotEventPartial$plotEvent) %>%
+    dplyr::distinct(plotEvent)
+
+  outputPlotEvent <- outputPlotEvent$plotEvent
+
+  #   Get 'plot-events' from 'missing' output table
+  missingPlotEvent <- woodMassOutputs$vst_lost_downed %>%
+    dplyr::mutate(plotEvent = paste(plotID, eventID, sep = "-")) %>%
+    dplyr::filter(!plotEvent %in% plotEventPartial$plotEvent) %>%
+    dplyr::distinct(plotEvent)
+
+  missingPlotEvent <- missingPlotEvent$plotEvent
+
+  #   Consolidate relevant output plot-events
+  outputPlotEvent <- sort(unique(c(outputPlotEvent, missingPlotEvent)))
+
+
+  ##  Conduct identical plot-event test
+  testthat::expect_identical(object = outputPlotEvent,
+                             expected = inputPlotEvent)
+})
