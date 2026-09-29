@@ -27,19 +27,19 @@
 #' @examples
 #' \dontrun{
 #' # Obtain NEON Herbaceous clip harvest data; note that a token is required and may be obtained after creating a NEON user account
-#' hbpDF <- neonUtilities::loadByProduct(
+#' hbp <- neonUtilities::loadByProduct(
 #' dpID = "DP1.10023.001",
-#' site = c("HARV", "CPER")
+#' site = c("HARV", "CPER"),
 #' package = "basic",
 #' check.size = FALSE,
 #' token = "my_NEON_token"
 #' )
 #'
 #' # Example with arguments at default values
-#' df <-estimateHerbProd(inputDataList = hbpDF)
+#' df <-estimateHerbProd(inputDataList = hbp)
 #'
 #' # Example specifying an alternative plotSubset value
-#' df <-estimateHerbProd(inputDataList = hbpDF,
+#' df <-estimateHerbProd(inputDataList = hbp,
 #' plotSubset = "tower")
 #'
 #' }

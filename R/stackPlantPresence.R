@@ -48,11 +48,6 @@
 #' data_stacked_10 <- div %>%
 #'   neonPlants::stackPlantPresence(totalSampledAreaFilter = 10)
 #'
-#' #   Filter to 10m plots outside of the stackPlantPresence function
-#' data_stacked_10 <- div %>%
-#'   neonPlants::stackPlantPresence() %>%
-#'   dplyr::filter(totalSampledArea == 10)
-#'
 #' #   Make your own list and stack the data
 #' my_1m_data <- div$div_1m2Data
 #' my_10_100m_data <- div$div_10m2Data100m2Data

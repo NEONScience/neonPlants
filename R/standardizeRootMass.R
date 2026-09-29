@@ -81,7 +81,7 @@ standardizeRootMass <- function(inputDataList,
 
 
   ### Verify inputMass is NA if inputDataList is supplied
-  if (inherits(inputDataList, "list") & !is.logical(inputMass)) {
+  if (inherits(inputDataList, "list") && !(length(inputMass) == 1L && is.logical(inputMass) && is.na(inputMass))) {
     stop("When 'inputDataList' is supplied the 'inputMass' argument must be NA")
   }
 
@@ -110,8 +110,8 @@ standardizeRootMass <- function(inputDataList,
 
   ### Verify 'rootMass' table contains correct data
   #   Check for required columns
-  massExpCols <- c("domainID", "siteID", "plotID", "samplingImpractical", "sampleID", "subsampleID",
-                   "sizeCategory", "rootStatus", "dryMass", "qaDryMass", "remarks")
+  massExpCols <- c("domainID", "siteID", "plotID", "collectDate", "samplingImpractical", "sampleID", "subsampleID",
+                   "sizeCategory", "rootStatus", "mycorrhizaeVisible", "dryMass", "qaDryMass", "remarks")
 
   if (length(setdiff(massExpCols, colnames(rootMass))) > 0) {
     stop(glue::glue("Required columns missing from 'inputMass':", '{paste(setdiff(massExpCols, colnames(rootMass)), collapse = ", ")}',
