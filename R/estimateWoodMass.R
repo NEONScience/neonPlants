@@ -28,6 +28,7 @@
 #'   * vst_AGB_indiv - Above-ground live and dead standing woody biomass reported for each individual ("kg").
 #'   * vst_AGB_plot - Summary of above-ground total, live, and dead standing woody biomass for each plotID x eventID combination ("Mg/ha"). If argument growthFormSubset == "tree", plots with smaller woody biomass but no trees will have zero biomass in this data frame.
 #'   * vst_AGB_site - Summary of above-ground total, live, and dead standing woody biomass for each siteID x year combination in the data ("Mg/ha").
+#'   * vst_AGB_duplicates - Duplicated individualID x tempStemIDs within a given sampling event (i.e., "eventID"). The individualID x tempStemID should be unique for multi-stem individuals within an eventID; duplicates are identified but not removed before above-ground biomass calculations are carried out.
 #'   * vst_lost_downed - Individuals with 'plantStatus' values of "removed", "lost" of some type, "no longer qualifies", and "downed", and also those individuals for which an allometry was missing or for which an above-ground biomass estimate is missing for some other reason.
 #'   * variables - Units and definitions of novel variables created by the function that are not already defined in the Vegetation Structure data product.
 #'
@@ -382,6 +383,25 @@ estimateWoodMass = function(inputDataList,
     dplyr::rename("basalMeasurementHeight" = "basalStemDiameterMsrmntHeight")
 
 
+  ##  Identify duplicates: Dupes cause inflated biomass for multi-stem smaller individuals when grouping to calculate equivalent diameters
+  #   Identify individualID x eventID x tempStemID combos that are duplicated (more prevalent in older data)
+  theDupes <- appInd %>%
+    dplyr::mutate(indivEventID = paste(.data$individualID, .data$tempStemID, .data$eventID, sep = "-")) %>%
+    dplyr::filter(duplicated(.data$indivEventID))
+
+  #   Extract all duplicated individualID x eventID records; 'theDupes' only contains one of each pair
+  dupeDF <- appInd %>%
+    dplyr::mutate(indivEventID = paste(.data$individualID, .data$tempStemID, .data$eventID, sep = "-")) %>%
+    dplyr::filter(.data$indivEventID %in% theDupes$indivEventID) %>%
+    dplyr::arrange(.data$plotID,
+                   .data$eventID,
+                   .data$individualID,
+                   .data$tempStemID) %>%
+    dplyr::select(-"indivEventID")
+
+  rm(theDupes)
+
+
   ##  Merge vst_apparentindividual table with 'map' to obtain taxonID fields
   #   Add taxonID to appInd table
   appInd <- dplyr::left_join(appInd,
@@ -465,7 +485,7 @@ estimateWoodMass = function(inputDataList,
     dplyr::filter(.data$liveDeadStatus %in% c("downedDead", "lost") | is.na(.data$liveDeadStatus) | is.na(.data$growthForm)) %>%
 
     #   Select columns for output and arrange
-    dplyr::select("domainID", "siteID", "plotID", "subplotID", "nlcdClass", "plotType",
+    dplyr::select("domainID", "siteID", "plotID", "nlcdClass", "plotType",
                   "year", "date", "eventID", "eventType", "dataCollected",
                   "individualID", "tempStemID", "taxonID", "scientificName", "genus", "family", "growthForm", "liveDeadStatus",
                   "sampledArea_m2", "stemDiameter", "basalStemDiameter", "height", "maxCrownDiameter", "ninetyCrownDiameter",
@@ -538,7 +558,6 @@ estimateWoodMass = function(inputDataList,
                     .data$individualID,
                     .data$date,
                     .data$plotID,
-                    .data$subplotID,
                     .data$nlcdClass,
                     .data$plotType,
                     .data$eventType,
@@ -655,7 +674,7 @@ estimateWoodMass = function(inputDataList,
       dplyr::filter(.data$liveDeadStatus %in% c("downedDead", "lost") | is.na(.data$liveDeadStatus) | is.na(.data$growthForm)) %>%
 
       #   Select columns for output and arrange
-      dplyr::select("domainID", "siteID", "plotID", "subplotID", "nlcdClass", "plotType",
+      dplyr::select("domainID", "siteID", "plotID", "nlcdClass", "plotType",
                     "year", "date", "eventID", "eventType", "dataCollected",
                     "individualID", "taxonID", "scientificName", "growthForm", "liveDeadStatus",
                     "sampledArea_m2", "stemDiameter", "basalStemDiameter", "height", "maxCrownDiameter", "ninetyCrownDiameter",
@@ -735,7 +754,6 @@ estimateWoodMass = function(inputDataList,
                       .data$individualID,
                       .data$date,
                       .data$plotID,
-                      .data$subplotID,
                       .data$nlcdClass,
                       .data$plotType,
                       .data$eventType,
@@ -992,6 +1010,7 @@ estimateWoodMass = function(inputDataList,
   output <- list(vst_AGB_indiv = agbDF,
                  vst_AGB_plot = agbPlotDF,
                  vst_AGB_site = agbSiteDF,
+                 vst_AGB_duplicates = dupeDF,
                  vst_lost_downed = lostDownedDF,
                  variables = variables)
 

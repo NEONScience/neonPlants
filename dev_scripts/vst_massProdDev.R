@@ -72,6 +72,28 @@ indivSummNoMass <- indiv %>%
 #--> Downed records look plausible
 
 
+##  D04 wood mass output check
+vstD04 <- neonUtilities::loadByProduct(dpID = "DP1.10098.001",
+                                       site = c("GUAN", "LAJA"),
+                                       release = "LATEST",
+                                       check.size = FALSE,
+                                       token = Sys.getenv("NEON_TOKEN"))
+
+massD04 <- neonPlants::estimateWoodMass(inputDataList = vstD04)
+indiv <- massD04$vst_AGB_indiv
+plot <- massD04$vst_AGB_plot
+site <- massD04$vst_AGB_site
+dupes <- massD04$vst_AGB_duplicates
+downed <- massD04$vst_lost_downed
+#--> 793 records with "noAllometry" and almost all are cactus, yucca, small-palm.
+#--> Plot-level records look plausible
+#--> Site-level records look plausible
+#--> Downed records look plausible
+
+
+
+
+
 
 
 ### DEV: Verify input data are RELEASE ≥ 2027

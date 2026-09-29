@@ -186,7 +186,7 @@ estimateAllometricWoodyMass <- function(appIndTable,
                                               TRUE ~ .data$tropical))
 
 
-  ##  Assumption: For tropical species, if specific gravity unknown assume 0.5 g/cm3 forChave et al 2014 allometry, following Asner et al 2011
+  ##  Assumption: For tropical species, if specific gravity unknown assume 0.5 g/cm3 for Chave et al 2014 allometry, following Asner et al 2011
   aiDF$spg_gcm3 <- dplyr::if_else(is.na(aiDF$spg_gcm3) & aiDF$tropical == "tropical",
                                   0.5,
                                   aiDF$spg_gcm3,
@@ -208,15 +208,17 @@ estimateAllometricWoodyMass <- function(appIndTable,
 
   #   Assign height and crown dimensions from primary bole to secondary boles
   heightMBT <- mbt %>%
-    dplyr::group_by(.data$tempIndivID) %>%
+    dplyr::group_by(.data$eventID,
+                    .data$tempIndivID) %>%
     dplyr::summarise(height = ifelse(!all(is.na(.data$height)),
                                      max(.data$height, na.rm = TRUE),
-                                     NA_real_))
+                                     NA_real_),
+                     .groups = "drop")
 
   mbt <- dplyr::left_join(mbt %>%
                             dplyr::select(-"height"),
                           heightMBT,
-                          by = "tempIndivID") %>%
+                          by = c("eventID", "tempIndivID")) %>%
     dplyr::relocate("height",
                     .after = "liveDeadStatus") %>%
     dplyr::select(-"tempIndivID")
@@ -247,7 +249,8 @@ estimateAllometricWoodyMass <- function(appIndTable,
 
     #   Determine max height, crownDiameters per individualID
     heightCrownShrub <- shrub %>%
-      dplyr::group_by(.data$individualID) %>%
+      dplyr::group_by(.data$eventID,
+                      .data$individualID) %>%
       dplyr::summarise(height = ifelse(!all(is.na(.data$height)),
                                        max(.data$height, na.rm = TRUE),
                                        NA_real_),
@@ -256,22 +259,21 @@ estimateAllometricWoodyMass <- function(appIndTable,
                                                  NA_real_),
                        ninetyCrownDiameter = ifelse(!all(is.na(.data$ninetyCrownDiameter)),
                                                     max(.data$ninetyCrownDiameter, na.rm = TRUE),
-                                                    NA_real_))
+                                                    NA_real_),
+                       .groups = "drop")
 
-    #   Group multiple stems belonging to same individualID x liveDeadStatus combination, and calculate equivalent stemDiameter and basalStemDiameter.
+    #   Group multiple stems belonging to same eventID x individualID x liveDeadStatus combination, and calculate equivalent stemDiameter and basalStemDiameter.
     shrub <- shrub %>%
       dplyr::group_by(.data$domainID,
                       .data$siteID,
                       .data$plotID,
-                      .data$subplotID,
+                      .data$eventID,
                       .data$taxonID,
                       .data$family,
                       .data$genus,
                       .data$scientificName,
                       .data$individualID,
                       .data$liveDeadStatus,
-                      .data$eventID,
-                      .data$date,
                       .data$growthForm,
                       .data$spg_gcm3,
                       .data$nativeStatus,
@@ -297,7 +299,7 @@ estimateAllometricWoodyMass <- function(appIndTable,
     #  Join with 'heightCrownShrub' to assign crown dimensions based on individualID
     shrub <- dplyr::left_join(shrub,
                               heightCrownShrub,
-                              by = "individualID")
+                              by = c("eventID", "individualID"))
 
     #   Re-assemble single data frame with updated 'shrub' data
     aiDF <- dplyr::bind_rows(nonShrub,

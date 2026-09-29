@@ -196,6 +196,7 @@ estimateWoodProd <- function(inputDataList,
   rm(treeDupes)
 
 
+
   ### Generate wood mass estimates
   woodMassOutput <- neonPlants::estimateWoodMass(
     inputIndividual = appInd,
