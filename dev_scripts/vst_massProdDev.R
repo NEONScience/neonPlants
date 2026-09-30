@@ -85,10 +85,55 @@ plot <- massD04$vst_AGB_plot
 site <- massD04$vst_AGB_site
 dupes <- massD04$vst_AGB_duplicates
 downed <- massD04$vst_lost_downed
+#--> Indiv: Multiple records per individualID x eventID for shrubs --> fixed by adding "eventID" to group_by() in estimateAllometricWoodMass
+#--> New duplicates table output: Noticed dupes, especially for shrub stems, that will inflate biomass estimate. Need mechanism for reporting dupes.
 #--> 793 records with "noAllometry" and almost all are cactus, yucca, small-palm.
 #--> Plot-level records look plausible
 #--> Site-level records look plausible
 #--> Downed records look plausible
+
+
+
+##  D05 wood mass output check
+vstD05 <- neonUtilities::loadByProduct(dpID = "DP1.10098.001",
+                                       site = c("STEI", "TREE", "UNDE"),
+                                       release = "LATEST",
+                                       check.size = FALSE,
+                                       token = Sys.getenv("NEON_TOKEN"))
+
+massD05 <- neonPlants::estimateWoodMass(inputDataList = vstD05)
+indiv <- massD05$vst_AGB_indiv
+plot <- massD05$vst_AGB_plot
+site <- massD05$vst_AGB_site
+dupes <- massD05$vst_AGB_duplicates
+downed <- massD05$vst_lost_downed
+#--> Indiv: 12,553 records with "noAllometry"; 12,506 are ferns; output in this table looks plausible
+#--> Dupes: Output appears accurate
+#--> Plot-level records look plausible
+#--> Site-level records look plausible
+
+
+##  D06 wood mass output check
+vstD06 <- neonUtilities::loadByProduct(dpID = "DP1.10098.001",
+                                       site = c("KONZ", "UKFS"),
+                                       release = "LATEST",
+                                       check.size = FALSE,
+                                       token = Sys.getenv("NEON_TOKEN"))
+
+massD06 <- neonPlants::estimateWoodMass(inputDataList = vstD06)
+indiv <- massD06$vst_AGB_indiv
+plot <- massD06$vst_AGB_plot
+site <- massD06$vst_AGB_site
+dupes <- massD06$vst_AGB_duplicates
+downed <- massD06$vst_lost_downed
+#--> Indiv: 949 records with "noAllometry"; 456 are Maclura pomifera (Osage Orange), 267 are Morus rubra (Red Mulberry). Output looks plausible but some problems in the data, e.g. for NEON.PLA.D06.KONZ.01250, NEON.PLA.D06.KONZ.01252
+#--> Dupes: Looks reasonable
+#--> Plot-level: KONZ_046 has implausibly high biomass in 2016 --> driven by NEON.PLA.D06.KONZ.01138 sapling with reported basalStemDiameter = 20 cm, height 1.6 m; had basalStemDiametet = 1.6 cm and height 0.7 m in 2015, reported "dead" both years.
+#--> Site-level: Big jump in biomass from 2021 to 2022 at KONZ, odd. Seems driven by KONZ_061; data issues in 'indiv' table (see above), but output logical given data issues.
+
+
+##  D07 wood mass output check
+
 
 
 
