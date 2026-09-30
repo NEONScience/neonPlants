@@ -133,6 +133,20 @@ downed <- massD06$vst_lost_downed
 
 
 ##  D07 wood mass output check
+vstD07 <- neonUtilities::loadByProduct(dpID = "DP1.10098.001",
+                                       site = c("GRSM", "MLBS", "ORNL"),
+                                       release = "LATEST",
+                                       check.size = FALSE,
+                                       token = Sys.getenv("NEON_TOKEN"))
+
+massD07 <- neonPlants::estimateWoodMass(inputDataList = vstD07)
+indiv <- massD07$vst_AGB_indiv
+plot <- massD07$vst_AGB_plot
+site <- massD07$vst_AGB_site
+dupes <- massD07$vst_AGB_duplicates
+downed <- massD07$vst_lost_downed
+#--> Indiv: --> pick up again here.
+#--> Dupes: Looks reasonable
 
 
 
