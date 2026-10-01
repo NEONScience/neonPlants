@@ -275,7 +275,9 @@ calculateTransitions <- function(biomassTable,
 
 
 
-  ### APPROXIMATE MISSING MASS VALUES ####
+  ### APPROXIMATE MISSING MASS AND STEMDIAMETER VALUES ####
+  
+  ### Interpolate missing mass values
   #--> Calculated 'growthInterval' data will be based off both inferred and allometrically estimated mass values
   transFilterDF <- transFilterDF %>%
     dplyr::group_by(.data$individualID) %>%
@@ -302,7 +304,7 @@ calculateTransitions <- function(biomassTable,
       },
     .after = "agb_kg")
 
-  #   Conditionally populate 'agb_kg' with missing mass values; create 'massFlag' to record when an estimated mass is used
+  #   Conditionally populate missing 'agb_kg' values with interpolated mass values; create 'massFlag' to record when an estimated mass is used
   transFilterDF <- transFilterDF %>%
     dplyr::mutate(
       massFlag = dplyr::case_when(
@@ -317,6 +319,44 @@ calculateTransitions <- function(biomassTable,
     dplyr::relocate("massFlag",
                     .after = "agb_kg") %>%
     dplyr::select(-"estimatedMass")
+  
+  
+  
+  ### Interpolate missing stemDiameter values
+  transFilterDF <- transFilterDF %>%
+    dplyr::group_by(.data$individualID) %>%
+    dplyr::arrange(.data$year,
+                   .by_group = TRUE) %>%
+    dplyr::mutate(
+      estimatedDiam = {
+        x <- .data$year
+        y <- .data$stemDiameter
+        ok <- !is.na(y)
+        
+        if (sum(ok) < 2) {
+          #   Return NA if not enough points to interpolate
+          rep(NA_real_, length(y))
+          
+        } else {
+          #   Rule 1 does not extrapolate to NAs outside the data
+          round(stats::approx(x = x[ok],
+                              y = y[ok],
+                              xout = x,
+                              rule = 1)$y,
+                digits = 1)
+        }
+      },
+      .after = "stemDiameter")
+  
+  #   Conditionally populate 'stemDiameter' with interpolated values
+  transFilterDF <- transFilterDF %>%
+    dplyr::mutate(
+      stemDiameter = dplyr::replace_when(
+        .data$stemDiameter,
+        is.na(.data$stemDiameter) & !is.na(.data$estimatedDiam) ~ .data$estimatedDiam
+      )
+    ) %>%
+    dplyr::select(-"estimatedDiam")
 
 
 
