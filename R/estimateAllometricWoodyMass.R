@@ -286,7 +286,9 @@ estimateAllometricWoodyMass <- function(appIndTable,
                       .data$maxDiameter) %>%
 
       #   Calculate equivalent stemDiameters and mean measurementHeight values
-      dplyr::summarise(stemDiameter = ifelse(!all(is.na(.data$stemDiameter)),
+      dplyr::summarise(date = dplyr::case_when(dplyr::n_distinct(.data$date) == 1 ~ dplyr::first(.data$date),
+                                               TRUE ~ NA),
+                       stemDiameter = ifelse(!all(is.na(.data$stemDiameter)),
                                              round(sqrt(sum(.data$stemDiameter^2, na.rm = TRUE)),
                                                    digits = 1),
                                              NA_real_),

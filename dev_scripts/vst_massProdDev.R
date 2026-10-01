@@ -20,7 +20,7 @@ indiv <- massD01$vst_AGB_indiv
 plot <- massD01$vst_AGB_plot
 site <- massD01$vst_AGB_site
 downed <- massD01$vst_lost_downed
-
+dupes <- massD01$vst_AGB_duplicates
 #--> All table outputs look reasonable at a glance
 
 
@@ -36,8 +36,9 @@ indiv <- massD02$vst_AGB_indiv
 plot <- massD02$vst_AGB_plot
 site <- massD02$vst_AGB_site
 downed <- massD02$vst_lost_downed
+dupes <- massD02$vst_AGB_duplicates
 
-indivSummNoMass <- indiv %>%
+indivSummary <- indiv %>%
   dplyr::filter(source == "noAllometry") %>%
   dplyr::group_by(taxonID) %>%
   dplyr::summarise(count = n())
@@ -60,6 +61,7 @@ indiv <- massD03$vst_AGB_indiv
 plot <- massD03$vst_AGB_plot
 site <- massD03$vst_AGB_site
 downed <- massD03$vst_lost_downed
+dupes <- massD03$vst_AGB_duplicates
 
 indivSummNoMass <- indiv %>%
   dplyr::filter(source == "noAllometry") %>%
@@ -145,9 +147,113 @@ plot <- massD07$vst_AGB_plot
 site <- massD07$vst_AGB_site
 dupes <- massD07$vst_AGB_duplicates
 downed <- massD07$vst_lost_downed
-#--> Indiv: --> pick up again here.
-#--> Dupes: Looks reasonable
 
+indivSummary <- indiv %>%
+  dplyr::filter(source == "noAllometry") %>%
+  dplyr::group_by(taxonID) %>%
+  dplyr::summarise(count = n())
+
+#--> Indiv: --> 5894 records with "noAllometry"; 2027 are THNO (fern), 1978 are OSCI (fern); in total 4740 are ferns
+#--> Dupes: Looks reasonable
+#--> Downed: Looks reasonable
+#--> Plot-level: Some plots show significant drops in biomass - GRSM_051, GRSM_062, beginning in 2019 (fire?); very high biomass for GRSM_011 and GRSM_012 --> looks legit, very big trees. 
+#--> Site-level: Plausible output
+
+
+##  D08 wood mass output check
+vstD08 <- neonUtilities::loadByProduct(dpID = "DP1.10098.001",
+                                       site = c("DELA", "LENO", "TALL"),
+                                       release = "LATEST",
+                                       check.size = FALSE,
+                                       token = Sys.getenv("NEON_TOKEN"))
+
+massD08 <- neonPlants::estimateWoodMass(inputDataList = vstD08)
+indiv <- massD08$vst_AGB_indiv
+plot <- massD08$vst_AGB_plot
+site <- massD08$vst_AGB_site
+dupes <- massD08$vst_AGB_duplicates
+downed <- massD08$vst_lost_downed
+
+indivSummary <- indiv %>%
+  dplyr::filter(source == "noAllometry") %>%
+  dplyr::group_by(taxonID) %>%
+  dplyr::summarise(count = n())
+
+#--> Indiv: 2332 records with "noAllometry"; 470 are Halesia diptera (Two-wing snowdrop tree), 406 are Triadica sebifera (Chinese Tallow), no ferns
+#--> Dupes: 199 records, output appears accurate
+#--> Downed: Looks reasonable
+#--> Plot-level: Some odd changes in biomass, DELA_053 in 2021, LENO_011 in 2021; nothing systematically wrong with output
+#--> Site-level: SD is pretty high for 2021, but to be expected given plot-level observations. Plausible output.
+
+
+##  D10 wood mass output check
+vstD10 <- neonUtilities::loadByProduct(dpID = "DP1.10098.001",
+                                       site = c("CPER", "RMNP", "STER"),
+                                       release = "LATEST",
+                                       check.size = FALSE,
+                                       token = Sys.getenv("NEON_TOKEN"))
+
+massD10 <- neonPlants::estimateWoodMass(inputDataList = vstD10)
+indiv <- massD10$vst_AGB_indiv
+plot <- massD10$vst_AGB_plot
+site <- massD10$vst_AGB_site
+dupes <- massD10$vst_AGB_duplicates
+downed <- massD10$vst_lost_downed
+#--> Dupes: 26 records, output appears accurate
+#--> Indiv: 424 records with "noAllometry", all are cactus at CPER; output looks plausible
+#--> Downed: Looks reasonable
+#--> Plot-level: Some odd changes in biomass, RMNP_003 in 2025, RMNP_043 in 2024; nothing systematically wrong with output
+#--> Site-level: Plausible output
+
+
+##  D11 wood mass output check
+vstD11 <- neonUtilities::loadByProduct(dpID = "DP1.10098.001",
+                                       site = c("CLBJ", "OAES"),
+                                       release = "LATEST",
+                                       check.size = FALSE,
+                                       token = Sys.getenv("NEON_TOKEN"))
+
+massD11 <- neonPlants::estimateWoodMass(inputDataList = vstD11)
+indiv <- massD11$vst_AGB_indiv
+plot <- massD11$vst_AGB_plot
+site <- massD11$vst_AGB_site
+dupes <- massD11$vst_AGB_duplicates
+downed <- massD11$vst_lost_downed
+
+indivSummary <- indiv %>%
+  dplyr::filter(source == "noAllometry") %>%
+  dplyr::group_by(taxonID) %>%
+  dplyr::summarise(count = n())
+
+#--> Dupes: 63 records, output accurate
+#--> Indiv: 532 records with "noAllometry", 305 are Opuntia and Yucca; output looks plausible
+#--> Downed: Looks reasonable
+#--> Plot-level: CLBJ_006 transitions to 0 biomass in 2025, CLBJ_009 significantly reduced biomass from 2017 onward, CLBJ_016, 022, 024 same as 009; nothing systematically wrong with output
+#--> Site-level: Plausible output
+
+
+##  D12 wood mass output check
+vstD12 <- neonUtilities::loadByProduct(dpID = "DP1.10098.001",
+                                       site = "YELL",
+                                       release = "LATEST",
+                                       check.size = FALSE,
+                                       token = Sys.getenv("NEON_TOKEN"))
+
+massD12 <- neonPlants::estimateWoodMass(inputDataList = vstD12)
+indiv <- massD12$vst_AGB_indiv
+plot <- massD12$vst_AGB_plot
+site <- massD12$vst_AGB_site
+dupes <- massD12$vst_AGB_duplicates
+downed <- massD12$vst_lost_downed
+
+#--> Dupes: 72 records, output accurate
+#--> Indiv: 46 records with "noAllometry", all are taxonID = 2PLANT, 15 of which are from 2024 --> how is this happening? Output looks plausible
+#--> Downed: Looks reasonable
+#--> Plot-level: Output looks plausible
+#--> Site-level: Output looks plausible
+
+
+##  D13 wood mass output check
 
 
 
