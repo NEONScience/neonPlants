@@ -254,7 +254,24 @@ downed <- massD12$vst_lost_downed
 
 
 ##  D13 wood mass output check
+vstD13 <- neonUtilities::loadByProduct(dpID = "DP1.10098.001",
+                                       site = c("MOAB", "NIWO"),
+                                       release = "LATEST",
+                                       check.size = FALSE,
+                                       token = Sys.getenv("NEON_TOKEN"))
 
+massD13 <- neonPlants::estimateWoodMass(inputDataList = vstD13)
+indiv <- massD13$vst_AGB_indiv
+plot <- massD13$vst_AGB_plot
+site <- massD13$vst_AGB_site
+dupes <- massD13$vst_AGB_duplicates
+downed <- massD13$vst_lost_downed
+
+#--> Dupes: 42 records, output accurate
+#--> Indiv: 40 records with "noAllometry", 35 are Opuntia; output plausible
+#--> Downed: Looks reasonable
+#--> Plot-level: Some oddities, MOAB_001, 002, 004, 006, 009, 010, 012, 014, 015, 016, 017, 018 all go to 0 biomass in last event. Structurally, output looks fine.
+#--> Site-level: Strange biomass so low in 2015. Structurally, output looks fine.
 
 
 
