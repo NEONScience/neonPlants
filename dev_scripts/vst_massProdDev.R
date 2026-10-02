@@ -21,7 +21,14 @@ plot <- massD01$vst_AGB_plot
 site <- massD01$vst_AGB_site
 downed <- massD01$vst_lost_downed
 dupes <- massD01$vst_AGB_duplicates
-#--> All table outputs look reasonable at a glance
+
+write.csv(dupes, file = "~/Desktop/vst_AGB_dupes_D01.csv", row.names = FALSE, fileEncoding = "UTF-8")
+
+#--> Dupes: 96 records; output accurate
+#--> Indiv: 8823 records with "noAllometry"; 8760 are ferns. Output plausible.
+#--> Downed: Output plausible
+#--> Plot-level: Unexpected jump in mass for HARV_040 from 2015 to 2016; nothing systematically wrong
+#--> Site-level: Output plausible
 
 
 ##  D02 wood mass output check
@@ -43,10 +50,13 @@ indivSummary <- indiv %>%
   dplyr::group_by(taxonID) %>%
   dplyr::summarise(count = n())
 
-#--> A number of taxa with "noAllometry" do not have biomass estimates (2581 records all time): e.g., Asimina triloba (paw paw), Tetradium daniellii, Lonicera maackii. Most are Asimina triloba (1842 records).
-#--> Plot-level outputs look plausible
-#--> Site-level outputs look plausible
-#--> Downed output looks plausible
+write.csv(dupes, file = "~/Desktop/vst_AGB_dupes_D02.csv", row.names = FALSE, fileEncoding = "UTF-8")
+
+#--> Dupes: 38 records, output accurate.
+#--> Indiv: 2581 records with "noAllometry": e.g., Asimina triloba (paw paw), Tetradium daniellii, Lonicera maackii. Most are Asimina triloba (1842 records). Output plausible.
+#--> Downed: Output plausible.
+#--> Plot-level: Drop in biomass for SCBI_052, 058 from 2020 to 2025; SERC_022 from 2019 to 2024 --> loss of ash?
+#--> Site-level: Output plausible
 
 
 ##  D03 wood mass output check
@@ -68,10 +78,13 @@ indivSummNoMass <- indiv %>%
   dplyr::group_by(taxonID) %>%
   dplyr::summarise(count = n())
 
-#--> 1422 records with "noAllometry"; 500+ are Yucca record, another 218 are Opuntia, another 200+ are Diospyros virginiana L.
-#--> Plot-level records look plausible
-#--> Site-level records look plausible
-#--> Downed records look plausible
+write.csv(dupes, file = "~/Desktop/vst_AGB_dupes_D03.csv", row.names = FALSE, fileEncoding = "UTF-8")
+
+#--> Dupes: 726 records, output accurate
+#--> Indiv: 1422 records with "noAllometry"; 500+ are Yucca record, another 218 are Opuntia, another 200+ are Diospyros virginiana L.
+#--> Downed: Output plausible
+#--> Plot-level: Drop in biomass for JERC_055 from 2016 to 2017; JERC_062, OSBS_007 from 2015 to 2016; OSBS_005 from 2020 to 2025
+#--> Site-level: Output plausible
 
 
 ##  D04 wood mass output check
@@ -87,9 +100,11 @@ plot <- massD04$vst_AGB_plot
 site <- massD04$vst_AGB_site
 dupes <- massD04$vst_AGB_duplicates
 downed <- massD04$vst_lost_downed
-#--> Indiv: Multiple records per individualID x eventID for shrubs --> fixed by adding "eventID" to group_by() in estimateAllometricWoodMass
-#--> New duplicates table output: Noticed dupes, especially for shrub stems, that will inflate biomass estimate. Need mechanism for reporting dupes.
-#--> 793 records with "noAllometry" and almost all are cactus, yucca, small-palm.
+
+write.csv(dupes, file = "~/Desktop/vst_AGB_dupes_D04.csv", row.names = FALSE, fileEncoding = "UTF-8")
+
+#--> Dupes: 1135 records, output accurate 
+#--> Indiv: 793 records with "noAllometry" and almost all are cactus, yucca, small-palm.
 #--> Plot-level records look plausible
 #--> Site-level records look plausible
 #--> Downed records look plausible
@@ -109,15 +124,19 @@ plot <- massD05$vst_AGB_plot
 site <- massD05$vst_AGB_site
 dupes <- massD05$vst_AGB_duplicates
 downed <- massD05$vst_lost_downed
+
+write.csv(dupes, file = "~/Desktop/vst_AGB_dupes_D05.csv", row.names = FALSE, fileEncoding = "UTF-8")
+
+#--> Dupes: 402 records, output accurate
 #--> Indiv: 12,553 records with "noAllometry"; 12,506 are ferns; output in this table looks plausible
-#--> Dupes: Output appears accurate
-#--> Plot-level records look plausible
-#--> Site-level records look plausible
+#--> Downed: Output accurate
+#--> Plot-level: Output plausible
+#--> Site-level: Output plausible
 
 
 ##  D06 wood mass output check
 vstD06 <- neonUtilities::loadByProduct(dpID = "DP1.10098.001",
-                                       site = c("KONZ", "UKFS"),
+                                       site = c("KONA", "KONZ", "UKFS"),
                                        release = "LATEST",
                                        check.size = FALSE,
                                        token = Sys.getenv("NEON_TOKEN"))
@@ -128,8 +147,12 @@ plot <- massD06$vst_AGB_plot
 site <- massD06$vst_AGB_site
 dupes <- massD06$vst_AGB_duplicates
 downed <- massD06$vst_lost_downed
+
+write.csv(dupes, file = "~/Desktop/vst_AGB_dupes_D06.csv", row.names = FALSE, fileEncoding = "UTF-8")
+
+#--> Dupes: 161 records, output accurate
 #--> Indiv: 949 records with "noAllometry"; 456 are Maclura pomifera (Osage Orange), 267 are Morus rubra (Red Mulberry). Output looks plausible but some problems in the data, e.g. for NEON.PLA.D06.KONZ.01250, NEON.PLA.D06.KONZ.01252
-#--> Dupes: Looks reasonable
+#--> Downed: Output accurate
 #--> Plot-level: KONZ_046 has implausibly high biomass in 2016 --> driven by NEON.PLA.D06.KONZ.01138 sapling with reported basalStemDiameter = 20 cm, height 1.6 m; had basalStemDiametet = 1.6 cm and height 0.7 m in 2015, reported "dead" both years.
 #--> Site-level: Big jump in biomass from 2021 to 2022 at KONZ, odd. Seems driven by KONZ_061; data issues in 'indiv' table (see above), but output logical given data issues.
 
@@ -153,8 +176,10 @@ indivSummary <- indiv %>%
   dplyr::group_by(taxonID) %>%
   dplyr::summarise(count = n())
 
+write.csv(dupes, file = "~/Desktop/vst_AGB_dupes_D07.csv", row.names = FALSE, fileEncoding = "UTF-8")
+
+#--> Dupes: 202 records, output accurate
 #--> Indiv: --> 5894 records with "noAllometry"; 2027 are THNO (fern), 1978 are OSCI (fern); in total 4740 are ferns
-#--> Dupes: Looks reasonable
 #--> Downed: Looks reasonable
 #--> Plot-level: Some plots show significant drops in biomass - GRSM_051, GRSM_062, beginning in 2019 (fire?); very high biomass for GRSM_011 and GRSM_012 --> looks legit, very big trees. 
 #--> Site-level: Plausible output
@@ -179,8 +204,10 @@ indivSummary <- indiv %>%
   dplyr::group_by(taxonID) %>%
   dplyr::summarise(count = n())
 
-#--> Indiv: 2332 records with "noAllometry"; 470 are Halesia diptera (Two-wing snowdrop tree), 406 are Triadica sebifera (Chinese Tallow), no ferns
+write.csv(dupes, file = "~/Desktop/vst_AGB_dupes_D08.csv", row.names = FALSE, fileEncoding = "UTF-8")
+
 #--> Dupes: 199 records, output appears accurate
+#--> Indiv: 2332 records with "noAllometry"; 470 are Halesia diptera (Two-wing snowdrop tree), 406 are Triadica sebifera (Chinese Tallow), no ferns
 #--> Downed: Looks reasonable
 #--> Plot-level: Some odd changes in biomass, DELA_053 in 2021, LENO_011 in 2021; nothing systematically wrong with output
 #--> Site-level: SD is pretty high for 2021, but to be expected given plot-level observations. Plausible output.
@@ -199,6 +226,9 @@ plot <- massD10$vst_AGB_plot
 site <- massD10$vst_AGB_site
 dupes <- massD10$vst_AGB_duplicates
 downed <- massD10$vst_lost_downed
+
+write.csv(dupes, file = "~/Desktop/vst_AGB_dupes_D10.csv", row.names = FALSE, fileEncoding = "UTF-8")
+
 #--> Dupes: 26 records, output appears accurate
 #--> Indiv: 424 records with "noAllometry", all are cactus at CPER; output looks plausible
 #--> Downed: Looks reasonable
@@ -225,6 +255,8 @@ indivSummary <- indiv %>%
   dplyr::group_by(taxonID) %>%
   dplyr::summarise(count = n())
 
+write.csv(dupes, file = "~/Desktop/vst_AGB_dupes_D11.csv", row.names = FALSE, fileEncoding = "UTF-8")
+
 #--> Dupes: 63 records, output accurate
 #--> Indiv: 532 records with "noAllometry", 305 are Opuntia and Yucca; output looks plausible
 #--> Downed: Looks reasonable
@@ -245,6 +277,8 @@ plot <- massD12$vst_AGB_plot
 site <- massD12$vst_AGB_site
 dupes <- massD12$vst_AGB_duplicates
 downed <- massD12$vst_lost_downed
+
+write.csv(dupes, file = "~/Desktop/vst_AGB_dupes_D12.csv", row.names = FALSE, fileEncoding = "UTF-8")
 
 #--> Dupes: 72 records, output accurate
 #--> Indiv: 46 records with "noAllometry", all are taxonID = 2PLANT, 15 of which are from 2024 --> how is this happening? Output looks plausible
@@ -267,11 +301,44 @@ site <- massD13$vst_AGB_site
 dupes <- massD13$vst_AGB_duplicates
 downed <- massD13$vst_lost_downed
 
+write.csv(dupes, file = "~/Desktop/vst_AGB_dupes_D13.csv", row.names = FALSE, fileEncoding = "UTF-8")
+
 #--> Dupes: 42 records, output accurate
 #--> Indiv: 40 records with "noAllometry", 35 are Opuntia; output plausible
 #--> Downed: Looks reasonable
 #--> Plot-level: Some oddities, MOAB_001, 002, 004, 006, 009, 010, 012, 014, 015, 016, 017, 018 all go to 0 biomass in last event. Structurally, output looks fine.
 #--> Site-level: Strange biomass so low in 2015. Structurally, output looks fine.
+
+
+##  D14 wood mass output check
+vstD14 <- neonUtilities::loadByProduct(dpID = "DP1.10098.001",
+                                       site = c("JORN", "SRER"),
+                                       release = "LATEST",
+                                       check.size = FALSE,
+                                       token = Sys.getenv("NEON_TOKEN"))
+
+massD14 <- neonPlants::estimateWoodMass(inputDataList = vstD14)
+indiv <- massD14$vst_AGB_indiv
+plot <- massD14$vst_AGB_plot
+site <- massD14$vst_AGB_site
+dupes <- massD14$vst_AGB_duplicates
+downed <- massD14$vst_lost_downed
+
+indivSummary <- indiv %>%
+  dplyr::filter(source == "noAllometry") %>%
+  dplyr::group_by(taxonID) %>%
+  dplyr::summarise(count = n())
+
+write.csv(dupes, file = "~/Desktop/vst_AGB_dupes_D14.csv", row.names = FALSE, fileEncoding = "UTF-8")
+
+#--> Dupes: 104 records, output accurate
+#--> Indiv: 4982 records with "noAllometry"; nearly all are yucca or cactus; mass for some multi-stemmed ATCA2 seems awfully high, possible Conti allometry over-estimates due to high aggregate basalStemDiameter.
+#--> Downed: Strange a number of yucca have no liveDeadStatus --> traces back to no plantStatus in nonWoody table
+#--> Plot-level: Output plausible
+#--> Site-level: Output plausible
+
+
+
 
 
 
