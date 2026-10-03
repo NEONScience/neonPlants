@@ -338,6 +338,65 @@ write.csv(dupes, file = "~/Desktop/vst_AGB_dupes_D14.csv", row.names = FALSE, fi
 #--> Site-level: Output plausible
 
 
+##  D15 wood mass output check
+vstD15 <- neonUtilities::loadByProduct(dpID = "DP1.10098.001",
+                                       site = c("ONAQ"),
+                                       release = "LATEST",
+                                       check.size = FALSE,
+                                       token = Sys.getenv("NEON_TOKEN"))
+
+massD15 <- neonPlants::estimateWoodMass(inputDataList = vstD15)
+indiv <- massD15$vst_AGB_indiv
+plot <- massD15$vst_AGB_plot
+site <- massD15$vst_AGB_site
+dupes <- massD15$vst_AGB_duplicates
+downed <- massD15$vst_lost_downed
+
+indivSummary <- indiv %>%
+  dplyr::filter(source == "noAllometry") %>%
+  dplyr::group_by(taxonID) %>%
+  dplyr::summarise(count = n())
+
+write.csv(dupes, file = "~/Desktop/vst_AGB_dupes_D15.csv", row.names = FALSE, fileEncoding = "UTF-8")
+
+#--> Dupes: 14 records, output accurate
+#--> Indiv: 222 records with "noAllometry"; all are Opuntia; output plausible
+#--> Downed: Output plausible
+#--> Plot-level: Output plausible
+#--> Site-level: Very low plot numbers in 2014 and 2015, and biomass is 0 these two years which is unexpected.
+    # No AI or NW records on Portal for 2014 or 2015, but do mave PPPY for ONAQ_045 and 056 in 2014 and ONAQ_065 in 2015.
+    # Either need to find and publish AI and/or NW data from respective years or delete PPPY records.
+
+
+##  D16 wood mass output check
+vstD16 <- neonUtilities::loadByProduct(dpID = "DP1.10098.001",
+                                       site = c("ABBY", "WREF"),
+                                       release = "LATEST",
+                                       check.size = FALSE,
+                                       token = Sys.getenv("NEON_TOKEN"))
+
+massD16 <- neonPlants::estimateWoodMass(inputDataList = vstD16)
+indiv <- massD16$vst_AGB_indiv
+plot <- massD16$vst_AGB_plot
+site <- massD16$vst_AGB_site
+dupes <- massD16$vst_AGB_duplicates
+downed <- massD16$vst_lost_downed
+
+indivSummary <- indiv %>%
+  dplyr::filter(source == "noAllometry") %>%
+  dplyr::group_by(taxonID) %>%
+  dplyr::summarise(count = n())
+
+write.csv(dupes, file = "~/Desktop/vst_AGB_dupes_D16.csv", row.names = FALSE, fileEncoding = "UTF-8")
+
+#--> Dupes: 24 records, output accurate
+#--> Indiv: 257 records with "noAllometry"; 158 are a single species of fern, 92 are Frangula purshiana (Cascara); missing output for most years but all years are present in PostgreSQL db. Publication problem? neonUtilities problem? Getting loadByProduct message: "No files found for site leas and month =LATEST" --> check with CL
+#--> Downed: Output plausible
+#--> Plot-level: Implausible --> problem with loadByProduct not retrieving expected data from the Portal.
+
+
+
+
 
 
 
