@@ -8,7 +8,8 @@
 #--> Also need to re-assemble test dataset with edited data so that updated "partial" logic works with RELEASE-2027 onward
 
 
-##  D01 wood mass output check
+##  D01 output checks
+#   Wood mass check
 vstD01 <- neonUtilities::loadByProduct(dpID = "DP1.10098.001",
                                        site = c("BART", "HARV"),
                                        release = "LATEST",
@@ -29,6 +30,21 @@ write.csv(dupes, file = "~/Desktop/vst_AGB_dupes_D01.csv", row.names = FALSE, fi
 #--> Downed: Output plausible
 #--> Plot-level: Unexpected jump in mass for HARV_040 from 2015 to 2016; nothing systematically wrong
 #--> Site-level: Output plausible
+
+#   Wood prod check
+theSite <- "BART"
+tempPP <- vstD01$vst_perplotperyear %>% dplyr::filter(siteID == theSite)
+tempMap <- vstD01$vst_mappingandtagging %>% dplyr::filter(siteID == theSite)
+tempAI <- vstD01$vst_apparentindividual %>% dplyr::filter(siteID == theSite)
+tempInput <- list(vst_perplotperyear = tempPP,
+                  vst_mappingandtagging = tempMap,
+                  vst_apparentindividual = tempAI)
+
+prodBART <- neonPlants::estimateWoodProd(inputDataList = tempInput)
+
+
+
+
 
 
 ##  D02 wood mass output check
@@ -454,6 +470,34 @@ write.csv(dupes, file = "~/Desktop/vst_AGB_dupes_D19.csv", row.names = FALSE, fi
   # 020: A number of large Salix single shrubs that Conti estimates between 14-30 kg, could be overestimate.
   # 025: A number of large single-bole trees
   # Interestingly, all 3 of these plots last sampled in 2021, not in subsequent years.
+
+
+##  D20 wood mass output check
+vstD20 <- neonUtilities::loadByProduct(dpID = "DP1.10098.001",
+                                       site = c("PUUM"),
+                                       release = "LATEST",
+                                       check.size = FALSE,
+                                       token = Sys.getenv("NEON_TOKEN"))
+
+massD20 <- neonPlants::estimateWoodMass(inputDataList = vstD20)
+indiv <- massD20$vst_AGB_indiv
+plot <- massD20$vst_AGB_plot
+site <- massD20$vst_AGB_site
+dupes <- massD20$vst_AGB_duplicates
+downed <- massD20$vst_lost_downed
+
+indivSummary <- indiv %>%
+  dplyr::filter(source == "noAllometry") %>%
+  dplyr::group_by(taxonID) %>%
+  dplyr::summarise(count = n())
+
+write.csv(dupes, file = "~/Desktop/vst_AGB_dupes_D20.csv", row.names = FALSE, fileEncoding = "UTF-8")
+
+#--> Dupes: 24 records, output accurate
+#--> Indiv: CIGL tree ferns from 2018 and 2019 have no stemLength --> "noAllometry" (385 records); 384 records are Dryopteris wallichiana (fern). Output plausible.
+#--> Downed: Output plausible
+#--> Plot-level: PUUM_010 large biomass reduction 2020->2025
+#--> Site-level: Biomass lowest by a bit in 2022, not immediately clear why without looking at per plot stem counts through time; nothing systematically wrong with output.
 
 
 
