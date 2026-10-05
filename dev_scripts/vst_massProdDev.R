@@ -389,10 +389,74 @@ indivSummary <- indiv %>%
 
 write.csv(dupes, file = "~/Desktop/vst_AGB_dupes_D16.csv", row.names = FALSE, fileEncoding = "UTF-8")
 
-#--> Dupes: 24 records, output accurate
-#--> Indiv: 257 records with "noAllometry"; 158 are a single species of fern, 92 are Frangula purshiana (Cascara); missing output for most years but all years are present in PostgreSQL db. Publication problem? neonUtilities problem? Getting loadByProduct message: "No files found for site leas and month =LATEST" --> check with CL
+#--> Dupes: 120 records, output accurate
+#--> Indiv: 1018 records with "noAllometry"; 159 are a single species of fern, 833 are Frangula purshiana (Cascara)
 #--> Downed: Output plausible
-#--> Plot-level: Implausible --> problem with loadByProduct not retrieving expected data from the Portal.
+#--> Plot-level: Some large swings in biomass for ABBY_007 (logging?), WREF_004, WREF_013; ABBY_067 very high in 2016 compared to other years (NEON.PLA.D16.ABBY.01003 with stemDiameter = 222 cm, diameter 111-138 in all subsequent years, unclear why it keeps "growing" if dead); ABBY_070 has hardly any biomass at all in 2016 but much higher in 2015 and all other years (only 29 individuals in 2016; 118 individuals in 2017, no changes in totalsampledareas). 
+#--> Site-leveL: Output plausible given plot-level issues noted.
+
+
+##  D17 wood mass output check
+vstD17 <- neonUtilities::loadByProduct(dpID = "DP1.10098.001",
+                                       site = c("SJER", "SOAP", "TEAK"),
+                                       release = "LATEST",
+                                       check.size = FALSE,
+                                       token = Sys.getenv("NEON_TOKEN"))
+
+massD17 <- neonPlants::estimateWoodMass(inputDataList = vstD17)
+indiv <- massD17$vst_AGB_indiv
+plot <- massD17$vst_AGB_plot
+site <- massD17$vst_AGB_site
+dupes <- massD17$vst_AGB_duplicates
+downed <- massD17$vst_lost_downed
+
+indivSummary <- indiv %>%
+  dplyr::filter(source == "noAllometry") %>%
+  dplyr::group_by(taxonID) %>%
+  dplyr::summarise(count = n())
+
+write.csv(dupes, file = "~/Desktop/vst_AGB_dupes_D17.csv", row.names = FALSE, fileEncoding = "UTF-8")
+
+#--> Dupes: 100 records, output accurate
+#--> Indiv: 220 records with "noAllometry", 56 are CEIN3 (Ceonothus) that are classified either as sap or smt (same taxonID gets a biomass when classified as a shrub); 46 are 2PLANT; a number of CELE2 with substantial mass (Ceonothus, 15-70 kg), no diameters, and large crowns. 
+#--> Downed: Strange a lot of "lost" 2PLANT from 2016 at SJER (example: NEON.PLA.D17.SJER.00097 was a dead sap with no diameters in 2015 then "lost" 2PLANT in 2016, just delete both records?)
+#--> Plot-level: Some large swings in biomass for SJER_009 in 2019; 060, 061 in 2025; TEAK_046 relatively low biomass in 2021, 2023.
+#--> Site-level: Output plausible.
+
+
+##  D19 wood mass output check
+vstD19 <- neonUtilities::loadByProduct(dpID = "DP1.10098.001",
+                                       site = c("BONA", "DEJU", "HEAL"),
+                                       release = "LATEST",
+                                       check.size = FALSE,
+                                       token = Sys.getenv("NEON_TOKEN"))
+
+massD19 <- neonPlants::estimateWoodMass(inputDataList = vstD19)
+indiv <- massD19$vst_AGB_indiv
+plot <- massD19$vst_AGB_plot
+site <- massD19$vst_AGB_site
+dupes <- massD19$vst_AGB_duplicates
+downed <- massD19$vst_lost_downed
+
+indivSummary <- indiv %>%
+  dplyr::filter(source == "noAllometry") %>%
+  dplyr::group_by(taxonID) %>%
+  dplyr::summarise(count = n())
+
+write.csv(dupes, file = "~/Desktop/vst_AGB_dupes_D19.csv", row.names = FALSE, fileEncoding = "UTF-8")
+
+#--> Dupes: 346 records, output accurate
+#--> Indiv: 0 records with "noAllometry"; output plausible
+#--> Downed: Output plausible
+#--> Plot-level: BONA_021 large-ish loss of mass from 2017 to 2020, BONA_071 from 2016 to 2022; DEJU_053 oddly high in 2016; 2X fluctuations in HEAL_023, 059, 061, 068, 072 in 2016
+#--> Site-level: Much higher AGB in 2021 than all other years by factor of 2-3X --> 3 plots with high biomass 014, 020, 025
+  # 014: Two Betula classified as single shrub getting high biomass estimate via Conti (~30 kg); a couple single-bole white spruce with 13-18 cm diameter.
+  # 020: A number of large Salix single shrubs that Conti estimates between 14-30 kg, could be overestimate.
+  # 025: A number of large single-bole trees
+  # Interestingly, all 3 of these plots last sampled in 2021, not in subsequent years.
+
+
+
 
 
 
