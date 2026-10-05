@@ -364,7 +364,7 @@ calculateTransitions <- function(biomassTable,
 
   ##  Relocate columns for output
   transFilterDF <- transFilterDF %>%
-    dplyr::relocate(c("plotID", "subplotID"), .after = "year") %>%
+    dplyr::relocate(c("plotID"), .after = "year") %>%
     dplyr::relocate("nlcdClass", .after = "plotType") %>%
     dplyr::relocate(("taxonID":"scientificName"), .after = "ninetyCrownDiameter") %>%
     dplyr::relocate("source", .after = "scientificName")
