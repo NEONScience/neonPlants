@@ -8,7 +8,7 @@
 #--> Also need to re-assemble test dataset with edited data so that updated "partial" logic works with RELEASE-2027 onward
 
 
-##  D01 output checks
+### D01 output checks
 #   Wood mass check
 vstD01 <- neonUtilities::loadByProduct(dpID = "DP1.10098.001",
                                        site = c("BART", "HARV"),
@@ -36,18 +36,44 @@ theSite <- "BART"
 tempPP <- vstD01$vst_perplotperyear %>% dplyr::filter(siteID == theSite)
 tempMap <- vstD01$vst_mappingandtagging %>% dplyr::filter(siteID == theSite)
 tempAI <- vstD01$vst_apparentindividual %>% dplyr::filter(siteID == theSite)
-tempInput <- list(vst_perplotperyear = tempPP,
-                  vst_mappingandtagging = tempMap,
-                  vst_apparentindividual = tempAI)
+tempInput <- list(vst_perplotperyear = tempPP, vst_mappingandtagging = tempMap, vst_apparentindividual = tempAI)
 
-prodBART <- neonPlants::estimateWoodProd(inputDataList = tempInput)
+prodOut <- neonPlants::estimateWoodProd(inputDataList = tempInput)
+
+write.csv(prodOut$vst_ANPP_duplicates, file = glue::glue("~/Desktop/vst_ANPP_treedupes_D01{theSite}.csv"), 
+          row.names = FALSE, fileEncoding = "UTF-8")
+write.csv(prodOut$vst_ANPP_flagged, file = glue::glue("~/Desktop/vst_ANPP_flagged_D01{theSite}.csv"), 
+          row.names = FALSE, fileEncoding = "UTF-8")
+
+site <- prodOut$vst_ANPP_site
+plot <- prodOut$vst_ANPP_plot
+
+#--> Site-level: towerSubset years relatively low ANPP compared to when more plots sampled
+#--> Plot-level: A number of plot-years with negative productivity --> stemDiameter data entry errors? E.g., BART_034-2018, BART_041-2016, BART_047-2016
+
+theSite <- "HARV"
+tempPP <- vstD01$vst_perplotperyear %>% dplyr::filter(siteID == theSite)
+tempMap <- vstD01$vst_mappingandtagging %>% dplyr::filter(siteID == theSite)
+tempAI <- vstD01$vst_apparentindividual %>% dplyr::filter(siteID == theSite)
+tempInput <- list(vst_perplotperyear = tempPP, vst_mappingandtagging = tempMap, vst_apparentindividual = tempAI)
+
+prodOut <- neonPlants::estimateWoodProd(inputDataList = tempInput)
+
+write.csv(prodOut$vst_ANPP_duplicates, file = glue::glue("~/Desktop/vst_ANPP_treedupes_D01{theSite}.csv"), 
+          row.names = FALSE, fileEncoding = "UTF-8")
+write.csv(prodOut$vst_ANPP_flagged, file = glue::glue("~/Desktop/vst_ANPP_flagged_D01{theSite}.csv"), 
+          row.names = FALSE, fileEncoding = "UTF-8")
+
+site <- prodOut$vst_ANPP_site
+plot <- prodOut$vst_ANPP_plot
+
+#--> Site-level: 2022 very low compared to other years
+#--> Plot-level: Substantial negative productivity --> HARV_025-2019, HARV_035-2019, HARV_051-2016; some years very positive --> HARV_001-2016, HARV_038-2021, HARV_042-2016, HARV_044-2016
 
 
 
-
-
-
-##  D02 wood mass output check
+### D02 output checks
+#   Wood mass check
 vstD02 <- neonUtilities::loadByProduct(dpID = "DP1.10098.001",
                                        site = c("BLAN", "SCBI", "SERC"),
                                        release = "LATEST",
@@ -74,8 +100,67 @@ write.csv(dupes, file = "~/Desktop/vst_AGB_dupes_D02.csv", row.names = FALSE, fi
 #--> Plot-level: Drop in biomass for SCBI_052, 058 from 2020 to 2025; SERC_022 from 2019 to 2024 --> loss of ash?
 #--> Site-level: Output plausible
 
+#   Wood prod check
+theSite <- "BLAN"
+tempPP <- vstD02$vst_perplotperyear %>% dplyr::filter(siteID == theSite)
+tempMap <- vstD02$vst_mappingandtagging %>% dplyr::filter(siteID == theSite)
+tempAI <- vstD02$vst_apparentindividual %>% dplyr::filter(siteID == theSite)
+tempInput <- list(vst_perplotperyear = tempPP, vst_mappingandtagging = tempMap, vst_apparentindividual = tempAI)
 
-##  D03 wood mass output check
+prodOut <- neonPlants::estimateWoodProd(inputDataList = tempInput)
+
+write.csv(prodOut$vst_ANPP_duplicates, file = glue::glue("~/Desktop/vst_ANPP_treedupes_D02{theSite}.csv"), 
+          row.names = FALSE, fileEncoding = "UTF-8")
+write.csv(prodOut$vst_ANPP_flagged, file = glue::glue("~/Desktop/vst_ANPP_flagged_D02{theSite}.csv"), 
+          row.names = FALSE, fileEncoding = "UTF-8")
+
+site <- prodOut$vst_ANPP_site
+plot <- prodOut$vst_ANPP_plot
+
+#--> Site-level: Output plausible
+#--> Plot-level: BLAN_063-2016 & 2018, BLAN_017-2019, BLAN_047-2025 unexpectedly high; BLAN_063-2017 negative
+
+theSite <- "SCBI"
+tempPP <- vstD02$vst_perplotperyear %>% dplyr::filter(siteID == theSite)
+tempMap <- vstD02$vst_mappingandtagging %>% dplyr::filter(siteID == theSite)
+tempAI <- vstD02$vst_apparentindividual %>% dplyr::filter(siteID == theSite)
+tempInput <- list(vst_perplotperyear = tempPP, vst_mappingandtagging = tempMap, vst_apparentindividual = tempAI)
+
+prodOut <- neonPlants::estimateWoodProd(inputDataList = tempInput)
+
+write.csv(prodOut$vst_ANPP_duplicates, file = glue::glue("~/Desktop/vst_ANPP_treedupes_D02{theSite}.csv"), 
+          row.names = FALSE, fileEncoding = "UTF-8")
+write.csv(prodOut$vst_ANPP_flagged, file = glue::glue("~/Desktop/vst_ANPP_flagged_D02{theSite}.csv"), 
+          row.names = FALSE, fileEncoding = "UTF-8")
+
+site <- prodOut$vst_ANPP_site
+plot <- prodOut$vst_ANPP_plot
+
+#--> Site-level: Unexpectedly low ANPP in 2017
+#--> Plot-level: SCBI_045-2016 & 2017, SCBI_050-2018, SCBI_061-2018, SCBI_062-2017, SCBI_063-2016 substantially negative; also substantially positive plot years --> SCBI_066-2016 & 2017 and 5-6 others.
+
+theSite <- "SERC"
+tempPP <- vstD02$vst_perplotperyear %>% dplyr::filter(siteID == theSite)
+tempMap <- vstD02$vst_mappingandtagging %>% dplyr::filter(siteID == theSite)
+tempAI <- vstD02$vst_apparentindividual %>% dplyr::filter(siteID == theSite)
+tempInput <- list(vst_perplotperyear = tempPP, vst_mappingandtagging = tempMap, vst_apparentindividual = tempAI)
+
+prodOut <- neonPlants::estimateWoodProd(inputDataList = tempInput)
+
+write.csv(prodOut$vst_ANPP_duplicates, file = glue::glue("~/Desktop/vst_ANPP_treedupes_D02{theSite}.csv"), 
+          row.names = FALSE, fileEncoding = "UTF-8")
+write.csv(prodOut$vst_ANPP_flagged, file = glue::glue("~/Desktop/vst_ANPP_flagged_D02{theSite}.csv"), 
+          row.names = FALSE, fileEncoding = "UTF-8")
+
+site <- prodOut$vst_ANPP_site
+plot <- prodOut$vst_ANPP_plot
+
+#--> Site-level: Negative ANPP in 2016, then more positive than expected in 2017 --> likely data entry errors
+#--> Plot-level: Negative ANPP for SERC_044-2016 & 2018, SERC_045-2016, SERC_049-2016, SERC_050-2016, SERC_052-2016 & 2018, SERC_060-2016, SERC_061-2016, SERC_062-2016, SERC_067-2018, 
+
+
+
+### D03 wood mass output check
 vstD03 <- neonUtilities::loadByProduct(dpID = "DP1.10098.001",
                                        site = c("DSNY", "JERC", "OSBS"),
                                        release = "LATEST",
