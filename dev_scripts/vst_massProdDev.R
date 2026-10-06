@@ -9,13 +9,13 @@
 
 
 ### D01 output checks
-#   Wood mass check
 vstD01 <- neonUtilities::loadByProduct(dpID = "DP1.10098.001",
                                        site = c("BART", "HARV"),
                                        release = "LATEST",
                                        check.size = FALSE,
                                        token = Sys.getenv("NEON_TOKEN"))
 
+#   Wood mass check
 massD01 <- neonPlants::estimateWoodMass(inputDataList = vstD01)
 indiv <- massD01$vst_AGB_indiv
 plot <- massD01$vst_AGB_plot
@@ -73,13 +73,13 @@ plot <- prodOut$vst_ANPP_plot
 
 
 ### D02 output checks
-#   Wood mass check
 vstD02 <- neonUtilities::loadByProduct(dpID = "DP1.10098.001",
                                        site = c("BLAN", "SCBI", "SERC"),
                                        release = "LATEST",
                                        check.size = FALSE,
                                        token = Sys.getenv("NEON_TOKEN"))
 
+#   Wood mass check
 massD02 <- neonPlants::estimateWoodMass(inputDataList = vstD02)
 indiv <- massD02$vst_AGB_indiv
 plot <- massD02$vst_AGB_plot
@@ -160,13 +160,14 @@ plot <- prodOut$vst_ANPP_plot
 
 
 
-### D03 wood mass output check
+### D03 output checks
 vstD03 <- neonUtilities::loadByProduct(dpID = "DP1.10098.001",
                                        site = c("DSNY", "JERC", "OSBS"),
                                        release = "LATEST",
                                        check.size = FALSE,
                                        token = Sys.getenv("NEON_TOKEN"))
 
+#   Wood mass check
 massD03 <- neonPlants::estimateWoodMass(inputDataList = vstD03)
 indiv <- massD03$vst_AGB_indiv
 plot <- massD03$vst_AGB_plot
@@ -187,14 +188,34 @@ write.csv(dupes, file = "~/Desktop/vst_AGB_dupes_D03.csv", row.names = FALSE, fi
 #--> Plot-level: Drop in biomass for JERC_055 from 2016 to 2017; JERC_062, OSBS_007 from 2015 to 2016; OSBS_005 from 2020 to 2025
 #--> Site-level: Output plausible
 
+#   Wood prod check
+theSite <- "DSNY"
+tempPP <- vstD03$vst_perplotperyear %>% dplyr::filter(siteID == theSite)
+tempMap <- vstD03$vst_mappingandtagging %>% dplyr::filter(siteID == theSite)
+tempAI <- vstD03$vst_apparentindividual %>% dplyr::filter(siteID == theSite)
+tempInput <- list(vst_perplotperyear = tempPP, vst_mappingandtagging = tempMap, vst_apparentindividual = tempAI)
 
-##  D04 wood mass output check
+prodOut <- neonPlants::estimateWoodProd(inputDataList = tempInput)
+
+write.csv(prodOut$vst_ANPP_duplicates, file = glue::glue("~/Desktop/vst_ANPP_treedupes_D03{theSite}.csv"), 
+          row.names = FALSE, fileEncoding = "UTF-8")
+write.csv(prodOut$vst_ANPP_flagged, file = glue::glue("~/Desktop/vst_ANPP_flagged_D03{theSite}.csv"), 
+          row.names = FALSE, fileEncoding = "UTF-8")
+
+site <- prodOut$vst_ANPP_site
+plot <- prodOut$vst_ANPP_plot
+
+
+
+
+### D04 output checks
 vstD04 <- neonUtilities::loadByProduct(dpID = "DP1.10098.001",
                                        site = c("GUAN", "LAJA"),
                                        release = "LATEST",
                                        check.size = FALSE,
                                        token = Sys.getenv("NEON_TOKEN"))
 
+#   Wood mass check
 massD04 <- neonPlants::estimateWoodMass(inputDataList = vstD04)
 indiv <- massD04$vst_AGB_indiv
 plot <- massD04$vst_AGB_plot
