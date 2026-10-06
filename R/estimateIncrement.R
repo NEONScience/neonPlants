@@ -222,6 +222,12 @@ estimateIncrement <- function(biomassTable,
       agbIncr_kgyr = dplyr::case_when(
         .data$liveDeadStatus == "live" & dplyr::lag(.data$liveDeadStatus) == "live" ~
           round((.data$agb_kg - dplyr::lag(.data$agb_kg)) / .data$growthInterval, digits = 1),
+        
+        # Calculate mass lost (kg/y) in mortality events
+        # For now: mass lost = mass at last live measurement
+        # Future improvement: estimate growth between observations
+        .data$transitionStatus == "mortality" ~
+          -1*round((dplyr::lag(.data$agb_kg)) / .data$growthInterval, digits = 1),
 
         TRUE ~ NA_real_
       ),
@@ -230,6 +236,12 @@ estimateIncrement <- function(biomassTable,
       agbIncr_kg = dplyr::case_when(
         .data$liveDeadStatus == "live" & dplyr::lag(.data$liveDeadStatus) == "live" ~
           round(.data$agb_kg - dplyr::lag(.data$agb_kg), digits = 1),
+        
+        # Calculate mass lost (kg) in mortality events
+        # For now: mass lost = mass at last live measurement
+        # Future improvement: estimate growth between observations
+        .data$transitionStatus == "mortality" ~
+          -1*round(dplyr::lag(.data$agb_kg), digits = 1),
 
         TRUE ~ NA_real_
       ),
