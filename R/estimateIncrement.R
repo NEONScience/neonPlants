@@ -193,7 +193,7 @@ estimateIncrement <- function(biomassTable,
         !is.na(.data$date) & !is.na(dplyr::lag(.data$date)) ~ as.numeric(difftime(.data$date, dplyr::lag(.data$date), units = "days")) / 365.25,
 
         #   Otherwise use 'year' from PPPY table to calculate 'growthInterval' if mass data are present
-        (is.na(.data$date) | is.na(dplyr::lag(.data$date))) & !is.na(.data$agb_kg) & !is.na(dplyr::lag(.data$agb_kg)) ~
+        (is.na(.data$date) | is.na(dplyr::lag(.data$date))) & (!is.na(.data$agb_kg) | !is.na(dplyr::lag(.data$agb_kg))) ~
           .data$year - dplyr::lag(.data$year),
 
         #   Return NA when biomass data unavailable and 'year' based interval not relevant
