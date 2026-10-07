@@ -170,12 +170,17 @@ estimateWoodProd <- function(inputDataList,
 
 
 
-  ### ESTIMATE BIOMASS OF TREES ####
+  ### PREPARE APPARENT INDIVIDUAL INPUT DATA ####
+  
+  ### Filter to 'tree' growthForms
+  appInd <- appInd %>%
+    dplyr::filter(.data$growthForm %in% c("single bole tree", "multi-bole tree"))
+  
+  
 
   ### Remove duplicates: Dupes cause problems when calculating 'estimatedMass' in calculateTransitions() function
   #   Identify individualID x eventID combos for "tree" growthForms that are duplicated (more prevalent in older data)
   treeDupes <- appInd %>%
-    dplyr::filter(.data$growthForm %in% c("single bole tree", "multi-bole tree")) %>%
     dplyr::mutate(indivEventID = paste(.data$individualID, .data$eventID, sep = "-")) %>%
     dplyr::filter(duplicated(.data$indivEventID))
 
@@ -194,8 +199,47 @@ estimateWoodProd <- function(inputDataList,
     dplyr::select(-"indivEventID")
 
   rm(treeDupes)
+  
+  
+  
+  ### Create 'liveDeadStatus' field to parse standing biomass unambiguously
+  #   Define plantStatus values to identify standing individuals that are unambiguously live/dead
+  standingLiveDead <- c("Live",
+                        "Live, insect damaged",
+                        "Live, disease damaged",
+                        "Live, physically damaged",
+                        "Live, other damage",
+                        "Live, broken bole",
+                        "Standing dead",
+                        "Dead, broken bole")
+  
+  #   Define plantStatus values to identify absent individuals that are definitely dead but for which we have no stemDiameter data, and individuals absent, lost, or with ambiguous fate
+  lostDowned <- c("Downed",
+                  "Removed",
+                  "No longer qualifies",
+                  "Lost, burned",
+                  "Lost, herbivory",
+                  "Lost, presumed dead",
+                  "Lost, fate unknown")
+  
+  #   Assign liveDeadStatus values
+  appInd <- appInd %>%
+    dplyr::mutate(liveDeadStatus = dplyr::case_when(.data$plantStatus %in% head(standingLiveDead, -2) ~ "live",
+                                                    .data$plantStatus %in% tail(standingLiveDead, 2) ~ "dead",
+                                                    .data$plantStatus %in% head(lostDowned, 2) ~ "dead",
+                                                    .data$plantStatus %in% tail(lostDowned, 5) ~ "lost",
+                                                    TRUE ~ NA_character_),
+                  .after = "plantStatus")
+  
+  
+  
+  #--> Need to assign liveDeadStatus, identify transitions, interpolate missing stemDiameters, and flag implausible stemDiameter increments *before* biomass is calculated...
+  #--> Problem: Calculating transitions at this point means a number of variables created need to be passed through estimateWoodMass which is difficult due to calls to group_by() --> use only allometric mass function instead?
 
-
+  
+  
+  
+  ### ESTIMATE BIOMASS OF TREES ####
 
   ### Generate wood mass estimates
   woodMassOutput <- neonPlants::estimateWoodMass(
@@ -215,12 +259,6 @@ estimateWoodProd <- function(inputDataList,
 
   ### Prepare outputs from estimateWoodMass
 
-  ##  Update 'liveDeadStatus' for "downedDead" individuals to "dead"; "standing dead" versus "downed dead" distinction not relevant for NPP
-  lostDowned <- lostDowned %>%
-    dplyr::mutate(liveDeadStatus = dplyr::replace_when(.data$liveDeadStatus,
-                                                       .data$liveDeadStatus == "downedDead" ~ "dead"))
-
-
   ##  Create unified 'agb' data frame that includes lost/downed individuals (no growthform, or plantStatus 'downed', 'lost', or 'no longer qualifies')
   agb <- dplyr::bind_rows(agb,
                           lostDowned %>%
@@ -230,7 +268,7 @@ estimateWoodProd <- function(inputDataList,
 
 
 
-  ### FIND MORTALITY AND RECRUITMENT EVENTS ####
+  ### FIND MORTALITY AND RECRUITMENT EVENTS #### -------------------------------> move up before biomass estimation
 
   if (nrow(agb) > 0) {
 
@@ -293,7 +331,7 @@ estimateWoodProd <- function(inputDataList,
         TRUE ~ paste(unique(na.omit(.data$nlcdClass)), collapse = ", ")
         ),
 
-      #   Sum biomass increment at plotID x eventID level
+      #   Sum biomass increment at plotID x eventID level --------------------------> inappropriately returns 0 for first year
       woodProd_Mghayr = dplyr::case_when(
         all(is.na(.data$agbIncr_Mghayr)) ~ 0,
         TRUE ~ round(sum(.data$agbIncr_Mghayr, na.rm = TRUE), digits = 2)

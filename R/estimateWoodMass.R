@@ -383,13 +383,13 @@ estimateWoodMass = function(inputDataList,
     dplyr::rename("basalMeasurementHeight" = "basalStemDiameterMsrmntHeight")
 
 
-  ##  Identify duplicates: Dupes cause inflated biomass for multi-stem smaller individuals when grouping to calculate equivalent diameters
+  ##  Identify and remove dupes: Dupes inflate biomass for multi-stem smaller individuals when grouping to calculate equivalent diameters
   #   Identify individualID x eventID x tempStemID combos that are duplicated (more prevalent in older data)
   theDupes <- appInd %>%
     dplyr::mutate(indivEventID = paste(.data$individualID, .data$tempStemID, .data$eventID, sep = "-")) %>%
     dplyr::filter(duplicated(.data$indivEventID))
 
-  #   Extract all duplicated individualID x eventID records; 'theDupes' only contains one of each pair
+  #   Extract all duplicated individualID x eventID records for output; 'theDupes' only contains one of each pair
   dupeDF <- appInd %>%
     dplyr::mutate(indivEventID = paste(.data$individualID, .data$tempStemID, .data$eventID, sep = "-")) %>%
     dplyr::filter(.data$indivEventID %in% theDupes$indivEventID) %>%
@@ -397,6 +397,12 @@ estimateWoodMass = function(inputDataList,
                    .data$eventID,
                    .data$individualID,
                    .data$tempStemID) %>%
+    dplyr::select(-"indivEventID")
+  
+  #   Remove duplicated individualID x eventID records from 'appInd' dataset
+  appInd <- appInd %>%
+    dplyr::mutate(indivEventID = paste(.data$individualID, .data$tempStemID, .data$eventID, sep = "-")) %>%
+    dplyr::filter(!.data$indivEventID %in% theDupes$indivEventID) %>%
     dplyr::select(-"indivEventID")
 
   rm(theDupes)
@@ -452,7 +458,7 @@ estimateWoodMass = function(inputDataList,
                                                     .data$plantStatus %in% tail(lostDowned, 5) ~ "lost",
                                                     TRUE ~ NA_character_),
                   .after = "plantStatus")
-
+  
 
 
   ### Create 'lostDownedDF' table for later output
