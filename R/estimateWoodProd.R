@@ -107,6 +107,23 @@ estimateWoodProd <- function(inputDataList,
     inputDataList <- NULL
 
   } # end missing conditional
+  
+  
+  
+  ### Verify table inputs are NA if 'inputDataList' is supplied
+  if (inherits(inputDataList, "list") &
+      (!is.logical(inputIndividual) | !is.logical(inputMapTag) | !is.logical(inputPerPlot)  | !is.logical(inputNonWoody) )) {
+    stop("When 'inputDataList' is supplied all table input arguments must be NA")
+  }
+  
+  
+  
+  ### Verify 'inputIndividual', 'inputMapTag', and 'inputPerPlot' are data frames if 'inputDataList' is missing
+  if (is.null(inputDataList) &
+      (!inherits(inputIndividual, "data.frame") | !inherits(inputMapTag, "data.frame") | !inherits(inputPerPlot, "data.frame"))) {
+    
+    stop("Data frames must be supplied for 'inputIndividual', 'inputMapTag', and 'inputPerPlot' if 'inputDataList' is not provided")
+  }
 
 
 
@@ -132,6 +149,89 @@ estimateWoodProd <- function(inputDataList,
     appInd <- inputIndividual
     nonWoody <- inputNonWoody
 
+  }
+  
+  
+  
+  ### Verify 'vst_mappingandtagging' table contains required data
+  #   Check for required columns
+  mapExpCols <- c("siteID", "plotID", "individualID", "taxonID")
+  
+  if (length(setdiff(mapExpCols, colnames(map))) > 0) {
+    stop(glue::glue("Required columns missing from 'vst_mappingandtagging':", '{paste(setdiff(mapExpCols, colnames(map)), collapse = ", ")}',
+                    .sep = " "))
+  }
+  
+  #   Check for data
+  if (nrow(map) == 0) {
+    stop(glue::glue("Table 'vst_mappingandtagging' has no data."))
+  }
+  
+  
+  ### Verify 'vst_perplotperyear' table contains required data
+  #   Check for required columns
+  plotExpCols <- c("date", "nonwoodyCollectDate", "domainID", "siteID", "plotID", "plotType", "nlcdClass", "samplingImpractical", "eventID", "eventType", "dataCollected", "targetTaxaPresent", "treesPresent", "shrubsPresent", "lianasPresent", "palmsPresent", "treeFernsPresent", "totalSampledAreaTrees", "totalSampledAreaShrubSapling", "totalSampledAreaLiana", "totalSampledAreaFerns", "totalSampledAreaOther")
+  
+  if (length(setdiff(plotExpCols, colnames(perPlot))) > 0) {
+    stop(glue::glue("Required columns missing from 'vst_perplotperyear':", '{paste(setdiff(plotExpCols, colnames(perPlot)), collapse = ", ")}',
+                    .sep = " "))
+  }
+  
+  #   Check for data
+  if (nrow(perPlot) == 0) {
+    stop(glue::glue("Table 'vst_perplotperyear' has no data."))
+  }
+  
+  #   Check for RELEASE-2027 or more recent
+  if ("release" %in% names(perPlot)) {
+    
+    releaseValue <- unique(perPlot$release)
+    
+    if (length(releaseValue) > 1) {
+      
+      stop("Data from more than one NEON RELEASE detected: Function does not support using data from multiple RELEASES.")
+      
+    } else {
+      
+      releaseCheck <- dplyr::case_when(releaseValue == "LATEST" ~ TRUE,
+                                       as.numeric(stringr::str_extract(releaseValue, "20[0-9]{2}$")) >= 2027 ~ TRUE,
+                                       TRUE ~ FALSE)
+      
+      if (!isTRUE(releaseCheck)) {stop("Input data must be RELEASE-2027 or newer.")}
+      
+    }
+    
+  } else {
+    warning("Cannot determine the NEON RELEASE for the input data: Outputs may contain known errors if data older than RELEASE-2027 are used.")
+  }
+  
+  
+  
+  ### Verify 'vst_apparentindividual' table contains required data
+  #   Check for required columns
+  appIndExpCols <- c("domainID", "siteID","plotID", "individualID", "growthForm", "plantStatus", "date", "eventID", "stemDiameter", "basalStemDiameter", "height", "maxCrownDiameter", "ninetyCrownDiameter")
+  
+  if (length(setdiff(appIndExpCols, colnames(appInd))) > 0) {
+    stop(glue::glue("Required columns missing from 'vst_apparentindividual':", '{paste(setdiff(appIndExpCols, colnames(appInd)), collapse = ", ")}',
+                    .sep = " "))
+  }
+  
+  #   Check for data
+  if (nrow(appInd) == 0) {
+    stop(glue::glue("Table 'vst_apparentindividual' has no data."))
+  }
+  
+  
+  ### Verify vst_nonWoody table contains required data
+  #   Check for required columns
+  nonwoodyExpCols <- c("domainID", "siteID", "plotID", "individualID", "growthForm", "plantStatus", "date", "stemDiameter", "basalStemDiameter", "taxonID", "height", "stemLength", "leafNumber", "meanLeafLength", "meanPetioleLength", "meanBladeLength")
+  
+  if (methods::is(nonWoody, class = "data.frame" )) {
+    
+    if (length(setdiff(nonwoodyExpCols, colnames(nonWoody))) > 0) {
+      stop(glue::glue("Required columns missing from vst_nonWoody:", '{paste(setdiff(nonwoodyExpCols, colnames(nonWoody), collapse = ", ")}',
+                      .sep = " "))
+    }
   }
 
 
@@ -167,10 +267,79 @@ estimateWoodProd <- function(inputDataList,
   if (!missing %in% c("filter", "retain")) {
     stop("The 'missing' argument must be one of: 'filter', 'retain'")
   }
+  
+  
+  
+  ### Assign plotType needed in output based on 'plotSubset' argument
+  plotType <- dplyr::case_when(plotSubset == "all" ~ "all",
+                               plotSubset == "distributed" ~ "distributed",
+                               plotSubset %in% c("towerAll", "towerAnnualSubset") ~ "tower")
+  
+  
+  
+  
+  
+  ### PREPARE PERPLOT INPUT DATA ####
+  
+  ##  Extract year from eventID, create 'plotID x eventID' identifier
+  perPlot <- perPlot %>%
+    dplyr::mutate(year = as.numeric(stringr::str_extract(.data$eventID, "20[0-9]{2}$")),
+                  .before = "eventID") %>%
+    dplyr::mutate(plot_eventID = paste(.data$plotID, .data$eventID, sep = "_"),
+                  .before = "plotID")
+  
+  
+  ##  Remove duplicates: Sort by date before removing duplicates so that if duplicates are from different dates the record from latest date will be retained. Sorting by date and then using fromLast = TRUE retains the most recent version of duplicates.
+  perPlot <- perPlot[order(perPlot$date), ]
+  perPlot <- perPlot[!duplicated(perPlot$plot_eventID, fromLast = TRUE), ]
+  
+  
+  ##  Join with plot priority data; the 'specificModuleSamplingPriority' field is used to optionally filter only to plots with priority 1-5 when user-supplied 'plotSubset' == "towerAnnualSubset"
+  data("priority_plots", envir = environment())
+  
+  priority_plots <- priority_plots %>%
+    dplyr::select("plotID",
+                  "specificModuleSamplingPriority")
+  
+  perPlot <- dplyr::left_join(perPlot,
+                              priority_plots,
+                              by = "plotID")
+  
+  
+  ##  Filter plots to user-supplied 'plotSubset'
+  #   Conditionally retain only Tower annual subset
+  perPlot <- perPlot %>%
+    dplyr::filter(as.logical(dplyr::case_when(
+      plotSubset == "towerAnnualSubset" & .data$specificModuleSamplingPriority <= 5 ~ TRUE,
+      plotSubset != "towerAnnualSubset" &
+        (is.na(.data$specificModuleSamplingPriority) | .data$specificModuleSamplingPriority <= 50) ~ TRUE,
+      TRUE ~ FALSE
+    )))
+  
+  #   Conditionally retain all Tower plots
+  if (plotSubset == "towerAll") {
+    perPlot <- perPlot[which(perPlot$plotType == "tower"),]
+  }
+  
+  #   Conditionally retain Distributed plots
+  if (plotSubset == "distributed") {
+    perPlot <- perPlot[which(perPlot$plotType == "distributed"),]
+  }
+  
+  
+  ##  Identify plot_eventIDs with full plot sampling 
+  
+  
+  #--> account for samplingImpractical and dataCollected variations; then remove plot-events from perPlot that are NOT full plot sampling
+  
+  
 
 
 
   ### PREPARE APPARENT INDIVIDUAL INPUT DATA ####
+  
+  ###-----------> Filter out records not associated with full plot sampling for trees
+  
   
   ### Filter to 'tree' growthForms
   appInd <- appInd %>%
@@ -242,29 +411,32 @@ estimateWoodProd <- function(inputDataList,
   ### ESTIMATE BIOMASS OF TREES ####
 
   ### Generate wood mass estimates
-  woodMassOutput <- neonPlants::estimateWoodMass(
-    inputIndividual = appInd,
-    inputMapTag = map,
-    inputPerPlot = perPlot,
-    plotSubset = plotSubset,
-    growthFormSubset = "tree"
-  )
-
-
-  ##  Extract required estimateWoodMass output tables
-  agb <- woodMassOutput$vst_AGB_indiv
-  lostDowned <- woodMassOutput$vst_lost_downed
-
-
-
-  ### Prepare outputs from estimateWoodMass
-
-  ##  Create unified 'agb' data frame that includes lost/downed individuals (no growthform, or plantStatus 'downed', 'lost', or 'no longer qualifies')
-  agb <- dplyr::bind_rows(agb,
-                          lostDowned %>%
-                            dplyr::select(-"tempStemID", -("measurementHeight":"dataQF"))
-                          ) %>%
-    dplyr::select(-"sampledArea_m2")
+  
+  #--> Replace code below with output from estimateAllometricWoodMass function; need to verify what 'agb_kg' output looks like for lost/downed individuals.
+  
+  # woodMassOutput <- neonPlants::estimateWoodMass(
+  #   inputIndividual = appInd,
+  #   inputMapTag = map,
+  #   inputPerPlot = perPlot,
+  #   plotSubset = plotSubset,
+  #   growthFormSubset = "tree"
+  # )
+  # 
+  # 
+  # ##  Extract required estimateWoodMass output tables
+  # agb <- woodMassOutput$vst_AGB_indiv
+  # lostDowned <- woodMassOutput$vst_lost_downed
+  # 
+  # 
+  # 
+  # ### Prepare outputs from estimateWoodMass
+  # 
+  # ##  Create unified 'agb' data frame that includes lost/downed individuals (no growthform, or plantStatus 'downed', 'lost', or 'no longer qualifies')
+  # agb <- dplyr::bind_rows(agb,
+  #                         lostDowned %>%
+  #                           dplyr::select(-"tempStemID", -("measurementHeight":"dataQF"))
+  #                         ) %>%
+  #   dplyr::select(-"sampledArea_m2")
 
 
 

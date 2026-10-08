@@ -245,7 +245,9 @@ estimateWoodMass = function(inputDataList,
     stop("The plotSubset argument must be one of: 'all', 'towerAll', 'towerAnnualSubset', 'distributed'")
   }
 
-  #   Assign plotType needed in output based on 'plotSubset' argument
+  
+  
+  ### Assign plotType needed in output based on 'plotSubset' argument
   plotType <- dplyr::case_when(plotSubset == "all" ~ "all",
                                plotSubset == "distributed" ~ "distributed",
                                plotSubset %in% c("towerAll", "towerAnnualSubset") ~ "tower")
