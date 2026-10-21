@@ -32,10 +32,8 @@ calculateTransitions <- function(appIndTable,
 
 
   ##  Prep vst_perplotperyear data
-  plotDF <- plotYearTable
-
   #   Reduce to needed columns
-  plotDF <- plotDF %>%
+  plotDF <- plotYearTable %>%
     dplyr::select("domainID",
                   "siteID",
                   "plotID",
@@ -115,7 +113,8 @@ calculateTransitions <- function(appIndTable,
   transFilledDF <- transFilledDF %>%
     dplyr::left_join(aiDF %>%
                        dplyr::select(-"domainID",
-                                     -"siteID"),
+                                     -"siteID",
+                                     -"plot_eventID"),
                      by = c("plotID",
                             "eventID",
                             "individualID"))
@@ -267,54 +266,7 @@ calculateTransitions <- function(appIndTable,
 
 
 
-  ### APPROXIMATE MISSING STEMDIAMETER VALUES ####
-  
-  #--> Remove mass interpolation code, only interpolate stemDiameter
-  
-  ### Interpolate missing mass values
-  #--> Calculated 'growthInterval' data will be based off both inferred and allometrically estimated mass values
-  transFilterDF <- transFilterDF %>%
-    dplyr::group_by(.data$individualID) %>%
-    dplyr::arrange(.data$year,
-                   .by_group = TRUE) %>%
-    dplyr::mutate(
-      estimatedMass = {
-        x <- .data$year
-        y <- .data$agb_kg
-        ok <- !is.na(y)
-
-        if (sum(ok) < 2) {
-          #   Return NA if not enough points to interpolate
-          rep(NA_real_, length(y))
-
-        } else {
-          #   Rule 1 does not extrapolate to NAs outside the data
-          round(stats::approx(x = x[ok],
-                              y = y[ok],
-                              xout = x,
-                              rule = 1)$y,
-                digits = 2)
-        }
-      },
-    .after = "agb_kg")
-
-  #   Conditionally populate missing 'agb_kg' values with interpolated mass values; create 'massFlag' to record when an estimated mass is used
-  transFilterDF <- transFilterDF %>%
-    dplyr::mutate(
-      massFlag = dplyr::case_when(
-        is.na(.data$agb_kg) & !is.na(.data$estimatedMass) ~ TRUE,
-        TRUE ~ FALSE
-      ),
-      agb_kg = dplyr::replace_when(
-        .data$agb_kg,
-        is.na(.data$agb_kg) & !is.na(.data$estimatedMass) ~ .data$estimatedMass
-      )
-    ) %>%
-    dplyr::relocate("massFlag",
-                    .after = "agb_kg") %>%
-    dplyr::select(-"estimatedMass")
-  
-  
+  ### APPROXIMATE MISSING 'stemDiameter' VALUES ####
   
   ### Interpolate missing stemDiameter values
   transFilterDF <- transFilterDF %>%
@@ -342,15 +294,116 @@ calculateTransitions <- function(appIndTable,
       },
       .after = "stemDiameter")
   
-  #   Conditionally populate 'stemDiameter' with interpolated values
+  #   Conditionally populate 'stemDiameter' with interpolated values; create estimatedDiamFlag to indicate when a stemDiameter is interpolated
   transFilterDF <- transFilterDF %>%
     dplyr::mutate(
+      estimatedDiamFlag = dplyr::case_when(
+        is.na(.data$stemDiameter) & !is.na(.data$estimatedDiam) ~ TRUE,
+        TRUE ~ FALSE
+      ),
+      
       stemDiameter = dplyr::replace_when(
         .data$stemDiameter,
         is.na(.data$stemDiameter) & !is.na(.data$estimatedDiam) ~ .data$estimatedDiam
       )
     ) %>%
+    dplyr::relocate("estimatedDiamFlag", .after = "stemDiameter")
     dplyr::select(-"estimatedDiam")
+    
+    
+    
+  ### RECRUITS: ASSIGN RECRUITED 'stemDiameter' VALUE ####
+  
+  ### Replace NA 'stemDiameter' values with "10" cm for year prior to recruitment event; update 'estimatedDiamFlag', 'liveDeadStatus' and 'statusFlag' accordingly
+    transFilterDF <- transFilterDF %>%
+      dplyr::group_by(.data$individualID) %>%
+      dplyr::arrange(.data$year,
+                     .by_group = TRUE) %>%
+      dplyr::mutate(
+        stemDiameter = dplyr::replace_when(
+          .data$stemDiameter,
+          is.na(.data$stemDiameter) & dplyr::lead(.data$transitionStatus) == "recruitment" ~ 10
+        ),
+        
+        estimatedDiamFlag = dplyr::replace_when(
+          .data$estimatedDiamFlag,
+          .data$stemDiameter == 10 & dplyr::lead(.data$transitionStatus) == "recruitment" ~ TRUE
+        ),
+        
+        liveDeadStatus = dplyr::replace_when(
+          .data$liveDeadStatus,
+          .data$stemDiameter == 10 & dplyr::lead(.data$transitionStatus) == "recruitment" ~ "live"
+        ),
+        
+        statusFlag = dplyr::replace_when(
+          .data$statusFlag,
+          .data$stemDiameter == 10 & dplyr::lead(.data$transitionStatus) == "recruitment" ~ TRUE
+        )
+      )
+    
+    
+    
+    ### Flag unexpected 'stemDiameter' increments
+    #--> Note: A number of individuals at ABBY appear to have legitimate stemDiameter increments > 3 AND < 4 cm/y
+    #--> Note: Flag not applied to year a secondary stem of a multi-bole tree is recruited --> no standard qualifying diameter
+    transFilterDF <- transFilterDF %>%
+      dplyr::group_by(.data$individualID) %>%
+      dplyr::arrange(.data$year,
+                     .by_group = TRUE) %>%
+      dplyr::mutate(
+        
+        incrementFlag = dplyr::case_when(
+          .data$transitionStatus == "recruitment" & grepl("[0-9]{5}[A-Za-z]{1}$", .data$individualID) ~ FALSE,
+          abs(.data$stemDiameter - dplyr::lag(.data$stemDiameter)) / (.data$year - dplyr::lag(.data$year)) > 3.5 ~ TRUE,
+          TRUE ~ FALSE),
+        
+        .after = "stemDiameter"
+      ) %>%
+      
+      dplyr::mutate(
+        incrementFlag = dplyr::replace_when(
+          .data$incrementFlag,
+          dplyr::lead(.data$transitionStatus) == "recruitment" & dplyr::lead(.data$incrementFlag) == TRUE ~ TRUE
+        )
+      )
+    
+    
+    
+    ### Update 'stemDiameter' with modeled value for recruits with incrementFlag == TRUE
+    #--> Note: These individuals were likely missed in the previous bout
+    temp <- transFilterDF %>%
+      dplyr::group_by(.data$individualID) %>%
+      dplyr::arrange(.data$year,
+                     .by_group = TRUE) %>%
+      #   Retain individualIDs recruited at some point and with flagged 10 cm recruitment diameter
+      dplyr::filter(any(.data$transitionStatus == "recruitment") & any(.data$stemDiameter == 10 & .data$incrementFlag == TRUE)) %>%
+      
+      #   Ensure at least 3 rows of data exist so that 2 timepoints remain once spurious 10 cm value is removed before model fitting
+      filter(sum(!is.na(.data$year) & !is.na(.data$stemDiameter)) >= 3)
+    
+    #--> Next step is to set offending 10 cm values to NA and then model a predicted value
+    
+    
+    
+    
+    
+    #--> Method to generate predicted values with linear model
+    df_with_predictions <- df %>%
+      group_by(individualID) %>%
+      filter(any(transitionStatus == "recruitment") & any(incrementFlag == TRUE)) %>%
+      filter(sum(!is.na(date) & !is.na(stemDiameter)) >= 2) %>% #--> Ensure at least 2 rows have enough data to fit a model
+      mutate(
+        # Fit model only on rows with both non-NA date AND non-NA stemDiameter
+        model = list(lm(stemDiameter ~ date, 
+                        data = cur_data() %>% filter(!is.na(date) & !is.na(stemDiameter)))),
+        # Predict for all rows
+        predictedDiameter = predict(model[[1]], newdata = cur_data(), na.action = na.predict)
+      ) %>%
+      select(-model) %>%
+      ungroup()
+    
+    
+  
 
 
 
