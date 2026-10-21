@@ -4,19 +4,19 @@
 #' Courtney L Meier \email{cmeier@BattelleEcology.org} \cr
 #' Claire K Lunch \email{clunch@BattelleEcology.org} \cr
 #'
-#' @description Identifies individual trees whose status has changed between surveys (e.g. live to dead), and infers the appropriate status for missed events when possible; for example, when a tree is "live" then is not sampled for several eventIDs and is "live" again, it is inferred to be alive for the eventIDs that were missed. Biomass is also inferred via interpolation for missed eventIDs but biomass is not inferred for missed eventIDs outside the recorded data (i.e., no extrapolation). The growthInterval is then determined using dates for both observed and inferred biomass.
+#' @description Identifies individual trees whose status has changed between surveys (e.g. live to dead), and infers the appropriate status for missed events when possible; for example, when a tree is "live" then is not sampled for several eventIDs and is "live" again, it is inferred to be alive for the eventIDs that were missed. The stemDiameter is also inferred via interpolation for missed eventIDs but stemDiameter is not inferred for missed eventIDs outside the recorded data (i.e., no extrapolation). The growthInterval is then determined using dates for both observed and inferred stemDiameter, and suspicious stemDiameter increment rates are flagged, including for recruits.
 #'
-#' @details This is a helper function for the estimateWoodProd() function, used to estimate mortality, recruitment, and missingness.
+#' @details This is a helper function for the estimateWoodProd() function, used to estimate mortality, recruitment, and missingness, and to infer missing and recruited stemDiameter when appropriate.
 #'
-#' @param biomassTable Table (generated in estimateWoodProd()) containing biomass records for individual trees. [data.frame]
+#' @param appIndTable Table (generated in estimateWoodProd()) containing records with stemDiameter for individual trees. [data.frame]
 #'
 #' @param plotYearTable The 'vst_perplotperyear' table for the site x month combination(s) of interest; this table is passed by the user into the estimateWoodProd() function. [data.frame]
 #'
-#' @return A table with one record for each individual whose status has changed, noting its status and biomass at each time point.
+#' @return A table with one record for each individual whose status has changed, noting its status, stemDiameter, and any generated flags at each time point.
 #'
 #' @keywords internal
 
-calculateTransitions <- function(biomassTable,
+calculateTransitions <- function(appIndTable,
                                  plotYearTable) {
 
 
@@ -28,16 +28,11 @@ calculateTransitions <- function(biomassTable,
 
 
   ### INPUT DATA PREPARATION ####
-  agbDF <- biomassTable
+  aiDF <- appIndTable
 
 
   ##  Prep vst_perplotperyear data
   plotDF <- plotYearTable
-
-  #   Remove unneeded per plot records
-  plotDF <- plotDF %>%
-    dplyr::filter(.data$samplingImpractical == "OK" | is.na(.data$samplingImpractical),
-                  is.na(.data$dataCollected) | .data$dataCollected %in% c("allGrowthForms", "woodyOnly", "treesOnly"))
 
   #   Reduce to needed columns
   plotDF <- plotDF %>%
@@ -80,12 +75,12 @@ calculateTransitions <- function(biomassTable,
 
   ### Join plot and biomass data and expand
   #--> Create a record for an individualID in each plot-event when the individual occurs in that plot in at least one eventID
-  #--> Allows accounting for individuals when whole plot mortality or recruitment occurs or a plot is missed
+  #--> Allows accounting for individuals when whole plot mortality or recruitment occurs, or a plot or individual is missed
 
   ##  Use full_join to associate plot data with individual data
   #--> Reveals plots-events with no individuals and individuals with no plot-events
   transitionDF <- dplyr::full_join(plotDF,
-                                   agbDF %>%
+                                   aiDF %>%
                                      dplyr::select("plotID", "eventID", "individualID"),
                                    by = c("plotID", "eventID"))
 
@@ -118,12 +113,9 @@ calculateTransitions <- function(biomassTable,
 
   ##  Fill in original individual-level data where they exist, otherwise they are NA
   transFilledDF <- transFilledDF %>%
-    dplyr::left_join(agbDF %>%
+    dplyr::left_join(aiDF %>%
                        dplyr::select(-"domainID",
-                                     -"siteID",
-                                     -"plotType",
-                                     -"eventType",
-                                     -"dataCollected"),
+                                     -"siteID"),
                      by = c("plotID",
                             "eventID",
                             "individualID"))
@@ -140,13 +132,13 @@ calculateTransitions <- function(biomassTable,
                     .before = "date")
 
 
-  ##  Fill in 'year' when missing; happens for plotIDs not in estimateWoodMass output
+  ##  Create 'year' column
   transFilterDF <- transFilterDF %>%
-    dplyr::mutate(
-      year = dplyr::replace_when(
-        .data$year,
-        is.na(.data$year) ~ as.numeric(stringr::str_extract(string = .data$eventID, pattern = "20[0-9]{2}$"))
-      )
+    dplyr::mutate(year = dplyr::case_when(
+        !is.na(.data$eventID) ~ as.numeric(stringr::str_extract(string = .data$eventID, pattern = "20[0-9]{2}$")),
+        TRUE ~ NA_integer_
+      ),
+      .before = "eventID"
     )
 
 
@@ -275,7 +267,9 @@ calculateTransitions <- function(biomassTable,
 
 
 
-  ### APPROXIMATE MISSING MASS AND STEMDIAMETER VALUES ####
+  ### APPROXIMATE MISSING STEMDIAMETER VALUES ####
+  
+  #--> Remove mass interpolation code, only interpolate stemDiameter
   
   ### Interpolate missing mass values
   #--> Calculated 'growthInterval' data will be based off both inferred and allometrically estimated mass values
