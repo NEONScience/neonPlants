@@ -1,10 +1,10 @@
-#' @title Find trees at NEON sites whose status has changed between sampling events
+#' @title Identify trees at NEON sites whose status has changed between sampling events and process data for recruits
 #'
 #' @author
 #' Courtney L Meier \email{cmeier@BattelleEcology.org} \cr
 #' Claire K Lunch \email{clunch@BattelleEcology.org} \cr
 #'
-#' @description Identifies individual trees whose status has changed between surveys (e.g. live to dead), and infers the appropriate status for missed events when possible; for example, when a tree is "live" then is not sampled for several eventIDs and is "live" again, it is inferred to be alive for the eventIDs that were missed. The stemDiameter is also inferred via interpolation for missed eventIDs but stemDiameter is not inferred for missed eventIDs outside the recorded data (i.e., no extrapolation). The growthInterval is then determined using dates for both observed and inferred stemDiameter, and suspicious stemDiameter increment rates are flagged, including for recruits.
+#' @description Identifies individual trees whose status has changed between surveys (e.g. live to dead), and infers the appropriate status for missed events when possible; for example, when a tree is "live" then is not sampled for several eventIDs and is "live" again, it is inferred to be alive for the eventIDs that were missed. The stemDiameter is also inferred via interpolation for missed eventIDs but stemDiameter is not inferred for missed eventIDs outside the recorded data (i.e., no extrapolation). The sampling interval is then determined using dates for both observed and inferred stemDiameter, and suspicious stemDiameter increment rates are flagged, including for recruits. Where possible, inappropriate stemDiameter for recruits is replaced with a modeled value (i.e., the standard assumption of 10 cm stemDiameter for recruits is clearly incorrect and it is possible to model a more appropriate diameter).
 #'
 #' @details This is a helper function for the estimateWoodProd() function, used to estimate mortality, recruitment, and missingness, and to infer missing and recruited stemDiameter when appropriate.
 #'
@@ -12,7 +12,7 @@
 #'
 #' @param plotYearTable The 'vst_perplotperyear' table for the site x month combination(s) of interest; this table is passed by the user into the estimateWoodProd() function. [data.frame]
 #'
-#' @return A table with one record for each individual whose status has changed, noting its status, stemDiameter, and any generated flags at each time point.
+#' @return A table with one record for each individual, noting its status, stemDiameter, and any generated flags at each time point.
 #'
 #' @keywords internal
 
@@ -307,7 +307,7 @@ calculateTransitions <- function(appIndTable,
         is.na(.data$stemDiameter) & !is.na(.data$estimatedDiam) ~ .data$estimatedDiam
       )
     ) %>%
-    dplyr::relocate("estimatedDiamFlag", .after = "stemDiameter")
+    dplyr::relocate("estimatedDiamFlag", .after = "stemDiameter") %>%
     dplyr::select(-"estimatedDiam")
     
     
@@ -343,9 +343,33 @@ calculateTransitions <- function(appIndTable,
     
     
     
+    ### Determine predicted recruitment date
+    #--> Note: YYYY-10-01 is used when the interval between the "recruitment" year and the previous time the plot was sampled is 1 year; otherwise, the midpoint date between the "recruitment" sampling date and 10/01 of the year the plot was previously sampled is used.
+    
+    transFilterDF <- transFilterDF %>%
+      dplyr::group_by(.data$individualID) %>%
+      dplyr::arrange(.data$year,
+                     .by_group = TRUE) %>%
+      dplyr::mutate(
+        
+        predictedDate = case_when(
+          lead(.data$transitionStatus) == "recruitment" & !is.na(lead(.data$date)) & is.na(.data$date) &
+            lead(.data$year) != .data$year + 1 ~ 
+            as.Date(glue::glue("{.data$year}-10-01")) + (lead(.data$date) - as.Date(glue::glue("{.data$year}-10-01"))) / 2,
+          lead(.data$transitionStatus) == "recruitment" & !is.na(lead(.data$date)) & is.na(.data$date) &
+            lead(.data$year) == .data$year + 1 ~ 
+            as.Date(glue::glue("{.data$year}-10-01")),
+          TRUE ~ .data$date
+        ),
+        
+        .after = "date"
+      )
+    
+    
+    
     ### Flag unexpected 'stemDiameter' increments
-    #--> Note: A number of individuals at ABBY appear to have legitimate stemDiameter increments > 3 AND < 4 cm/y
-    #--> Note: Flag not applied to year a secondary stem of a multi-bole tree is recruited --> no standard qualifying diameter
+    #--> Note: A number of individuals at ABBY appear to have legitimate annual stemDiameter increments > 3 AND < 4 cm/y
+    #--> Note: Flag not applied to recruited secondary stems of a multi-bole tree --> no standard qualifying diameter
     transFilterDF <- transFilterDF %>%
       dplyr::group_by(.data$individualID) %>%
       dplyr::arrange(.data$year,
@@ -354,12 +378,16 @@ calculateTransitions <- function(appIndTable,
         
         incrementFlag = dplyr::case_when(
           .data$transitionStatus == "recruitment" & grepl("[0-9]{5}[A-Za-z]{1}$", .data$individualID) ~ FALSE,
-          abs(.data$stemDiameter - dplyr::lag(.data$stemDiameter)) / (.data$year - dplyr::lag(.data$year)) > 3.5 ~ TRUE,
-          TRUE ~ FALSE),
+          abs(.data$stemDiameter - dplyr::lag(.data$stemDiameter)) / 
+            lubridate::time_length(.data$predictedDate - dplyr::lag(.data$predictedDate), unit = "years") > 3.5 ~ TRUE,
+          TRUE ~ FALSE
+        ),
         
         .after = "stemDiameter"
       ) %>%
       
+      #   Update incrementFlag for recruited individuals to include flagging year prior to recruitment
+      #--> Note: This flags when assuming a 10 cm recruitment diameter is inappropriate
       dplyr::mutate(
         incrementFlag = dplyr::replace_when(
           .data$incrementFlag,
@@ -370,54 +398,91 @@ calculateTransitions <- function(appIndTable,
     
     
     ### Update 'stemDiameter' with modeled value for recruits with incrementFlag == TRUE
-    #--> Note: These individuals were likely missed in the previous bout
+    #--> Note: These individuals were likely missed in the previous bout and therefore appear inexplicably large when first recorded
+    
+    ##  Isolate all records associated with any individualID that is flagged for a suspicious "recruitment" event
     temp <- transFilterDF %>%
       dplyr::group_by(.data$individualID) %>%
       dplyr::arrange(.data$year,
                      .by_group = TRUE) %>%
-      #   Retain individualIDs recruited at some point and with flagged 10 cm recruitment diameter
+      #   Filter to individualIDs recruited at some point and with flagged 10 cm recruitment diameter
       dplyr::filter(any(.data$transitionStatus == "recruitment") & any(.data$stemDiameter == 10 & .data$incrementFlag == TRUE)) %>%
       
-      #   Ensure at least 3 rows of data exist so that 2 timepoints remain once spurious 10 cm value is removed before model fitting
-      filter(sum(!is.na(.data$year) & !is.na(.data$stemDiameter)) >= 3)
-    
-    #--> Next step is to set offending 10 cm values to NA and then model a predicted value
-    
+      #   Ensure at least 3 rows of data exist before setting 10 cm -> NA and model fitting
+      dplyr::filter(sum(!is.na(.data$predictedDate) & !is.na(.data$stemDiameter)) >= 3) %>%
+      dplyr::relocate("individualID", .before = "tempStemID")
     
     
-    
-    
-    #--> Method to generate predicted values with linear model
-    df_with_predictions <- df %>%
-      group_by(individualID) %>%
-      filter(any(transitionStatus == "recruitment") & any(incrementFlag == TRUE)) %>%
-      filter(sum(!is.na(date) & !is.na(stemDiameter)) >= 2) %>% #--> Ensure at least 2 rows have enough data to fit a model
-      mutate(
-        # Fit model only on rows with both non-NA date AND non-NA stemDiameter
-        model = list(lm(stemDiameter ~ date, 
-                        data = cur_data() %>% filter(!is.na(date) & !is.na(stemDiameter)))),
-        # Predict for all rows
-        predictedDiameter = predict(model[[1]], newdata = cur_data(), na.action = na.predict)
+    ##  Update recruitment diameter from 10 cm to NA for flagged rows, then model and use new predicted stemDiameter
+    temp <- temp %>%
+      dplyr::group_by(.data$individualID) %>%
+      dplyr::arrange(.data$year,
+                     .by_group = TRUE) %>%
+      
+      #   Set offending recruitment stemDiameters to NA_real_
+      dplyr::mutate(
+        stemDiameter = dplyr::replace_when(
+          .data$stemDiameter,
+          dplyr::lead(.data$transitionStatus == "recruitment") & .data$stemDiameter == 10 & .data$incrementFlag == TRUE ~ NA_real_
+        )
       ) %>%
-      select(-model) %>%
-      ungroup()
+      
+      #   Model new predictedStemDiam (for all time points with a date)
+      dplyr::mutate(
+        model = list(lm(.data$stemDiameter ~ .data$predictedDate, 
+                        data = dplyr::cur_data() %>% 
+                          dplyr::filter(!is.na(.data$predictedDate) & !is.na(.data$stemDiameter)))),
+        predictedStemDiam = round(stats::predict(.data$model[[1]], newdata = dplyr::cur_data()),
+                                  digits = 1)
+      ) %>%
+      
+      #   Update recruitment stemDiameter previously set to NA with with new predicted value
+      dplyr::mutate(
+        stemDiameter = dplyr::replace_when(
+          .data$stemDiameter,
+          dplyr::lead(.data$transitionStatus == "recruitment") & is.na(.data$stemDiameter) & .data$incrementFlag == TRUE ~
+            .data$predictedStemDiam
+        )
+      ) %>%
+      
+      #   Column clean-up
+      dplyr::select(-"model",
+                    -"predictedStemDiam")
     
     
-  
+    ##  Replace records in 'transFilterDF' with flagged recruitment increment with records updated with modeled recruitment stemDiameter
+    
+    #   Create unique individualID-eventID identifier for modified records
+    temp <- temp %>%
+      dplyr::mutate(indivEventID = paste(.data$individualID, .data$eventID, sep = "-"),
+                    .before = "plotID")
+    
+    #   Remove corresponding records from transFilterDF
+    transFilterDF <- transFilterDF %>%
+      dplyr::mutate(indivEventID = paste(.data$individualID, .data$eventID, sep = "-"),
+                    .before = "plotID") %>%
+      dplyr::filter(!indivEventID %in% temp$indivEventID) %>%
+      dplyr::select(-"indivEventID")
+    
+    #   Recombine data frames
+    transFilterDF <- dplyr::bind_rows(transFilterDF,
+                                      temp %>%
+                                        dplyr::select(-"indivEventID"))
 
 
 
-  ### OUTPUT #######################################################
-
-  ##  Relocate columns for output
-  transFilterDF <- transFilterDF %>%
-    dplyr::relocate(c("plotID"), .after = "year") %>%
-    dplyr::relocate("nlcdClass", .after = "plotType") %>%
-    dplyr::relocate(("taxonID":"scientificName"), .after = "ninetyCrownDiameter") %>%
-    dplyr::relocate("source", .after = "scientificName")
-
-
-  ##  Return output
-  return(transFilterDF)
+    ### OUTPUT #######################################################
+    
+    ##  Relocate columns for output
+    transFilterDF <- transFilterDF %>%
+      dplyr::relocate("plotID", .before = "subplotID") %>%
+      dplyr::relocate("individualID", .before = "growthForm") %>%
+      dplyr::ungroup() %>%
+      dplyr::arrange(.data$individualID,
+                     .data$year)
+    
+    
+    ##  Return output
+    return(transFilterDF)
 
 }

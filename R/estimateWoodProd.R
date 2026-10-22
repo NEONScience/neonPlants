@@ -454,7 +454,7 @@ estimateWoodProd <- function(inputDataList,
   
   
   
-  ### IDENTIFY MORTALITY AND RECRUITMENT EVENTS ####
+  ### IDENTIFY TRANSITION EVENTS ####
   
   #   Find mortality and recruitment, interpolate missing stemDiameter data, and flag suspicious stemDiameter transitions
   if (nrow(appInd) > 0) {
@@ -471,15 +471,12 @@ estimateWoodProd <- function(inputDataList,
   
   
   
-  #--> Need to assign liveDeadStatus, identify transitions, interpolate missing stemDiameters, and flag implausible stemDiameter increments *before* biomass is calculated...
-  
-
-  
-  
-  
   ### ESTIMATE BIOMASS OF TREES ####
 
   ### Generate wood mass estimates
+  
+  ###-----> Begin again here ###########################################################################
+  
   
   #   Join taxonomic data from 'map' to 'appInd' --> make sure this code works/makes sense here...
   appInd <- dplyr::left_join(appInd,

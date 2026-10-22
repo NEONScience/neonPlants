@@ -2,23 +2,23 @@
 % Please edit documentation in R/calculateTransitions.R
 \name{calculateTransitions}
 \alias{calculateTransitions}
-\title{Find trees at NEON sites whose status has changed between sampling events}
+\title{Identify trees at NEON sites whose status has changed between sampling events and process data for recruits}
 \usage{
-calculateTransitions(biomassTable, plotYearTable)
+calculateTransitions(appIndTable, plotYearTable)
 }
 \arguments{
-\item{biomassTable}{Table (generated in estimateWoodProd()) containing biomass records for individual trees. \link{data.frame}}
+\item{appIndTable}{Table (generated in estimateWoodProd()) containing records with stemDiameter for individual trees. \link{data.frame}}
 
 \item{plotYearTable}{The 'vst_perplotperyear' table for the site x month combination(s) of interest; this table is passed by the user into the estimateWoodProd() function. \link{data.frame}}
 }
 \value{
-A table with one record for each individual whose status has changed, noting its status and biomass at each time point.
+A table with one record for each individual, noting its status, stemDiameter, and any generated flags at each time point.
 }
 \description{
-Identifies individual trees whose status has changed between surveys (e.g. live to dead), and infers the appropriate status for missed events when possible; for example, when a tree is "live" then is not sampled for several eventIDs and is "live" again, it is inferred to be alive for the eventIDs that were missed. Biomass is also inferred via interpolation for missed eventIDs but biomass is not inferred for missed eventIDs outside the recorded data (i.e., no extrapolation). The growthInterval is then determined using dates for both observed and inferred biomass.
+Identifies individual trees whose status has changed between surveys (e.g. live to dead), and infers the appropriate status for missed events when possible; for example, when a tree is "live" then is not sampled for several eventIDs and is "live" again, it is inferred to be alive for the eventIDs that were missed. The stemDiameter is also inferred via interpolation for missed eventIDs but stemDiameter is not inferred for missed eventIDs outside the recorded data (i.e., no extrapolation). The sampling interval is then determined using dates for both observed and inferred stemDiameter, and suspicious stemDiameter increment rates are flagged, including for recruits. Where possible, inappropriate stemDiameter for recruits is replaced with a modeled value (i.e., the standard assumption of 10 cm stemDiameter for recruits is clearly incorrect and it is possible to model a more appropriate diameter).
 }
 \details{
-This is a helper function for the estimateWoodProd() function, used to estimate mortality, recruitment, and missingness.
+This is a helper function for the estimateWoodProd() function, used to estimate mortality, recruitment, and missingness, and to infer missing and recruited stemDiameter when appropriate.
 }
 \author{
 Courtney L Meier \email{cmeier@BattelleEcology.org} \cr
