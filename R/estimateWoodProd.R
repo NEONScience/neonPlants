@@ -459,7 +459,7 @@ estimateWoodProd <- function(inputDataList,
   #   Find mortality and recruitment, interpolate missing stemDiameter data, and flag suspicious stemDiameter transitions
   if (nrow(appInd) > 0) {
     
-    transitions <- calculateTransitions(biomassTable = appInd,
+    transitions <- calculateTransitions(appIndTable = appInd,
                                         plotYearTable = perPlot)
     
   } else {
@@ -475,44 +475,29 @@ estimateWoodProd <- function(inputDataList,
 
   ### Generate wood mass estimates
   
-  ###-----> Begin again here ###########################################################################
-  
-  
   #   Join taxonomic data from 'map' to 'appInd' --> make sure this code works/makes sense here...
-  appInd <- dplyr::left_join(appInd,
-                             map,
-                             by = "individualID") %>%
+  transitions <- dplyr::left_join(transitions,
+                                  map,
+                                  by = "individualID") %>%
     dplyr::relocate("taxonID",
                     "scientificName",
                     "genus",
                     "family",
                     .before = "growthForm")
   
-  #--> Replace code below with output from estimateAllometricWoodMass function; need to verify what 'agb_kg' output looks like for lost/downed individuals.
+  #   Generate above-ground biomass estimates for trees
+  agb <- neonPlants:::estimateAllometricWoodyMass(appIndTable = transitions,
+                                                  growthFormSubset = "tree")
   
-  # woodMassOutput <- neonPlants::estimateWoodMass(
-  #   inputIndividual = appInd,
-  #   inputMapTag = map,
-  #   inputPerPlot = perPlot,
-  #   plotSubset = plotSubset,
-  #   growthFormSubset = "tree"
-  # )
-  # 
-  # 
-  # ##  Extract required estimateWoodMass output tables
-  # agb <- woodMassOutput$vst_AGB_indiv
-  # lostDowned <- woodMassOutput$vst_lost_downed
-  # 
-  # 
-  # 
-  # ### Prepare outputs from estimateWoodMass
-  # 
-  # ##  Create unified 'agb' data frame that includes lost/downed individuals (no growthform, or plantStatus 'downed', 'lost', or 'no longer qualifies')
-  # agb <- dplyr::bind_rows(agb,
-  #                         lostDowned %>%
-  #                           dplyr::select(-"tempStemID", -("measurementHeight":"dataQF"))
-  #                         ) %>%
-  #   dplyr::select(-"sampledArea_m2")
+  agb <- agb %>%
+    dplyr::relocate("agb_kg", .before = "stemDiameter")
+  
+  
+  ###-----> Begin again here ###########################################################################
+  
+  #--> Verify output from estimateAllometricWoodMass function is as expected
+  
+  
 
 
 
@@ -520,9 +505,7 @@ estimateWoodProd <- function(inputDataList,
 
 
 
-  ### CALCULATE BIOMASS CHANGES FROM INCREMENT, RECRUITMENT, AND MORTALITY ####
-  
-  #--> Bring code in estimateIncrement that assigns DBH = 10 cm to recruits into calculateTransitions
+  ### CALCULATE BIOMASS INCREMENT ####
 
   increment <- estimateIncrement(biomassTable = transitions,
                                  missing = missing,

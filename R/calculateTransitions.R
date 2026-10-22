@@ -430,9 +430,9 @@ calculateTransitions <- function(appIndTable,
       #   Model new predictedStemDiam (for all time points with a date)
       dplyr::mutate(
         model = list(lm(.data$stemDiameter ~ .data$predictedDate, 
-                        data = dplyr::cur_data() %>% 
+                        data = dplyr::pick(dplyr::everything()) %>% 
                           dplyr::filter(!is.na(.data$predictedDate) & !is.na(.data$stemDiameter)))),
-        predictedStemDiam = round(stats::predict(.data$model[[1]], newdata = dplyr::cur_data()),
+        predictedStemDiam = round(stats::predict(.data$model[[1]], newdata = dplyr::pick(dplyr::everything())),
                                   digits = 1)
       ) %>%
       
@@ -476,7 +476,7 @@ calculateTransitions <- function(appIndTable,
     ##  Relocate columns for output
     transFilterDF <- transFilterDF %>%
       dplyr::relocate("plotID", .before = "subplotID") %>%
-      dplyr::relocate("individualID", .before = "growthForm") %>%
+      dplyr::relocate("individualID", .before = "tempStemID") %>%
       dplyr::ungroup() %>%
       dplyr::arrange(.data$individualID,
                      .data$year)
