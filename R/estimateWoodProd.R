@@ -411,7 +411,8 @@ estimateWoodProd <- function(inputDataList,
     dplyr::filter(.data$indivEventID %in% treeDupes$indivEventID) %>%
     dplyr::arrange(.data$plotID,
                    .data$eventID,
-                   .data$individualID)
+                   .data$individualID) %>%
+    dplyr::select(-"plot_eventID")
 
   #   Remove all duplicate records from 'appInd' table
   appInd <- appInd %>%
@@ -491,29 +492,48 @@ estimateWoodProd <- function(inputDataList,
   
   agb <- agb %>%
     dplyr::relocate("agb_kg", .before = "stemDiameter")
-  
-  
-  ###-----> Begin again here ###########################################################################
-  
-  #--> Verify output from estimateAllometricWoodMass function is as expected
-  
-  
-
-
-
-  
 
 
 
   ### CALCULATE BIOMASS INCREMENT ####
 
-  increment <- estimateIncrement(biomassTable = transitions,
+  increment <- estimateIncrement(biomassTable = agb,
                                  missing = missing,
                                  flagged = flagged)
 
-  agbIncrDF <- increment$agbIncrDF
-  missingDF <- increment$missingDF
-  flaggedDF <- increment$flaggedDF
+  #   Remove unneeded variables
+  agbIncrDF <- increment$agbIncrDF %>%
+    dplyr::select(-"allometryID",
+                  -"spg_gcm3",
+                  -"nativeStatus",
+                  -"tropical",
+                  -"b0",
+                  -"b1",
+                  -"minDiameter",
+                  -"maxDiameter",
+                  -"Chave_E")
+  
+  missingDF <- increment$missingDF %>%
+    dplyr::select(-"allometryID",
+                  -"spg_gcm3",
+                  -"nativeStatus",
+                  -"tropical",
+                  -"b0",
+                  -"b1",
+                  -"minDiameter",
+                  -"maxDiameter",
+                  -"Chave_E")
+  
+  flaggedDF <- increment$flaggedDF %>%
+    dplyr::select(-"allometryID",
+                  -"spg_gcm3",
+                  -"nativeStatus",
+                  -"tropical",
+                  -"b0",
+                  -"b1",
+                  -"minDiameter",
+                  -"maxDiameter",
+                  -"Chave_E")
 
 
 
@@ -540,19 +560,13 @@ estimateWoodProd <- function(inputDataList,
                     .data$year,
                     .data$plotID,
                     .data$plotType,
-                    # .data$nlcdClass, #--> causes problems since NA in some older data
                     .data$eventType,
                     .data$dataCollected) %>%
 
     dplyr::summarise(
 
-      #   Deal with NAs present in nlcdClass
-      nlcdClass = dplyr::case_when(
-        all(is.na(.data$nlcdClass)) ~ NA,
-        TRUE ~ paste(unique(na.omit(.data$nlcdClass)), collapse = ", ")
-        ),
-
-      #   Sum biomass increment at plotID x eventID level --------------------------> inappropriately returns 0 for first year
+      #   Sum biomass increment at plotID x eventID level
+      #--> Note: 0 is returned when all values are NA. When non-NA values are present, the value returned is the sum of all increments for the plotID x eventID combination.
       woodProd_Mghayr = dplyr::case_when(
         all(is.na(.data$agbIncr_Mghayr)) ~ 0,
         TRUE ~ round(sum(.data$agbIncr_Mghayr, na.rm = TRUE), digits = 2)
@@ -565,10 +579,31 @@ estimateWoodProd <- function(inputDataList,
       ),
 
       .groups = "drop"
+    )
+  
+  
+  ##  Correct output in first year when ANPP and treeCount should be NA, and add back nlcdClass
+  plotDF <- plotDF %>%
+    dplyr::left_join(perPlot %>%
+                       dplyr::select("plotID", "eventID", "nlcdClass"),
+                     by = c("plotID", "eventID")) %>%
+    dplyr::relocate("nlcdClass", .before = "eventType") %>%
+    dplyr::group_by(.data$plotID) %>%
+    dplyr::arrange(.data$year,
+                   .by_group = TRUE) %>%
+    
+    dplyr::mutate(
+      woodProd_Mghayr = dplyr::replace_when(
+        .data$woodProd_Mghayr,
+        .data$year == min(.data$year) & .data$woodProd_Mghayr == 0 ~ NA
+      ),
+      
+      treeCount = dplyr::replace_when(
+        .data$treeCount,
+        .data$year == min(.data$year) & .data$treeCount == 0 ~ NA
+      )
     ) %>%
-    dplyr::relocate("nlcdClass",
-                    .after = "plotType") %>%
-
+    dplyr::ungroup() %>%
     dplyr::arrange(.data$domainID,
                    .data$siteID,
                    .data$plotID,
@@ -577,6 +612,8 @@ estimateWoodProd <- function(inputDataList,
 
 
   ### SITE SCALE: DETERMINE SITE-LEVEL PRODUCTION AND UNCERTAINTY (Mg/ha/y) ####
+  
+  ##  Calculate siteID x eventID ANPP
   siteDF <- plotDF %>%
     dplyr::group_by(.data$domainID,
                     .data$siteID,
@@ -592,6 +629,9 @@ estimateWoodProd <- function(inputDataList,
 
       #   Report comma-separated plotType(s)
       plotType = paste(sort(unique(.data$plotType)), collapse = ", "),
+      
+      #   Report comma-separated eventType(s)
+      eventType = paste(sort(unique(.data$eventType)), collapse = ", "),
 
       #   Determine plot count
       plotCount = dplyr::n(),
@@ -606,6 +646,25 @@ estimateWoodProd <- function(inputDataList,
     ) %>%
 
     dplyr::rename("woodProd_Mghayr" = "woodProdSite_Mghayr")
+  
+  
+  ##  Correct output in first year when ANPP and SD should both be NA
+  siteDF <- siteDF %>%
+    dplyr::group_by(.data$siteID) %>%
+    dplyr::arrange(.data$year,
+                   .by_group = TRUE) %>%
+    
+    dplyr::mutate(
+      woodProd_Mghayr = dplyr::replace_when(
+        .data$woodProd_Mghayr,
+        .data$year == min(.data$year) ~ NA
+      ),
+      
+      woodProdSD_Mghayr = dplyr::replace_when(
+        .data$woodProdSD_Mghayr,
+        .data$year == min(.data$year) ~ NA
+      )
+    )
 
 
 

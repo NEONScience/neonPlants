@@ -18,7 +18,7 @@ A table with one record for each individual, noting its status, stemDiameter, an
 Identifies individual trees whose status has changed between surveys (e.g. live to dead), and infers the appropriate status for missed events when possible; for example, when a tree is "live" then is not sampled for several eventIDs and is "live" again, it is inferred to be alive for the eventIDs that were missed. The stemDiameter is also inferred via interpolation for missed eventIDs but stemDiameter is not inferred for missed eventIDs outside the recorded data (i.e., no extrapolation). The sampling interval is then determined using dates for both observed and inferred stemDiameter, and suspicious stemDiameter increment rates are flagged, including for recruits. Where possible, inappropriate stemDiameter for recruits is replaced with a modeled value (i.e., the standard assumption of 10 cm stemDiameter for recruits is clearly incorrect and it is possible to model a more appropriate diameter).
 }
 \details{
-This is a helper function for the estimateWoodProd() function, used to estimate mortality, recruitment, and missingness, and to infer missing and recruited stemDiameter when appropriate.
+This is a helper function for the estimateWoodProd() function, used to estimate mortality, recruitment, and missingness, and to infer missing and recruited stemDiameter when appropriate. For both "recruitment" and "mortality" events, increment is calculated relative to the mid-point between two sampling events when the sampling interval is more than 1 year.
 }
 \author{
 Courtney L Meier \email{cmeier@BattelleEcology.org} \cr

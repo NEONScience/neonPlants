@@ -175,6 +175,7 @@ estimateWoodMass,vst_lost_downed,year,year,Calendar year in which the growing se
 estimateWoodMass,vst_lost_downed,liveDeadStatus,,Indicator of whether an individual is live or dead at the time of measurement
 estimateWoodMass,vst_lost_downed,sampledArea_m2,m2,Total area sampled within the plot for the growthForm assigned to the individual
 estimateWoodProd,vst_ANPP_indiv,year,year,Calendar year in which the growing season began
+estimateWoodProd,vst_ANPP_indiv,predictedDate,date,The date predicted for recruitment and mortality events when the sampling interval is longer than one year; otherwise equivalent to 'date'.
 estimateWoodProd,vst_ANPP_indiv,growthInterval,year,Number of years between observations of an individual
 estimateWoodProd,vst_ANPP_indiv,liveDeadStatus,,Indicator of whether an individual is live or dead at the time of measurement
 estimateWoodProd,vst_ANPP_indiv,transitionStatus,,"Indicator of whether an individual was recruited, died, or experienced no change in liveDeadStatus from one sampling event to the next"
@@ -183,8 +184,8 @@ estimateWoodProd,vst_ANPP_indiv,agbIncr_Mghayr,Mg/ha/yr,Above-ground biomass inc
 estimateWoodProd,vst_ANPP_indiv,agbIncr_kgyr,kg/yr,Above-ground biomass increment per year for an individual relative to a prior sampling event
 estimateWoodProd,vst_ANPP_indiv,agbIncr_kg,kg,Above-ground biomass increment for an individual relative to a prior sampling event
 estimateWoodProd,vst_ANPP_indiv,agb_kg,kg,Allometrically estimated above-ground biomass for an individual
-estimateWoodProd,vst_ANPP_indiv,massFlag,,Indicator that the 'agb_kg' value was interpolated for a missed individual or estimated for a recruited individual with DBH = 10 cm
 estimateWoodProd,vst_ANPP_indiv,incrementFlag,,Indicator that the change in stemDiameter for an individual was > 3.5 cm/yr from one sampling event to the next
+estimateWoodProd,vst_ANPP_indiv,estimatedDiamFlag,,Indicator the stemDiameter was estimated when an individual was recruited.
 estimateWoodProd,vst_ANPP_indiv,source,,Literature citation for the allometry assigned to the individual
 estimateWoodProd,vst_ANPP_plot,year,year,Calendar year in which the growing season began
 estimateWoodProd,vst_ANPP_plot,woodProd_Mghayr,Mg/ha/yr,Woody plot-level annual above-ground net primary production per unit area
@@ -195,19 +196,22 @@ estimateWoodProd,vst_ANPP_site,woodProd_Mghayr,Mg/ha/yr,Mean site-level woody an
 estimateWoodProd,vst_ANPP_site,woodProdSD_Mghayr,Mg/ha/yr,Standard deviation of site-level woody annual above-ground net primary production per unit area
 estimateWoodProd,vst_ANPP_duplicates,indivEventID,,Combination of the individualID and the eventID that should be unique for a single- or multi-bole tree
 estimateWoodProd,vst_ANPP_flagged,year,year,Calendar year in which the growing season began
+estimateWoodProd,vst_ANPP_flagged,predictedDate,date,The date predicted for recruitment and mortality events when the sampling interval is longer than one year; otherwise equivalent to 'date'.
 estimateWoodProd,vst_ANPP_flagged,liveDeadStatus,,Indicator of whether an individual is live or dead at the time of measurement
 estimateWoodProd,vst_ANPP_flagged,transitionStatus,,"Indicator of whether an individual was recruited, died, or experienced no change in liveDeadStatus from one sampling event to the next"
 estimateWoodProd,vst_ANPP_flagged,statusFlag,,Indicator that the transitionStatus for a missed individual was inferred for a given sampling event based consistent status data in prior and subsequent years
 estimateWoodProd,vst_ANPP_flagged,agb_kg,kg,Allometrically estimated above-ground biomass for an individual
-estimateWoodProd,vst_ANPP_flagged,massFlag,,Indicator that the 'agb_kg' value was interpolated for a missed individual or estimated for a recruited individual with DBH = 10 cm
 estimateWoodProd,vst_ANPP_flagged,incrementFlag,,Indicator that the change in stemDiameter for an individual was > 3.5 cm/yr from one sampling event to the next
+estimateWoodProd,vst_ANPP_flagged,estimatedDiamFlag,,Indicator the stemDiameter was estimated when an individual was recruited.
 estimateWoodProd,vst_ANPP_flagged,source,,Literature citation for the allometry assigned to the individual
 estimateWoodProd,vst_ANPP_missing,year,year,Calendar year in which the growing season began
+estimateWoodProd,vst_ANPP_missing,predictedDate,,The date predicted for recruitment and mortality events when the sampling interval is longer than one year; otherwise equivalent to 'date'.
 estimateWoodProd,vst_ANPP_missing,liveDeadStatus,,Indicator of whether an individual is live or dead at the time of measurement
 estimateWoodProd,vst_ANPP_missing,transitionStatus,,"Indicator of whether an individual was recruited, died, or experienced no change in liveDeadStatus from one sampling event to the next"
 estimateWoodProd,vst_ANPP_missing,statusFlag,,Indicator that the transitionStatus for a missed individual was inferred for a given sampling event based consistent status data in prior and subsequent years
 estimateWoodProd,vst_ANPP_missing,agb_kg,kg,Allometrically estimated above-ground biomass for an individual
-estimateWoodProd,vst_ANPP_missing,massFlag,,Indicator that the 'agb_kg' value was interpolated for a missed individual or estimated for a recruited individual with DBH = 10 cm
+estimateWoodProd,vst_ANPP_missing,incrementFlag,,Indicator that the change in stemDiameter for an individual was > 3.5 cm/yr from one sampling event to the next
+estimateWoodProd,vst_ANPP_missing,estimatedDiamFlag,,Indicator the stemDiameter was estimated when an individual was recruited.
 estimateWoodProd,vst_ANPP_missing,source,,Literature citation for the allometry assigned to the individual
 estimateAquPercentCover,apc_percentCover,type,,Indicator of whether the percent_cover estimate corresponds to a taxon or substrate class
 estimateAquPercentCover,apc_percentCover,substrateOrTaxonID,,The taxonID or substrate identifier associated with the percent_cover estimate
