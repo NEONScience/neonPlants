@@ -353,7 +353,7 @@ calculateTransitions <- function(appIndTable,
                    .by_group = TRUE) %>%
     dplyr::mutate(
       
-      predictedDate = dplyr::case_when(
+      estimatedDate = dplyr::case_when(
         dplyr::lead(.data$transitionStatus) == "recruitment" & !is.na(dplyr::lead(.data$date)) & is.na(.data$date) &
           dplyr::lead(.data$year) != .data$year + 1 ~ 
           as.Date(glue::glue("{.data$year}-10-01")) + (dplyr::lead(.data$date) - as.Date(glue::glue("{.data$year}-10-01"))) / 2,
@@ -380,7 +380,7 @@ calculateTransitions <- function(appIndTable,
       incrementFlag = dplyr::case_when(
         .data$transitionStatus == "recruitment" & grepl("[0-9]{5}[A-Za-z]{1}$", .data$individualID) ~ FALSE,
         abs(.data$stemDiameter - dplyr::lag(.data$stemDiameter)) / 
-          lubridate::time_length(.data$predictedDate - dplyr::lag(.data$predictedDate), unit = "years") > 3.5 ~ TRUE,
+          lubridate::time_length(.data$estimatedDate - dplyr::lag(.data$estimatedDate), unit = "years") > 3.5 ~ TRUE,
         TRUE ~ FALSE
       ),
       
@@ -410,7 +410,7 @@ calculateTransitions <- function(appIndTable,
     dplyr::filter(any(.data$transitionStatus == "recruitment") & any(.data$stemDiameter == 10 & .data$incrementFlag == TRUE)) %>%
     
     #   Ensure at least 3 rows of data exist before setting 10 cm -> NA and model fitting
-    dplyr::filter(sum(!is.na(.data$predictedDate) & !is.na(.data$stemDiameter)) >= 3) %>%
+    dplyr::filter(sum(!is.na(.data$estimatedDate) & !is.na(.data$stemDiameter)) >= 3) %>%
     dplyr::relocate("individualID", .before = "tempStemID")
   
   
@@ -430,9 +430,9 @@ calculateTransitions <- function(appIndTable,
     
     #   Model new predictedStemDiam (for all time points with a date)
     dplyr::mutate(
-      model = list(lm(.data$stemDiameter ~ .data$predictedDate, 
+      model = list(lm(.data$stemDiameter ~ .data$estimatedDate, 
                       data = dplyr::pick(dplyr::everything()) %>% 
-                        dplyr::filter(!is.na(.data$predictedDate) & !is.na(.data$stemDiameter)))),
+                        dplyr::filter(!is.na(.data$estimatedDate) & !is.na(.data$stemDiameter)))),
       predictedStemDiam = round(stats::predict(.data$model[[1]], newdata = dplyr::pick(dplyr::everything())),
                                 digits = 1)
     ) %>%
@@ -457,7 +457,7 @@ calculateTransitions <- function(appIndTable,
         .data$incrementFlag,
         dplyr::lead(.data$transitionStatus == "recruitment") & !is.na(.data$stemDiameter) & .data$incrementFlag == TRUE &
           abs(dplyr::lead(.data$stemDiameter) - .data$stemDiameter) / 
-          lubridate::time_length(dplyr::lead(.data$predictedDate) - .data$predictedDate, unit = "years") < 3.5 ~ FALSE
+          lubridate::time_length(dplyr::lead(.data$estimatedDate) - .data$estimatedDate, unit = "years") < 3.5 ~ FALSE
       ),
       
       incrementFlag = dplyr::replace_when(
@@ -465,7 +465,7 @@ calculateTransitions <- function(appIndTable,
         .data$transitionStatus == "recruitment" & !is.na(dplyr::lag(.data$stemDiameter)) & dplyr::lag(.data$incrementFlag) == FALSE &
           .data$incrementFlag == TRUE & 
           abs(.data$stemDiameter - dplyr::lag(.data$stemDiameter)) / 
-          lubridate::time_length(.data$predictedDate - dplyr::lag(.data$predictedDate), unit = "years") < 3.5 ~ FALSE
+          lubridate::time_length(.data$estimatedDate - dplyr::lag(.data$estimatedDate), unit = "years") < 3.5 ~ FALSE
       )
     ) %>%
     
@@ -504,8 +504,8 @@ calculateTransitions <- function(appIndTable,
                    .by_group = TRUE) %>%
     
     dplyr::mutate(
-      predictedDate = dplyr::replace_when(
-        .data$predictedDate,
+      estimatedDate = dplyr::replace_when(
+        .data$estimatedDate,
         .data$transitionStatus == "mortality" & !is.na(.data$date) & !is.na(dplyr::lag(.data$date)) &
           .data$year != dplyr::lag(.data$year) + 1 ~
           dplyr::lag(.data$date) + (.data$date - dplyr::lag(.data$date)) / 2
