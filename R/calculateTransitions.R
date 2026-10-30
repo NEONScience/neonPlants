@@ -353,12 +353,12 @@ calculateTransitions <- function(appIndTable,
                    .by_group = TRUE) %>%
     dplyr::mutate(
       
-      predictedDate = case_when(
-        lead(.data$transitionStatus) == "recruitment" & !is.na(lead(.data$date)) & is.na(.data$date) &
-          lead(.data$year) != .data$year + 1 ~ 
-          as.Date(glue::glue("{.data$year}-10-01")) + (lead(.data$date) - as.Date(glue::glue("{.data$year}-10-01"))) / 2,
-        lead(.data$transitionStatus) == "recruitment" & !is.na(lead(.data$date)) & is.na(.data$date) &
-          lead(.data$year) == .data$year + 1 ~ 
+      predictedDate = dplyr::case_when(
+        dplyr::lead(.data$transitionStatus) == "recruitment" & !is.na(dplyr::lead(.data$date)) & is.na(.data$date) &
+          dplyr::lead(.data$year) != .data$year + 1 ~ 
+          as.Date(glue::glue("{.data$year}-10-01")) + (dplyr::lead(.data$date) - as.Date(glue::glue("{.data$year}-10-01"))) / 2,
+        dplyr::lead(.data$transitionStatus) == "recruitment" & !is.na(dplyr::lead(.data$date)) & is.na(.data$date) &
+          dplyr::lead(.data$year) == .data$year + 1 ~ 
           as.Date(glue::glue("{.data$year}-10-01")),
         TRUE ~ .data$date
       ),
