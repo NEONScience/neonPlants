@@ -65,7 +65,7 @@
 #'
 #' List of novel variables created by neonPlants functions; does not include variables already defined for existing data products
 #'
-#' @format A data frame with 215 rows and 5 columns:
+#' @format A data frame with 5 columns:
 #' \describe{
 #'   \item{functionName}{Name of neonPlants function}
 #'   \item{table}{Name of function output table}

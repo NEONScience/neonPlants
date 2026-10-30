@@ -5,7 +5,7 @@
 \alias{variables}
 \title{Dataset Title: Function output variables, units, and definitions}
 \format{
-A data frame with 215 rows and 5 columns:
+A data frame with 5 columns:
 \describe{
 \item{functionName}{Name of neonPlants function}
 \item{table}{Name of function output table}

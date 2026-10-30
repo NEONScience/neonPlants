@@ -14,7 +14,7 @@ estimateIncrement(biomassTable, missing, flagged)
 \item{flagged}{Select how individuals flagged for implausibly large stem diameter increments are handled (options are "filter" and "retain"). Default is "retain", which retains flagged individuals and includes them in calculations regardless of stem diameter increment; although flagged individuals contribute to productivity with this option, they are still sent to the "flagged" output table for review. Alternatively, the "filter" option removes all records for individuals with >= 3.5 cm absolute annual stemDiameter increment, including recruited individuals for which inferred initial diameter is 10 cm; flagged individuals are sent to the "flagged" output table. \link{character}}
 }
 \value{
-The input table, with new columns indicating estimated biomass change for each tree in each year.
+The input table, with new columns indicating estimated biomass change for each tree in each year with various units.
 }
 \description{
 Calculate the biomass change of trees between time points.
