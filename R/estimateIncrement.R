@@ -108,7 +108,7 @@ estimateIncrement <- function(biomassTable,
 
 
   ### CALCULATE 'growthInterval' RELATIVE TO LAST SAMPLING EVENT #################
-  #--> Use 'predictedDate' if available, otherwise use 'year'
+  #--> Use 'estimatedDate' if available, otherwise use 'year'
   #--> Calculating 'growthInterval' at this stage ensures accuracy *after* missing/flagged individuals removed
 
   agbDF <- agbDF %>%
@@ -118,12 +118,12 @@ estimateIncrement <- function(biomassTable,
     dplyr::mutate(
 
       growthInterval = dplyr::case_when(
-        #   When available, use 'predictedDate' to calculate 'growthInterval'
-        !is.na(.data$predictedDate) & !is.na(dplyr::lag(.data$predictedDate)) ~ 
-          lubridate::time_length(.data$predictedDate - dplyr::lag(.data$predictedDate), unit = "years"),
+        #   When available, use 'estimatedDate' to calculate 'growthInterval'
+        !is.na(.data$estimatedDate) & !is.na(dplyr::lag(.data$estimatedDate)) ~ 
+          lubridate::time_length(.data$estimatedDate - dplyr::lag(.data$estimatedDate), unit = "years"),
 
         #   Otherwise use 'year' from PPPY table to calculate 'growthInterval' if mass data are present
-        (is.na(.data$predictedDate) | is.na(dplyr::lag(.data$predictedDate))) & !is.na(.data$agb_kg) & !is.na(dplyr::lag(.data$agb_kg)) ~
+        (is.na(.data$estimatedDate) | is.na(dplyr::lag(.data$estimatedDate))) & !is.na(.data$agb_kg) & !is.na(dplyr::lag(.data$agb_kg)) ~
           .data$year - dplyr::lag(.data$year),
 
         #   Return NA when biomass data unavailable and 'year' based interval not relevant
@@ -135,7 +135,7 @@ estimateIncrement <- function(biomassTable,
 
     ) %>%
     dplyr::ungroup() %>%
-    dplyr::relocate("growthInterval", .after = "predictedDate")
+    dplyr::relocate("growthInterval", .after = "estimatedDate")
 
 
 
@@ -155,8 +155,8 @@ estimateIncrement <- function(biomassTable,
           (.data$agb_kg - dplyr::lag(.data$agb_kg)) / .data$growthInterval,
         
         #   Calculate mass increment (kg/y) for sampling interval mid-point when mortality occurs
-        .data$transitionStatus == "mortality" & dplyr::lag(.data$liveDeadStatus) == "live" & !is.na(.data$predictedDate) &
-          !is.na(dplyr::lag(.data$predictedDate)) ~ 
+        .data$transitionStatus == "mortality" & dplyr::lag(.data$liveDeadStatus) == "live" & !is.na(.data$estimatedDate) &
+          !is.na(dplyr::lag(.data$estimatedDate)) ~ 
           (.data$agb_kg - dplyr::lag(.data$agb_kg)) / .data$growthInterval,
 
         TRUE ~ NA_real_
@@ -172,8 +172,8 @@ estimateIncrement <- function(biomassTable,
           .data$agb_kg - dplyr::lag(.data$agb_kg),
         
         #   Calculate mass increment (kg) for sampling interval mid-point when mortality occurs
-        .data$transitionStatus == "mortality" & dplyr::lag(.data$liveDeadStatus) == "live" & !is.na(.data$predictedDate) &
-          !is.na(dplyr::lag(.data$predictedDate)) ~ 
+        .data$transitionStatus == "mortality" & dplyr::lag(.data$liveDeadStatus) == "live" & !is.na(.data$estimatedDate) &
+          !is.na(dplyr::lag(.data$estimatedDate)) ~ 
           .data$agb_kg - dplyr::lag(.data$agb_kg),
 
         TRUE ~ NA_real_
