@@ -440,6 +440,30 @@ calculateTransitions <- function(appIndTable,
     dplyr::relocate("predictedStemDiam", .after = "stemDiameter")
   
   
+  # flaggedDF <- flaggedDF %>%
+  #   dplyr::group_by(individualID) %>%
+  #   dplyr::arrange(year, .by_group = TRUE) %>%
+  #   
+  #   dplyr::mutate(
+  #     modelInputStemDiameter = dplyr::if_else(estimatedDiamFlag == TRUE, NA_real_, stemDiameter),
+  #     
+  #     predictedDiam = tryCatch(
+  #       broom::augment(lm(.data$modelInputStemDiameter ~ .data$predictedDate), 
+  #                      newdata = dplyr::pick(dplyr::everything()))$.fitted,
+  #       error = function(e) NA_real_
+  #     ),
+  #     
+  #     predictedDiam = round(predictedDiam, digits = 1),
+  #     
+  #     .after = "stemDiameter"
+  #   )
+  
+  
+  
+  
+  
+  
+  
   ##  Update recruitment stemDiameter previously set to NA with with new predicted value; remove flags if "recruitment" no longer meets flagging criteria
   temp <- temp %>%
     dplyr::group_by(.data$individualID) %>%
