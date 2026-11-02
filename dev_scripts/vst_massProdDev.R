@@ -1,6 +1,28 @@
 ### Scratchpad for estimateWoodMass and estimateWoodProd dev ####
 
 
+### D03 DSNY throws error: Investigate eventID requirements and lm() error handling
+vst <- neonUtilities::loadByProduct(dpID = "DP1.10098.001",
+                                    site = "DSNY",
+                                    release = "LATEST",
+                                    check.size = FALSE)
+
+perPlot <- vst$vst_perplotperyear
+map <- vst$vst_mappingandtagging
+appInd <- vst$vst_apparentindividual
+
+prodOut <- neonPlants::estimateWoodProd(inputDataList = vst)
+prodOut <- neonPlants::estimateWoodProd(inputDataList = vst, plotSubset = "towerAnnualSubset")
+prodOut <- neonPlants::estimateWoodProd(inputDataList = vst, plotSubset = "towerAll")
+#--> Errors out with expected message
+
+prodOut <- neonPlants::estimateWoodProd(inputDataList = vst,
+                                        plotSubset = "distributed")
+#--> Produces output as expected
+
+
+
+
 ### DEV: Verify input data are RELEASE ≥ 2027
 temp <- readRDS(testthat::test_path("testdata", "vst_testDat.rds"))
 
