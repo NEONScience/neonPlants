@@ -271,12 +271,50 @@ estimateWoodProd <- function(inputDataList,
   
   
   
-  ### Assign plotType needed in output based on 'plotSubset' argument
+  ### Assign plotType needed in output based on 'plotSubset' argument and eventID availability in input
+  
+  ##  Check for number of eventIDs by plotType
+  tempSummary <- perPlot %>%
+    dplyr::group_by(.data$plotType) %>%
+    dplyr::arrange(.data$eventID,
+                   .by_group = TRUE) %>%
+    dplyr::summarise(eventNumber = length(unique(.data$eventID)))
+  
+  
+  ##  Stop if insufficient eventIDs for both Distributed AND Tower plots; otherwise, warning for plotType with insufficient data
+  #   Check for ≥ 2 eventIDs for both Distributed and Tower plots
+  distEventCheck <- any(tempSummary$plotType == "distributed" & tempSummary$eventNumber >= 2)
+  towerEventCheck <- any(tempSummary$plotType == "tower" & tempSummary$eventNumber >= 2)
+  
+  #   Identify which plots have insufficient data
+  insufficientData <- dplyr::case_when(!distEventCheck & towerEventCheck ~ "Distributed plots",
+                                       distEventCheck & !towerEventCheck ~ "Tower plots",
+                                       TRUE ~ NA_character_)
+  
+  rm(tempSummary)
+  
+  #   Stop when mismatch occurs between plotSubset (user-supplied) and data availability
+  if (!distEventCheck & !towerEventCheck) {
+    stop("Insufficient data: Neither Distributed nor Tower plots have > 1 eventID")
+  }
+  
+  if (plotSubset == "all" & (!distEventCheck | !towerEventCheck)) {
+    stop(glue::glue('Argument plotSubset = "all" and insufficient number of sampling events to calculate woody productivity for {insufficientData}. Update plotSubset argument accordingly'))
+  }
+  
+  if (plotSubset == "distributed" & !distEventCheck) {
+    stop('Argument plotSubset = "distributed" and insufficient number of Distributed plot sampling events to calculate woody productivity')
+  }
+  
+  if (plotSubset %in% c("towerAll", "towerAnnualSubset") & !towerEventCheck) {
+    stop('Argument plotSubset = "towerAll" or "towerAnnualSubset" and insufficient number of Tower plot sampling events to calculate woody productivity')
+  }
+  
+  
+  ##  Assign plotType based on user input and data availability
   plotType <- dplyr::case_when(plotSubset == "all" ~ "all",
                                plotSubset == "distributed" ~ "distributed",
                                plotSubset %in% c("towerAll", "towerAnnualSubset") ~ "tower")
-  
-  
   
   
   

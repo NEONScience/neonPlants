@@ -344,7 +344,7 @@ calculateTransitions <- function(appIndTable,
   
   
   
-  ### Determine predicted recruitment date
+  ### Determine estimated recruitment date
   #--> Note: YYYY-10-01 is used when the interval between the "recruitment" year and the previous time the plot was sampled is 1 year; otherwise, the midpoint date between the "recruitment" sampling date and 10/01 of the year the plot was previously sampled is used.
   
   transFilterDF <- transFilterDF %>%
@@ -420,27 +420,23 @@ calculateTransitions <- function(appIndTable,
     dplyr::arrange(.data$year,
                    .by_group = TRUE) %>%
     
-    #   Set offending recruitment stemDiameters to NA_real_
     dplyr::mutate(
-      stemDiameter = dplyr::replace_when(
-        .data$stemDiameter,
-        dplyr::lead(.data$transitionStatus == "recruitment") & .data$stemDiameter == 10 & .data$incrementFlag == TRUE ~ NA_real_
-      )
-    ) %>%
-    
-    #   Model new predictedStemDiam (for all time points with a date)
-    dplyr::mutate(
-      model = list(lm(.data$stemDiameter ~ .data$estimatedDate, 
-                      data = dplyr::pick(dplyr::everything()) %>% 
-                        dplyr::filter(!is.na(.data$estimatedDate) & !is.na(.data$stemDiameter)))),
-      predictedStemDiam = round(stats::predict(.data$model[[1]], newdata = dplyr::pick(dplyr::everything())),
-                                digits = 1)
-    ) %>%
-    
-    dplyr::relocate("predictedStemDiam", .after = "stemDiameter")
+      modelInputStemDiameter = dplyr::case_when(
+        dplyr::lead(.data$transitionStatus == "recruitment") & .data$stemDiameter == 10 & .data$incrementFlag == TRUE ~ NA_real_,
+        TRUE ~ .data$stemDiameter
+      ),
+      
+      predictedStemDiam = tryCatch(
+        broom::augment(lm(.data$modelInputStemDiameter ~ .data$estimatedDate),
+                       newdata = dplyr::pick(dplyr::everything()))$.fitted,
+        error = function(e) NA_real_
+      ),
+      
+      predictedStemDiam = round(.data$predictedStemDiam, digits = 1)
+    )
   
   
-  ##  Update recruitment stemDiameter previously set to NA with with new predicted value; remove flags if "recruitment" no longer meets flagging criteria
+  ##  Update offending recruitment stemDiameter with with new predicted value; remove flags if "recruitment" no longer meets flagging criteria
   temp <- temp %>%
     dplyr::group_by(.data$individualID) %>%
     dplyr::arrange(.data$year,
@@ -449,7 +445,7 @@ calculateTransitions <- function(appIndTable,
     dplyr::mutate(
       stemDiameter = dplyr::replace_when(
         .data$stemDiameter,
-        dplyr::lead(.data$transitionStatus == "recruitment") & is.na(.data$stemDiameter) & .data$incrementFlag == TRUE ~
+        dplyr::lead(.data$transitionStatus == "recruitment") & .data$stemDiameter == 10 & .data$incrementFlag == TRUE ~
           .data$predictedStemDiam
       ),
       
@@ -470,12 +466,11 @@ calculateTransitions <- function(appIndTable,
     ) %>%
     
     #   Column clean-up
-    dplyr::select(-"model",
+    dplyr::select(-"modelInputStemDiameter",
                   -"predictedStemDiam")
   
   
   ##  Replace flagged recruitment stemDiameters in 'transFilterDF' with modeled stemDiameters from 'temp'
-  
   #   Create unique individualID-eventID identifier for modified records
   temp <- temp %>%
     dplyr::mutate(indivEventID = paste(.data$individualID, .data$eventID, sep = "-"),
