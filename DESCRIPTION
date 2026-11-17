@@ -39,20 +39,21 @@ Roxygen: list(markdown = TRUE)
 Depends: 
     R (>= 4.0.0)
 Imports: 
+    broom,
     dplyr,
+    ggplot2,
     glue,
     lifecycle,
     lubridate,
     magrittr,
     methods,
+    plotly,
     purrr,
+    RColorBrewer,
     rlang,
     stringr,
     tibble,
     tidyr,
-    tidyselect,
-    RColorBrewer,
-    ggplot2,
-    plotly
+    tidyselect
 LazyData: true
-Config/roxygen2/version: 8.1.0
+Config/roxygen2/version: 8.1.1

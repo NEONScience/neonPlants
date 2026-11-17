@@ -427,7 +427,7 @@ calculateTransitions <- function(appIndTable,
       ),
       
       predictedStemDiam = tryCatch(
-        broom::augment(lm(.data$modelInputStemDiameter ~ .data$estimatedDate),
+        broom::augment(stats::lm(.data$modelInputStemDiameter ~ .data$estimatedDate),
                        newdata = dplyr::pick(dplyr::everything()))$.fitted,
         error = function(e) NA_real_
       ),
@@ -480,7 +480,7 @@ calculateTransitions <- function(appIndTable,
   transFilterDF <- transFilterDF %>%
     dplyr::mutate(indivEventID = paste(.data$individualID, .data$eventID, sep = "-"),
                   .before = "plotID") %>%
-    dplyr::filter(!indivEventID %in% temp$indivEventID) %>%
+    dplyr::filter(!.data$indivEventID %in% temp$indivEventID) %>%
     dplyr::select(-"indivEventID")
   
   #   Recombine data frames

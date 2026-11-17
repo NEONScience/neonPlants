@@ -525,8 +525,8 @@ estimateWoodProd <- function(inputDataList,
                     .before = "growthForm")
   
   #   Generate above-ground biomass estimates for trees
-  agb <- neonPlants:::estimateAllometricWoodyMass(appIndTable = transitions,
-                                                  growthFormSubset = "tree")
+  agb <- estimateAllometricWoodyMass(appIndTable = transitions,
+                                     growthFormSubset = "tree")
   
   agb <- agb %>%
     dplyr::relocate("agb_kg", .before = "stemDiameter")
