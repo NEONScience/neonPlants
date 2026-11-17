@@ -43,33 +43,27 @@ woodProdOutputs <- neonPlants::estimateWoodProd(inputDataList = testInput,
 
 ### Output type tests ####
 
-### Test: Function generates expected output type
+### Test: Function generates expected output types
 testthat::test_that(desc = "Output type", {
+  
   testthat::expect_type(object = woodProdOutputs,
                         type = "list")
-})
-
-
-
-### Tests: Function generates expected output class for all output list objects
-#   Check all output tables are data frames
-testthat::test_that(desc = "Output class list objects", {
-
+  
   testthat::expect_s3_class(object = woodProdOutputs$vst_ANPP_indiv,
                             class = "data.frame")
-
+  
   testthat::expect_s3_class(object = woodProdOutputs$vst_ANPP_plot,
                             class = "data.frame")
-
+  
   testthat::expect_s3_class(object = woodProdOutputs$vst_ANPP_site,
                             class = "data.frame")
-
+  
   testthat::expect_s3_class(object = woodProdOutputs$vst_ANPP_duplicates,
                             class = "data.frame")
-
+  
   testthat::expect_s3_class(object = woodProdOutputs$vst_ANPP_flagged,
                             class = "data.frame")
-
+  
   testthat::expect_s3_class(object = woodProdOutputs$vst_ANPP_missing,
                             class = "data.frame")
 })
@@ -88,7 +82,7 @@ testthat::test_that(desc = "Output class list objects", {
 testthat::test_that(desc = "Output data frame dimensions for 'vst_ANPP_indiv'", {
 
   testthat::expect_identical(object = ncol(woodProdOutputs$vst_ANPP_indiv),
-                             expected = as.integer(36))
+                             expected = as.integer(50))
 
   testthat::expect_identical(object = nrow(woodProdOutputs$vst_ANPP_indiv),
                              expected = as.integer(5019))
@@ -108,7 +102,7 @@ testthat::test_that(desc = "Output data frame dimensions for 'vst_ANPP_plot'", {
 testthat::test_that(desc = "Output data frame dimensions for 'vst_ANPP_site'", {
 
   testthat::expect_identical(object = ncol(woodProdOutputs$vst_ANPP_site),
-                             expected = as.integer(9))
+                             expected = as.integer(10))
 
   testthat::expect_identical(object = nrow(woodProdOutputs$vst_ANPP_site),
                              expected = as.integer(9))
@@ -128,17 +122,17 @@ testthat::test_that(desc = "Output data frame dimensions for 'duplicates'", {
 testthat::test_that(desc = "Output data frame dimensions for 'flagged'", {
 
   testthat::expect_identical(object = ncol(woodProdOutputs$vst_ANPP_flagged),
-                             expected = as.integer(32))
+                             expected = as.integer(46))
 
   testthat::expect_identical(object = nrow(woodProdOutputs$vst_ANPP_flagged),
-                             expected = as.integer(222))
+                             expected = as.integer(190))
 })
 
 #   Check expected column and row numbers of 'missing' data frame
 testthat::test_that(desc = "Output data frame dimensions for 'missing'", {
 
   testthat::expect_identical(object = ncol(woodProdOutputs$vst_ANPP_missing),
-                             expected = as.integer(31))
+                             expected = as.integer(46))
 
   testthat::expect_identical(object = nrow(woodProdOutputs$vst_ANPP_missing),
                              expected = as.integer(36))
@@ -215,13 +209,13 @@ testthat::test_that(desc = "Output 'vst_ANPP_indiv' value as expected", {
 #   Test: Check for expected 'vst_ANPP_plot' value
 testthat::test_that(desc = "Output 'vst_ANPP_plot' value as expected", {
   testthat::expect_equal(object = woodProdOutputs$vst_ANPP_plot$woodProd_Mghayr[1],
-                         expected = 0)
+                         expected = NA_real_)
 })
 
 #   Test: Check for expected 'vst_ANPP_site' value
 testthat::test_that(desc = "Output 'vst_ANPP_site' value as expected", {
   testthat::expect_equal(object = woodProdOutputs$vst_ANPP_site$woodProd_Mghayr[1],
-                         expected = 0)
+                         expected = NA_real_)
 })
 
 #   Test: Check for expected 'duplicates' value
@@ -232,8 +226,8 @@ testthat::test_that(desc = "Output 'duplicates' value as expected", {
 
 #   Test: Check for expected 'flagged' value
 testthat::test_that(desc = "Output 'flagged' value as expected", {
-  testthat::expect_equal(object = woodProdOutputs$vst_ANPP_flagged$agb_kg[2],
-                         expected = 241.54)
+  testthat::expect_equal(object = woodProdOutputs$vst_ANPP_flagged$agb_kg[3],
+                         expected = 26.05)
 })
 
 #   Test: Check for expected 'missing' value

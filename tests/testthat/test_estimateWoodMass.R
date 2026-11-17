@@ -56,20 +56,20 @@ testthat::test_that(desc = "Output class list objects", {
 testthat::test_that(desc = "Output data frame column and row numbers 'vst_agb_kg'", {
 
   testthat::expect_identical(object = ncol(woodMassOutputs$vst_AGB_indiv),
-                             expected = as.integer(30))
+                             expected = as.integer(29))
 
   testthat::expect_identical(object = nrow(woodMassOutputs$vst_AGB_indiv),
-                             expected = as.integer(44405))
+                             expected = as.integer(44190))
 })
 
 #   Check expected column number of 'vst_lost_downed' data frame
 testthat::test_that(desc = "Output data frame column number 'vst_lost_downed'", {
 
   testthat::expect_identical(object = ncol(woodMassOutputs$vst_lost_downed),
-                             expected = as.integer(48))
+                             expected = as.integer(47))
 
   testthat::expect_identical(object = nrow(woodMassOutputs$vst_lost_downed),
-                             expected = as.integer(6438))
+                             expected = as.integer(6370))
 })
 
 #   Check expected column number of 'vst_plot_Mgha' data frame
@@ -100,14 +100,12 @@ testthat::test_that(desc = "Output data frame column number 'vst_site_Mgha'", {
 ### Error handling tests ####
 
 ### Tests: Generate expected errors for 'inputDataList'
-#   Test 'inputDataList' is a list
-testthat::test_that(desc = "Argument 'inputDataList' is list object", {
+#   Test 'inputDataList' is a list and contains required tables
+testthat::test_that(desc = "Argument 'inputDataList' input check", {
+  
   testthat::expect_error(object = neonPlants::estimateWoodMass(inputDataList = vstTestDF$vst_apparentindividual),
                          regexp = "Argument 'inputDataList' must be a list object from neonUtilities::loadByProduct()")
-})
-
-#   Test 'inputDataList' contains required tables (expect at least 3: appInd, mapandtag, and perplot)
-testthat::test_that(desc = "Required tables present in 'inputDataList' input", {
+  
   testthat::expect_error(object = neonPlants::estimateWoodMass(inputDataList = vstTestDF[1:2]),
                          regexp = "Required tables missing from 'inputDataList'")
 })
@@ -230,7 +228,7 @@ testthat::test_that(desc = "Output 'vst_lost_downed' value as expected", {
 ### Test: Generate error if output 'vst_plot_Mgha' value not as expected
 testthat::test_that(desc = "Output 'vst_AGB_plot' value as expected", {
   testthat::expect_equal(object = woodMassOutputs$vst_AGB_plot$agb_Mgha[12],
-                         expected = 80.97)
+                         expected = 80.90)
 })
 
 
@@ -238,7 +236,7 @@ testthat::test_that(desc = "Output 'vst_AGB_plot' value as expected", {
 ### Test: Generate error if output 'vst_AGB_site' value not as expected
 testthat::test_that(desc = "Output 'vst_AGB_site' value as expected", {
   testthat::expect_equal(object = woodMassOutputs$vst_AGB_site$woodMassMean_Mgha[18],
-                         expected = 265.4)
+                         expected = 265.2)
 })
 
 

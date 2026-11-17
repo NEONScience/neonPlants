@@ -162,7 +162,7 @@ estimateIncrement <- function(biomassTable,
         TRUE ~ NA_real_
       ),
       
-      agbIncr_kgyr = round(agbIncr_kgyr, digits = 1),
+      agbIncr_kgyr = round(.data$agbIncr_kgyr, digits = 1),
 
       
       agbIncr_kg = dplyr::case_when(
@@ -179,7 +179,7 @@ estimateIncrement <- function(biomassTable,
         TRUE ~ NA_real_
       ),
       
-      agbIncr_kg = round(agbIncr_kg, digits = 1),
+      agbIncr_kg = round(.data$agbIncr_kg, digits = 1),
 
       .before = "agb_kg"
     )
