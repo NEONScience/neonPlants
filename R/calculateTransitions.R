@@ -66,6 +66,12 @@ calculateTransitions <- function(appIndTable,
   
   ### Create "complete" plotDF: Contains a row for all combinations of plotID x eventID
   #--> Note that tidyr::complete() output is not sensible if > 1 siteID supplied; estimateWoodProd function prevents this
+  #--> Note: updated call to tidyr::complete() that is commented out may be able to allow processing > 1 siteID at a time
+  # plotDF <- plotDF %>%
+  #   dplyr::group_by(domainID, siteID) %>%
+  #   tidyr::complete(plotID, eventID) %>%
+  #   dplyr::ungroup()
+  
   plotDF <- plotDF %>%
     tidyr::complete(.data$domainID,
                     .data$siteID,

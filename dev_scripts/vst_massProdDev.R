@@ -1,6 +1,25 @@
 ### Scratchpad for estimateWoodMass and estimateWoodProd dev ####
 
 
+### Records with estimatedStemDiameter populated year before "recruitment" getting corrected by predictStemDiameter function
+#--> First example at BART: NEON.PLA.D01.BART.00102B; this one appears in 2016 unexpectedly at 31 cm and plot was sampled in 2015; then, an unexpectedly large increment in 2017 with stemDiameter = 38 cm.
+#--> Underlying issue: Big increment from 2016 --> 2017 because measurementHeight changed from 200 --> 130 cm
+
+vst <- neonUtilities::loadByProduct(dpID = "DP1.10098.001",
+                                    site = "BART",
+                                    release = "LATEST",
+                                    check.size = FALSE)
+
+perPlot <- vst$vst_perplotperyear
+map <- vst$vst_mappingandtagging
+appInd <- vst$vst_apparentindividual
+
+#--> transFilterDF looks fine after inferring live/dead status for missed eventIDs (line 153)
+
+
+
+
+
 ### D03 DSNY throws error: Investigate eventID requirements and lm() error handling
 vst <- neonUtilities::loadByProduct(dpID = "DP1.10098.001",
                                     site = "DSNY",
