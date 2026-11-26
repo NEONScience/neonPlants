@@ -65,8 +65,9 @@ calculateTransitions <- function(appIndTable,
   ### GENERATE 'TRANSITIONS' DATA FRAME ####
   
   ### Create "complete" plotDF: Contains a row for all combinations of plotID x eventID
-  #--> Note that tidyr::complete() output is not sensible if > 1 siteID supplied; estimateWoodProd function prevents this
-  #--> Note: updated call to tidyr::complete() that is commented out may be able to allow processing > 1 siteID at a time
+  #--> Note: Current tidyr::complete() output is not sensible if > 1 siteID supplied; estimateWoodProd function prevents this
+  #--> Note: Updated call to tidyr::complete() that is commented out immediately below may allow processing > 1 siteID at a time
+  
   # plotDF <- plotDF %>%
   #   dplyr::group_by(domainID, siteID) %>%
   #   tidyr::complete(plotID, eventID) %>%
@@ -360,12 +361,15 @@ calculateTransitions <- function(appIndTable,
     dplyr::mutate(
       
       estimatedDate = dplyr::case_when(
+        
         dplyr::lead(.data$transitionStatus) == "recruitment" & !is.na(dplyr::lead(.data$date)) & is.na(.data$date) &
           dplyr::lead(.data$year) != .data$year + 1 ~ 
           as.Date(glue::glue("{.data$year}-10-01")) + (dplyr::lead(.data$date) - as.Date(glue::glue("{.data$year}-10-01"))) / 2,
+        
         dplyr::lead(.data$transitionStatus) == "recruitment" & !is.na(dplyr::lead(.data$date)) & is.na(.data$date) &
           dplyr::lead(.data$year) == .data$year + 1 ~ 
           as.Date(glue::glue("{.data$year}-10-01")),
+        
         TRUE ~ .data$date
       ),
       
@@ -374,53 +378,67 @@ calculateTransitions <- function(appIndTable,
   
   
   
-  ### Flag unexpected 'stemDiameter' increments
+  ### Recruits: Flag unexpected 'stemDiameter' increments
   #--> Note: A number of individuals at ABBY appear to have legitimate annual stemDiameter increments > 3 AND < 4 cm/y
-  #--> Note: Flag not applied to recruited secondary stems of a multi-bole tree --> no standard qualifying diameter
   transFilterDF <- transFilterDF %>%
     dplyr::group_by(.data$individualID) %>%
     dplyr::arrange(.data$year,
                    .by_group = TRUE) %>%
     dplyr::mutate(
       
-      incrementFlag = dplyr::case_when(
-        .data$transitionStatus == "recruitment" & grepl("[0-9]{5}[A-Za-z]{1}$", .data$individualID) ~ FALSE,
-        abs(.data$stemDiameter - dplyr::lag(.data$stemDiameter)) / 
-          lubridate::time_length(.data$estimatedDate - dplyr::lag(.data$estimatedDate), unit = "years") > 3.5 ~ TRUE,
+      recruitFlag = dplyr::case_when(
+        
+        #   Flags added row before "recruitment" when DBH = 10 cm assumption is too large; i.e., recruited secondary multi-bole
+        dplyr::lead(.data$transitionStatus) == "recruitment" & dplyr::lead(.data$stemDiameter) <= 10 ~ TRUE,
+        
+        #   Flags added row before "recruitment" for any tree when stemDiameter delta relative to "recruitment" year > 3.5 cm/y
+        dplyr::lead(.data$transitionStatus) == "recruitment" & 
+          (dplyr::lead(.data$stemDiameter) - .data$stemDiameter) / 
+          lubridate::time_length(dplyr::lead(.data$estimatedDate) - .data$estimatedDate, unit = "years") > 3.5 ~ TRUE,
+        
+        # #   Flags row for any tree when abs(stemDiameter delta) relative to lag() row > 3.5 cm/y 
+        # abs(.data$stemDiameter - dplyr::lag(.data$stemDiameter)) / 
+        #   lubridate::time_length(.data$estimatedDate - dplyr::lag(.data$estimatedDate), unit = "years") > 3.5 ~ TRUE,
+        
         TRUE ~ FALSE
       ),
       
-      .after = "stemDiameter"
-    ) %>%
-    
-    #   Update incrementFlag for recruited individuals to include flagging year prior to recruitment
-    #--> Note: This flags when assuming a 10 cm recruitment diameter is inappropriate
-    dplyr::mutate(
-      incrementFlag = dplyr::replace_when(
-        .data$incrementFlag,
-        dplyr::lead(.data$transitionStatus) == "recruitment" & dplyr::lead(.data$incrementFlag) == TRUE ~ TRUE
-      )
-    )
+      .after = "stemDiameter")
+    # ) %>%
+    # 
+    # #   Update incrementFlag for recruited individuals to include flagging year prior to recruitment
+    # #--> Note: This flags when assuming a 10 cm recruitment diameter is inappropriate
+    # dplyr::mutate(
+    #   incrementFlag = dplyr::replace_when(
+    #     .data$incrementFlag,
+    #     dplyr::lead(.data$transitionStatus) == "recruitment" & dplyr::lead(.data$incrementFlag) == TRUE ~ TRUE
+    #   )
+    # )
   
   
   
-  ### Update 'stemDiameter' with modeled value for recruits with incrementFlag == TRUE
+  ### Update 'stemDiameter' with modeled value for recruits with recruitFlag == TRUE
   #--> Note: These individuals were likely missed in the previous bout and therefore appear inexplicably large when first recorded
+  #--> Note: Modeled value also generated for recruits legitimately smaller than 10 cm (secondary multi-boles)
   
   ##  Isolate all records associated with any individualID that is flagged for a suspicious "recruitment" event
   temp <- transFilterDF %>%
     dplyr::group_by(.data$individualID) %>%
     dplyr::arrange(.data$year,
                    .by_group = TRUE) %>%
-    #   Filter to individualIDs recruited at some point and with flagged 10 cm recruitment diameter
-    dplyr::filter(any(.data$transitionStatus == "recruitment") & any(.data$stemDiameter == 10 & .data$incrementFlag == TRUE)) %>%
+    
+    # #   Filter to individualIDs recruited at some point and with flagged 10 cm recruitment diameter
+    # dplyr::filter(any(.data$transitionStatus == "recruitment") & any(.data$stemDiameter == 10 & .data$incrementFlag == TRUE)) %>%
+    
+    #   Keep a group if any record is followed by a recruitment record and has recruitFlag == TRUE
+    dplyr::filter(any(dplyr::lead(.data$transitionStatus) == "recruitment" & .data$recruitFlag == TRUE, na.rm = TRUE)) %>%
     
     #   Ensure at least 3 rows of data exist before setting 10 cm -> NA and model fitting
     dplyr::filter(sum(!is.na(.data$estimatedDate) & !is.na(.data$stemDiameter)) >= 3) %>%
     dplyr::relocate("individualID", .before = "tempStemID")
   
   
-  ##  Update recruitment diameter from 10 cm to NA for flagged rows, then model new predicted stemDiameter
+  ##  Update recruitment diameter from 10 cm to NA for flagged rows added before "recruitment" row, then model new 'predictedStemDiam'
   temp <- temp %>%
     dplyr::group_by(.data$individualID) %>%
     dplyr::arrange(.data$year,
@@ -428,7 +446,7 @@ calculateTransitions <- function(appIndTable,
     
     dplyr::mutate(
       modelInputStemDiameter = dplyr::case_when(
-        dplyr::lead(.data$transitionStatus == "recruitment") & .data$stemDiameter == 10 & .data$incrementFlag == TRUE ~ NA_real_,
+        dplyr::lead(.data$transitionStatus == "recruitment") & .data$stemDiameter == 10 & .data$recruitFlag == TRUE ~ NA_real_,
         TRUE ~ .data$stemDiameter
       ),
       
@@ -439,7 +457,10 @@ calculateTransitions <- function(appIndTable,
       ),
       
       predictedStemDiam = round(.data$predictedStemDiam, digits = 1)
-    )
+    ) %>%
+    
+    #--> Delete this once happy with flagging
+    dplyr::relocate("stemDiameter", "predictedStemDiam", .after = "individualID")
   
   
   ##  Update offending recruitment stemDiameter with with new predicted value; remove flags if "recruitment" no longer meets flagging criteria
@@ -451,24 +472,24 @@ calculateTransitions <- function(appIndTable,
     dplyr::mutate(
       stemDiameter = dplyr::replace_when(
         .data$stemDiameter,
-        dplyr::lead(.data$transitionStatus == "recruitment") & .data$stemDiameter == 10 & .data$incrementFlag == TRUE ~
+        dplyr::lead(.data$transitionStatus == "recruitment") & .data$stemDiameter == 10 & .data$recruitFlag == TRUE ~
           .data$predictedStemDiam
       ),
       
-      incrementFlag = dplyr::replace_when(
-        .data$incrementFlag,
-        dplyr::lead(.data$transitionStatus == "recruitment") & !is.na(.data$stemDiameter) & .data$incrementFlag == TRUE &
+      recruitFlag = dplyr::replace_when(
+        .data$recruitFlag,
+        dplyr::lead(.data$transitionStatus == "recruitment") & !is.na(.data$stemDiameter) & .data$recruitFlag == TRUE &
           abs(dplyr::lead(.data$stemDiameter) - .data$stemDiameter) / 
           lubridate::time_length(dplyr::lead(.data$estimatedDate) - .data$estimatedDate, unit = "years") < 3.5 ~ FALSE
-      ),
-      
-      incrementFlag = dplyr::replace_when(
-        .data$incrementFlag,
-        .data$transitionStatus == "recruitment" & !is.na(dplyr::lag(.data$stemDiameter)) & dplyr::lag(.data$incrementFlag) == FALSE &
-          .data$incrementFlag == TRUE & 
-          abs(.data$stemDiameter - dplyr::lag(.data$stemDiameter)) / 
-          lubridate::time_length(.data$estimatedDate - dplyr::lag(.data$estimatedDate), unit = "years") < 3.5 ~ FALSE
       )
+      
+      # incrementFlag = dplyr::replace_when(
+      #   .data$incrementFlag,
+      #   .data$transitionStatus == "recruitment" & !is.na(dplyr::lag(.data$stemDiameter)) & dplyr::lag(.data$incrementFlag) == FALSE &
+      #     .data$incrementFlag == TRUE & 
+      #     abs(.data$stemDiameter - dplyr::lag(.data$stemDiameter)) / 
+      #     lubridate::time_length(.data$estimatedDate - dplyr::lag(.data$estimatedDate), unit = "years") < 3.5 ~ FALSE
+      # )
     ) %>%
     
     #   Column clean-up
@@ -493,6 +514,17 @@ calculateTransitions <- function(appIndTable,
   transFilterDF <- dplyr::bind_rows(transFilterDF,
                                     temp %>%
                                       dplyr::select(-"indivEventID"))
+  
+  
+  
+  ### INCREMENT FLAG: IDENTIFY AND FLAG ANOMALOUS stemDiameter VALUES ####
+  #--> Note: Function identifies all anomalies per individualID that exceed specified threshold in cm/year
+  transFilterDF <- transFilterDF %>%
+    dplyr::group_by(individualID) %>%
+    dplyr::arrange(year, .by_group = TRUE) %>%
+    dplyr::group_modify(~ flagDiameterIncrements(.x, threshold = 3.5, flaggedColumn = "incrementFlag")) %>%
+    dplyr::relocate("individualID", .before = "growthForm") %>%
+    dplyr::relocate("incrementFlag", .after = "recruitFlag")
   
   
   

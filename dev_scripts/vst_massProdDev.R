@@ -2,7 +2,9 @@
 
 
 ### Records with estimatedStemDiameter populated year before "recruitment" getting corrected by predictStemDiameter function
-#--> First example at BART: NEON.PLA.D01.BART.00102B; this one appears in 2016 unexpectedly at 31 cm and plot was sampled in 2015; then, an unexpectedly large increment in 2017 with stemDiameter = 38 cm.
+
+##  BART example: NEON.PLA.D01.BART.00102B
+#--> This one appears in 2016 unexpectedly at 31 cm and plot was sampled in 2015; then, an unexpectedly large increment in 2017 with stemDiameter = 38 cm.
 #--> Underlying issue: Big increment from 2016 --> 2017 because measurementHeight changed from 200 --> 130 cm
 
 vst <- neonUtilities::loadByProduct(dpID = "DP1.10098.001",
@@ -15,6 +17,41 @@ map <- vst$vst_mappingandtagging
 appInd <- vst$vst_apparentindividual
 
 #--> transFilterDF looks fine after inferring live/dead status for missed eventIDs (line 153)
+#--> transFilterDF looks fine after estimating stemDiameter for missed eventIDs (lines 276-318)
+#--> transFilterDF looks fine after 10 cm to stemDiameter year before transitionStatus == "recruitment"
+
+#--> ran code up to line 377, check logic of subsequent steps before proceeding, potential problem lines 380-403
+  #--> Update: multi-boles now flagged, were not before
+
+#   Check "flagged" output from estimateWoodProd for BART
+prodOut <- estimateWoodProd(inputDataList = vst)
+flaggedDF <- prodOut$vst_ANPP_flagged #--> as expected for BART.00102B
+
+#   Check predictStemDiameter output for BART
+predictOut <- predictStemDiameter(flaggedDF)
+
+
+##  HARV example: NEON.PLA.D01.HARV.05745
+#--> Live in 2016, dead in 2017; stemDiameters all look fine.
+
+vst <- neonUtilities::loadByProduct(dpID = "DP1.10098.001",
+                                    site = "HARV",
+                                    release = "LATEST",
+                                    check.size = FALSE)
+
+perPlot <- vst$vst_perplotperyear
+map <- vst$vst_mappingandtagging
+appInd <- vst$vst_apparentindividual
+
+prodOut <- estimateWoodProd(inputDataList = vst)
+flaggedDF <- prodOut$vst_ANPP_flagged
+
+#   Check predictStemDiameter output for HARV
+predictOut <- predictStemDiameter(flaggedDF)
+#--> Output for HARV.05745 removed due to insufficient rows numbers after initial filtering in predict function, but this is more happenstance than good logic.
+#--> Update predict function to only make predictions when a row in the group still has incrementFlag == TRUE after removing rows that should not contribute to prediction.
+#--> Update predict function to only make predictions when measurementHeight range is <= 20 cm across all years
+#--> All above complete
 
 
 
